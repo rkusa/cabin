@@ -1,7 +1,32 @@
-use rust_html_over_wire::{html, Action, Component, View};
-use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
+use std::str::FromStr;
 
-fn main() {}
+use rust_html_over_wire::{html, render, Action, Component, View};
+use serde::{Deserialize, Serialize};
+use solarsail::hyper::StatusCode;
+use solarsail::route::get;
+use solarsail::{IntoResponse, Request, RequestExt, Response, SolarSail};
+
+#[tokio::main]
+async fn main() {
+    let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
+    let app = SolarSail::new((), handle_request);
+    app.run(&addr).await.unwrap();
+}
+
+async fn handle_request(_state: (), req: Request) -> Response {
+    match req.route().as_tuple() {
+        get!("health") => "Ok".into_response(),
+
+        get!() => {
+            let view = counter_component(0);
+            let html = render(view).unwrap();
+            html.into_response()
+        }
+
+        _ => StatusCode::NOT_FOUND.into_response(),
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 pub enum CountAction {
