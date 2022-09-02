@@ -1,7 +1,52 @@
+use std::borrow::Cow;
 use std::fmt::{self, Write};
 
-pub trait View<S> {
-    fn render(&self, state: &S, out: impl Write) -> fmt::Result;
+use serde::Serialize;
+
+pub const fn create_component<S, V>(
+    state: S,
+    component: impl Fn(&S) -> V,
+) -> impl Component<View = V>
+where
+    S: Serialize,
+    V: View,
+{
+    ComponentFn {
+        state,
+        component_fn: component,
+    }
+}
+
+pub trait Component {
+    type View: View;
+    fn render(&self) -> Self::View;
+}
+
+struct ComponentFn<S, V, F>
+where
+    S: Serialize,
+    V: View,
+    F: Fn(&S) -> V,
+{
+    state: S,
+    component_fn: F,
+}
+
+impl<S, V, F> Component for ComponentFn<S, V, F>
+where
+    S: Serialize,
+    V: View,
+    F: Fn(&S) -> V,
+{
+    type View = V;
+
+    fn render(&self) -> Self::View {
+        (self.component_fn)(&self.state)
+    }
+}
+
+pub trait View {
+    fn render(&self, out: impl Write) -> fmt::Result;
 }
 
 pub struct HtmlTag<V> {
@@ -15,14 +60,14 @@ pub struct HtmlTagBuilder<S = ()> {
     on_click: Option<Box<dyn FnOnce(S) -> S + 'static>>,
 }
 
-impl<S> HtmlTagBuilder<S> {
+impl HtmlTagBuilder {
     // TODO: not available for all tags (e.g. only for buttons)
-    pub fn on_click(mut self, handler: impl FnOnce(S) -> S + 'static) -> Self {
-        self.on_click = Some(Box::new(handler));
-        self
-    }
+    // pub fn on_click(mut self, handler: impl FnOnce(S) -> S + 'static) -> Self {
+    //     self.on_click = Some(Box::new(handler));
+    //     self
+    // }
 
-    pub fn content<V: View<S>>(self, content: V) -> HtmlTag<V> {
+    pub fn content<V: View>(self, content: V) -> HtmlTag<V> {
         HtmlTag {
             tag: self.tag,
             content,
@@ -30,46 +75,46 @@ impl<S> HtmlTagBuilder<S> {
     }
 }
 
-impl<S1, S2, V1, V2> View<(S1, S2)> for (V1, V2)
+impl<V1, V2> View for (V1, V2)
 where
-    V1: View<S1>,
-    V2: View<S2>,
+    V1: View,
+    V2: View,
 {
-    fn render(&self, state: &(S1, S2), mut out: impl Write) -> fmt::Result {
-        self.0.render(&state.0, &mut out)?;
-        self.1.render(&state.1, &mut out)?;
+    fn render(&self, mut out: impl Write) -> fmt::Result {
+        self.0.render(&mut out)?;
+        self.1.render(&mut out)?;
         Ok(())
     }
 }
 
-impl<S, V> View<S> for HtmlTag<V>
+impl<V> View for HtmlTag<V>
 where
-    V: View<S>,
+    V: View,
 {
-    fn render(&self, state: &S, mut out: impl Write) -> fmt::Result {
+    fn render(&self, mut out: impl Write) -> fmt::Result {
         write!(&mut out, "<{}>", self.tag)?;
-        self.content.render(state, &mut out)?;
+        self.content.render(&mut out)?;
         write!(&mut out, "</{}>", self.tag)?;
         Ok(())
     }
 }
 
-impl<S> View<S> for HtmlTagBuilder {
-    fn render(&self, _state: &S, mut out: impl Write) -> fmt::Result {
+impl View for HtmlTagBuilder {
+    fn render(&self, mut out: impl Write) -> fmt::Result {
         write!(out, "<{}/>", self.tag)
     }
 }
 
-impl<'a, S> View<S> for &'a str {
-    fn render(&self, _state: &S, mut out: impl Write) -> fmt::Result {
+impl<'a> View for &'a str {
+    fn render(&self, mut out: impl Write) -> fmt::Result {
         out.write_str(self)?;
         Ok(())
     }
 }
 
-impl<S> View<S> for String {
-    fn render(&self, state: &S, out: impl Write) -> fmt::Result {
-        self.as_str().render(state, out)
+impl View for String {
+    fn render(&self, out: impl Write) -> fmt::Result {
+        self.as_str().render(out)
     }
 }
 
@@ -80,16 +125,16 @@ pub fn div() -> HtmlTagBuilder {
     }
 }
 
-pub fn button<S>(state: S) -> HtmlTagBuilder<S> {
+pub fn button<S>(state: S) -> HtmlTagBuilder {
     HtmlTagBuilder {
         tag: "button",
         ..Default::default()
     }
 }
 
-pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
+pub fn render(view: impl View) -> Result<String, fmt::Error> {
     let mut result = String::new();
-    view.render(&(), &mut result)?;
+    view.render(&mut result)?;
     Ok(result)
 }
 
@@ -116,14 +161,18 @@ pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
 //     }
 // }
 
-fn counter(count: u32) -> impl View<u32> {
+// #[component]
+fn counter(count: &u32) -> impl View {
+    // const counter: Box<dyn Component> = Box::new(create_component(0, |count: &u32| {
     (
-        format!("Count: {}", count),
-        button(count).on_click(|count| count + 1).content("incr"),
+        div().content(format!("Count: {}", *count)),
+        button(count)
+            // .on_click(|count| count + 1)
+            .content("incr"),
     )
 }
 
-impl<S> Default for HtmlTagBuilder<S> {
+impl Default for HtmlTagBuilder {
     fn default() -> Self {
         Self {
             tag: "div",
@@ -138,9 +187,11 @@ mod tests {
 
     #[test]
     fn it_works() {
+        let _component = create_component(0, counter);
+
         let count = 42;
-        let view = div().content((counter(count), div()));
+        let view = (counter(&count), div());
         let html = render(view).unwrap();
-        assert_eq!(html, "<div>Count: 42<div/></div>");
+        assert_eq!(html, "<div>Count: 42</div><button>incr</button><div/>");
     }
 }
