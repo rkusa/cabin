@@ -27,23 +27,25 @@ pub fn counter(count: u32) -> impl View<CountAction> {
 
 // result of #[component]
 pub fn counter_component(count: u32) -> impl View<()> {
-    let view = counter(count);
-    ViewBoundary {
-        view,
+    Component {
+        state: count,
+        render: counter,
         action: PhantomData,
     }
 }
 
 // By making this private, the conversion from View<A> to View<()> is the feature
 // that ensures the usage of #[component]
-struct ViewBoundary<V: View<A>, A> {
-    view: V,
+struct Component<S, V: View<A>, A> {
+    state: S,
+    render: fn(S) -> V,
     action: PhantomData<A>,
 }
 
-impl<V: View<A>, A> View<()> for ViewBoundary<V, A> {
-    fn render(&self, out: impl Write) -> fmt::Result {
-        self.view.render(out)
+impl<S, V: View<A>, A> View<()> for Component<S, V, A> {
+    fn render(self, out: impl Write) -> fmt::Result {
+        let view = (self.render)(self.state);
+        view.render(out)
     }
 }
 
@@ -63,7 +65,7 @@ fn handle_component(id: &str, state: &str, action: &str) {
 }
 
 pub trait View<A = ()> {
-    fn render(&self, out: impl Write) -> fmt::Result;
+    fn render(self, out: impl Write) -> fmt::Result;
 }
 
 pub trait Action<S> {
@@ -103,7 +105,7 @@ where
     V1: View<A>,
     V2: View<A>,
 {
-    fn render(&self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write) -> fmt::Result {
         self.0.render(&mut out)?;
         self.1.render(&mut out)?;
         Ok(())
@@ -114,7 +116,7 @@ impl<V, A> View<A> for HtmlTag<V, A>
 where
     V: View<A>,
 {
-    fn render(&self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write) -> fmt::Result {
         write!(&mut out, "<{}>", self.tag)?;
         self.content.render(&mut out)?;
         write!(&mut out, "</{}>", self.tag)?;
@@ -123,21 +125,21 @@ where
 }
 
 impl<A> View<A> for HtmlTagBuilder<A> {
-    fn render(&self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write) -> fmt::Result {
         write!(out, "<{}/>", self.tag)
     }
 }
 
 impl<'a, A> View<A> for &'a str {
-    fn render(&self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write) -> fmt::Result {
         out.write_str(self)?;
         Ok(())
     }
 }
 
 impl<A> View<A> for String {
-    fn render(&self, out: impl Write) -> fmt::Result {
-        View::<A>::render(&self.as_str(), out)
+    fn render(self, out: impl Write) -> fmt::Result {
+        View::<A>::render(self.as_str(), out)
     }
 }
 
