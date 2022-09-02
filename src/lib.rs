@@ -1,49 +1,59 @@
 use std::fmt::{self, Write};
+use std::marker::PhantomData;
 
 use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
-pub struct Count(u32);
 
 #[derive(Serialize, Deserialize)]
 pub enum CountAction {
     Increment,
 }
 
-impl Action for Count {
-    type Action = CountAction;
-
-    fn dispatch(self, action: Self::Action) -> Self {
-        match action {
-            CountAction::Increment => Count(self.0 + 1),
+impl Action<u32> for CountAction {
+    fn apply(self, state: u32) -> u32 {
+        match self {
+            CountAction::Increment => state + 1,
         }
     }
 }
 
-impl From<u32> for Count {
-    fn from(count: u32) -> Self {
-        Count(count)
-    }
-}
-
-// #[component]
-pub fn counter(count: impl Into<Count>) -> impl View {
-    let count = count.into();
+pub fn counter(count: u32) -> impl View<CountAction> {
     (
-        div().content(format!("Count: {}", count.0)),
+        div().content(format!("Count: {}", count)),
         button::<CountAction>()
             .on_click(CountAction::Increment)
             .content("incr"),
     )
 }
 
+// result of #[component]
+pub fn counter_component(count: u32) -> impl View<()> {
+    let view = counter(count);
+    ViewBoundary {
+        view,
+        action: PhantomData,
+    }
+}
+
+// By making this private, the conversion from View<A> to View<()> is the feature
+// that ensures the usage of #[component]
+struct ViewBoundary<V: View<A>, A> {
+    view: V,
+    action: PhantomData<A>,
+}
+
+impl<V: View<A>, A> View<()> for ViewBoundary<V, A> {
+    fn render(&self, out: impl Write) -> fmt::Result {
+        self.view.render(out)
+    }
+}
+
 #[allow(unused)]
 fn handle_component(id: &str, state: &str, action: &str) {
     match id {
         "crate::counter" => {
-            let before: Count = serde_json::from_str(state).unwrap();
-            let action: <Count as Action>::Action = serde_json::from_str(action).unwrap();
-            let after = before.dispatch(action);
+            let before: u32 = serde_json::from_str(state).unwrap();
+            let action: CountAction = serde_json::from_str(action).unwrap();
+            let after = action.apply(before);
             let _component = counter(after);
             // TODO: rerender
             // let _ = component.render(out)
@@ -52,18 +62,18 @@ fn handle_component(id: &str, state: &str, action: &str) {
     }
 }
 
-pub trait View {
+pub trait View<A = ()> {
     fn render(&self, out: impl Write) -> fmt::Result;
 }
 
-pub trait Action {
-    type Action;
-    fn dispatch(self, action: Self::Action) -> Self;
+pub trait Action<S> {
+    fn apply(self, state: S) -> S;
 }
 
-pub struct HtmlTag<V> {
+pub struct HtmlTag<V, A> {
     tag: &'static str,
     content: V,
+    action: PhantomData<A>,
 }
 
 pub struct HtmlTagBuilder<A = ()> {
@@ -79,18 +89,19 @@ impl<A> HtmlTagBuilder<A> {
         self
     }
 
-    pub fn content<V: View>(self, content: V) -> HtmlTag<V> {
+    pub fn content<V: View<A>>(self, content: V) -> HtmlTag<V, A> {
         HtmlTag {
             tag: self.tag,
             content,
+            action: PhantomData,
         }
     }
 }
 
-impl<V1, V2> View for (V1, V2)
+impl<V1, V2, A> View<A> for (V1, V2)
 where
-    V1: View,
-    V2: View,
+    V1: View<A>,
+    V2: View<A>,
 {
     fn render(&self, mut out: impl Write) -> fmt::Result {
         self.0.render(&mut out)?;
@@ -99,9 +110,9 @@ where
     }
 }
 
-impl<V> View for HtmlTag<V>
+impl<V, A> View<A> for HtmlTag<V, A>
 where
-    V: View,
+    V: View<A>,
 {
     fn render(&self, mut out: impl Write) -> fmt::Result {
         write!(&mut out, "<{}>", self.tag)?;
@@ -111,26 +122,26 @@ where
     }
 }
 
-impl View for HtmlTagBuilder {
+impl<A> View<A> for HtmlTagBuilder<A> {
     fn render(&self, mut out: impl Write) -> fmt::Result {
         write!(out, "<{}/>", self.tag)
     }
 }
 
-impl<'a> View for &'a str {
+impl<'a, A> View<A> for &'a str {
     fn render(&self, mut out: impl Write) -> fmt::Result {
         out.write_str(self)?;
         Ok(())
     }
 }
 
-impl View for String {
+impl<A> View<A> for String {
     fn render(&self, out: impl Write) -> fmt::Result {
-        self.as_str().render(out)
+        View::<A>::render(&self.as_str(), out)
     }
 }
 
-pub fn div() -> HtmlTagBuilder {
+pub fn div<A>() -> HtmlTagBuilder<A> {
     HtmlTagBuilder {
         tag: "div",
         ..Default::default()
@@ -144,7 +155,7 @@ pub fn button<A>() -> HtmlTagBuilder<A> {
     }
 }
 
-pub fn render(view: impl View) -> Result<String, fmt::Error> {
+pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
     let mut result = String::new();
     view.render(&mut result)?;
     Ok(result)
@@ -166,7 +177,7 @@ mod tests {
     #[test]
     fn it_works() {
         let count = 42;
-        let view = (counter(count), div());
+        let view = (counter_component(count), div());
         let html = render(view).unwrap();
         assert_eq!(html, "<div>Count: 42</div><button>incr</button><div/>");
     }
