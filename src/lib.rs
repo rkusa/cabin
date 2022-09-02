@@ -1,52 +1,74 @@
+#![feature(type_alias_impl_trait)]
+
 use std::borrow::Cow;
 use std::fmt::{self, Write};
 
 use serde::Serialize;
 
-pub const fn create_component<S, V>(
+// pub trait Component {
+//     type State: Serialize;
+//     type Action: Serialize;
+//     type View: View;
+
+//     fn render(state: &Self::State) -> Self::View;
+//     fn dispatch(state: Self::State, action: Self::Action) -> Self::State;
+// }
+
+pub struct Component<S, V> {
     state: S,
-    component: impl Fn(&S) -> V,
-) -> impl Component<View = V>
-where
-    S: Serialize,
-    V: View,
-{
-    ComponentFn {
-        state,
-        component_fn: component,
+    view: fn(state: &S) -> V,
+}
+
+// result of #[component]
+mod _counter {
+    use super::*;
+    type ComponentView = impl crate::View;
+    pub type ComponentState = u32;
+    fn component(count: &ComponentState) -> ComponentView {
+        (
+            div().content(format!("Count: {}", *count)),
+            button(count)
+                // .on_click(|count| count + 1)
+                .content("incr"),
+        )
+    }
+    pub fn counter(count: ComponentState) -> Component<ComponentState, ComponentView> {
+        Component::new(count, component)
     }
 }
+pub use _counter::counter;
 
-pub trait Component {
-    type View: View;
-    fn render(&self) -> Self::View;
-}
-
-struct ComponentFn<S, V, F>
-where
-    S: Serialize,
-    V: View,
-    F: Fn(&S) -> V,
-{
-    state: S,
-    component_fn: F,
-}
-
-impl<S, V, F> Component for ComponentFn<S, V, F>
-where
-    S: Serialize,
-    V: View,
-    F: Fn(&S) -> V,
-{
-    type View = V;
-
-    fn render(&self) -> Self::View {
-        (self.component_fn)(&self.state)
+fn handle_component(id: &str, input: &str) {
+    match id {
+        "crate::counter" => {
+            let state: _counter::ComponentState = serde_json::from_str(input).unwrap();
+            let _component = _counter::counter(state);
+            // TODO: apply action
+            // TODO: rerender
+            // let _ = component.render(out)
+        }
+        _ => panic!("unknown component with id `{}`", id),
     }
 }
 
 pub trait View {
     fn render(&self, out: impl Write) -> fmt::Result;
+}
+
+impl<S, V> Component<S, V> {
+    fn new(state: S, view: fn(state: &S) -> V) -> Self {
+        Component { state, view }
+    }
+}
+
+impl<S, V> View for Component<S, V>
+where
+    S: Serialize,
+    V: View,
+{
+    fn render(&self, out: impl Write) -> fmt::Result {
+        (self.view)(&self.state).render(out)
+    }
 }
 
 pub struct HtmlTag<V> {
@@ -138,40 +160,6 @@ pub fn render(view: impl View) -> Result<String, fmt::Error> {
     Ok(result)
 }
 
-// #[derive(Default)]
-// struct Counter {
-//     count: u32,
-// }
-
-// impl Counter {
-//     fn new(count: u32) -> Self {
-//         Self { count }
-//     }
-// }
-
-// impl<S> View<S> for Counter {
-//     fn render(&self, state: &S, out: impl Write) -> fmt::Result {
-//         (
-//             format!("Count: {}", count),
-//             button()
-//                 .on_click(|| self.count + 1)
-//                 .content::<(), _>("incr"),
-//         )
-//             .render(state, out)
-//     }
-// }
-
-// #[component]
-fn counter(count: &u32) -> impl View {
-    // const counter: Box<dyn Component> = Box::new(create_component(0, |count: &u32| {
-    (
-        div().content(format!("Count: {}", *count)),
-        button(count)
-            // .on_click(|count| count + 1)
-            .content("incr"),
-    )
-}
-
 impl Default for HtmlTagBuilder {
     fn default() -> Self {
         Self {
@@ -187,10 +175,8 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let _component = create_component(0, counter);
-
         let count = 42;
-        let view = (counter(&count), div());
+        let view = (counter(count), div());
         let html = render(view).unwrap();
         assert_eq!(html, "<div>Count: 42</div><button>incr</button><div/>");
     }
