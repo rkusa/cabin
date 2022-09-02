@@ -33,5 +33,8 @@ fn test_counter() {
     let count = 42;
     let view = (counter_component(count), html::div());
     let html = render(view).unwrap();
-    assert_eq!(html, "<div>Count: 42</div><button>incr</button><div/>");
+    assert_eq!(
+        html,
+        "<server-component><div>Count: 42</div><button>incr</button></server-component><div/>"
+    );
 }

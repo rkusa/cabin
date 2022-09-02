@@ -1,11 +1,11 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-use rust_html_over_wire::{html, render, Action, Component, View};
+use rust_html_over_wire::{html, render, Action, Component, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
-use solarsail::hyper::StatusCode;
-use solarsail::route::get;
-use solarsail::{IntoResponse, Request, RequestExt, Response, SolarSail};
+use solarsail::hyper::{header, StatusCode};
+use solarsail::route::{get, post};
+use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
 
 #[tokio::main]
 async fn main() {
@@ -14,13 +14,28 @@ async fn main() {
     app.run(&addr).await.unwrap();
 }
 
-async fn handle_request(_state: (), req: Request) -> Response {
+async fn handle_request(_state: (), mut req: Request) -> Response {
     match req.route().as_tuple() {
         get!("health") => "Ok".into_response(),
+
+        get!("server-component.js") => http::Response::builder()
+            .header(header::CONTENT_TYPE, "text/javascript")
+            .body(SERVER_COMPONENT_JS.into())
+            .unwrap(),
 
         get!() => {
             let view = counter_component(0);
             let html = render(view).unwrap();
+            let html = format!(
+                r#"<script src="/server-component.js" async></script>{}"#,
+                html
+            );
+            html.into_response()
+        }
+
+        post!("dispatch" / component) => {
+            // TODO: remove to_string()
+            let html = handle_component(&component.to_string(), &mut req).await;
             html.into_response()
         }
 
@@ -52,19 +67,24 @@ pub fn counter(count: u32) -> impl View<CountAction> {
 
 // result of #[component]
 pub fn counter_component(count: u32) -> impl View<()> {
-    Component::new(count, counter)
+    Component::new("counter::counter", count, counter)
 }
 
 #[allow(unused)]
-fn handle_component(id: &str, state: &str, action: &str) {
+async fn handle_component(id: &str, req: &mut Request) -> String {
     match id {
-        "crate::counter" => {
-            let before: u32 = serde_json::from_str(state).unwrap();
-            let action: CountAction = serde_json::from_str(action).unwrap();
-            let after = action.apply(before);
-            let _component = counter(after);
-            // TODO: rerender
-            // let _ = component.render(out)
+        "counter::counter" => {
+            #[derive(Deserialize)]
+            struct Dispatch {
+                state: u32,
+                action: CountAction,
+            }
+            // TODO: unwrap
+            let payload: Dispatch = req.body_mut().json().await.unwrap();
+            let after = payload.action.apply(payload.state);
+            let component = counter_component(after);
+            let html = render(component).unwrap();
+            html
         }
         _ => panic!("unknown component with id `{}`", id),
     }

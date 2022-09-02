@@ -6,6 +6,7 @@ pub trait View<A = ()> {
 
 impl<'a, A> View<A> for &'a str {
     fn render(self, mut out: impl Write) -> fmt::Result {
+        // TODO: safe escape HTML
         out.write_str(self)?;
         Ok(())
     }

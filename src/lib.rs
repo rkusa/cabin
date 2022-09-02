@@ -9,6 +9,8 @@ mod component;
 pub mod html;
 mod view;
 
+pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
+
 pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
     let mut result = String::new();
     view.render(&mut result)?;
