@@ -6,22 +6,31 @@ class ServerComponent extends HTMLElement {
     const initial = JSON.parse(this.firstElementChild.textContent);
     this.state = initial.state;
     this.viewHash = initial.viewHash;
-    console.log(this.viewHash, JSON.stringify(this.viewHash));
+    // console.log(this.viewHash, JSON.stringify(this.viewHash));
     this.removeChild(this.firstElementChild);
 
     this.addEventListener("click", async (e) => {
       let node = e.target;
       do {
         if (node.dataset.click && !node.disabled) {
-          console.log("found", node);
+          // console.log("found", node);
           e.stopPropagation();
           e.preventDefault();
+
+          // TODO: abort on unmount
+          if (this.abortController) {
+            console.log("abort");
+            this.abortController.abort();
+          }
+          const abortController = (this.abortController =
+            new AbortController());
+          const signal = this.abortController.signal;
 
           node.disabled = true;
           try {
             // TODO: get component id from DOM
-            // TODO: abort on unmount
             const res = await fetch("/dispatch/counter::counter", {
+              signal,
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -30,6 +39,10 @@ class ServerComponent extends HTMLElement {
                 node.dataset.click
               }}`,
             });
+            if (signal.aborted) {
+              console.log("already aborted, ignoring");
+              return;
+            }
             const { state: newState, html, viewHash } = await res.json();
             this.state = newState;
             // TODO: check if still mounted
@@ -40,8 +53,17 @@ class ServerComponent extends HTMLElement {
               applyUpdate(this, template.content);
             }
             this.dataset.hash = hash;
+          } catch (err) {
+            if (err instanceof DOMException && err.name === "AbortError") {
+              // ignore
+            } else {
+              throw err;
+            }
           } finally {
             node.disabled = false;
+            if (this.abortController === abortController) {
+              this.abortController = undefined;
+            }
           }
 
           break;
@@ -50,28 +72,39 @@ class ServerComponent extends HTMLElement {
     });
 
     this.addEventListener("input", async (e) => {
-      console.log(e);
+      // console.log(e);
 
       const node = e.target;
       if (node.dataset.input) {
-        console.log("found", node);
+        // console.log("found", node);
         e.stopPropagation();
         // e.preventDefault()
 
         // TODO: handle missing
         const action = node.dataset.input.replace("_##InputValue", node.value);
 
+        // TODO: abort on unmount
+        if (this.abortController) {
+          console.log("abort");
+          this.abortController.abort();
+        }
+        const abortController = (this.abortController = new AbortController());
+        const signal = this.abortController.signal;
+
         try {
           // TODO: get component id from DOM
-          // TODO: abort on unmount
-          // TODO: keep sequence?
           const res = await fetch("/dispatch/input::input", {
+            signal,
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: `{"state":${JSON.stringify(this.state)},"action":${action}}`,
           });
+          if (signal.aborted) {
+            console.log("already aborted, ignoring");
+            return;
+          }
           const { state: newState, html, viewHash } = await res.json();
           this.state = newState;
           // TODO: check if still mounted
@@ -82,7 +115,16 @@ class ServerComponent extends HTMLElement {
             applyUpdate(this, template.content);
           }
           this.dataset.hash = hash;
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") {
+            // ignore
+          } else {
+            throw err;
+          }
         } finally {
+          if (this.abortController === abortController) {
+            this.abortController = undefined;
+          }
         }
       }
     });
@@ -92,7 +134,7 @@ class ServerComponent extends HTMLElement {
 customElements.define("server-component", ServerComponent);
 
 function applyUpdate(before, after) {
-  console.log("apply", after);
+  // console.log("apply", after);
   let i = 0;
   for (; i < after.childNodes.length; ++i) {
     const childBefore = before.childNodes[i];
@@ -113,27 +155,27 @@ function applyUpdate(before, after) {
 
     // type changed, replace completely
     if (childBefore.prototype !== childAfter.prototype) {
-      console.log("replace");
+      // console.log("replace");
       before.replaceChild(childAfter, childBefore);
       continue;
     }
 
     if (childAfter instanceof Text) {
       if (childAfter.textContent !== childBefore.textContent) {
-        console.log("update text");
+        // console.log("update text");
         childBefore.textContent = childAfter.textContent;
       } else {
-        console.log("text is unchanged");
+        // console.log("text is unchanged");
       }
       continue;
     }
 
     if (childBefore.dataset.hash == childAfter.dataset.hash) {
-      console.log("skip, unchanged", childBefore);
+      // console.log("skip, unchanged", childBefore);
       continue;
     }
 
-    console.log(childBefore, "vs", childAfter);
+    // console.log(childBefore, "vs", childAfter);
 
     // apply attribute changes
     const oldAttributeNames = new Set(childBefore.getAttributeNames());
