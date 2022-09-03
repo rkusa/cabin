@@ -1,5 +1,4 @@
 use std::fmt::{self, Write};
-use std::marker::PhantomData;
 
 use serde::Serialize;
 
@@ -20,10 +19,8 @@ pub fn button<A>() -> HtmlTagBuilder<A> {
 }
 
 pub struct HtmlTag<V, A> {
-    tag: &'static str,
-    on_click: Option<A>,
-    content: V,
-    action: PhantomData<A>,
+    builder: HtmlTagBuilder<A>,
+    content: Option<V>,
 }
 
 pub struct HtmlTagBuilder<A = ()> {
@@ -47,10 +44,8 @@ impl<A> HtmlTagBuilder<A> {
 
     pub fn content<V: View<A>>(self, content: V) -> HtmlTag<V, A> {
         HtmlTag {
-            tag: self.tag,
-            on_click: self.on_click,
-            content,
-            action: PhantomData,
+            builder: self,
+            content: Some(content),
         }
     }
 }
@@ -61,8 +56,8 @@ where
     A: Serialize,
 {
     fn render(self, mut out: impl Write) -> fmt::Result {
-        write!(&mut out, "<{}", self.tag)?;
-        if let Some(on_click) = self.on_click {
+        write!(&mut out, "<{}", self.builder.tag)?;
+        if let Some(on_click) = self.builder.on_click {
             // TODO: unwrap
             let action = serde_json::to_string(&on_click).unwrap();
             write!(
@@ -71,16 +66,27 @@ where
                 quick_xml::escape::escape(&action)
             )?;
         }
-        write!(&mut out, ">")?;
-        self.content.render(&mut out)?;
-        write!(&mut out, "</{}>", self.tag)?;
+        if let Some(content) = self.content {
+            write!(&mut out, ">")?;
+            content.render(&mut out)?;
+            write!(&mut out, "</{}>", self.builder.tag)?;
+        } else {
+            write!(&mut out, "/>")?;
+        }
         Ok(())
     }
 }
 
-impl<A> View<A> for HtmlTagBuilder<A> {
-    fn render(self, mut out: impl Write) -> fmt::Result {
-        write!(out, "<{}/>", self.tag)
+impl<A> View<A> for HtmlTagBuilder<A>
+where
+    A: Serialize,
+{
+    fn render(self, out: impl Write) -> fmt::Result {
+        HtmlTag {
+            builder: self,
+            content: None::<()>,
+        }
+        .render(out)
     }
 }
 

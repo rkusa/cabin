@@ -4,6 +4,12 @@ pub trait View<A = ()> {
     fn render(self, out: impl Write) -> fmt::Result;
 }
 
+impl<A> View<A> for () {
+    fn render(self, _out: impl Write) -> fmt::Result {
+        Ok(())
+    }
+}
+
 impl<'a, A> View<A> for &'a str {
     fn render(self, mut out: impl Write) -> fmt::Result {
         // TODO: safe escape HTML

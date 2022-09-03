@@ -59,7 +59,7 @@ impl Action<u32> for CountAction {
 pub fn counter(count: u32) -> impl View<CountAction> {
     (
         html::div().content(format!("Count: {}", count)),
-        html::button::<CountAction>()
+        html::button()
             .on_click(CountAction::Increment)
             .content("incr"),
     )

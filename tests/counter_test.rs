@@ -17,7 +17,7 @@ impl Action<u32> for CountAction {
 pub fn counter(count: u32) -> impl View<CountAction> {
     (
         html::div().content(format!("Count: {}", count)),
-        html::button::<CountAction>()
+        html::button()
             .on_click(CountAction::Increment)
             .content("incr"),
     )
@@ -25,7 +25,7 @@ pub fn counter(count: u32) -> impl View<CountAction> {
 
 // result of #[component]
 pub fn counter_component(count: u32) -> impl View<()> {
-    Component::new(count, counter)
+    Component::new("counter", count, counter)
 }
 
 #[test]
@@ -35,6 +35,8 @@ fn test_counter() {
     let html = render(view).unwrap();
     assert_eq!(
         html,
-        "<server-component><div>Count: 42</div><button>incr</button></server-component><div/>"
+        "<server-component><script type=\"application/json\">42</script>\
+        <div>Count: 42</div><button data-click=\"&quot;Increment&quot;\">\
+        incr</button></server-component><div/>"
     );
 }
