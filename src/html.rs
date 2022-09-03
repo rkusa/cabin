@@ -2,54 +2,54 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
-use std::ops::Deref;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use twox_hash::XxHash32;
 
+use crate::action::EventAction;
 use crate::view::{View, ViewHash};
+use crate::Action;
 
-pub fn div<A>() -> HtmlTagBuilder<A> {
+pub fn div<S>() -> HtmlTagBuilder<S> {
     HtmlTagBuilder {
         tag: "div",
         ..Default::default()
     }
 }
 
-pub fn button<A>() -> HtmlTagBuilder<A> {
+pub fn button<S>() -> HtmlTagBuilder<S> {
     HtmlTagBuilder {
         tag: "button",
         ..Default::default()
     }
 }
 
-pub fn custom<A>(tag: &'static str) -> HtmlTagBuilder<A> {
+pub fn custom<S>(tag: &'static str) -> HtmlTagBuilder<S> {
     HtmlTagBuilder {
         tag,
         ..Default::default()
     }
 }
 
-pub struct HtmlTag<V, A> {
-    builder: HtmlTagBuilder<A>,
+pub struct HtmlTag<V, S> {
+    builder: HtmlTagBuilder<S>,
     content: V,
 }
 
-pub struct HtmlTagBuilder<A = ()> {
+pub struct HtmlTagBuilder<S = ()> {
     tag: &'static str,
     attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
-    on_click: Option<A>,
-    on_input: Option<A>,
+    on_click: Option<Action<S>>,
+    on_input: Option<EventAction<S, InputEvent>>,
 }
 
+#[derive(Deserialize)]
 #[non_exhaustive]
 pub struct InputEvent {
-    pub value: InputValue,
+    pub value: String,
 }
 
-pub struct InputValue(Cow<'static, str>);
-
-impl<A> HtmlTagBuilder<A> {
+impl<S> HtmlTagBuilder<S> {
     pub(crate) fn new(tag: &'static str) -> Self {
         HtmlTagBuilder {
             tag,
@@ -66,20 +66,18 @@ impl<A> HtmlTagBuilder<A> {
     }
 
     // TODO: not available for all tags (e.g. only for buttons)
-    pub fn on_click(mut self, action: A) -> HtmlTagBuilder<A> {
+    pub fn on_click(mut self, action: Action<S>) -> HtmlTagBuilder<S> {
         self.on_click = Some(action);
         self
     }
 
     // TODO: not available for all tags (e.g. only for inputs)
-    pub fn on_input(mut self, action: impl FnOnce(InputEvent) -> A) -> HtmlTagBuilder<A> {
-        self.on_input = Some(action(InputEvent {
-            value: InputValue("".into()),
-        }));
+    pub fn on_input(mut self, action: EventAction<S, InputEvent>) -> HtmlTagBuilder<S> {
+        self.on_input = Some(action);
         self
     }
 
-    pub fn content<V: View<A>>(self, content: V) -> HtmlTag<V, A> {
+    pub fn content<V: View<S>>(self, content: V) -> HtmlTag<V, S> {
         HtmlTag {
             builder: self,
             content,
@@ -87,10 +85,9 @@ impl<A> HtmlTagBuilder<A> {
     }
 }
 
-impl<V, A> View<A> for HtmlTag<V, A>
+impl<V, S> View<S> for HtmlTag<V, S>
 where
-    V: View<A>,
-    A: Serialize,
+    V: View<S>,
 {
     fn render(mut self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
         let mut hasher = XxHash32::default();
@@ -100,7 +97,7 @@ where
 
         if let Some(on_click) = self.builder.on_click.take() {
             // TODO: unwrap
-            let action = serde_json::to_string(&on_click).unwrap();
+            let action = on_click.id;
             hasher.write(b"on_click");
             hasher.write(action.as_bytes());
             self.builder = self.builder.attr("data-click", action);
@@ -108,7 +105,7 @@ where
 
         if let Some(on_input) = self.builder.on_input.take() {
             // TODO: unwrap
-            let action = serde_json::to_string(&on_input).unwrap();
+            let action = on_input.id;
             hasher.write(b"on_input");
             hasher.write(action.as_bytes());
             self.builder = self.builder.attr("data-input", action);
@@ -148,10 +145,7 @@ where
     }
 }
 
-impl<A> View<A> for HtmlTagBuilder<A>
-where
-    A: Serialize,
-{
+impl<S> View<S> for HtmlTagBuilder<S> {
     fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
         HtmlTag {
             builder: self,
@@ -161,7 +155,7 @@ where
     }
 }
 
-impl<A> Default for HtmlTagBuilder<A> {
+impl<S> Default for HtmlTagBuilder<S> {
     fn default() -> Self {
         Self {
             tag: "div",
@@ -169,39 +163,6 @@ impl<A> Default for HtmlTagBuilder<A> {
             on_click: None,
             on_input: None,
         }
-    }
-}
-
-impl Serialize for InputValue {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str("_##InputValue")
-    }
-}
-
-impl<'de> Deserialize<'de> for InputValue {
-    fn deserialize<D>(deserializer: D) -> Result<InputValue, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let value: Cow<'static, str> = Deserialize::deserialize(deserializer)?;
-        Ok(InputValue(value))
-    }
-}
-
-impl InputValue {
-    pub fn take(self) -> Cow<'static, str> {
-        self.0
-    }
-}
-
-impl Deref for InputValue {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 

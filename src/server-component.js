@@ -35,9 +35,9 @@ class ServerComponent extends HTMLElement {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: `{"state":${JSON.stringify(this.state)},"action":${
-                node.dataset.click
-              }}`,
+              body: `{"state":${JSON.stringify(
+                this.state
+              )},"action":${JSON.stringify(node.dataset.click)}}`,
             });
             if (signal.aborted) {
               console.log("already aborted, ignoring");
@@ -80,9 +80,6 @@ class ServerComponent extends HTMLElement {
         e.stopPropagation();
         // e.preventDefault()
 
-        // TODO: handle missing
-        const action = node.dataset.input.replace("_##InputValue", node.value);
-
         // TODO: abort on unmount
         if (this.abortController) {
           console.log("abort");
@@ -99,7 +96,11 @@ class ServerComponent extends HTMLElement {
             headers: {
               "Content-Type": "application/json",
             },
-            body: `{"state":${JSON.stringify(this.state)},"action":${action}}`,
+            body: `{"state":${JSON.stringify(
+              this.state
+            )},"action":${JSON.stringify(
+              node.dataset.input
+            )},"event":{"value":${JSON.stringify(node.value)}}}`,
           });
           if (signal.aborted) {
             console.log("already aborted, ignoring");

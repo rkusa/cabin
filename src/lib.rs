@@ -1,10 +1,10 @@
 use std::fmt;
 
-pub use action::Action;
+use action::Action;
 pub use component::Component;
 pub use view::View;
 
-mod action;
+pub mod action;
 mod component;
 pub mod html;
 pub mod view;

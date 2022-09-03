@@ -9,7 +9,7 @@ use twox_hash::XxHash32;
 pub use self::hash::ViewHash;
 pub use self::raw::raw;
 
-pub trait View<A = ()> {
+pub trait View<S = ()> {
     fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error>;
 }
 

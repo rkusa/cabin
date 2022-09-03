@@ -1,8 +1,9 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
 
+use rust_html_over_wire::action::Action;
 use rust_html_over_wire::view::ViewHash;
-use rust_html_over_wire::{html, render, Action, Component, View, SERVER_COMPONENT_JS};
+use rust_html_over_wire::{html, render, Component, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use solarsail::hyper::{header, StatusCode};
@@ -38,6 +39,7 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
 
         post!("dispatch" / component) => {
             // TODO: remove to_string()
+            #[allow(clippy::unnecessary_to_owned)]
             let update = handle_component(&component.to_string(), &mut req).await;
             json(update).into_response()
         }
@@ -46,30 +48,28 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum CountAction {
-    Increment,
+// #[action]
+fn increment_counter(count: u32) -> u32 {
+    count + 1
 }
 
-impl Action<u32> for CountAction {
-    fn apply(self, state: u32) -> u32 {
-        match self {
-            CountAction::Increment => state + 1,
-        }
-    }
-}
-
-pub fn counter(count: u32) -> impl View<CountAction> {
+// #[component::server]
+fn counter(count: u32) -> impl View<u32> {
     (
         html::div().content(format!("Count: {}", count)),
         html::button()
-            .on_click(CountAction::Increment)
+            .on_click(increment_counter_action)
             .content("incr"),
     )
 }
 
+// result of #[action]
+#[allow(non_upper_case_globals)]
+const increment_counter_action: Action<u32> =
+    Action::new("counter::increment_counter", increment_counter);
+
 // result of #[component]
-pub fn counter_component(count: u32) -> Component<u32, impl View<CountAction>, CountAction> {
+pub fn counter_component(count: u32) -> Component<u32, impl View<u32>> {
     Component::new("counter::counter", count, counter)
 }
 
@@ -81,6 +81,13 @@ struct Update {
     html: String,
 }
 
+fn handle_u32_action(state: u32, action: &str) -> u32 {
+    match action {
+        "counter::increment_counter" => (increment_counter_action.action)(state),
+        _ => panic!("unknown u32 action with id: {}", action),
+    }
+}
+
 #[allow(unused)]
 async fn handle_component(id: &str, req: &mut Request) -> Update {
     match id {
@@ -88,11 +95,11 @@ async fn handle_component(id: &str, req: &mut Request) -> Update {
             #[derive(Deserialize)]
             struct Dispatch {
                 state: u32,
-                action: CountAction,
+                action: String,
             }
             // TODO: unwrap
             let payload: Dispatch = req.body_mut().json().await.unwrap();
-            let after = payload.action.apply(payload.state);
+            let after = handle_u32_action(payload.state, &payload.action);
             let state = serde_json::value::to_raw_value(&after).unwrap();
             let component = counter_component(after);
             let (html, view_hash) = component.render_update().unwrap();

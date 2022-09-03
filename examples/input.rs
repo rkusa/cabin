@@ -2,9 +2,10 @@ use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-use rust_html_over_wire::html::InputValue;
+use rust_html_over_wire::action::EventAction;
+use rust_html_over_wire::html::InputEvent;
 use rust_html_over_wire::view::ViewHash;
-use rust_html_over_wire::{html, render, Action, Component, View, SERVER_COMPONENT_JS};
+use rust_html_over_wire::{html, render, Component, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use solarsail::hyper::{header, StatusCode};
@@ -40,6 +41,7 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
 
         post!("dispatch" / component) => {
             // TODO: remove to_string()
+            #[allow(clippy::unnecessary_to_owned)]
             let update = handle_component(&component.to_string(), &mut req).await;
             json(update).into_response()
         }
@@ -48,32 +50,29 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum InputAction {
-    SetValue(InputValue),
+// #[action::event]
+fn handle_input(_state: Cow<'static, str>, ev: InputEvent) -> Cow<'static, str> {
+    ev.value.into()
 }
 
-impl Action<Cow<'static, str>> for InputAction {
-    fn apply(self, _state: Cow<'static, str>) -> Cow<'static, str> {
-        match self {
-            InputAction::SetValue(new_value) => new_value.take(),
-        }
-    }
-}
-
-pub fn input(value: Cow<'static, str>) -> impl View<InputAction> {
+pub fn input(value: Cow<'static, str>) -> impl View<Cow<'static, str>> {
     (
         html::div().content(format!("Value: {}", value)),
         html::custom("input")
             .attr("value", value)
-            .on_input(|e| InputAction::SetValue(e.value)),
+            .on_input(handle_input_action),
     )
 }
+
+// result of #[action]
+#[allow(non_upper_case_globals)]
+const handle_input_action: EventAction<Cow<'static, str>, InputEvent> =
+    EventAction::new("input::handle_input", handle_input);
 
 // result of #[component]
 pub fn input_component(
     value: Cow<'static, str>,
-) -> Component<Cow<'static, str>, impl View<InputAction>, InputAction> {
+) -> Component<Cow<'static, str>, impl View<Cow<'static, str>>> {
     Component::new("input::input", value, input)
 }
 
@@ -85,6 +84,17 @@ struct Update {
     html: String,
 }
 
+fn handle_cow_str_input_action(
+    state: Cow<'static, str>,
+    action: &str,
+    event: InputEvent,
+) -> Cow<'static, str> {
+    match action {
+        "input::handle_input" => (handle_input_action.action)(state, event),
+        _ => panic!("unknown u32 action with id: {}", action),
+    }
+}
+
 #[allow(unused)]
 async fn handle_component(id: &str, req: &mut Request) -> Update {
     match id {
@@ -92,11 +102,12 @@ async fn handle_component(id: &str, req: &mut Request) -> Update {
             #[derive(Deserialize)]
             struct Dispatch {
                 state: Cow<'static, str>,
-                action: InputAction,
+                action: String,
+                event: InputEvent,
             }
             // TODO: unwrap
             let payload: Dispatch = req.body_mut().json().await.unwrap();
-            let after = payload.action.apply(payload.state);
+            let after = handle_cow_str_input_action(payload.state, &payload.action, payload.event);
             let state = serde_json::value::to_raw_value(&after).unwrap();
             let component = input_component(after);
             let (html, view_hash) = component.render_update().unwrap();
