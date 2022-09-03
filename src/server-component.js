@@ -179,7 +179,7 @@ function applyUpdate(before, after) {
 
     // apply attribute changes
     const oldAttributeNames = new Set(childBefore.getAttributeNames());
-    for (const name in childAfter.getAttributeNames()) {
+    for (const name of childAfter.getAttributeNames()) {
       oldAttributeNames.delete(name);
 
       const newValue = childAfter.getAttribute(name);
