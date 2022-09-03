@@ -3,7 +3,9 @@ use std::str::FromStr;
 
 use rust_html_over_wire::{html, render, Action, Component, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
+use serde_json::value::RawValue;
 use solarsail::hyper::{header, StatusCode};
+use solarsail::response::json;
 use solarsail::route::{get, post};
 use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
 
@@ -35,8 +37,8 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
 
         post!("dispatch" / component) => {
             // TODO: remove to_string()
-            let html = handle_component(&component.to_string(), &mut req).await;
-            html.into_response()
+            let (state, html) = handle_component(&component.to_string(), &mut req).await;
+            json((state, html)).into_response()
         }
 
         _ => StatusCode::NOT_FOUND.into_response(),
@@ -66,12 +68,12 @@ pub fn counter(count: u32) -> impl View<CountAction> {
 }
 
 // result of #[component]
-pub fn counter_component(count: u32) -> impl View<()> {
+pub fn counter_component(count: u32) -> Component<u32, impl View<CountAction>, CountAction> {
     Component::new("counter::counter", count, counter)
 }
 
 #[allow(unused)]
-async fn handle_component(id: &str, req: &mut Request) -> String {
+async fn handle_component(id: &str, req: &mut Request) -> (Box<RawValue>, String) {
     match id {
         "counter::counter" => {
             #[derive(Deserialize)]
@@ -82,9 +84,10 @@ async fn handle_component(id: &str, req: &mut Request) -> String {
             // TODO: unwrap
             let payload: Dispatch = req.body_mut().json().await.unwrap();
             let after = payload.action.apply(payload.state);
+            let state = serde_json::value::to_raw_value(&after).unwrap();
             let component = counter_component(after);
-            let html = render(component).unwrap();
-            html
+            let html = component.render_update().unwrap();
+            (state, html)
         }
         _ => panic!("unknown component with id `{}`", id),
     }

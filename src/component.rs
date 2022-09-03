@@ -24,6 +24,13 @@ impl<S, V: View<A>, A> Component<S, V, A> {
             action: PhantomData,
         }
     }
+
+    pub fn render_update(self) -> Result<String, fmt::Error> {
+        let mut result = String::new();
+        let view = (self.render)(self.state);
+        view.render(&mut result)?;
+        Ok(result)
+    }
 }
 
 impl<S: Serialize, V: View<A>, A: Serialize> View<()> for Component<S, V, A> {

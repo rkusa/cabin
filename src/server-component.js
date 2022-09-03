@@ -2,6 +2,12 @@ class ServerComponent extends HTMLElement {
   constructor() {
     super();
     
+    
+    
+    // TODO: handle missing
+    this.state = JSON.parse(this.firstElementChild.textContent)
+    this.removeChild(this.firstElementChild)
+    
     this.addEventListener('click', async (e) => {
       let node = e.target
       do {
@@ -9,9 +15,6 @@ class ServerComponent extends HTMLElement {
           console.log("found", node)
           e.stopPropagation()
           e.preventDefault()
-          
-          // TODO: handle missing
-          const state = this.firstElementChild.textContent
           
           node.disabled = true;
           try {
@@ -22,9 +25,10 @@ class ServerComponent extends HTMLElement {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: `{"state":${state},"action":${node.dataset.click}}`
+              body: `{"state":${JSON.stringify(this.state)},"action":${node.dataset.click}}`
             })
-            const html = await res.text()
+            const [newState, html] = await res.json()
+            this.state = newState
             // TODO: check if still mounted
             // TODO: apply diff instead of replace
             this.innerHTML = html
@@ -47,7 +51,6 @@ class ServerComponent extends HTMLElement {
         // e.preventDefault()
         
         // TODO: handle missing
-        const state = this.firstElementChild.textContent
         const action = node.dataset.input.replace("_##InputValue", node.value)
         
         try {
@@ -59,9 +62,10 @@ class ServerComponent extends HTMLElement {
             headers: {
               "Content-Type": "application/json",
             },
-            body: `{"state":${state},"action":${action}}`
+            body: `{"state":${JSON.stringify(this.state)},"action":${action}}`
           })
-          const html = await res.text()
+          const [newState, html] = await res.json()
+          this.state = newState
           // TODO: check if still mounted
           // TODO: apply diff instead of replace
           this.innerHTML = html
