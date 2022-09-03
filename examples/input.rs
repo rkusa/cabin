@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use rust_html_over_wire::html::InputValue;
+use rust_html_over_wire::view::ViewHash;
 use rust_html_over_wire::{html, render, Action, Component, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
@@ -39,8 +40,8 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
 
         post!("dispatch" / component) => {
             // TODO: remove to_string()
-            let (state, html) = handle_component(&component.to_string(), &mut req).await;
-            json((state, html)).into_response()
+            let update = handle_component(&component.to_string(), &mut req).await;
+            json(update).into_response()
         }
 
         _ => StatusCode::NOT_FOUND.into_response(),
@@ -76,8 +77,16 @@ pub fn input_component(
     Component::new("input::input", value, input)
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Update {
+    state: Box<RawValue>,
+    view_hash: ViewHash,
+    html: String,
+}
+
 #[allow(unused)]
-async fn handle_component(id: &str, req: &mut Request) -> (Box<RawValue>, String) {
+async fn handle_component(id: &str, req: &mut Request) -> Update {
     match id {
         "input::input" => {
             #[derive(Deserialize)]
@@ -90,8 +99,12 @@ async fn handle_component(id: &str, req: &mut Request) -> (Box<RawValue>, String
             let after = payload.action.apply(payload.state);
             let state = serde_json::value::to_raw_value(&after).unwrap();
             let component = input_component(after);
-            let html = component.render_update().unwrap();
-            (state, html)
+            let (html, view_hash) = component.render_update().unwrap();
+            Update {
+                state,
+                view_hash,
+                html,
+            }
         }
         _ => panic!("unknown component with id `{}`", id),
     }

@@ -1,11 +1,13 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Write};
+use std::hash::Hasher;
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
+use twox_hash::XxHash32;
 
-use crate::view::View;
+use crate::view::{View, ViewHash};
 
 pub fn div<A>() -> HtmlTagBuilder<A> {
     HtmlTagBuilder {
@@ -90,23 +92,33 @@ where
     V: View<A>,
     A: Serialize,
 {
-    fn render(mut self, mut out: impl Write) -> fmt::Result {
+    fn render(mut self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
+        let mut hasher = XxHash32::default();
+        hasher.write(self.builder.tag.as_bytes());
+
         write!(&mut out, "<{}", self.builder.tag)?;
 
         if let Some(on_click) = self.builder.on_click.take() {
             // TODO: unwrap
             let action = serde_json::to_string(&on_click).unwrap();
+            hasher.write(b"on_click");
+            hasher.write(action.as_bytes());
             self.builder = self.builder.attr("data-click", action);
         }
 
         if let Some(on_input) = self.builder.on_input.take() {
             // TODO: unwrap
             let action = serde_json::to_string(&on_input).unwrap();
+            hasher.write(b"on_input");
+            hasher.write(action.as_bytes());
             self.builder = self.builder.attr("data-input", action);
         }
 
         if let Some(attrs) = self.builder.attrs {
             for (name, value) in attrs {
+                hasher.write(name.as_bytes());
+                hasher.write(value.as_bytes());
+
                 write!(
                     &mut out,
                     r#" {}="{}""#,
@@ -117,16 +129,30 @@ where
         }
 
         if let Some(content) = self.content {
-            write!(&mut out, ">")?;
-            content.render(&mut out)?;
-            write!(&mut out, "</{}>", self.builder.tag)?;
-        } else if !matches!(self.builder.tag, "script") {
-            write!(&mut out, "/>")?;
-        } else {
-            write!(&mut out, "></{}>", self.builder.tag)?;
+            let mut inner = String::new();
+            let child_hash = content.render(&mut inner)?;
+            hasher.write_u32(child_hash.hash());
+
+            let hash = hasher.finish() as u32;
+
+            write!(
+                &mut out,
+                " data-hash=\"{}\">{}</{}>",
+                hash, inner, self.builder.tag
+            )?;
+            return Ok(child_hash.into_parent(hash));
         }
 
-        Ok(())
+        let hash = hasher.finish() as u32;
+        write!(&mut out, r#" data-hash="{}""#, hash)?;
+
+        if matches!(self.builder.tag, "input") {
+            write!(&mut out, "/>")?;
+            Ok(ViewHash::Leaf(hash))
+        } else {
+            write!(&mut out, "></{}>", self.builder.tag)?;
+            Ok(ViewHash::Leaf(hash))
+        }
     }
 }
 
@@ -134,7 +160,7 @@ impl<A> View<A> for HtmlTagBuilder<A>
 where
     A: Serialize,
 {
-    fn render(self, out: impl Write) -> fmt::Result {
+    fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
         HtmlTag {
             builder: self,
             content: None::<()>,

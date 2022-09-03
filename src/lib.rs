@@ -7,7 +7,7 @@ pub use view::View;
 mod action;
 mod component;
 pub mod html;
-mod view;
+pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
