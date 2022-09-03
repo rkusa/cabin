@@ -32,7 +32,7 @@ pub fn custom<A>(tag: &'static str) -> HtmlTagBuilder<A> {
 
 pub struct HtmlTag<V, A> {
     builder: HtmlTagBuilder<A>,
-    content: Option<V>,
+    content: V,
 }
 
 pub struct HtmlTagBuilder<A = ()> {
@@ -82,7 +82,7 @@ impl<A> HtmlTagBuilder<A> {
     pub fn content<V: View<A>>(self, content: V) -> HtmlTag<V, A> {
         HtmlTag {
             builder: self,
-            content: Some(content),
+            content,
         }
     }
 }
@@ -128,25 +128,17 @@ where
             }
         }
 
-        if let Some(content) = self.content {
-            let mut inner = String::new();
-            let child_hash = content.render(&mut inner)?;
-            hasher.write_u32(child_hash.hash());
-
-            let hash = hasher.finish() as u32;
-
-            write!(
-                &mut out,
-                " data-hash=\"{}\">{}</{}>",
-                hash, inner, self.builder.tag
-            )?;
-            return Ok(child_hash.into_parent(hash));
-        }
+        let mut inner = String::new();
+        let child_hash = self.content.render(&mut inner)?;
+        hasher.write_u32(child_hash.hash());
 
         let hash = hasher.finish() as u32;
         write!(&mut out, r#" data-hash="{}""#, hash)?;
 
-        if matches!(self.builder.tag, "input") {
+        if !inner.is_empty() {
+            write!(&mut out, ">{}</{}>", inner, self.builder.tag)?;
+            Ok(child_hash.into_parent(hash))
+        } else if matches!(self.builder.tag, "input") {
             write!(&mut out, "/>")?;
             Ok(ViewHash::Leaf(hash))
         } else {
@@ -163,7 +155,7 @@ where
     fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
         HtmlTag {
             builder: self,
-            content: None::<()>,
+            content: (),
         }
         .render(out)
     }
