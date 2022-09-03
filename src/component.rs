@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use serde::Serialize;
 
-use crate::html::HtmlTagBuilder;
+use crate::html::{self, HtmlTagBuilder};
 use crate::View;
 
 // The conversion from View<A> to View<()> is the feature
@@ -32,7 +32,9 @@ impl<S: Serialize, V: View<A>, A: Serialize> View<()> for Component<S, V, A> {
         let state = serde_json::to_string(&self.state).unwrap();
         let view = (self.render)(self.state);
         let view = HtmlTagBuilder::new("server-component").content((
-            format!(r#"<script type="application/json">{}</script>"#, state),
+            html::custom("script")
+                .attr("type", "application/json")
+                .content(state),
             view,
         ));
         view.render(out)
