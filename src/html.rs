@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Write};
+use std::ops::Deref;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::view::View;
 
@@ -36,7 +37,15 @@ pub struct HtmlTagBuilder<A = ()> {
     tag: &'static str,
     attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
     on_click: Option<A>,
+    on_input: Option<A>,
 }
+
+#[non_exhaustive]
+pub struct InputEvent {
+    pub value: InputValue,
+}
+
+pub struct InputValue(Cow<'static, str>);
 
 impl<A> HtmlTagBuilder<A> {
     pub(crate) fn new(tag: &'static str) -> Self {
@@ -60,6 +69,14 @@ impl<A> HtmlTagBuilder<A> {
         self
     }
 
+    // TODO: not available for all tags (e.g. only for inputs)
+    pub fn on_input(mut self, action: impl FnOnce(InputEvent) -> A) -> HtmlTagBuilder<A> {
+        self.on_input = Some(action(InputEvent {
+            value: InputValue("".into()),
+        }));
+        self
+    }
+
     pub fn content<V: View<A>>(self, content: V) -> HtmlTag<V, A> {
         HtmlTag {
             builder: self,
@@ -75,10 +92,17 @@ where
 {
     fn render(mut self, mut out: impl Write) -> fmt::Result {
         write!(&mut out, "<{}", self.builder.tag)?;
+
         if let Some(on_click) = self.builder.on_click.take() {
             // TODO: unwrap
             let action = serde_json::to_string(&on_click).unwrap();
             self.builder = self.builder.attr("data-click", action);
+        }
+
+        if let Some(on_input) = self.builder.on_input.take() {
+            // TODO: unwrap
+            let action = serde_json::to_string(&on_input).unwrap();
+            self.builder = self.builder.attr("data-input", action);
         }
 
         if let Some(attrs) = self.builder.attrs {
@@ -125,7 +149,41 @@ impl<A> Default for HtmlTagBuilder<A> {
             tag: "div",
             attrs: None,
             on_click: None,
+            on_input: None,
         }
+    }
+}
+
+impl Serialize for InputValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str("_##InputValue")
+    }
+}
+
+impl<'de> Deserialize<'de> for InputValue {
+    fn deserialize<D>(deserializer: D) -> Result<InputValue, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value: Cow<'static, str> = Deserialize::deserialize(deserializer)?;
+        Ok(InputValue(value))
+    }
+}
+
+impl InputValue {
+    pub fn take(self) -> Cow<'static, str> {
+        self.0
+    }
+}
+
+impl Deref for InputValue {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
