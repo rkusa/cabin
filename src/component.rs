@@ -1,3 +1,5 @@
+pub mod registry;
+
 use std::fmt::{self, Write};
 
 use serde::Serialize;
@@ -9,14 +11,20 @@ use crate::View;
 // The conversion from View<A> to View<()> is the feature
 // that ensures the usage of #[component]
 pub struct Component<S, V: View<S>> {
-    id: &'static str,
+    module: &'static str,
+    name: &'static str,
     state: S,
     render: fn(S) -> V,
 }
 
 impl<S, V: View<S>> Component<S, V> {
-    pub fn new(id: &'static str, state: S, render: fn(S) -> V) -> Self {
-        Component { id, state, render }
+    pub fn new(module: &'static str, name: &'static str, state: S, render: fn(S) -> V) -> Self {
+        Component {
+            module,
+            name,
+            state,
+            render,
+        }
     }
 
     pub fn render_update(self) -> Result<(String, ViewHash), fmt::Error> {
@@ -50,7 +58,11 @@ impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
         };
         let state = serde_json::to_string(&initial).unwrap();
 
-        write!(out, r#"<server-component data-hash="{}">"#, hash)?;
+        write!(
+            out,
+            r#"<server-component data-id="{}::{}" data-hash="{}">"#,
+            self.module, self.name, hash
+        )?;
         write!(out, r#"<script type="application/json">{}</script>"#, state)?;
         write!(out, r#"{}</server-component>"#, inner)?;
 

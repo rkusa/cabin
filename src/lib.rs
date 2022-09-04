@@ -2,11 +2,11 @@ use std::fmt;
 
 use action::Action;
 pub use component::Component;
-pub use crabweb_macros::component;
+pub use crabweb_macros::{action, component, event};
 pub use view::View;
 
 pub mod action;
-mod component;
+pub mod component;
 pub mod html;
 pub mod view;
 

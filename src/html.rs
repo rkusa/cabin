@@ -50,13 +50,6 @@ pub struct InputEvent {
 }
 
 impl<S> HtmlTagBuilder<S> {
-    pub(crate) fn new(tag: &'static str) -> Self {
-        HtmlTagBuilder {
-            tag,
-            ..Default::default()
-        }
-    }
-
     pub fn attr(mut self, name: &'static str, value: impl Into<Cow<'static, str>>) -> Self {
         let value = value.into();
         let mut attrs = self.attrs.take().unwrap_or_default();
@@ -96,16 +89,16 @@ where
         write!(&mut out, "<{}", self.builder.tag)?;
 
         if let Some(on_click) = self.builder.on_click.take() {
-            // TODO: unwrap
-            let action = on_click.id;
+            // TODO: avoid allocation
+            let action = format!("{}::{}", on_click.module, on_click.name);
             hasher.write(b"on_click");
             hasher.write(action.as_bytes());
             self.builder = self.builder.attr("data-click", action);
         }
 
         if let Some(on_input) = self.builder.on_input.take() {
-            // TODO: unwrap
-            let action = on_input.id;
+            // TODO: avoid allocation
+            let action = format!("{}::{}", on_input.module, on_input.name);
             hasher.write(b"on_input");
             hasher.write(action.as_bytes());
             self.builder = self.builder.attr("data-input", action);

@@ -29,15 +29,15 @@ class ServerComponent extends HTMLElement {
           node.disabled = true;
           try {
             // TODO: get component id from DOM
-            const res = await fetch("/dispatch/counter::counter", {
+            const res = await fetch(`/dispatch/${this.dataset.id}/${node.dataset.click}`, {
               signal,
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: `{"state":${JSON.stringify(
+              body: JSON.stringify(
                 this.state
-              )},"action":${JSON.stringify(node.dataset.click)}}`,
+              ),
             });
             if (signal.aborted) {
               console.log("already aborted, ignoring");
@@ -90,7 +90,7 @@ class ServerComponent extends HTMLElement {
 
         try {
           // TODO: get component id from DOM
-          const res = await fetch("/dispatch/input::input", {
+          const res = await fetch(`/dispatch/${this.dataset.id}/${node.dataset.input}/input`, {
             signal,
             method: "POST",
             headers: {
@@ -98,8 +98,6 @@ class ServerComponent extends HTMLElement {
             },
             body: `{"state":${JSON.stringify(
               this.state
-            )},"action":${JSON.stringify(
-              node.dataset.input
             )},"event":{"value":${JSON.stringify(node.value)}}}`,
           });
           if (signal.aborted) {

@@ -1,26 +1,27 @@
 use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::str::FromStr;
+use std::sync::Arc;
 
-use rust_html_over_wire::action::EventAction;
+use rust_html_over_wire::component::registry::ComponentRegistry;
 use rust_html_over_wire::html::InputEvent;
-use rust_html_over_wire::view::ViewHash;
-use rust_html_over_wire::{component, html, render, View, SERVER_COMPONENT_JS};
-use serde::{Deserialize, Serialize};
-use serde_json::value::RawValue;
-use solarsail::hyper::{header, StatusCode};
+use rust_html_over_wire::{component, event, html, render, View, SERVER_COMPONENT_JS};
+use solarsail::hyper::body::Buf;
+use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;
 use solarsail::route::{get, post};
 use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
 
 #[tokio::main]
 async fn main() {
+    let registry = ComponentRegistry::default();
+
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
-    let app = SolarSail::new((), handle_request);
+    let app = SolarSail::new(Arc::new(registry), handle_request);
     app.run(&addr).await.unwrap();
 }
 
-async fn handle_request(_state: (), mut req: Request) -> Response {
+async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> Response {
     match req.route().as_tuple() {
         get!("health") => "Ok".into_response(),
 
@@ -39,10 +40,26 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
             html.into_response()
         }
 
-        post!("dispatch" / component) => {
-            // TODO: remove to_string()
-            #[allow(clippy::unnecessary_to_owned)]
-            let update = handle_component(&component.to_string(), &mut req).await;
+        post!("dispatch" / component / action / "input") => {
+            // TODO: get rid of to_string()
+            let id = component.to_string();
+            let action = action.to_string();
+
+            // TODO: unwrap()
+            let (body, _mime_type) = req.body_mut().take().unwrap();
+            // TODO: test mime type
+            // if let Some(mime_type) = mime_type {
+            //     if mime_type != mime::APPLICATION_JSON {
+            //         return Err(BodyError::WrongContentType("application/json"));
+            //     }
+            // }
+
+            let whole_body = hyper::body::aggregate(body).await.unwrap();
+            let rd = whole_body.reader();
+
+            let update = registry
+                .handle_event(&id, rd, &action, "input")
+                .expect("known component");
             json(update).into_response()
         }
 
@@ -50,7 +67,7 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
     }
 }
 
-// #[action::event]
+#[event]
 fn handle_input(_state: Cow<'static, str>, ev: InputEvent) -> Cow<'static, str> {
     ev.value.into()
 }
@@ -61,56 +78,6 @@ pub fn input(value: Cow<'static, str>) -> impl View<Cow<'static, str>> {
         html::div().content(format!("Value: {}", value)),
         html::custom("input")
             .attr("value", value)
-            .on_input(handle_input_action),
+            .on_input(handle_input),
     )
-}
-
-// result of #[action]
-#[allow(non_upper_case_globals)]
-const handle_input_action: EventAction<Cow<'static, str>, InputEvent> =
-    EventAction::new("input::handle_input", handle_input);
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Update {
-    state: Box<RawValue>,
-    view_hash: ViewHash,
-    html: String,
-}
-
-fn handle_cow_str_input_action(
-    state: Cow<'static, str>,
-    action: &str,
-    event: InputEvent,
-) -> Cow<'static, str> {
-    match action {
-        "input::handle_input" => (handle_input_action.action)(state, event),
-        _ => panic!("unknown u32 action with id: {}", action),
-    }
-}
-
-#[allow(unused)]
-async fn handle_component(id: &str, req: &mut Request) -> Update {
-    match id {
-        "input::input" => {
-            #[derive(Deserialize)]
-            struct Dispatch {
-                state: Cow<'static, str>,
-                action: String,
-                event: InputEvent,
-            }
-            // TODO: unwrap
-            let payload: Dispatch = req.body_mut().json().await.unwrap();
-            let after = handle_cow_str_input_action(payload.state, &payload.action, payload.event);
-            let state = serde_json::value::to_raw_value(&after).unwrap();
-            let component = input(after);
-            let (html, view_hash) = component.render_update().unwrap();
-            Update {
-                state,
-                view_hash,
-                html,
-            }
-        }
-        _ => panic!("unknown component with id `{}`", id),
-    }
 }
