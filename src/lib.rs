@@ -2,6 +2,7 @@ use std::fmt;
 
 use action::Action;
 pub use component::Component;
+pub use crabweb_macros::component;
 pub use view::View;
 
 pub mod action;

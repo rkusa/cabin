@@ -5,7 +5,7 @@ use std::str::FromStr;
 use rust_html_over_wire::action::EventAction;
 use rust_html_over_wire::html::InputEvent;
 use rust_html_over_wire::view::ViewHash;
-use rust_html_over_wire::{html, render, Component, View, SERVER_COMPONENT_JS};
+use rust_html_over_wire::{component, html, render, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use solarsail::hyper::{header, StatusCode};
@@ -30,7 +30,7 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
             .unwrap(),
 
         get!() => {
-            let view = input_component("".into());
+            let view = input("".into());
             let html = render(view).unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -55,6 +55,7 @@ fn handle_input(_state: Cow<'static, str>, ev: InputEvent) -> Cow<'static, str> 
     ev.value.into()
 }
 
+#[component]
 pub fn input(value: Cow<'static, str>) -> impl View<Cow<'static, str>> {
     (
         html::div().content(format!("Value: {}", value)),
@@ -68,13 +69,6 @@ pub fn input(value: Cow<'static, str>) -> impl View<Cow<'static, str>> {
 #[allow(non_upper_case_globals)]
 const handle_input_action: EventAction<Cow<'static, str>, InputEvent> =
     EventAction::new("input::handle_input", handle_input);
-
-// result of #[component]
-pub fn input_component(
-    value: Cow<'static, str>,
-) -> Component<Cow<'static, str>, impl View<Cow<'static, str>>> {
-    Component::new("input::input", value, input)
-}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -109,7 +103,7 @@ async fn handle_component(id: &str, req: &mut Request) -> Update {
             let payload: Dispatch = req.body_mut().json().await.unwrap();
             let after = handle_cow_str_input_action(payload.state, &payload.action, payload.event);
             let state = serde_json::value::to_raw_value(&after).unwrap();
-            let component = input_component(after);
+            let component = input(after);
             let (html, view_hash) = component.render_update().unwrap();
             Update {
                 state,

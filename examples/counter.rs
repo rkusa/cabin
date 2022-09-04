@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use rust_html_over_wire::action::Action;
 use rust_html_over_wire::view::ViewHash;
-use rust_html_over_wire::{html, render, Component, View, SERVER_COMPONENT_JS};
+use rust_html_over_wire::{component, html, render, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use solarsail::hyper::{header, StatusCode};
@@ -28,7 +28,7 @@ async fn handle_request(_state: (), mut req: Request) -> Response {
             .unwrap(),
 
         get!() => {
-            let view = counter_component(0);
+            let view = counter(0);
             let html = render(view).unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -53,7 +53,7 @@ fn increment_counter(count: u32) -> u32 {
     count + 1
 }
 
-// #[component::server]
+#[component]
 fn counter(count: u32) -> impl View<u32> {
     (
         html::div().content(format!("Count: {}", count)),
@@ -67,11 +67,6 @@ fn counter(count: u32) -> impl View<u32> {
 #[allow(non_upper_case_globals)]
 const increment_counter_action: Action<u32> =
     Action::new("counter::increment_counter", increment_counter);
-
-// result of #[component]
-pub fn counter_component(count: u32) -> Component<u32, impl View<u32>> {
-    Component::new("counter::counter", count, counter)
-}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -101,7 +96,7 @@ async fn handle_component(id: &str, req: &mut Request) -> Update {
             let payload: Dispatch = req.body_mut().json().await.unwrap();
             let after = handle_u32_action(payload.state, &payload.action);
             let state = serde_json::value::to_raw_value(&after).unwrap();
-            let component = counter_component(after);
+            let component = counter(after);
             let (html, view_hash) = component.render_update().unwrap();
             Update {
                 state,
