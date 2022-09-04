@@ -1,5 +1,5 @@
 [package]
-name = "rust-html-over-wire"
+name = "crabweb"
 version = "0.1.0"
 edition = "2021"
 

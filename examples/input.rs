@@ -3,9 +3,9 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use rust_html_over_wire::component::registry::ComponentRegistry;
-use rust_html_over_wire::html::InputEvent;
-use rust_html_over_wire::{component, event, html, render, View, SERVER_COMPONENT_JS};
+use crabweb::component::registry::ComponentRegistry;
+use crabweb::html::InputEvent;
+use crabweb::{component, event, html, render, View, SERVER_COMPONENT_JS};
 use solarsail::hyper::body::Buf;
 use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;

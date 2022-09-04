@@ -50,18 +50,18 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let name = ident.to_string();
 
     let wrapped_fn = quote! {
-        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> ::rust_html_over_wire::Component<#state_type, impl View<#state_type>> {
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> ::crabweb::Component<#state_type, impl View<#state_type>> {
 
             #(#attrs)*
             #constness #asyncness #unsafety #abi fn #inner_ident #generics(#inputs #variadic) #output {
                 #block
             }
 
-            ::rust_html_over_wire::Component::new(module_path!(), #name, #state_ident, #inner_ident)
+            ::crabweb::Component::new(module_path!(), #name, #state_ident, #inner_ident)
         }
 
-        #[::linkme::distributed_slice(::rust_html_over_wire::component::registry::COMPONENT_FACTORIES)]
-        fn #factory_ident(r: &mut ::rust_html_over_wire::component::registry::ComponentRegistry) {
+        #[::linkme::distributed_slice(::crabweb::component::registry::COMPONENT_FACTORIES)]
+        fn #factory_ident(r: &mut ::crabweb::component::registry::ComponentRegistry) {
             r.register(module_path!(), #name, #ident);
         }
     };
@@ -122,11 +122,11 @@ pub fn action(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         #[allow(non_upper_case_globals)]
-        #vis const #ident: ::rust_html_over_wire::action::Action<#state_type> =
-            ::rust_html_over_wire::action::Action::new(module_path!(), #name, #original_ident);
+        #vis const #ident: ::crabweb::action::Action<#state_type> =
+            ::crabweb::action::Action::new(module_path!(), #name, #original_ident);
 
-        #[::linkme::distributed_slice(::rust_html_over_wire::action::registry::ACTION_FACTORIES)]
-        fn #factory_ident(r: &mut ::rust_html_over_wire::action::registry::ActionRegistry) {
+        #[::linkme::distributed_slice(::crabweb::action::registry::ACTION_FACTORIES)]
+        fn #factory_ident(r: &mut ::crabweb::action::registry::ActionRegistry) {
             r.register(module_path!(), #name, #ident);
         }
     };
@@ -195,11 +195,11 @@ pub fn event(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         #[allow(non_upper_case_globals)]
-        #vis const #ident: ::rust_html_over_wire::action::EventAction<#state_type, #event_type> =
-            ::rust_html_over_wire::action::EventAction::new(module_path!(), #name, #original_ident);
+        #vis const #ident: ::crabweb::action::EventAction<#state_type, #event_type> =
+            ::crabweb::action::EventAction::new(module_path!(), #name, #original_ident);
 
-        #[::linkme::distributed_slice(::rust_html_over_wire::action::registry::ACTION_FACTORIES)]
-        fn #factory_ident(r: &mut ::rust_html_over_wire::action::registry::ActionRegistry) {
+        #[::linkme::distributed_slice(::crabweb::action::registry::ACTION_FACTORIES)]
+        fn #factory_ident(r: &mut ::crabweb::action::registry::ActionRegistry) {
             r.register_event(module_path!(), #name, #ident);
         }
     };
