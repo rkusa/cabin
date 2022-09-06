@@ -36,6 +36,16 @@ impl<A> View<A> for String {
     }
 }
 
+impl<F, V, A> View<A> for F
+where
+    F: FnOnce() -> V,
+    V: View<A>,
+{
+    fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
+        self().render(out)
+    }
+}
+
 macro_rules! impl_tuple {
     ( $count:tt; $( $t:ident ),+;  $( $ix:tt ),* ) => {
         impl<$( $t: View<A> ),*, A> View<A> for ($( $t, )*) {
