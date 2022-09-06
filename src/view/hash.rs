@@ -3,8 +3,6 @@ use std::hash::Hasher;
 use serde::{Deserialize, Serialize};
 use twox_hash::XxHash32;
 
-pub type ViewHashTree = Vec<Marker>;
-
 pub struct HashTree {
     hasher: XxHash32,
     // Represent the three as a flat structure to reduce allocations (as otherwise each level
@@ -12,8 +10,11 @@ pub struct HashTree {
     tree: Vec<Marker>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ViewHashTree(Vec<Marker>);
+
 #[derive(Debug, PartialEq, Eq)]
-pub enum Marker {
+enum Marker {
     Start,
     End(u32),
 }
@@ -48,9 +49,9 @@ impl HashTree {
         }
     }
 
-    pub fn finish(mut self) -> Vec<Marker> {
+    pub fn finish(mut self) -> ViewHashTree {
         self.tree.push(Marker::End(self.hash()));
-        self.tree
+        ViewHashTree(self.tree)
     }
 }
 
@@ -105,14 +106,15 @@ impl Serialize for Marker {
     }
 }
 
-mod visitor {
+mod deserialize {
     use std::fmt;
 
     use serde::de::{self, Visitor};
+    use serde::Deserialize;
 
     use super::Marker;
 
-    pub struct MarkerVisitor;
+    struct MarkerVisitor;
 
     impl<'de> Visitor<'de> for MarkerVisitor {
         type Value = Marker;
@@ -188,20 +190,20 @@ mod visitor {
             }
         }
     }
-}
 
-impl<'de> Deserialize<'de> for Marker {
-    fn deserialize<D>(d: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        d.deserialize_any(visitor::MarkerVisitor)
+    impl<'de> Deserialize<'de> for Marker {
+        fn deserialize<D>(d: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            d.deserialize_any(MarkerVisitor)
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{html, View};
+    use crate::{html, Render, View};
 
     use super::*;
 
@@ -225,8 +227,9 @@ mod tests {
             (html::div(), (html::div(), html::div()))
         }
         let mut hash_tree = HashTree::default();
+        let renderer = component().render(&mut hash_tree).unwrap();
         let mut out = String::new();
-        component().render(&mut hash_tree, &mut out).unwrap();
+        renderer.render(&mut out).unwrap();
         assert_eq!(
             hash_tree.tree,
             vec![
@@ -246,8 +249,9 @@ mod tests {
             (html::div(), html::div().content(("foobar", html::div())))
         }
         let mut hash_tree = HashTree::default();
+        let renderer = component().render(&mut hash_tree).unwrap();
         let mut out = String::new();
-        component().render(&mut hash_tree, &mut out).unwrap();
+        renderer.render(&mut out).unwrap();
         let expected_parent_hash = {
             let mut hasher = XxHash32::default();
             hasher.write(b"div");

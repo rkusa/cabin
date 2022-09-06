@@ -9,14 +9,18 @@ pub struct Attribute<N> {
 }
 
 pub trait Attributes {
-    fn render(self, hasher: impl Hasher, out: impl Write) -> Result<(), fmt::Error>;
+    fn hash(&self, hasher: impl Hasher);
+    fn render(self, out: impl Write) -> Result<(), fmt::Error>;
 }
 
 impl Attributes for () {
-    fn render(self, _hasher: impl Hasher, _out: impl Write) -> Result<(), fmt::Error> {
+    fn hash(&self, _hasher: impl Hasher) {}
+
+    fn render(self, _out: impl Write) -> Result<(), fmt::Error> {
         Ok(())
     }
 }
+
 impl<N> Attribute<N> {
     pub fn new(name: &'static str, value: impl Into<Cow<'static, str>>, next: N) -> Self {
         Self {
@@ -31,10 +35,14 @@ impl<N> Attributes for Attribute<N>
 where
     N: Attributes,
 {
-    fn render(self, mut hasher: impl Hasher, mut out: impl Write) -> Result<(), fmt::Error> {
+    fn hash(&self, mut hasher: impl Hasher) {
         hasher.write(self.name.as_bytes());
         hasher.write(self.value.as_bytes());
 
+        self.next.hash(hasher)
+    }
+
+    fn render(self, mut out: impl Write) -> Result<(), fmt::Error> {
         write!(
             &mut out,
             r#" {}="{}""#,
@@ -42,7 +50,7 @@ where
             escape_attribute_value(&self.value)
         )?;
 
-        self.next.render(hasher, out)
+        self.next.render(out)
     }
 }
 

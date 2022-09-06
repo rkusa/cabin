@@ -7,7 +7,7 @@ use serde_json::value::RawValue;
 
 use crate::view::hash::ViewHashTree;
 use crate::view::HashTree;
-use crate::View;
+use crate::{Render, View};
 
 // The conversion from View<A> to View<()> is the feature
 // that ensures the usage of #[component]
@@ -29,16 +29,18 @@ impl<S, V: View<S>> Component<S, V> {
     }
 
     pub fn render_update(self) -> Result<(String, ViewHashTree), fmt::Error> {
-        let mut result = String::new();
         let mut hash_tree = HashTree::default();
-        let view = (self.render)(self.state);
-        let view_hash = view.render(&mut hash_tree, &mut result)?;
+        let renderer = (self.render)(self.state).render(&mut hash_tree).unwrap(); // TODO: unwrap
+        let mut result = String::new();
+        renderer.render(&mut result)?;
         Ok((result, hash_tree.finish()))
     }
 }
 
 impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
-    fn render(self, _hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
+    type Renderer = ComponentRenderer<V::Renderer>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Initial {
@@ -47,24 +49,45 @@ impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
         }
 
         // TODO: unwrap
+        // TODO: don't serialize if not rendered in the end
         let state = serde_json::value::to_raw_value(&self.state).unwrap();
-        let view = (self.render)(self.state);
-        let mut hash_tree = HashTree::default();
-        let mut inner = String::new();
-        view.render(&mut hash_tree, &mut inner)?;
+        let content = (self.render)(self.state).render(hash_tree);
 
         let hash = hash_tree.hash();
-        let state = serde_json::to_string(&state).unwrap();
+
+        Some(ComponentRenderer {
+            module: self.module,
+            name: self.name,
+            hash,
+            state,
+            content,
+        })
+    }
+}
+
+pub struct ComponentRenderer<R> {
+    module: &'static str,
+    name: &'static str,
+    hash: u32,
+    state: Box<RawValue>,
+    content: Option<R>,
+}
+
+impl<R> Render for ComponentRenderer<R>
+where
+    R: Render,
+{
+    fn render(self, mut out: impl Write) -> fmt::Result {
+        let state = serde_json::to_string(&self.state).unwrap();
 
         write!(
             out,
             r#"<server-component data-id="{}::{}" data-hash="{}">"#,
-            self.module, self.name, hash
+            self.module, self.name, self.hash
         )?;
         write!(out, r#"<script type="application/json">{}</script>"#, state)?;
-        write!(out, r#"{}</server-component>"#, inner)?;
-
-        eprintln!("{:?}", hash_tree.finish());
+        self.content.unwrap().render(&mut out)?; // TODO: unwrap fine?
+        write!(out, r#"</server-component>"#)?;
 
         Ok(())
     }

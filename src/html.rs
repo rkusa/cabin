@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 use crate::action::EventAction;
 use crate::view::{HashTree, View};
-use crate::Action;
+use crate::{Action, Render};
 
 use self::attributes::{Attribute, Attributes};
 
@@ -93,25 +93,61 @@ where
     V: View<S>,
     A: Attributes,
 {
-    fn render(mut self, hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
+    type Renderer = HtmlTagRenderer<S, A, V::Renderer>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         let mut node = hash_tree.node();
         node.write(self.builder.tag.as_bytes());
 
+        if let Some(on_click) = &self.builder.on_click {
+            // TODO: avoid double allocation (again in render)
+            let action = format!("{}::{}", on_click.module, on_click.name);
+            Attribute::new("data-click", action, ()).hash(&mut node);
+        }
+
+        if let Some(on_input) = &self.builder.on_input {
+            // TODO: avoid double allocation (again in render)
+            let action = format!("{}::{}", on_input.module, on_input.name);
+            Attribute::new("data-input", action, ()).hash(&mut node);
+        }
+
+        self.builder.attrs.hash(&mut node);
+
+        Some(HtmlTagRenderer {
+            builder: self.builder,
+            content: self.content.render(node.content()),
+            hash: node.end(),
+        })
+    }
+}
+
+pub struct HtmlTagRenderer<S, A, R> {
+    builder: HtmlTagBuilder<S, A>,
+    content: Option<R>,
+    hash: u32,
+}
+
+impl<S, A, R> Render for HtmlTagRenderer<S, A, R>
+where
+    A: Attributes,
+    R: Render,
+{
+    fn render(self, mut out: impl Write) -> fmt::Result {
         write!(&mut out, "<{}", self.builder.tag)?;
 
-        if let Some(on_click) = self.builder.on_click.take() {
+        if let Some(on_click) = self.builder.on_click {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_click.module, on_click.name);
-            Attribute::new("data-click", action, ()).render(&mut node, &mut out)?;
+            Attribute::new("data-click", action, ()).render(&mut out)?;
         }
 
-        if let Some(on_input) = self.builder.on_input.take() {
+        if let Some(on_input) = self.builder.on_input {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_input.module, on_input.name);
-            Attribute::new("data-input", action, ()).render(&mut node, &mut out)?;
+            Attribute::new("data-input", action, ()).render(&mut out)?;
         }
 
-        self.builder.attrs.render(&mut node, &mut out)?;
+        self.builder.attrs.render(&mut out)?;
 
         // Handle void elements. Content is simply ignored.
         // https://html.spec.whatwg.org/multipage/syntax.html#elements-2
@@ -120,14 +156,12 @@ where
             return Ok(());
         }
 
-        // TODO: get away without the extra string here (problem is the data-hash)?
-        let mut inner = String::new();
-        self.content.render(node.content(), &mut inner)?;
+        write!(&mut out, r#" data-hash="{}">"#, self.hash)?;
 
-        let hash = node.end();
-        write!(&mut out, r#" data-hash="{}""#, hash)?;
+        // TODO: unwrap
+        self.content.unwrap().render(&mut out)?;
 
-        write!(&mut out, ">{}</{}>", inner, self.builder.tag)?;
+        write!(&mut out, "</{}>", self.builder.tag)?;
         Ok(())
     }
 }
@@ -155,12 +189,14 @@ impl<S, A> View<S> for HtmlTagBuilder<S, A>
 where
     A: Attributes,
 {
-    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result {
+    type Renderer = HtmlTagRenderer<S, A, ()>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         HtmlTag {
             builder: self,
             content: (),
         }
-        .render(hash_tree, out)
+        .render(hash_tree)
     }
 }
 

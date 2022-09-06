@@ -1,33 +1,69 @@
 pub(crate) mod hash;
 
+use std::borrow::Cow;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
 pub use self::hash::HashTree;
 
 pub trait View<S = ()> {
-    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result;
+    type Renderer: Render;
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer>;
+}
+
+pub trait Render {
+    fn render(self, out: impl Write) -> fmt::Result;
 }
 
 impl<A> View<A> for () {
-    fn render(self, _hash_tree: &mut HashTree, _out: impl Write) -> fmt::Result {
+    type Renderer = ();
+
+    fn render(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+        Some(())
+    }
+}
+
+impl Render for () {
+    fn render(self, _out: impl Write) -> fmt::Result {
         Ok(())
     }
 }
 
 impl<'a, A> View<A> for &'a str {
-    fn render(self, hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
+    type Renderer = StrRender<'a>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         let mut node = hash_tree.node();
         node.write(self.as_bytes());
-        let hash = node.end();
+        Some(StrRender {
+            str: self.into(),
+            hash: node.end(),
+        })
+    }
+}
+
+pub struct StrRender<'a> {
+    str: Cow<'a, str>,
+    hash: u32,
+}
+
+impl<'a> Render for StrRender<'a> {
+    fn render(self, mut out: impl Write) -> fmt::Result {
         // TODO: safe escape HTML
-        write!(out, "<!--hash={}-->{}", hash, self)
+        write!(out, "<!--hash={}-->{}", self.hash, self.str)
     }
 }
 
 impl<A> View<A> for String {
-    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result {
-        View::<A>::render(self.as_str(), hash_tree, out)
+    type Renderer = StrRender<'static>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+        let mut node = hash_tree.node();
+        node.write(self.as_bytes());
+        Some(StrRender {
+            str: self.into(),
+            hash: node.end(),
+        })
     }
 }
 
@@ -36,17 +72,32 @@ where
     F: FnOnce() -> V,
     V: View<A>,
 {
-    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result {
-        self().render(hash_tree, out)
+    type Renderer = V::Renderer;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+        self().render(hash_tree)
     }
 }
 
 macro_rules! impl_tuple {
     ( $count:tt; $( $t:ident ),+;  $( $ix:tt ),* ) => {
-        impl<$( $t: View<A> ),*, A> View<A> for ($( $t, )*) {
-            fn render(self, hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
+        impl<$( $t: View<S> ),*, S> View<S> for ($( $t, )*) {
+            type Renderer = ($( Option<$t::Renderer>, )*);
+
+            fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+                Some((
+                    $(
+                        self.$ix.render(hash_tree),
+                    )*
+                ))
+            }
+        }
+
+        impl<$( $t: Render ),*> Render for ($( Option<$t>, )*) {
+            fn render(self, mut out: impl Write) -> fmt::Result {
                 $(
-                    self.$ix.render(hash_tree, &mut out)?;
+                    // TODO: unwrap
+                    self.$ix.unwrap().render(&mut out)?;
                 )*
                 Ok(())
             }
