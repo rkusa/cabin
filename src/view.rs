@@ -1,38 +1,33 @@
-mod hash;
-mod raw;
+pub(crate) mod hash;
 
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
-use twox_hash::XxHash32;
-
-pub use self::hash::ViewHash;
-pub use self::raw::raw;
+pub use self::hash::HashTree;
 
 pub trait View<S = ()> {
-    fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error>;
+    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result;
 }
 
 impl<A> View<A> for () {
-    fn render(self, _out: impl Write) -> Result<ViewHash, fmt::Error> {
-        Ok(ViewHash::Leaf(0))
+    fn render(self, _hash_tree: &mut HashTree, _out: impl Write) -> fmt::Result {
+        Ok(())
     }
 }
 
 impl<'a, A> View<A> for &'a str {
-    fn render(self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
-        let mut hasher = XxHash32::default();
-        hasher.write(self.as_bytes());
-        let hash = hasher.finish() as u32;
+    fn render(self, hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
+        let mut node = hash_tree.node();
+        node.write(self.as_bytes());
+        let hash = node.end();
         // TODO: safe escape HTML
-        out.write_str(self)?;
-        Ok(ViewHash::Leaf(hash))
+        write!(out, "<!--hash={}-->{}", hash, self)
     }
 }
 
 impl<A> View<A> for String {
-    fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
-        View::<A>::render(self.as_str(), out)
+    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result {
+        View::<A>::render(self.as_str(), hash_tree, out)
     }
 }
 
@@ -41,21 +36,19 @@ where
     F: FnOnce() -> V,
     V: View<A>,
 {
-    fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
-        self().render(out)
+    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result {
+        self().render(hash_tree, out)
     }
 }
 
 macro_rules! impl_tuple {
     ( $count:tt; $( $t:ident ),+;  $( $ix:tt ),* ) => {
         impl<$( $t: View<A> ),*, A> View<A> for ($( $t, )*) {
-            fn render(self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
-                let mut child_hashes = Vec::with_capacity($count);
+            fn render(self, hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
                 $(
-                    let hash = self.$ix.render(&mut out)?;
-                    child_hashes.push(hash);
+                    self.$ix.render(hash_tree, &mut out)?;
                 )*
-                Ok(ViewHash::Node(0, child_hashes.into_boxed_slice()))
+                Ok(())
             }
         }
     };

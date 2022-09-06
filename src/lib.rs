@@ -3,6 +3,7 @@ use std::fmt;
 use action::Action;
 pub use component::Component;
 pub use crabweb_macros::{action, component, event};
+use view::HashTree;
 pub use view::View;
 
 pub mod action;
@@ -13,7 +14,8 @@ pub mod view;
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
 pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
+    let mut hash_tree = HashTree::default();
     let mut result = String::new();
-    view.render(&mut result)?;
+    view.render(&mut hash_tree, &mut result)?;
     Ok(result)
 }

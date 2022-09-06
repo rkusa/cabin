@@ -6,7 +6,7 @@ use serde_json::value::RawValue;
 
 use crate::action::registry::ActionRegistry;
 use crate::html::InputEvent;
-use crate::view::ViewHash;
+use crate::view::hash::ViewHashTree;
 use crate::{Component, View};
 
 #[linkme::distributed_slice]
@@ -23,7 +23,7 @@ pub struct ComponentRegistry {
 #[serde(rename_all = "camelCase")]
 pub struct Update {
     state: Box<RawValue>,
-    view_hash: ViewHash,
+    hash_tree: ViewHashTree,
     html: String,
 }
 
@@ -41,8 +41,16 @@ impl Default for ComponentRegistry {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Payload<S> {
+    state: S,
+    hash_tree: ViewHashTree,
+}
+
+#[derive(Deserialize)]
 struct EventPayload<S, E> {
     state: S,
+    hash_tree: ViewHashTree,
     event: E,
 }
 
@@ -75,10 +83,10 @@ impl ComponentRegistry {
 
                         let state = serde_json::value::to_raw_value(&after).unwrap();
                         let component = (component)(after);
-                        let (html, view_hash) = component.render_update().unwrap();
+                        let (html, hash_tree) = component.render_update().unwrap();
                         Update {
                             state,
-                            view_hash,
+                            hash_tree,
                             html,
                         }
                     } else {
@@ -87,14 +95,14 @@ impl ComponentRegistry {
                             .expect("action does not exist");
 
                         // TODO: unwraps
-                        let state: S = serde_json::from_reader(rd).unwrap();
-                        let after = (action.action)(state);
+                        let payload: Payload<S> = serde_json::from_reader(rd).unwrap();
+                        let after = (action.action)(payload.state);
                         let state = serde_json::value::to_raw_value(&after).unwrap();
                         let component = (component)(after);
-                        let (html, view_hash) = component.render_update().unwrap();
+                        let (html, hash_tree) = component.render_update().unwrap();
                         Update {
                             state,
-                            view_hash,
+                            hash_tree,
                             html,
                         }
                     }

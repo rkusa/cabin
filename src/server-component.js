@@ -3,11 +3,12 @@ class ServerComponent extends HTMLElement {
     super();
 
     // TODO: handle missing
-    const initial = JSON.parse(this.firstElementChild.textContent);
-    this.state = initial.state;
-    this.viewHash = initial.viewHash;
-    // console.log(this.viewHash, JSON.stringify(this.viewHash));
+    const state = JSON.parse(this.firstElementChild.textContent);
     this.removeChild(this.firstElementChild);
+
+    this.state = state;
+    this.hashTree = hashTree(this);
+    console.log(this.hashTree, JSON.stringify(this.hashTree));
 
     this.addEventListener("click", async (e) => {
       let node = e.target;
@@ -29,16 +30,20 @@ class ServerComponent extends HTMLElement {
           node.disabled = true;
           try {
             // TODO: get component id from DOM
-            const res = await fetch(`/dispatch/${this.dataset.id}/${node.dataset.click}`, {
-              signal,
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(
-                this.state
-              ),
-            });
+            const res = await fetch(
+              `/dispatch/${this.dataset.id}/${node.dataset.click}`,
+              {
+                signal,
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  state: this.state,
+                  hashTree: this.hashTree,
+                }),
+              }
+            );
             if (signal.aborted) {
               console.log("already aborted, ignoring");
               return;
@@ -90,16 +95,19 @@ class ServerComponent extends HTMLElement {
 
         try {
           // TODO: get component id from DOM
-          const res = await fetch(`/dispatch/${this.dataset.id}/${node.dataset.input}/input`, {
-            signal,
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: `{"state":${JSON.stringify(
-              this.state
-            )},"event":{"value":${JSON.stringify(node.value)}}}`,
-          });
+          const res = await fetch(
+            `/dispatch/${this.dataset.id}/${node.dataset.input}/input`,
+            {
+              signal,
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: `{"state":${JSON.stringify(
+                this.state
+              )},"event":{"value":${JSON.stringify(node.value)}}}`,
+            }
+          );
           if (signal.aborted) {
             console.log("already aborted, ignoring");
             return;
@@ -207,4 +215,35 @@ function applyUpdate(before, after) {
   for (; i < before.childNodes.length; ++i) {
     before.removeChild(before.childNodes[i]);
   }
+}
+
+function hashTree(root) {
+  const hashTree = [];
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT
+  );
+  walker.nextNode() // skip over root
+  do {
+    const node = walker.currentNode
+    switch (node.nodeType) {
+      case Node.ELEMENT_NODE:
+        hashTree.push("s")
+        break;
+      case Node.COMMENT_NODE:
+        if (node.nodeValue.startsWith("hash=")) {
+          const hash = node.nodeValue.substring(5)
+          hashTree.push("s", parseInt(hash))
+        }
+        break;
+      case Node.TEXT_NODE:
+        break;
+    }
+    if (!node.nextSibling && node.parentNode !== root) {
+      hashTree.push(parseInt(node.parentNode.dataset.hash))
+    }
+    console.log(node);
+  } while (walker.nextNode());
+  hashTree.push(parseInt(root.dataset.hash))
+  return hashTree
 }

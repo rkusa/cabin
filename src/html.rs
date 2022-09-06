@@ -5,10 +5,9 @@ use std::fmt::{self, Write};
 use std::hash::Hasher;
 
 use serde::Deserialize;
-use twox_hash::XxHash32;
 
 use crate::action::EventAction;
-use crate::view::{View, ViewHash};
+use crate::view::{HashTree, View};
 use crate::Action;
 
 use self::attributes::{Attribute, Attributes};
@@ -94,56 +93,74 @@ where
     V: View<S>,
     A: Attributes,
 {
-    fn render(mut self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
-        let mut hasher = XxHash32::default();
-        hasher.write(self.builder.tag.as_bytes());
+    fn render(mut self, hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
+        let mut node = hash_tree.node();
+        node.write(self.builder.tag.as_bytes());
 
         write!(&mut out, "<{}", self.builder.tag)?;
 
         if let Some(on_click) = self.builder.on_click.take() {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_click.module, on_click.name);
-            Attribute::new("data-click", action, ()).render(&mut hasher, &mut out)?;
+            Attribute::new("data-click", action, ()).render(&mut node, &mut out)?;
         }
 
         if let Some(on_input) = self.builder.on_input.take() {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_input.module, on_input.name);
-            Attribute::new("data-input", action, ()).render(&mut hasher, &mut out)?;
+            Attribute::new("data-input", action, ()).render(&mut node, &mut out)?;
         }
 
-        self.builder.attrs.render(&mut hasher, &mut out)?;
+        self.builder.attrs.render(&mut node, &mut out)?;
 
+        // Handle void elements. Content is simply ignored.
+        // https://html.spec.whatwg.org/multipage/syntax.html#elements-2
+        if is_void_element(self.builder.tag) {
+            write!(&mut out, "/>")?;
+            return Ok(());
+        }
+
+        // TODO: get away without the extra string here (problem is the data-hash)?
         let mut inner = String::new();
-        let child_hash = self.content.render(&mut inner)?;
-        hasher.write_u32(child_hash.hash());
+        self.content.render(node.content(), &mut inner)?;
 
-        let hash = hasher.finish() as u32;
+        let hash = node.end();
         write!(&mut out, r#" data-hash="{}""#, hash)?;
 
-        if !inner.is_empty() {
-            write!(&mut out, ">{}</{}>", inner, self.builder.tag)?;
-            Ok(child_hash.into_parent(hash))
-        } else if matches!(self.builder.tag, "input") {
-            write!(&mut out, "/>")?;
-            Ok(ViewHash::Leaf(hash))
-        } else {
-            write!(&mut out, "></{}>", self.builder.tag)?;
-            Ok(ViewHash::Leaf(hash))
-        }
+        write!(&mut out, ">{}</{}>", inner, self.builder.tag)?;
+        Ok(())
     }
+}
+
+fn is_void_element(tag: &str) -> bool {
+    matches!(
+        tag,
+        "area"
+            | "base"
+            | "br"
+            | "col"
+            | "embed"
+            | "hr"
+            | "img"
+            | "input"
+            | "link"
+            | "meta"
+            | "source"
+            | "track"
+            | "wbr"
+    )
 }
 
 impl<S, A> View<S> for HtmlTagBuilder<S, A>
 where
     A: Attributes,
 {
-    fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
+    fn render(self, hash_tree: &mut HashTree, out: impl Write) -> fmt::Result {
         HtmlTag {
             builder: self,
             content: (),
         }
-        .render(out)
+        .render(hash_tree, out)
     }
 }
 

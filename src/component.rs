@@ -5,7 +5,8 @@ use std::fmt::{self, Write};
 use serde::Serialize;
 use serde_json::value::RawValue;
 
-use crate::view::ViewHash;
+use crate::view::hash::ViewHashTree;
+use crate::view::HashTree;
 use crate::View;
 
 // The conversion from View<A> to View<()> is the feature
@@ -27,36 +28,33 @@ impl<S, V: View<S>> Component<S, V> {
         }
     }
 
-    pub fn render_update(self) -> Result<(String, ViewHash), fmt::Error> {
+    pub fn render_update(self) -> Result<(String, ViewHashTree), fmt::Error> {
         let mut result = String::new();
+        let mut hash_tree = HashTree::default();
         let view = (self.render)(self.state);
-        let view_hash = view.render(&mut result)?;
-        let hash = view_hash.hash();
-        Ok((result, view_hash.into_parent(hash)))
+        let view_hash = view.render(&mut hash_tree, &mut result)?;
+        Ok((result, hash_tree.finish()))
     }
 }
 
 impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
-    fn render(self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
+    fn render(self, _hash_tree: &mut HashTree, mut out: impl Write) -> fmt::Result {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Initial {
             state: Box<RawValue>,
-            view_hash: ViewHash,
+            view_hash: ViewHashTree,
         }
 
         // TODO: unwrap
         let state = serde_json::value::to_raw_value(&self.state).unwrap();
         let view = (self.render)(self.state);
+        let mut hash_tree = HashTree::default();
         let mut inner = String::new();
-        let view_hash = view.render(&mut inner)?;
+        view.render(&mut hash_tree, &mut inner)?;
 
-        let hash = view_hash.hash();
-        let initial = Initial {
-            state,
-            view_hash: view_hash.into_parent(hash),
-        };
-        let state = serde_json::to_string(&initial).unwrap();
+        let hash = hash_tree.hash();
+        let state = serde_json::to_string(&state).unwrap();
 
         write!(
             out,
@@ -66,6 +64,8 @@ impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
         write!(out, r#"<script type="application/json">{}</script>"#, state)?;
         write!(out, r#"{}</server-component>"#, inner)?;
 
-        Ok(initial.view_hash)
+        eprintln!("{:?}", hash_tree.finish());
+
+        Ok(())
     }
 }
