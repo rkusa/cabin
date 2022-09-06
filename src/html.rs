@@ -1,5 +1,6 @@
+mod attributes;
+
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
@@ -10,35 +11,37 @@ use crate::action::EventAction;
 use crate::view::{View, ViewHash};
 use crate::Action;
 
-pub fn div<S>() -> HtmlTagBuilder<S> {
+use self::attributes::{Attribute, Attributes};
+
+pub fn div<S>() -> HtmlTagBuilder<S, ()> {
     HtmlTagBuilder {
         tag: "div",
         ..Default::default()
     }
 }
 
-pub fn button<S>() -> HtmlTagBuilder<S> {
+pub fn button<S>() -> HtmlTagBuilder<S, ()> {
     HtmlTagBuilder {
         tag: "button",
         ..Default::default()
     }
 }
 
-pub fn custom<S>(tag: &'static str) -> HtmlTagBuilder<S> {
+pub fn custom<S>(tag: &'static str) -> HtmlTagBuilder<S, ()> {
     HtmlTagBuilder {
         tag,
         ..Default::default()
     }
 }
 
-pub struct HtmlTag<V, S> {
-    builder: HtmlTagBuilder<S>,
+pub struct HtmlTag<V, S, A> {
+    builder: HtmlTagBuilder<S, A>,
     content: V,
 }
 
-pub struct HtmlTagBuilder<S = ()> {
+pub struct HtmlTagBuilder<S, A> {
     tag: &'static str,
-    attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
+    attrs: A,
     on_click: Option<Action<S>>,
     on_input: Option<EventAction<S, InputEvent>>,
 }
@@ -49,28 +52,36 @@ pub struct InputEvent {
     pub value: String,
 }
 
-impl<S> HtmlTagBuilder<S> {
-    pub fn attr(mut self, name: &'static str, value: impl Into<Cow<'static, str>>) -> Self {
-        let value = value.into();
-        let mut attrs = self.attrs.take().unwrap_or_default();
-        attrs.insert(name, value);
-        self.attrs = Some(attrs);
-        self
+impl<S, A> HtmlTagBuilder<S, A>
+where
+    A: Attributes,
+{
+    pub fn attr(
+        self,
+        name: &'static str,
+        value: impl Into<Cow<'static, str>>,
+    ) -> HtmlTagBuilder<S, impl Attributes> {
+        HtmlTagBuilder {
+            tag: self.tag,
+            attrs: Attribute::new(name, value, self.attrs),
+            on_click: self.on_click,
+            on_input: self.on_input,
+        }
     }
 
     // TODO: not available for all tags (e.g. only for buttons)
-    pub fn on_click(mut self, action: Action<S>) -> HtmlTagBuilder<S> {
+    pub fn on_click(mut self, action: Action<S>) -> Self {
         self.on_click = Some(action);
         self
     }
 
     // TODO: not available for all tags (e.g. only for inputs)
-    pub fn on_input(mut self, action: EventAction<S, InputEvent>) -> HtmlTagBuilder<S> {
+    pub fn on_input(mut self, action: EventAction<S, InputEvent>) -> Self {
         self.on_input = Some(action);
         self
     }
 
-    pub fn content<V: View<S>>(self, content: V) -> HtmlTag<V, S> {
+    pub fn content<V: View<S>>(self, content: V) -> HtmlTag<V, S, A> {
         HtmlTag {
             builder: self,
             content,
@@ -78,9 +89,10 @@ impl<S> HtmlTagBuilder<S> {
     }
 }
 
-impl<V, S> View<S> for HtmlTag<V, S>
+impl<V, S, A> View<S> for HtmlTag<V, S, A>
 where
     V: View<S>,
+    A: Attributes,
 {
     fn render(mut self, mut out: impl Write) -> Result<ViewHash, fmt::Error> {
         let mut hasher = XxHash32::default();
@@ -91,32 +103,16 @@ where
         if let Some(on_click) = self.builder.on_click.take() {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_click.module, on_click.name);
-            hasher.write(b"on_click");
-            hasher.write(action.as_bytes());
-            self.builder = self.builder.attr("data-click", action);
+            Attribute::new("data-click", action, ()).render(&mut hasher, &mut out)?;
         }
 
         if let Some(on_input) = self.builder.on_input.take() {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_input.module, on_input.name);
-            hasher.write(b"on_input");
-            hasher.write(action.as_bytes());
-            self.builder = self.builder.attr("data-input", action);
+            Attribute::new("data-input", action, ()).render(&mut hasher, &mut out)?;
         }
 
-        if let Some(attrs) = self.builder.attrs {
-            for (name, value) in attrs {
-                hasher.write(name.as_bytes());
-                hasher.write(value.as_bytes());
-
-                write!(
-                    &mut out,
-                    r#" {}="{}""#,
-                    name, // TODO: validate/escape attr name
-                    escape_attribute_value(&value)
-                )?;
-            }
-        }
+        self.builder.attrs.render(&mut hasher, &mut out)?;
 
         let mut inner = String::new();
         let child_hash = self.content.render(&mut inner)?;
@@ -138,7 +134,10 @@ where
     }
 }
 
-impl<S> View<S> for HtmlTagBuilder<S> {
+impl<S, A> View<S> for HtmlTagBuilder<S, A>
+where
+    A: Attributes,
+{
     fn render(self, out: impl Write) -> Result<ViewHash, fmt::Error> {
         HtmlTag {
             builder: self,
@@ -148,49 +147,13 @@ impl<S> View<S> for HtmlTagBuilder<S> {
     }
 }
 
-impl<S> Default for HtmlTagBuilder<S> {
+impl<S> Default for HtmlTagBuilder<S, ()> {
     fn default() -> Self {
         Self {
             tag: "div",
-            attrs: None,
+            attrs: (),
             on_click: None,
             on_input: None,
         }
-    }
-}
-
-pub fn escape_attribute_value(input: &str) -> Cow<str> {
-    let mut replacements = input
-        .char_indices()
-        .filter_map(|(i, ch)| escape_attribute_value_char(ch).map(|s| (i, s)))
-        .peekable();
-    if replacements.peek().is_none() {
-        return Cow::Borrowed(input);
-    }
-
-    let mut escaped = String::with_capacity(input.len());
-    let mut pos = 0;
-    for (i, sub) in replacements {
-        if i > pos {
-            escaped.push_str(&input[pos..i]);
-        }
-        escaped.push_str(sub);
-        pos = i + 1;
-    }
-    if pos < input.len() {
-        escaped.push_str(&input[pos..input.len()]);
-    }
-
-    Cow::Owned(escaped)
-}
-
-fn escape_attribute_value_char(ch: char) -> Option<&'static str> {
-    match ch {
-        '<' => Some("&lt;"),
-        '>' => Some("&gt;"),
-        '\'' => Some("&apos;"),
-        '&' => Some("&amp;"),
-        '"' => Some("&quot;"),
-        _ => None,
     }
 }
