@@ -48,8 +48,8 @@ pub struct IteratorRenderer<V: View<S>, S> {
 }
 
 impl<V: View<S>, S> Render for IteratorRenderer<V, S> {
-    fn render(self, mut out: impl Write, is_update: bool) -> std::fmt::Result {
-        for r in self.renderers {
+    fn render(&self, mut out: &mut dyn Write, is_update: bool) -> std::fmt::Result {
+        for r in &self.renderers {
             r.render(&mut out, is_update)?;
         }
         Ok(())

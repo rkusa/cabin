@@ -10,13 +10,13 @@ pub struct Attribute<N> {
 
 pub trait Attributes {
     fn hash(&self, hasher: impl Hasher);
-    fn render(self, out: impl Write) -> Result<(), fmt::Error>;
+    fn render(&self, out: impl Write) -> Result<(), fmt::Error>;
 }
 
 impl Attributes for () {
     fn hash(&self, _hasher: impl Hasher) {}
 
-    fn render(self, _out: impl Write) -> Result<(), fmt::Error> {
+    fn render(&self, _out: impl Write) -> Result<(), fmt::Error> {
         Ok(())
     }
 }
@@ -42,7 +42,7 @@ where
         self.next.hash(hasher)
     }
 
-    fn render(self, mut out: impl Write) -> Result<(), fmt::Error> {
+    fn render(&self, mut out: impl Write) -> Result<(), fmt::Error> {
         write!(
             &mut out,
             r#" {}="{}""#,

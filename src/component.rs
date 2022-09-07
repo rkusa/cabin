@@ -61,21 +61,21 @@ impl<R> Render for ComponentRenderer<R>
 where
     R: Render,
 {
-    fn render(self, mut out: impl Write, is_update: bool) -> fmt::Result {
+    fn render(&self, mut out: &mut dyn Write, is_update: bool) -> fmt::Result {
         if is_update {
-            return self.content.unwrap().render(&mut out, is_update); // TODO: unwrap fine?
+            return self.content.as_ref().unwrap().render(&mut out, is_update); // TODO: unwrap fine?
         }
 
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
-        struct Initial {
-            state: Box<RawValue>,
-            hash_tree: ViewHashTree,
+        struct Initial<'a> {
+            state: &'a RawValue,
+            hash_tree: &'a ViewHashTree,
         }
 
         let initial = serde_json::to_string(&Initial {
-            state: self.state,
-            hash_tree: self.hash_tree,
+            state: &self.state,
+            hash_tree: &self.hash_tree,
         })
         .unwrap();
 
@@ -89,7 +89,7 @@ where
             r#"<script type="application/json">{}</script>"#,
             initial
         )?;
-        self.content.unwrap().render(&mut out, is_update)?; // TODO: unwrap fine?
+        self.content.as_ref().unwrap().render(&mut out, is_update)?; // TODO: unwrap fine?
         write!(out, r#"</server-component>"#)?;
 
         Ok(())

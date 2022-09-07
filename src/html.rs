@@ -8,6 +8,7 @@ use serde::Deserialize;
 
 use self::attributes::{Attribute, Attributes};
 use crate::action::EventAction;
+pub use crate::view::any::any;
 pub use crate::view::text::text;
 use crate::view::{HashTree, View};
 use crate::{Action, Render};
@@ -138,16 +139,16 @@ where
     A: Attributes,
     R: Render,
 {
-    fn render(self, mut out: impl Write, is_update: bool) -> fmt::Result {
+    fn render(&self, mut out: &mut dyn Write, is_update: bool) -> fmt::Result {
         write!(&mut out, "<{}", self.tag.tag)?;
 
-        if let Some(on_click) = self.tag.on_click {
+        if let Some(on_click) = &self.tag.on_click {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_click.module, on_click.name);
             Attribute::new("data-click", action, ()).render(&mut out)?;
         }
 
-        if let Some(on_input) = self.tag.on_input {
+        if let Some(on_input) = &self.tag.on_input {
             // TODO: avoid allocation
             let action = format!("{}::{}", on_input.module, on_input.name);
             Attribute::new("data-input", action, ()).render(&mut out)?;

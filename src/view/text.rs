@@ -54,7 +54,7 @@ impl<F> Render for TextRenderer<F>
 where
     F: Fn(&mut dyn fmt::Write) -> fmt::Result,
 {
-    fn render(self, mut out: impl Write, _is_update: bool) -> fmt::Result {
+    fn render(&self, mut out: &mut dyn Write, _is_update: bool) -> fmt::Result {
         (self.0)(&mut out)
     }
 }
