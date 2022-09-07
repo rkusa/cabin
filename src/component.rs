@@ -11,15 +11,15 @@ use crate::{Render, View};
 
 // The conversion from View<A> to View<()> is the feature
 // that ensures the usage of #[component]
-pub struct Component<S, V: View<S>, F: Fn(S) -> V> {
+pub struct Component<S, V: View<S>> {
     module: &'static str,
     name: &'static str,
     state: S,
-    render: F,
+    render: fn(S) -> V,
 }
 
-impl<S, V: View<S>, F: Fn(S) -> V> Component<S, V, F> {
-    pub fn new(module: &'static str, name: &'static str, state: S, render: F) -> Self {
+impl<S, V: View<S>> Component<S, V> {
+    pub fn new(module: &'static str, name: &'static str, state: S, render: fn(S) -> V) -> Self {
         Component {
             module,
             name,
@@ -27,9 +27,23 @@ impl<S, V: View<S>, F: Fn(S) -> V> Component<S, V, F> {
             render,
         }
     }
+
+    pub fn render_update(
+        self,
+        previous_tree: ViewHashTree,
+    ) -> Result<(String, ViewHashTree), fmt::Error> {
+        let mut hash_tree = HashTree::from_previous_tree(previous_tree);
+        let renderer = (self.render)(self.state)
+            .into_renderer(&mut hash_tree)
+            .unwrap(); // TODO: unwrap
+        let mut result = String::new();
+        // TODO: remove `is_update` again?
+        renderer.render(&mut result, true)?;
+        Ok((result, hash_tree.finish()))
+    }
 }
 
-impl<S1, S2: Serialize, V: View<S2>, F: Fn(S2) -> V> View<S1> for Component<S2, V, F> {
+impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
     type Renderer = ComponentRenderer<V::Renderer>;
 
     fn into_renderer(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {

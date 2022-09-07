@@ -24,7 +24,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         paren_token: _,
         inputs,
         variadic,
-        output,
+        output: _, // TODO: validate to match `impl View<S>`
     } = sig;
 
     if inputs.len() != 1 {
@@ -50,13 +50,13 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let wrapped_fn = quote! {
         #(#attrs)*
-        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
-            ::crabweb::Component::<#state_type, _, _>::new(module_path!(), #name, #state_ident, |#inputs #variadic| #block)
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> ::crabweb::Component<#state_type, impl View<#state_type>> {
+            ::crabweb::Component::new(module_path!(), #name, #state_ident, |#inputs #variadic| #block)
         }
 
         #[::linkme::distributed_slice(::crabweb::component::registry::COMPONENT_FACTORIES)]
         fn #factory_ident(r: &mut ::crabweb::component::registry::ComponentRegistry) {
-            r.register::<#state_type, _, _>(module_path!(), #name, #ident);
+            r.register(module_path!(), #name, #ident);
         }
     };
 

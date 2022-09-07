@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fmt;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -8,8 +7,7 @@ use serde_json::value::RawValue;
 use crate::action::registry::ActionRegistry;
 use crate::html::InputEvent;
 use crate::view::hash::ViewHashTree;
-use crate::view::HashTree;
-use crate::{Render, View};
+use crate::{Component, View};
 
 #[linkme::distributed_slice]
 pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
@@ -58,15 +56,11 @@ struct EventPayload<S, E> {
 }
 
 impl ComponentRegistry {
-    pub fn register<
-        S: Serialize + for<'de> Deserialize<'de> + 'static,
-        V: View<S>,
-        F: Fn(S) -> V + Send + Sync + 'static,
-    >(
+    pub fn register<S: Serialize + for<'de> Deserialize<'de> + 'static, V: View<S> + 'static>(
         &mut self,
         module_path: &str,
         name: &str,
-        component: F,
+        component: fn(S) -> Component<S, V>,
     ) {
         let action_registry = self.action_registry.clone();
         self.handler.insert(
@@ -93,7 +87,7 @@ impl ComponentRegistry {
 
                         let state = serde_json::value::to_raw_value(&after).unwrap();
                         let component = (component)(after);
-                        let (html, hash_tree) = render_update(component, hash_tree).unwrap();
+                        let (html, hash_tree) = component.render_update(hash_tree).unwrap();
                         Update {
                             state,
                             hash_tree,
@@ -109,8 +103,7 @@ impl ComponentRegistry {
                         let after = (action.action)(payload.state);
                         let state = serde_json::value::to_raw_value(&after).unwrap();
                         let component = (component)(after);
-                        let (html, hash_tree) =
-                            render_update(component, payload.hash_tree).unwrap();
+                        let (html, hash_tree) = component.render_update(payload.hash_tree).unwrap();
                         Update {
                             state,
                             hash_tree,
@@ -142,15 +135,4 @@ impl ComponentRegistry {
         let handler = self.handler.get(id)?;
         Some(handler(Box::new(rd), action, Some(event)))
     }
-}
-
-pub fn render_update<S>(
-    view: impl View<S>,
-    previous_tree: ViewHashTree,
-) -> Result<(String, ViewHashTree), fmt::Error> {
-    let mut hash_tree = HashTree::from_previous_tree(previous_tree);
-    let renderer = view.into_renderer(&mut hash_tree).unwrap(); // TODO: unwrap
-    let mut result = String::new();
-    renderer.render(&mut result, true)?;
-    Ok((result, hash_tree.finish()))
 }
