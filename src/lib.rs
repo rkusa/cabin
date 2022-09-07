@@ -13,10 +13,10 @@ mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
-pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
+pub fn render<S>(view: impl View<S>) -> Result<String, fmt::Error> {
     let mut hash_tree = HashTree::default();
     let renderer = view.render(&mut hash_tree);
     let mut result = String::new();
-    renderer.render(&mut result)?;
+    renderer.render(&mut result, false)?;
     Ok(result)
 }

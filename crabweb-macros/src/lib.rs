@@ -45,24 +45,18 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         FnArg::Typed(pat_type) => (&pat_type.pat, &pat_type.ty),
     };
 
-    let inner_ident = format_ident!("__{}", ident);
     let factory_ident = format_ident!("__register_{}", ident);
     let name = ident.to_string();
 
     let wrapped_fn = quote! {
-        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> ::crabweb::Component<#state_type, impl View<#state_type>> {
-
-            #(#attrs)*
-            #constness #asyncness #unsafety #abi fn #inner_ident #generics(#inputs #variadic) #output {
-                #block
-            }
-
-            ::crabweb::Component::new(module_path!(), #name, #state_ident, #inner_ident)
+        #(#attrs)*
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
+            ::crabweb::Component::<#state_type, _, _>::new(module_path!(), #name, #state_ident, |#inputs #variadic| #block)
         }
 
         #[::linkme::distributed_slice(::crabweb::component::registry::COMPONENT_FACTORIES)]
         fn #factory_ident(r: &mut ::crabweb::component::registry::ComponentRegistry) {
-            r.register(module_path!(), #name, #ident);
+            r.register::<#state_type, _, _>(module_path!(), #name, #ident);
         }
     };
 

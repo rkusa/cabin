@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::marker::PhantomData;
 
 use crate::Render;
@@ -48,9 +49,9 @@ pub struct IteratorRenderer<V: View<S>, S> {
 }
 
 impl<V: View<S>, S> Render for IteratorRenderer<V, S> {
-    fn render(self, mut out: impl std::fmt::Write) -> std::fmt::Result {
+    fn render(self, mut out: impl Write, is_update: bool) -> std::fmt::Result {
         for r in self.renderers {
-            r.render(&mut out)?;
+            r.render(&mut out, is_update)?;
         }
         Ok(())
     }

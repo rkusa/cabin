@@ -14,7 +14,7 @@ pub trait View<S = ()> {
 }
 
 pub trait Render {
-    fn render(self, out: impl Write) -> fmt::Result;
+    fn render(self, out: impl Write, is_update: bool) -> fmt::Result;
 }
 
 impl<S> View<S> for () {
@@ -26,7 +26,7 @@ impl<S> View<S> for () {
 }
 
 impl Render for () {
-    fn render(self, _out: impl Write) -> fmt::Result {
+    fn render(self, _out: impl Write, _is_update: bool) -> fmt::Result {
         Ok(())
     }
 }
@@ -65,7 +65,7 @@ impl<S> View<S> for String {
 }
 
 impl<'a> Render for Cow<'a, str> {
-    fn render(self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write, _is_update: bool) -> fmt::Result {
         // TODO: safe escape HTML
         out.write_str(&self)
     }
@@ -87,9 +87,9 @@ impl<R> Render for Option<R>
 where
     R: Render,
 {
-    fn render(self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write, is_update: bool) -> fmt::Result {
         match self {
-            Some(r) => r.render(out),
+            Some(r) => r.render(out, is_update),
             None => write!(out, "<!--unchanged-->"),
         }
     }
@@ -110,9 +110,9 @@ macro_rules! impl_tuple {
         }
 
         impl<$( $t: Render ),*> Render for ($( Option<$t>, )*) {
-            fn render(self, mut out: impl Write) -> fmt::Result {
+            fn render(self, mut out: impl Write, is_update: bool) -> fmt::Result {
                 $(
-                    self.$ix.render(&mut out)?;
+                    self.$ix.render(&mut out, is_update)?;
                 )*
                 Ok(())
             }

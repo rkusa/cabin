@@ -145,7 +145,7 @@ where
     A: Attributes,
     R: Render,
 {
-    fn render(self, mut out: impl Write) -> fmt::Result {
+    fn render(self, mut out: impl Write, is_update: bool) -> fmt::Result {
         write!(&mut out, "<{}", self.builder.tag)?;
 
         if let Some(on_click) = self.builder.on_click {
@@ -170,7 +170,7 @@ where
 
         write!(&mut out, ">")?;
 
-        self.content.render(&mut out)?;
+        self.content.render(&mut out, is_update)?;
 
         write!(&mut out, "</{}>", self.builder.tag)?;
         Ok(())
