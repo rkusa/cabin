@@ -83,6 +83,31 @@ where
     }
 }
 
+impl<V, S> View<S> for Option<V>
+where
+    V: View<S>,
+{
+    type Renderer = OptionRenderer<V::Renderer>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+        Some(OptionRenderer(self.and_then(|v| v.render(hash_tree))))
+    }
+}
+
+pub struct OptionRenderer<R>(Option<R>);
+
+impl<R> Render for OptionRenderer<R>
+where
+    R: Render,
+{
+    fn render(self, out: impl Write, is_update: bool) -> fmt::Result {
+        match self.0 {
+            Some(r) => r.render(out, is_update),
+            None => Ok(()),
+        }
+    }
+}
+
 impl<R> Render for Option<R>
 where
     R: Render,
