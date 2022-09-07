@@ -1,9 +1,8 @@
 use std::fmt::Write;
 use std::marker::PhantomData;
 
-use crate::Render;
-
 pub use super::View;
+use crate::Render;
 
 // TODO: using iter directly in component would be cooler
 pub fn list<I, F, T, V, S>(iter: I, map: F) -> impl View<S>

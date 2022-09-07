@@ -4,7 +4,7 @@ use action::Action;
 pub use component::Component;
 pub use crabweb_macros::{action, component, event};
 use view::HashTree;
-pub use view::{list, Render, View};
+pub use view::{list, Render, Text, View};
 
 pub mod action;
 pub mod component;

@@ -1,5 +1,6 @@
 pub(crate) mod hash;
 mod iter;
+pub mod text;
 
 use std::borrow::Cow;
 use std::fmt::{self, Write};
@@ -7,6 +8,7 @@ use std::hash::Hasher;
 
 pub use self::hash::HashTree;
 pub use self::iter::list;
+pub use self::text::Text;
 
 pub trait View<S = ()> {
     type Renderer: Render;

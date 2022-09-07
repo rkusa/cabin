@@ -225,9 +225,8 @@ mod deserialize {
 
 #[cfg(test)]
 mod tests {
-    use crate::{html, Render, View};
-
     use super::*;
+    use crate::{html, Render, View};
 
     fn hash(tag: &str) -> u32 {
         let mut hasher = XxHash32::default();

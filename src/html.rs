@@ -6,11 +6,11 @@ use std::hash::Hasher;
 
 use serde::Deserialize;
 
+use self::attributes::{Attribute, Attributes};
 use crate::action::EventAction;
+pub use crate::view::text::text;
 use crate::view::{HashTree, View};
 use crate::{Action, Render};
-
-use self::attributes::{Attribute, Attributes};
 
 pub fn div<V: View<S>, S>(content: V) -> Html<V, S, ()> {
     custom("div", content)
