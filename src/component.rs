@@ -32,12 +32,12 @@ impl<S, V: View<S>, F: Fn(S) -> V> Component<S, V, F> {
 impl<S1, S2: Serialize, V: View<S2>, F: Fn(S2) -> V> View<S1> for Component<S2, V, F> {
     type Renderer = ComponentRenderer<V::Renderer>;
 
-    fn render(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn into_renderer(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         // TODO: unwrap
         // TODO: don't serialize if not rendered in the end
         let state = serde_json::value::to_raw_value(&self.state).unwrap();
         let mut hash_tree = HashTree::default();
-        let content = (self.render)(self.state).render(&mut hash_tree);
+        let content = (self.render)(self.state).into_renderer(&mut hash_tree);
 
         Some(ComponentRenderer {
             module: self.module,

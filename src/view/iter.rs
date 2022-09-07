@@ -32,12 +32,12 @@ where
 {
     type Renderer = IteratorRenderer<V, S>;
 
-    fn render(self, hash_tree: &mut super::HashTree) -> Option<Self::Renderer> {
+    fn into_renderer(self, hash_tree: &mut super::HashTree) -> Option<Self::Renderer> {
         Some(IteratorRenderer {
             renderers: self
                 .iter
                 .map(self.map)
-                .map(|v| v.render(hash_tree))
+                .map(|v| v.into_renderer(hash_tree))
                 .collect(),
         })
     }

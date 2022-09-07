@@ -40,7 +40,7 @@ where
 {
     type Renderer = TextRenderer<F>;
 
-    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         let mut node = hash_tree.node();
         (self.write)(&mut HashFmt(&mut node)).unwrap(); // TODO: unwrap
         let hash = node.end();

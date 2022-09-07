@@ -10,7 +10,7 @@ where
 {
     AnyView {
         view: Box::new(|hash_tree: &mut HashTree| {
-            view.render(hash_tree)
+            view.into_renderer(hash_tree)
                 .map::<Box<dyn Render>, _>(|r| Box::new(r))
         }),
         marker: PhantomData,
@@ -27,7 +27,7 @@ pub struct AnyView<S> {
 impl<S> View<S> for AnyView<S> {
     type Renderer = Box<dyn Render>;
 
-    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         (self.view)(hash_tree)
     }
 }

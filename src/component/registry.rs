@@ -149,7 +149,7 @@ pub fn render_update<S>(
     previous_tree: ViewHashTree,
 ) -> Result<(String, ViewHashTree), fmt::Error> {
     let mut hash_tree = HashTree::from_previous_tree(previous_tree);
-    let renderer = view.render(&mut hash_tree).unwrap(); // TODO: unwrap
+    let renderer = view.into_renderer(&mut hash_tree).unwrap(); // TODO: unwrap
     let mut result = String::new();
     renderer.render(&mut result, true)?;
     Ok((result, hash_tree.finish()))

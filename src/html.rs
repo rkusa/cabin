@@ -103,7 +103,7 @@ where
 {
     type Renderer = HtmlTagRenderer<S, A, V::Renderer>;
 
-    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         let mut node = hash_tree.node();
         node.write(self.tag.tag.as_bytes());
 
@@ -120,7 +120,7 @@ where
         }
 
         self.tag.attrs.hash(&mut node);
-        let content = self.content.render(node.content());
+        let content = self.content.into_renderer(node.content());
         let hash = node.end();
         hash_tree.changed_or_else(hash, || HtmlTagRenderer {
             tag: self.tag,
