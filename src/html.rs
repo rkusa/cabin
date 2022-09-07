@@ -112,11 +112,11 @@ where
         }
 
         self.builder.attrs.hash(&mut node);
-
-        Some(HtmlTagRenderer {
+        let content = self.content.render(node.content());
+        let hash = node.end();
+        hash_tree.changed_or_else(hash, || HtmlTagRenderer {
             builder: self.builder,
-            content: self.content.render(node.content()),
-            hash: node.end(),
+            content,
         })
     }
 }
@@ -124,7 +124,6 @@ where
 pub struct HtmlTagRenderer<S, A, R> {
     builder: HtmlTagBuilder<S, A>,
     content: Option<R>,
-    hash: u32,
 }
 
 impl<S, A, R> Render for HtmlTagRenderer<S, A, R>
@@ -150,16 +149,14 @@ where
         self.builder.attrs.render(&mut out)?;
 
         // Handle void elements. Content is simply ignored.
-        // https://html.spec.whatwg.org/multipage/syntax.html#elements-2
         if is_void_element(self.builder.tag) {
             write!(&mut out, "/>")?;
             return Ok(());
         }
 
-        write!(&mut out, r#" data-hash="{}">"#, self.hash)?;
+        write!(&mut out, ">")?;
 
-        // TODO: unwrap
-        self.content.unwrap().render(&mut out)?;
+        self.content.render(&mut out)?;
 
         write!(&mut out, "</{}>", self.builder.tag)?;
         Ok(())
@@ -167,6 +164,7 @@ where
 }
 
 fn is_void_element(tag: &str) -> bool {
+    // https://html.spec.whatwg.org/multipage/syntax.html#elements-2
     matches!(
         tag,
         "area"

@@ -15,8 +15,7 @@ pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
 pub fn render(view: impl View<()>) -> Result<String, fmt::Error> {
     let mut hash_tree = HashTree::default();
-    let renderer = view.render(&mut hash_tree).unwrap(); // TODO: unwrap
-    eprintln!("{:?}", hash_tree.finish());
+    let renderer = view.render(&mut hash_tree);
     let mut result = String::new();
     renderer.render(&mut result)?;
     Ok(result)

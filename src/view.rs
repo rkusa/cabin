@@ -30,40 +30,31 @@ impl Render for () {
 }
 
 impl<'a, A> View<A> for &'a str {
-    type Renderer = StrRender<'a>;
+    type Renderer = Cow<'a, str>;
 
     fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         let mut node = hash_tree.node();
         node.write(self.as_bytes());
-        Some(StrRender {
-            str: self.into(),
-            hash: node.end(),
-        })
+        let hash = node.end();
+        hash_tree.changed_or_else(hash, || Cow::Borrowed(self))
     }
 }
 
-pub struct StrRender<'a> {
-    str: Cow<'a, str>,
-    hash: u32,
-}
-
-impl<'a> Render for StrRender<'a> {
+impl<'a> Render for Cow<'a, str> {
     fn render(self, mut out: impl Write) -> fmt::Result {
         // TODO: safe escape HTML
-        write!(out, "<!--hash={}-->{}", self.hash, self.str)
+        out.write_str(&self)
     }
 }
 
 impl<A> View<A> for String {
-    type Renderer = StrRender<'static>;
+    type Renderer = Cow<'static, str>;
 
     fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         let mut node = hash_tree.node();
         node.write(self.as_bytes());
-        Some(StrRender {
-            str: self.into(),
-            hash: node.end(),
-        })
+        let hash = node.end();
+        hash_tree.changed_or_else(hash, || Cow::Owned(self))
     }
 }
 
@@ -76,6 +67,18 @@ where
 
     fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         self().render(hash_tree)
+    }
+}
+
+impl<R> Render for Option<R>
+where
+    R: Render,
+{
+    fn render(self, mut out: impl Write) -> fmt::Result {
+        match self {
+            Some(r) => r.render(out),
+            None => write!(out, "<!--unchanged-->"),
+        }
     }
 }
 
@@ -96,8 +99,7 @@ macro_rules! impl_tuple {
         impl<$( $t: Render ),*> Render for ($( Option<$t>, )*) {
             fn render(self, mut out: impl Write) -> fmt::Result {
                 $(
-                    // TODO: unwrap
-                    self.$ix.unwrap().render(&mut out)?;
+                    self.$ix.render(&mut out)?;
                 )*
                 Ok(())
             }

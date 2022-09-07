@@ -48,6 +48,7 @@ struct Payload<S> {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct EventPayload<S, E> {
     state: S,
     hash_tree: ViewHashTree,
@@ -69,21 +70,24 @@ impl ComponentRegistry {
                     if let Some(event) = event {
                         // TODO: unwraps
                         // TODO: better solution than this string based match?
-                        let after = match event {
+                        let (after, hash_tree) = match event {
                             "input" => {
                                 let action = action_registry
                                     .get_event::<S, InputEvent>(action)
                                     .expect("action does not exist");
                                 let payload: EventPayload<S, InputEvent> =
                                     serde_json::from_reader(rd).unwrap();
-                                (action.action)(payload.state, payload.event)
+                                (
+                                    (action.action)(payload.state, payload.event),
+                                    payload.hash_tree,
+                                )
                             }
                             _ => panic!("unknown event: {}", event),
                         };
 
                         let state = serde_json::value::to_raw_value(&after).unwrap();
                         let component = (component)(after);
-                        let (html, hash_tree) = component.render_update().unwrap();
+                        let (html, hash_tree) = component.render_update(hash_tree).unwrap();
                         Update {
                             state,
                             hash_tree,
@@ -99,7 +103,7 @@ impl ComponentRegistry {
                         let after = (action.action)(payload.state);
                         let state = serde_json::value::to_raw_value(&after).unwrap();
                         let component = (component)(after);
-                        let (html, hash_tree) = component.render_update().unwrap();
+                        let (html, hash_tree) = component.render_update(payload.hash_tree).unwrap();
                         Update {
                             state,
                             hash_tree,

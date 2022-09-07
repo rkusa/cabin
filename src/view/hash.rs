@@ -5,9 +5,10 @@ use twox_hash::XxHash32;
 
 pub struct HashTree {
     hasher: XxHash32,
-    // Represent the three as a flat structure to reduce allocations (as otherwise each level
+    // Represent the tree as a flat structure to reduce allocations (as otherwise each level
     // would require a new allocation for its own vec).
     tree: Vec<Marker>,
+    previous_tree: Option<Vec<Marker>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,11 +30,19 @@ impl Default for HashTree {
         Self {
             hasher: XxHash32::default(),
             tree: Vec::with_capacity(32),
+            previous_tree: None,
         }
     }
 }
 
 impl HashTree {
+    pub fn from_previous_tree(previous_tree: ViewHashTree) -> Self {
+        Self {
+            previous_tree: Some(previous_tree.0),
+            ..Default::default()
+        }
+    }
+
     pub fn hash(&self) -> u32 {
         self.hasher.finish() as u32
     }
@@ -52,6 +61,19 @@ impl HashTree {
     pub fn finish(mut self) -> ViewHashTree {
         self.tree.push(Marker::End(self.hash()));
         ViewHashTree(self.tree)
+    }
+
+    pub fn changed_or_else<R>(&self, hash: u32, f: impl FnOnce() -> R) -> Option<R> {
+        if let Some(Marker::End(previous)) = self
+            .previous_tree
+            .as_ref()
+            .and_then(|t| t.get(self.tree.len() - 1))
+        {
+            if *previous == hash {
+                return None;
+            }
+        }
+        Some(f())
     }
 }
 
