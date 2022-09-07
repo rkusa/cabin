@@ -71,8 +71,8 @@ fn increment_counter(count: u32) -> u32 {
 #[component]
 fn counter(count: u32) -> impl View<u32> {
     (
-        (count == 0).then_some(move || html::div().content("Hit `incr` to start counting ...")),
-        (count > 0).then_some(move || html::div().content(format!("Count: {}", count))),
-        html::button().on_click(increment_counter).content("incr"),
+        (count == 0).then(move || html::div("Hit `incr` to start counting ...")),
+        (count > 0).then(move || html::div(format!("Count: {}", count))),
+        html::button("incr").on_click(increment_counter),
     )
 }

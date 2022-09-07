@@ -75,9 +75,7 @@ fn handle_input(_state: Cow<'static, str>, ev: InputEvent) -> Cow<'static, str> 
 #[component]
 pub fn input(value: Cow<'static, str>) -> impl View<Cow<'static, str>> {
     (
-        html::div().content(format!("Value: {}", value)),
-        html::custom("input")
-            .attr("value", value)
-            .on_input(handle_input),
+        html::div(format!("Value: {}", value)),
+        html::input().attr("value", value).on_input(handle_input),
     )
 }

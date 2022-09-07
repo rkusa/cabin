@@ -246,12 +246,12 @@ mod tests {
     #[test]
     fn test_hash_tree_tuple_flattened() {
         fn component() -> impl View {
-            (html::div(), (html::div(), html::div()))
+            (html::div(()), (html::div(()), html::div(())))
         }
         let mut hash_tree = HashTree::default();
         let renderer = component().render(&mut hash_tree).unwrap();
         let mut out = String::new();
-        renderer.render(&mut out).unwrap();
+        renderer.render(&mut out, false).unwrap();
         assert_eq!(
             hash_tree.tree,
             vec![
@@ -268,12 +268,12 @@ mod tests {
     #[test]
     fn test_hash_tree_nested() {
         fn component() -> impl View {
-            (html::div(), html::div().content(("foobar", html::div())))
+            (html::div(()), html::div(("foobar", html::div(()))))
         }
         let mut hash_tree = HashTree::default();
         let renderer = component().render(&mut hash_tree).unwrap();
         let mut out = String::new();
-        renderer.render(&mut out).unwrap();
+        renderer.render(&mut out, false).unwrap();
         let expected_parent_hash = {
             let mut hasher = XxHash32::default();
             hasher.write(b"div");

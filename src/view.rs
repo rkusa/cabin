@@ -71,17 +71,22 @@ impl<'a> Render for Cow<'a, str> {
     }
 }
 
-impl<F, V, S> View<S> for F
-where
-    F: FnOnce() -> V,
-    V: View<S>,
-{
-    type Renderer = V::Renderer;
+// Disabled as it leads to unhelpful errors (
+// > expected an `FnOnce<()>` closure, found `V`
+// instead of
+// > the trait `View<_>` is not implemented for `V`
+//
+// impl<F, V, S> View<S> for F
+// where
+//     F: FnOnce() -> V,
+//     V: View<S>,
+// {
+//     type Renderer = V::Renderer;
 
-    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
-        self().render(hash_tree)
-    }
-}
+//     fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+//         self().render(hash_tree)
+//     }
+// }
 
 impl<V, S> View<S> for Option<V>
 where

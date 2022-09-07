@@ -73,7 +73,7 @@ fn add_item(mut items: Vec<Cow<'static, str>>) -> Vec<Cow<'static, str>> {
 #[component]
 fn items(items: Vec<Cow<'static, str>>) -> impl View<Vec<Cow<'static, str>>> {
     (
-        html::ul().content(list(items.into_iter(), |s| html::li().content(s))),
-        html::div().content(html::button().on_click(add_item).content("add")),
+        html::ul(list(items.into_iter(), html::li)),
+        html::div(html::button("add").on_click(add_item)),
     )
 }
