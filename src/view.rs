@@ -1,10 +1,12 @@
 pub(crate) mod hash;
+mod iter;
 
 use std::borrow::Cow;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
 pub use self::hash::HashTree;
+pub use self::iter::list;
 
 pub trait View<S = ()> {
     type Renderer: Render;
@@ -15,7 +17,7 @@ pub trait Render {
     fn render(self, out: impl Write) -> fmt::Result;
 }
 
-impl<A> View<A> for () {
+impl<S> View<S> for () {
     type Renderer = ();
 
     fn render(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
@@ -29,7 +31,7 @@ impl Render for () {
     }
 }
 
-impl<'a, A> View<A> for &'a str {
+impl<'a, S> View<S> for &'a str {
     type Renderer = Cow<'a, str>;
 
     fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
@@ -40,14 +42,18 @@ impl<'a, A> View<A> for &'a str {
     }
 }
 
-impl<'a> Render for Cow<'a, str> {
-    fn render(self, mut out: impl Write) -> fmt::Result {
-        // TODO: safe escape HTML
-        out.write_str(&self)
+impl<'a, S> View<S> for Cow<'a, str> {
+    type Renderer = Cow<'a, str>;
+
+    fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+        let mut node = hash_tree.node();
+        node.write(self.as_bytes());
+        let hash = node.end();
+        hash_tree.changed_or_else(hash, || self)
     }
 }
 
-impl<A> View<A> for String {
+impl<S> View<S> for String {
     type Renderer = Cow<'static, str>;
 
     fn render(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
@@ -58,10 +64,17 @@ impl<A> View<A> for String {
     }
 }
 
-impl<F, V, A> View<A> for F
+impl<'a> Render for Cow<'a, str> {
+    fn render(self, mut out: impl Write) -> fmt::Result {
+        // TODO: safe escape HTML
+        out.write_str(&self)
+    }
+}
+
+impl<F, V, S> View<S> for F
 where
     F: FnOnce() -> V,
-    V: View<A>,
+    V: View<S>,
 {
     type Renderer = V::Renderer;
 

@@ -19,6 +19,20 @@ pub fn div<S>() -> HtmlTagBuilder<S, ()> {
     }
 }
 
+pub fn ul<S>() -> HtmlTagBuilder<S, ()> {
+    HtmlTagBuilder {
+        tag: "ul",
+        ..Default::default()
+    }
+}
+
+pub fn li<S>() -> HtmlTagBuilder<S, ()> {
+    HtmlTagBuilder {
+        tag: "li",
+        ..Default::default()
+    }
+}
+
 pub fn button<S>() -> HtmlTagBuilder<S, ()> {
     HtmlTagBuilder {
         tag: "button",
