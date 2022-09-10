@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::{action, component, html, list, render, View, SERVER_COMPONENT_JS};
+use crabweb::{action, component, html, render, View, SERVER_COMPONENT_JS};
 use solarsail::hyper::body::Buf;
 use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;
@@ -73,7 +73,7 @@ fn add_item(mut items: Vec<Cow<'static, str>>) -> Vec<Cow<'static, str>> {
 #[component]
 fn items(items: Vec<Cow<'static, str>>) -> impl View<Vec<Cow<'static, str>>> {
     (
-        html::ul(list(items.into_iter(), html::li)),
+        html::ul(items.into_iter().map(html::li)),
         html::div(html::button("add").on_click(add_item)),
     )
 }

@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::value::RawValue;
 
 use crate::view::hash::ViewHashTree;
-use crate::view::HashTree;
+use crate::view::{HashTree, IntoView};
 use crate::{Render, View};
 
 // The conversion from View<A> to View<()> is the feature
@@ -60,6 +60,12 @@ impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
             hash_tree: hash_tree.finish(),
             content,
         })
+    }
+}
+
+impl<S: Serialize, V: View<S>> IntoView<Component<S, V>, ()> for Component<S, V> {
+    fn into_view(self) -> Component<S, V> {
+        self
     }
 }
 

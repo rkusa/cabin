@@ -10,22 +10,22 @@ use self::attributes::{Attribute, Attributes};
 use crate::action::EventAction;
 pub use crate::view::any::any;
 pub use crate::view::text::text;
-use crate::view::{HashTree, View};
+use crate::view::{HashTree, IntoView, View};
 use crate::{Action, Render};
 
-pub fn div<V: View<S>, S>(content: V) -> Html<V, S, ()> {
+pub fn div<V: View<S>, S>(content: impl IntoView<V, S>) -> Html<V, S, ()> {
     custom("div", content)
 }
 
-pub fn ul<V: View<S>, S>(content: V) -> Html<V, S, ()> {
+pub fn ul<V: View<S>, S>(content: impl IntoView<V, S>) -> Html<V, S, ()> {
     custom("ul", content)
 }
 
-pub fn li<V: View<S>, S>(content: V) -> Html<V, S, ()> {
+pub fn li<V: View<S>, S>(content: impl IntoView<V, S>) -> Html<V, S, ()> {
     custom("li", content)
 }
 
-pub fn button<V: View<S>, S>(content: V) -> Html<V, S, ()> {
+pub fn button<V: View<S>, S>(content: impl IntoView<V, S>) -> Html<V, S, ()> {
     custom("button", content)
 }
 
@@ -33,7 +33,7 @@ pub fn input<S>() -> Html<(), S, ()> {
     custom("button", ())
 }
 
-pub fn custom<V: View<S>, S>(tag: &'static str, content: V) -> Html<V, S, ()> {
+pub fn custom<V: View<S>, S>(tag: &'static str, content: impl IntoView<V, S>) -> Html<V, S, ()> {
     Html {
         tag: HtmlTag {
             tag,
@@ -41,7 +41,7 @@ pub fn custom<V: View<S>, S>(tag: &'static str, content: V) -> Html<V, S, ()> {
             on_click: None,
             on_input: None,
         },
-        content,
+        content: content.into_view(),
     }
 }
 
@@ -126,6 +126,16 @@ where
             tag: self.tag,
             content,
         })
+    }
+}
+
+impl<V, S, A> IntoView<Html<V, S, A>, S> for Html<V, S, A>
+where
+    V: View<S>,
+    A: Attributes,
+{
+    fn into_view(self) -> Html<V, S, A> {
+        self
     }
 }
 

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::HashTree;
+use super::{HashTree, IntoView};
 use crate::{Render, View};
 
 pub fn any<V, S>(view: V) -> AnyView<S>
@@ -29,6 +29,12 @@ impl<S> View<S> for AnyView<S> {
 
     fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         (self.view)(hash_tree)
+    }
+}
+
+impl<S> IntoView<AnyView<S>, S> for AnyView<S> {
+    fn into_view(self) -> AnyView<S> {
+        self
     }
 }
 

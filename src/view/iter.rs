@@ -1,44 +1,38 @@
 use std::fmt::Write;
 use std::marker::PhantomData;
 
+use super::IntoView;
 pub use super::View;
 use crate::Render;
 
-// TODO: using iter directly in component would be cooler
-pub fn list<I, F, T, V, S>(iter: I, map: F) -> impl View<S>
+impl<I, V, S> IntoView<IteratorView<I, V, S>, S> for I
 where
-    I: Iterator<Item = T>,
-    F: FnMut(T) -> V,
+    I: Iterator<Item = V>,
     V: View<S>,
 {
-    IteratorView::<I, F, T, V, S> {
-        iter,
-        map,
-        marker: PhantomData,
+    fn into_view(self) -> IteratorView<I, V, S> {
+        IteratorView::<I, V, S> {
+            iter: self,
+            marker: PhantomData,
+        }
     }
 }
 
-pub struct IteratorView<I, F, T, V, S> {
+pub struct IteratorView<I, V, S> {
     iter: I,
-    map: F,
-    marker: PhantomData<(T, V, S)>,
+    marker: PhantomData<(V, S)>,
 }
 
-impl<I, F, T, V, S> View<S> for IteratorView<I, F, T, V, S>
+impl<I, V, S> View<S> for IteratorView<I, V, S>
 where
-    I: Iterator<Item = T>,
-    F: FnMut(T) -> V,
+    I: Iterator<Item = V>,
     V: View<S>,
 {
     type Renderer = IteratorRenderer<V, S>;
 
     fn into_renderer(self, hash_tree: &mut super::HashTree) -> Option<Self::Renderer> {
         Some(IteratorRenderer {
-            renderers: self
-                .iter
-                .map(self.map)
-                .map(|v| v.into_renderer(hash_tree))
-                .collect(),
+            renderers: self.iter.map(|v| v.into_renderer(hash_tree)).collect(),
         })
     }
 }

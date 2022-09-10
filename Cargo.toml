@@ -12,6 +12,7 @@ twox-hash = "1.6"
 crabweb-macros = { path = "./crabweb-macros", version = "0.1" }
 linkme = "0.3"
 http = "0.2"
+paste = "1.0" # TODO: without the additiona dependency?
 
 [dev-dependencies]
 solarsail = { version = "0.3" }

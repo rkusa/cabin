@@ -1,6 +1,6 @@
 use std::fmt::{self, Write};
 
-use super::HashTree;
+use super::{HashTree, IntoView};
 use crate::{Render, View};
 
 #[macro_export]
@@ -45,6 +45,15 @@ where
         (self.write)(&mut HashFmt(&mut node)).unwrap(); // TODO: unwrap
         let hash = node.end();
         hash_tree.changed_or_else(hash, || TextRenderer(self.write))
+    }
+}
+
+impl<S, F> IntoView<Text<F>, S> for Text<F>
+where
+    F: Fn(&mut dyn fmt::Write) -> fmt::Result,
+{
+    fn into_view(self) -> Text<F> {
+        self
     }
 }
 

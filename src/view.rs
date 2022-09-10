@@ -9,8 +9,16 @@ use std::hash::Hasher;
 
 pub use self::any::AnyView;
 pub use self::hash::HashTree;
-pub use self::iter::list;
 pub use self::text::Text;
+
+use paste::paste;
+
+pub trait IntoView<V, S>
+where
+    V: View<S>,
+{
+    fn into_view(self) -> V;
+}
 
 pub trait View<S = ()> {
     type Renderer: Render;
@@ -26,6 +34,12 @@ impl<S> View<S> for () {
 
     fn into_renderer(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
         Some(())
+    }
+}
+
+impl<S> IntoView<(), S> for () {
+    fn into_view(self) -> () {
+        self
     }
 }
 
@@ -46,6 +60,12 @@ impl<'a, S> View<S> for &'a str {
     }
 }
 
+impl<'a, S> IntoView<&'a str, S> for &'a str {
+    fn into_view(self) -> &'a str {
+        self
+    }
+}
+
 impl<'a, S> View<S> for Cow<'a, str> {
     type Renderer = Cow<'a, str>;
 
@@ -57,6 +77,12 @@ impl<'a, S> View<S> for Cow<'a, str> {
     }
 }
 
+impl<'a, S> IntoView<Cow<'a, str>, S> for Cow<'a, str> {
+    fn into_view(self) -> Cow<'a, str> {
+        self
+    }
+}
+
 impl<S> View<S> for String {
     type Renderer = Cow<'static, str>;
 
@@ -65,6 +91,12 @@ impl<S> View<S> for String {
         node.write(self.as_bytes());
         let hash = node.end();
         hash_tree.changed_or_else(hash, || Cow::Owned(self))
+    }
+}
+
+impl<S> IntoView<String, S> for String {
+    fn into_view(self) -> String {
+        self
     }
 }
 
@@ -105,6 +137,15 @@ where
     }
 }
 
+impl<V, S> IntoView<Option<V>, S> for Option<V>
+where
+    V: View<S>,
+{
+    fn into_view(self) -> Option<V> {
+        self
+    }
+}
+
 pub struct OptionRenderer<R>(Option<R>);
 
 impl<R> Render for OptionRenderer<R>
@@ -132,37 +173,49 @@ where
 }
 
 macro_rules! impl_tuple {
-    ( $count:tt; $( $t:ident ),+;  $( $ix:tt ),* ) => {
-        impl<$( $t: View<S> ),*, S> View<S> for ($( $t, )*) {
-            type Renderer = ($( Option<$t::Renderer>, )*);
+    ( $count:tt; $( $ix:tt ),* ) => {
+        paste!{
+            impl<$( [<V$ix>]: View<S> ),*, S> View<S> for ($( [<V$ix>], )*) {
+                type Renderer = ($( Option<[<V$ix>]::Renderer>, )*);
 
-            fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
-                Some((
-                    $(
-                        self.$ix.into_renderer(hash_tree),
-                    )*
-                ))
+                fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+                    Some((
+                        $(
+                            self.$ix.into_renderer(hash_tree),
+                        )*
+                    ))
+                }
             }
-        }
 
-        impl<$( $t: Render ),*> Render for ($( Option<$t>, )*) {
-            fn render(&self, mut out: &mut dyn Write, is_update: bool) -> fmt::Result {
-                $(
-                    self.$ix.render(&mut out, is_update)?;
-                )*
-                Ok(())
+            impl<$( [<I$ix>]: IntoView<[<V$ix>], S>, [<V$ix>]: View<S> ),*, S> IntoView<($([<V$ix>], )*), S> for ($([<I$ix>],)*) {
+                fn into_view(self) -> ($([<V$ix>], )*) {
+                    (
+                        $(
+                            self.$ix.into_view(),
+                        )*
+                    )
+                }
+            }
+
+            impl<$( [<V$ix>]: Render ),*> Render for ($( Option<[<V$ix>]>, )*) {
+                fn render(&self, mut out: &mut dyn Write, is_update: bool) -> fmt::Result {
+                    $(
+                        self.$ix.render(&mut out, is_update)?;
+                    )*
+                    Ok(())
+                }
             }
         }
     };
 }
 
-impl_tuple!( 1; V1; 0);
-impl_tuple!( 2; V1, V2; 0, 1);
-impl_tuple!( 3; V1, V2, V3; 0, 1, 2);
-impl_tuple!( 4; V1, V2, V3, V4; 0, 1, 2, 3);
-impl_tuple!( 5; V1, V2, V3, V4, V5; 0, 1, 2, 3, 4);
-impl_tuple!( 6; V1, V2, V3, V4, V5, V6; 0, 1, 2, 3, 4, 5);
-impl_tuple!( 7; V1, V2, V3, V4, V5, V6, V7; 0, 1, 2, 3, 4, 5, 6);
-impl_tuple!( 8; V1, V2, V3, V4, V5, V6, V7, V8; 0, 1, 2, 3, 4, 5, 6, 7);
-impl_tuple!( 9; V1, V2, V3, V4, V5, V6, V7, V8, V9; 0, 1, 2, 3, 4, 5, 6, 7, 8);
-impl_tuple!(10; V1, V2, V3, V4, V5, V6, V7, V8, V9, V10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+impl_tuple!( 1; 0);
+impl_tuple!( 2; 0, 1);
+impl_tuple!( 3; 0, 1, 2);
+impl_tuple!( 4; 0, 1, 2, 3);
+impl_tuple!( 5; 0, 1, 2, 3, 4);
+impl_tuple!( 6; 0, 1, 2, 3, 4, 5);
+impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6);
+impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7);
+impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8);
+impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
