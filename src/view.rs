@@ -21,8 +21,8 @@ where
 }
 
 pub trait View<S = ()> {
-    type Renderer: Render;
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer>;
+    type Render: Render;
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render>;
 }
 
 pub trait Render {
@@ -30,9 +30,9 @@ pub trait Render {
 }
 
 impl<S> View<S> for () {
-    type Renderer = ();
+    type Render = ();
 
-    fn into_renderer(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, _hash_tree: &mut HashTree) -> Option<Self::Render> {
         Some(())
     }
 }
@@ -50,9 +50,9 @@ impl Render for () {
 }
 
 impl<'a, S> View<S> for &'a str {
-    type Renderer = Cow<'a, str>;
+    type Render = Cow<'a, str>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
         let mut node = hash_tree.node();
         node.write(self.as_bytes());
         let hash = node.end();
@@ -67,9 +67,9 @@ impl<'a, S> IntoView<&'a str, S> for &'a str {
 }
 
 impl<'a, S> View<S> for Cow<'a, str> {
-    type Renderer = Cow<'a, str>;
+    type Render = Cow<'a, str>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
         let mut node = hash_tree.node();
         node.write(self.as_bytes());
         let hash = node.end();
@@ -84,9 +84,9 @@ impl<'a, S> IntoView<Cow<'a, str>, S> for Cow<'a, str> {
 }
 
 impl<S> View<S> for String {
-    type Renderer = Cow<'static, str>;
+    type Render = Cow<'static, str>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
         let mut node = hash_tree.node();
         node.write(self.as_bytes());
         let hash = node.end();
@@ -128,12 +128,10 @@ impl<V, S> View<S> for Option<V>
 where
     V: View<S>,
 {
-    type Renderer = OptionRenderer<V::Renderer>;
+    type Render = OptionRenderer<V::Render>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
-        Some(OptionRenderer(
-            self.and_then(|v| v.into_renderer(hash_tree)),
-        ))
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
+        Some(OptionRenderer(self.and_then(|v| v.prepare(hash_tree))))
     }
 }
 
@@ -175,18 +173,6 @@ where
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            impl<$( [<V$ix>]: View<S> ),*, S> View<S> for ($( [<V$ix>], )*) {
-                type Renderer = ($( Option<[<V$ix>]::Renderer>, )*);
-
-                fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
-                    Some((
-                        $(
-                            self.$ix.into_renderer(hash_tree),
-                        )*
-                    ))
-                }
-            }
-
             impl<$( [<I$ix>]: IntoView<[<V$ix>], S>, [<V$ix>]: View<S> ),*, S> IntoView<($([<V$ix>], )*), S> for ($([<I$ix>],)*) {
                 fn into_view(self) -> ($([<V$ix>], )*) {
                     (
@@ -194,6 +180,18 @@ macro_rules! impl_tuple {
                             self.$ix.into_view(),
                         )*
                     )
+                }
+            }
+
+            impl<$( [<V$ix>]: View<S> ),*, S> View<S> for ($( [<V$ix>], )*) {
+                type Render = ($( Option<[<V$ix>]::Render>, )*);
+
+                fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
+                    Some((
+                        $(
+                            self.$ix.prepare(hash_tree),
+                        )*
+                    ))
                 }
             }
 

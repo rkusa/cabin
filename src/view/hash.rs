@@ -248,7 +248,7 @@ mod tests {
             (html::div(()), (html::div(()), html::div(())))
         }
         let mut hash_tree = HashTree::default();
-        let renderer = component().into_renderer(&mut hash_tree).unwrap();
+        let renderer = component().prepare(&mut hash_tree).unwrap();
         let mut out = String::new();
         renderer.render(&mut out, false).unwrap();
         assert_eq!(
@@ -270,7 +270,7 @@ mod tests {
             (html::div(()), html::div(("foobar", html::div(()))))
         }
         let mut hash_tree = HashTree::default();
-        let renderer = component().into_renderer(&mut hash_tree).unwrap();
+        let renderer = component().prepare(&mut hash_tree).unwrap();
         let mut out = String::new();
         renderer.render(&mut out, false).unwrap();
         let expected_parent_hash = {

@@ -28,17 +28,17 @@ where
     I: Iterator<Item = V>,
     V: View<S>,
 {
-    type Renderer = IteratorRenderer<V, S>;
+    type Render = IteratorRenderer<V, S>;
 
-    fn into_renderer(self, hash_tree: &mut super::HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut super::HashTree) -> Option<Self::Render> {
         Some(IteratorRenderer {
-            renderers: self.iter.map(|v| v.into_renderer(hash_tree)).collect(),
+            renderers: self.iter.map(|v| v.prepare(hash_tree)).collect(),
         })
     }
 }
 
 pub struct IteratorRenderer<V: View<S>, S> {
-    renderers: Vec<Option<V::Renderer>>,
+    renderers: Vec<Option<V::Render>>,
 }
 
 impl<V: View<S>, S> Render for IteratorRenderer<V, S> {

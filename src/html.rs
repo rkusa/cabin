@@ -101,9 +101,9 @@ where
     V: View<S>,
     A: Attributes,
 {
-    type Renderer = HtmlTagRenderer<S, A, V::Renderer>;
+    type Render = HtmlTagRenderer<S, A, V::Render>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
         let mut node = hash_tree.node();
         node.write(self.tag.tag.as_bytes());
 
@@ -120,7 +120,7 @@ where
         }
 
         self.tag.attrs.hash(&mut node);
-        let content = self.content.into_renderer(node.content());
+        let content = self.content.prepare(node.content());
         let hash = node.end();
         hash_tree.changed_or_else(hash, || HtmlTagRenderer {
             tag: self.tag,

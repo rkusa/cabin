@@ -38,9 +38,9 @@ impl<S, F> View<S> for Text<F>
 where
     F: Fn(&mut dyn fmt::Write) -> fmt::Result,
 {
-    type Renderer = TextRenderer<F>;
+    type Render = TextRenderer<F>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
         let mut node = hash_tree.node();
         (self.write)(&mut HashFmt(&mut node)).unwrap(); // TODO: unwrap
         let hash = node.end();

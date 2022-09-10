@@ -6,11 +6,11 @@ use crate::{Render, View};
 pub fn any<V, S>(view: V) -> AnyView<S>
 where
     V: View<S> + 'static,
-    V::Renderer: 'static,
+    V::Render: 'static,
 {
     AnyView {
         view: Box::new(|hash_tree: &mut HashTree| {
-            view.into_renderer(hash_tree)
+            view.prepare(hash_tree)
                 .map::<Box<dyn Render>, _>(|r| Box::new(r))
         }),
         marker: PhantomData,
@@ -25,9 +25,9 @@ pub struct AnyView<S> {
 }
 
 impl<S> View<S> for AnyView<S> {
-    type Renderer = Box<dyn Render>;
+    type Render = Box<dyn Render>;
 
-    fn into_renderer(self, hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
         (self.view)(hash_tree)
     }
 }

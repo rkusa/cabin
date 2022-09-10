@@ -33,9 +33,7 @@ impl<S, V: View<S>> Component<S, V> {
         previous_tree: ViewHashTree,
     ) -> Result<(String, ViewHashTree), fmt::Error> {
         let mut hash_tree = HashTree::from_previous_tree(previous_tree);
-        let renderer = (self.render)(self.state)
-            .into_renderer(&mut hash_tree)
-            .unwrap(); // TODO: unwrap
+        let renderer = (self.render)(self.state).prepare(&mut hash_tree).unwrap(); // TODO: unwrap
         let mut result = String::new();
         // TODO: remove `is_update` again?
         renderer.render(&mut result, true)?;
@@ -44,14 +42,14 @@ impl<S, V: View<S>> Component<S, V> {
 }
 
 impl<S: Serialize, V: View<S>> View<()> for Component<S, V> {
-    type Renderer = ComponentRenderer<V::Renderer>;
+    type Render = ComponentRenderer<V::Render>;
 
-    fn into_renderer(self, _hash_tree: &mut HashTree) -> Option<Self::Renderer> {
+    fn prepare(self, _hash_tree: &mut HashTree) -> Option<Self::Render> {
         // TODO: unwrap
         // TODO: don't serialize if not rendered in the end
         let state = serde_json::value::to_raw_value(&self.state).unwrap();
         let mut hash_tree = HashTree::default();
-        let content = (self.render)(self.state).into_renderer(&mut hash_tree);
+        let content = (self.render)(self.state).prepare(&mut hash_tree);
 
         Some(ComponentRenderer {
             module: self.module,
