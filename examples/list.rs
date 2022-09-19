@@ -66,12 +66,15 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 
 #[action]
 fn add_item(mut items: Vec<Cow<'static, str>>) -> Vec<Cow<'static, str>> {
-    items.push("new item".into());
+    items.push("new item 1".into());
+    items.push("new item 2".into());
     items
 }
 
+type Items = Vec<Cow<'static, str>>;
+
 #[component]
-fn items(items: Vec<Cow<'static, str>>) -> impl View<Vec<Cow<'static, str>>> {
+fn items(items: Items) -> impl View<Items> {
     (
         html::ul(items.into_iter().map(html::li)),
         html::div(html::button("add").on_click(add_item)),

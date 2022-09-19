@@ -100,43 +100,49 @@ customElements.define("server-component", ServerComponent);
 function patchComponent(rootBefore, rootAfter) {
   // console.log("apply", rootBefore, rootAfter);
 
-  const filter =
-    NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT;
-  const before = document.createTreeWalker(rootBefore, filter);
-  const after = document.createTreeWalker(rootAfter, filter);
+  const cmp = new TreeComparator(rootBefore, rootAfter);
+  const changes = [];
+  let parent = rootBefore;
+  for (const [nodeBefore, nodeAfter] of cmp) {
+    console.log(nodeBefore, nodeAfter);
 
-  // skip over root nodes
-  before.nextNode();
-  after.nextNode();
-
-  do {
-    const nodeBefore = before.currentNode;
-    const nodeAfter = after.currentNode;
-    // console.log(nodeBefore, nodeAfter);
+    if (nodeBefore?.parentNode) {
+      parent = nodeBefore.parentNode;
+    }
 
     if (
       nodeAfter.nodeType === Node.COMMENT_NODE &&
       nodeAfter.nodeValue === "unchanged"
     ) {
+      // Skip over the children of the old three as they are not included in the new one.
+      console.log("unchanged");
+      cmp.skipSubtree();
+      continue;
+    }
+
+    // TODO: handle moved nodes
+    // TODO: handle removed nodes
+
+    // New node
+    if (nodeBefore === null) {
+      console.log("append new", nodeAfter);
+      cmp.skipSubtree();
+      changes.push({ type: "append", parent, child: nodeAfter });
       continue;
     }
 
     // type changed, replace completely
     if (nodeBefore.prototype !== nodeAfter.prototype) {
       console.log("replace");
-      nodeBefore.parentNode.replaceChild(nodeAfter, nodeBefore);
+      cmp.skipSubtree();
+      changes.push({
+        type: "replace",
+        parent: nodeBefore,
+        newChild: nodeAfter,
+        oldChild: nodeBefore,
+      });
       continue;
     }
-
-    // TODO: handle added/removed nodes
-    //   if (!childBefore) {
-    //     if (i == 0) {
-    //       before.appendChild(childAfter);
-    //     } else {
-    //       before.childNodes[i - 1].after(childAfter);
-    //     }
-    //     continue;
-    //   }
 
     switch (nodeAfter.nodeType) {
       case Node.COMMENT_NODE:
@@ -156,19 +162,33 @@ function patchComponent(rootBefore, rootAfter) {
         }
         break;
     }
-  } while (advanceBoth(before, after));
+  }
+
+  // TOOD: apply changes while iterating the tree?
+  for (const change of changes) {
+    switch (change.type) {
+      case "append":
+        change.parent.appendChild(change.child);
+        break;
+      case "replace":
+        change.parent.replace(change.newChild, change.oldChild);
+        break;
+      default:
+        throw new Error(`unknown change type: "${change.type}"`);
+    }
+  }
 }
 
 function patchAttributes(childBefore, childAfter) {
   const oldAttributeNames = new Set(childBefore.getAttributeNames());
   for (const name of childAfter.getAttributeNames()) {
     oldAttributeNames.delete(name);
-    
+
     // TODO: handle new attributes
 
     const newValue = childAfter.getAttribute(name);
     if (childBefore.getAttribute(name) !== newValue) {
-      console.log("update attribute", name)
+      console.log("update attribute", name);
       switch (name) {
         case "value":
           childBefore.value = newValue;
@@ -182,13 +202,55 @@ function patchAttributes(childBefore, childAfter) {
 
   // delete attributes that are not set anymore
   for (const name in oldAttributeNames) {
-    console.log("remove attribute", name)
+    console.log("remove attribute", name);
     childBefore.removeAttribute(name);
   }
 }
 
-function advanceBoth(tree1, tree2) {
-  const node1 = tree1.nextNode();
-  const node2 = tree2.nextNode();
-  return node1 || node2;
+class TreeComparator {
+  constructor(rootBefore, rootAfter) {
+    const filter =
+      NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT;
+    this.before = document.createTreeWalker(rootBefore, filter);
+    this.after = document.createTreeWalker(rootAfter, filter);
+
+    // skip over root nodes
+    this.before.nextNode();
+    this.after.nextNode();
+
+    this.nextBefore = this.before.nextNode();
+    this.nextAfter = this.after.nextNode();
+  }
+
+  next() {
+    if (!this.nextBefore && !this.nextAfter) {
+      this.nextBefore = this.before.nextNode();
+      this.nextAfter = this.after.nextNode();
+    }
+    if (!this.nextBefore && !this.nextAfter) {
+      return { done: true };
+    }
+
+    const value = [this.nextBefore, this.nextAfter];
+
+    this.nextBefore = null;
+    this.nextAfter = null;
+
+    return { done: false, value };
+  }
+
+  skipSubtree() {
+    this.nextBefore = this.before.nextSibling();
+    if (!this.nextBefore) {
+      this.before.lastChild();
+    }
+    this.nextAfter = this.after.nextSibling();
+    if (!this.nextAfter) {
+      this.after.lastChild();
+    }
+  }
+
+  [Symbol.iterator]() {
+    return this;
+  }
 }

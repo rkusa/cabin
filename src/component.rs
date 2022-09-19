@@ -33,7 +33,8 @@ impl<S, V: View<S>> Component<S, V> {
         previous_tree: ViewHashTree,
     ) -> Result<(String, ViewHashTree), fmt::Error> {
         let mut hash_tree = HashTree::from_previous_tree(previous_tree);
-        let renderer = (self.render)(self.state).prepare(&mut hash_tree).unwrap(); // TODO: unwrap
+        // TODO: unwrap (eg if root is empty)
+        let renderer = (self.render)(self.state).prepare(&mut hash_tree).unwrap();
         let mut result = String::new();
         // TODO: remove `is_update` again?
         renderer.render(&mut result, true)?;
