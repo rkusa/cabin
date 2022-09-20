@@ -1,4 +1,5 @@
 use std::hash::Hasher;
+use std::ops::Neg;
 
 use serde::{Deserialize, Serialize};
 use twox_hash::XxHash32;
@@ -9,7 +10,7 @@ pub struct HashTree {
     // would require a new allocation for its own vec).
     tree: Vec<Marker>,
     previous_tree: Option<Vec<Marker>>,
-    previous_offset: usize,
+    previous_offset: isize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -50,6 +51,13 @@ impl HashTree {
     }
 
     pub fn node(&mut self) -> Node<'_> {
+        let previous = self
+            .previous_tree
+            .as_ref()
+            .and_then(|t| t.get(self.previous_position()));
+        if let Some(Marker::End(_)) = previous {
+            self.previous_offset += 2
+        }
         self.tree.push(Marker::Start);
         // When entering a node, set the hasher of the [HashTree] to a fresh hasher and store its
         // current hasher in the node. It is swapped back once the node gets dropped.
@@ -65,17 +73,25 @@ impl HashTree {
         ViewHashTree(self.tree)
     }
 
+    fn previous_position(&self) -> usize {
+        if self.previous_offset > 0 {
+            self.tree.len() - self.previous_offset as usize
+        } else {
+            self.tree.len() + self.previous_offset.neg() as usize
+        }
+    }
+
     pub fn changed_or_else<R>(&mut self, hash: u32, f: impl FnOnce() -> R) -> Option<R> {
         let previous = self
             .previous_tree
             .as_ref()
-            .and_then(|t| t.get(self.tree.len() - 1 - self.previous_offset));
+            .and_then(|t| t.get(self.previous_position() - 1));
         match previous {
             // Subtree did not change
             Some(Marker::End(previous)) if *previous == hash => return None,
             // Encountered start marker, which means that the new tree has new items. Update the
             // offset accordingly.
-            Some(Marker::Start) => self.previous_offset += 2,
+            Some(Marker::Start) => self.previous_offset -= 2,
             _ => {}
         }
 
@@ -371,7 +387,7 @@ mod tests {
     }
 
     #[test]
-    fn test_unchanged_after_new_items() {
+    fn test_new_items() {
         let mut hash_tree = HashTree::from_previous_tree(ViewHashTree(vec![
             Marker::Start,
             Marker::Start,
@@ -395,5 +411,32 @@ mod tests {
         let root2 = hash_tree.node();
         root2.end();
         assert_eq!(hash_tree.changed_or_else(3, || ()), None);
+    }
+
+    #[test]
+    fn test_removed_items() {
+        let mut hash_tree = HashTree::from_previous_tree(ViewHashTree(vec![
+            //                vs
+            Marker::Start,  // Start
+            Marker::Start,  // Start
+            Marker::End(1), // End(1)
+            Marker::Start,
+            Marker::End(2),
+            Marker::End(3), // End(5)
+            Marker::Start,  // Start
+            Marker::End(4), // End(4)
+        ]));
+
+        let mut root1 = hash_tree.node();
+        let root1_content = root1.content();
+        let child1 = root1_content.node();
+        child1.end();
+        assert_eq!(root1_content.changed_or_else(1, || ()), None);
+        root1.end();
+        assert_eq!(hash_tree.changed_or_else(5, || ()), Some(()));
+
+        let root2 = hash_tree.node();
+        root2.end();
+        assert_eq!(hash_tree.changed_or_else(4, || ()), None);
     }
 }
