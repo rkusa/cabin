@@ -242,11 +242,11 @@ class TreeComparator {
   skipSubtree() {
     this.nextBefore = this.before.nextSibling();
     if (!this.nextBefore) {
-      this.before.lastChild();
+      while (this.before.lastChild()) {}
     }
     this.nextAfter = this.after.nextSibling();
     if (!this.nextAfter) {
-      this.after.lastChild();
+      while (this.after.lastChild()) {}
     }
   }
 

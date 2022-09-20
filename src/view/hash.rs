@@ -9,6 +9,7 @@ pub struct HashTree {
     // would require a new allocation for its own vec).
     tree: Vec<Marker>,
     previous_tree: Option<Vec<Marker>>,
+    previous_offset: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -31,6 +32,7 @@ impl Default for HashTree {
             hasher: XxHash32::default(),
             tree: Vec::with_capacity(32),
             previous_tree: None,
+            previous_offset: 0,
         }
     }
 }
@@ -63,16 +65,20 @@ impl HashTree {
         ViewHashTree(self.tree)
     }
 
-    pub fn changed_or_else<R>(&self, hash: u32, f: impl FnOnce() -> R) -> Option<R> {
-        if let Some(Marker::End(previous)) = self
+    pub fn changed_or_else<R>(&mut self, hash: u32, f: impl FnOnce() -> R) -> Option<R> {
+        let previous = self
             .previous_tree
             .as_ref()
-            .and_then(|t| t.get(self.tree.len() - 1))
-        {
-            if *previous == hash {
-                return None;
-            }
+            .and_then(|t| t.get(self.tree.len() - 1 - self.previous_offset));
+        match previous {
+            // Subtree did not change
+            Some(Marker::End(previous)) if *previous == hash => return None,
+            // Encountered start marker, which means that the new tree has new items. Update the
+            // offset accordingly.
+            Some(Marker::Start) => self.previous_offset += 2,
+            _ => {}
         }
+
         Some(f())
     }
 }
@@ -312,5 +318,82 @@ mod tests {
         assert_eq!(serialized, r#"["s",1,"s","s",2,"s",3,4,5]"#);
         let deserialized: Vec<Marker> = serde_json::from_str(&serialized).unwrap();
         assert_eq!(deserialized, hash_tree);
+    }
+
+    #[test]
+    fn test_unchanged() {
+        let mut hash_tree = HashTree::from_previous_tree(ViewHashTree(vec![
+            Marker::Start,
+            Marker::Start,
+            Marker::End(1),
+            Marker::Start,
+            Marker::End(2),
+            Marker::End(3),
+        ]));
+        let mut root = hash_tree.node();
+        let root_content = root.content();
+
+        let child1 = root_content.node();
+        child1.end();
+        assert_eq!(root_content.changed_or_else(1, || ()), None);
+
+        let child2 = root_content.node();
+        child2.end();
+        assert_eq!(root_content.changed_or_else(2, || ()), None);
+
+        root.end();
+        assert_eq!(hash_tree.changed_or_else(3, || ()), None);
+    }
+
+    #[test]
+    fn test_changed() {
+        let mut hash_tree = HashTree::from_previous_tree(ViewHashTree(vec![
+            Marker::Start,
+            Marker::Start,
+            Marker::End(1),
+            Marker::Start,
+            Marker::End(2),
+            Marker::End(3),
+        ]));
+        let mut root = hash_tree.node();
+        let root_content = root.content();
+
+        let child1 = root_content.node();
+        child1.end();
+        assert_eq!(root_content.changed_or_else(1, || ()), None);
+
+        let child2 = root_content.node();
+        child2.end();
+        assert_eq!(root_content.changed_or_else(5, || ()), Some(()));
+
+        root.end();
+        assert_eq!(hash_tree.changed_or_else(6, || ()), Some(()));
+    }
+
+    #[test]
+    fn test_unchanged_after_new_items() {
+        let mut hash_tree = HashTree::from_previous_tree(ViewHashTree(vec![
+            Marker::Start,
+            Marker::Start,
+            Marker::End(1),
+            Marker::End(3),
+            Marker::Start,
+            Marker::End(3),
+        ]));
+
+        let mut root1 = hash_tree.node();
+        let root1_content = root1.content();
+        let child1 = root1_content.node();
+        child1.end();
+        assert_eq!(root1_content.changed_or_else(1, || ()), None);
+        let child2 = root1_content.node();
+        child2.end();
+        assert_eq!(root1_content.changed_or_else(4, || ()), Some(()));
+        root1.end();
+        assert_eq!(hash_tree.changed_or_else(5, || ()), Some(()));
+
+        let root2 = hash_tree.node();
+        root2.end();
+        assert_eq!(hash_tree.changed_or_else(3, || ()), None);
     }
 }
