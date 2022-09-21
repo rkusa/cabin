@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::{action, component, html, render, View, SERVER_COMPONENT_JS};
+use crabweb::{action, component, html, render, IntoView, View, SERVER_COMPONENT_JS};
 use solarsail::hyper::body::Buf;
 use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;
@@ -74,9 +74,9 @@ fn counter(count: u32) -> impl View<u32> {
         //     (count == 0).then(|| ),
         //     (count > 0).then(move || html::div(html::text!("Count: {}", count))),
         if count > 0 {
-            html::any(html::div(html::text!("Count: {}", count)))
+            html::div(html::text!("Count: {}", count)).boxed()
         } else {
-            html::any(html::div("Hit `incr` to start counting ..."))
+            html::div("Hit `incr` to start counting ...").boxed()
         },
         html::button("incr").on_click(increment_counter),
     )

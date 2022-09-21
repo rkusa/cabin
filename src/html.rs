@@ -1,17 +1,16 @@
 mod attributes;
 
 use std::borrow::Cow;
-use std::fmt::{self, Write};
-use std::hash::Hasher;
+use std::fmt;
 
 use serde::Deserialize;
 
 use self::attributes::{Attribute, Attributes};
 use crate::action::EventAction;
-pub use crate::view::any::any;
+use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::text;
-use crate::view::{HashTree, IntoView, View};
-use crate::{Action, Render};
+use crate::view::{IntoView, View};
+use crate::Action;
 
 pub fn div<V: View<S>, S>(content: impl IntoView<V, S>) -> Html<V, S, ()> {
     custom("div", content)
@@ -30,7 +29,7 @@ pub fn button<V: View<S>, S>(content: impl IntoView<V, S>) -> Html<V, S, ()> {
 }
 
 pub fn input<S>() -> Html<(), S, ()> {
-    custom("button", ())
+    custom("input", ())
 }
 
 pub fn custom<V: View<S>, S>(tag: &'static str, content: impl IntoView<V, S>) -> Html<V, S, ()> {
@@ -101,31 +100,31 @@ where
     V: View<S>,
     A: Attributes,
 {
-    type Render = HtmlTagRenderer<S, A, V::Render>;
-
-    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
-        let mut node = hash_tree.node();
-        node.write(self.tag.tag.as_bytes());
+    fn render(&self, r: &mut Renderer) -> fmt::Result {
+        let mut el = r.element(self.tag.tag)?;
 
         if let Some(on_click) = &self.tag.on_click {
-            // TODO: avoid double allocation (again in render)
+            // TODO: avoid allocation
             let action = format!("{}::{}", on_click.module, on_click.name);
-            Attribute::new("data-click", action, ()).hash(&mut node);
+            el.attribute("data-click", &action)?;
         }
 
         if let Some(on_input) = &self.tag.on_input {
-            // TODO: avoid double allocation (again in render)
+            // TODO: avoid allocation
             let action = format!("{}::{}", on_input.module, on_input.name);
-            Attribute::new("data-input", action, ()).hash(&mut node);
+            el.attribute("data-input", &action)?;
         }
 
-        self.tag.attrs.hash(&mut node);
-        let content = self.content.prepare(node.content());
-        let hash = node.end();
-        hash_tree.changed_or_else(hash, || HtmlTagRenderer {
-            tag: self.tag,
-            content,
-        })
+        self.tag.attrs.render(&mut el)?;
+
+        if !is_void_element(self.tag.tag) {
+            let content = el.content()?;
+            self.content.render(content)?;
+        }
+
+        el.end()?;
+
+        Ok(())
     }
 }
 
@@ -137,66 +136,4 @@ where
     fn into_view(self) -> Html<V, S, A> {
         self
     }
-}
-
-pub struct HtmlTagRenderer<S, A, R> {
-    tag: HtmlTag<S, A>,
-    content: Option<R>,
-}
-
-impl<S, A, R> Render for HtmlTagRenderer<S, A, R>
-where
-    A: Attributes,
-    R: Render,
-{
-    fn render(&self, mut out: &mut dyn Write, is_update: bool) -> fmt::Result {
-        write!(&mut out, "<{}", self.tag.tag)?;
-
-        if let Some(on_click) = &self.tag.on_click {
-            // TODO: avoid allocation
-            let action = format!("{}::{}", on_click.module, on_click.name);
-            Attribute::new("data-click", action, ()).render(&mut out)?;
-        }
-
-        if let Some(on_input) = &self.tag.on_input {
-            // TODO: avoid allocation
-            let action = format!("{}::{}", on_input.module, on_input.name);
-            Attribute::new("data-input", action, ()).render(&mut out)?;
-        }
-
-        self.tag.attrs.render(&mut out)?;
-
-        // Handle void elements. Content is simply ignored.
-        if is_void_element(self.tag.tag) {
-            write!(&mut out, "/>")?;
-            return Ok(());
-        }
-
-        write!(&mut out, ">")?;
-
-        self.content.render(&mut out, is_update)?;
-
-        write!(&mut out, "</{}>", self.tag.tag)?;
-        Ok(())
-    }
-}
-
-fn is_void_element(tag: &str) -> bool {
-    // https://html.spec.whatwg.org/multipage/syntax.html#elements-2
-    matches!(
-        tag,
-        "area"
-            | "base"
-            | "br"
-            | "col"
-            | "embed"
-            | "hr"
-            | "img"
-            | "input"
-            | "link"
-            | "meta"
-            | "source"
-            | "track"
-            | "wbr"
-    )
 }

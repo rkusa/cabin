@@ -1,7 +1,7 @@
-use std::fmt::{self, Write};
+use std::fmt;
 
-use super::{HashTree, IntoView};
-use crate::{Render, View};
+use super::{IntoView, View};
+use crate::render::Renderer;
 
 #[macro_export]
 macro_rules! text {
@@ -24,13 +24,11 @@ macro_rules! text {
 pub use text;
 
 // Note: Cannot directly implement View for std::fmt::Arguments due to resulting lifetime issues.
-pub struct Text<F> {
-    write: F,
-}
+pub struct Text<F>(F);
 
 impl<F: Fn(&mut dyn fmt::Write) -> fmt::Result> Text<F> {
     pub fn new(write: F) -> Self {
-        Text { write }
+        Text(write)
     }
 }
 
@@ -38,13 +36,8 @@ impl<S, F> View<S> for Text<F>
 where
     F: Fn(&mut dyn fmt::Write) -> fmt::Result,
 {
-    type Render = TextRenderer<F>;
-
-    fn prepare(self, hash_tree: &mut HashTree) -> Option<Self::Render> {
-        let mut node = hash_tree.node();
-        (self.write)(&mut HashFmt(&mut node)).unwrap(); // TODO: unwrap
-        let hash = node.end();
-        hash_tree.changed_or_else(hash, || TextRenderer(self.write))
+    fn render(&self, r: &mut Renderer) -> fmt::Result {
+        (self.0)(r)
     }
 }
 
@@ -54,17 +47,6 @@ where
 {
     fn into_view(self) -> Text<F> {
         self
-    }
-}
-
-pub struct TextRenderer<F>(F);
-
-impl<F> Render for TextRenderer<F>
-where
-    F: Fn(&mut dyn fmt::Write) -> fmt::Result,
-{
-    fn render(&self, mut out: &mut dyn Write, _is_update: bool) -> fmt::Result {
-        (self.0)(&mut out)
     }
 }
 

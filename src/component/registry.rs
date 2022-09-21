@@ -6,8 +6,7 @@ use serde_json::value::RawValue;
 
 use crate::action::registry::ActionRegistry;
 use crate::html::InputEvent;
-use crate::view::hash::ViewHashTree;
-use crate::{Component, View};
+use crate::{Component, View, ViewHashTree};
 
 #[linkme::distributed_slice]
 pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
