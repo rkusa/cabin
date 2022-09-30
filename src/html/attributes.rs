@@ -1,12 +1,11 @@
 use std::borrow::Cow;
-use std::fmt::{self, Write};
-use std::hash::Hasher;
+use std::fmt;
 
-use crate::render::{ElementRenderer, Renderer};
+use crate::render::ElementRenderer;
 
-pub struct Attribute<N> {
+pub struct Attribute<'a, N> {
     name: &'static str,
-    value: Cow<'static, str>,
+    value: Cow<'a, str>,
     next: N,
 }
 
@@ -20,8 +19,8 @@ impl Attributes for () {
     }
 }
 
-impl<N> Attribute<N> {
-    pub fn new(name: &'static str, value: impl Into<Cow<'static, str>>, next: N) -> Self {
+impl<'a, N> Attribute<'a, N> {
+    pub fn new(name: &'static str, value: impl Into<Cow<'a, str>>, next: N) -> Self {
         Self {
             name,
             value: value.into(),
@@ -30,11 +29,11 @@ impl<N> Attribute<N> {
     }
 }
 
-impl<N> Attributes for Attribute<N>
+impl<'a, N> Attributes for Attribute<'a, N>
 where
     N: Attributes,
 {
-    fn render<'a>(&self, r: &mut ElementRenderer<'a>) -> Result<(), fmt::Error> {
+    fn render<'b>(&self, r: &mut ElementRenderer<'b>) -> Result<(), fmt::Error> {
         r.attribute(self.name, &self.value)?;
         self.next.render(r)
     }

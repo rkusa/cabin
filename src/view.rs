@@ -1,27 +1,24 @@
 mod iter;
-pub mod text;
 
 use std::borrow::Cow;
 use std::fmt;
 
-use crate::render::Renderer;
-
-pub use self::text::Text;
-
 use paste::paste;
+
+use crate::render::Renderer;
 
 // Implementation note: It is not possible to implement [View] for both tupels and iterators
 // (fails due to conflicting implementation). As workaround, `IntoView` is introduced as an
 // additional indirection. By putting the resulting view into a generic (and not an associated),
 // and since both have a different resulting view (the tuple returns itself, and the iterator
 // is wrapped into [IteratorView]), it can be implemented for both.
-pub trait IntoView<V, S>
+pub trait IntoView<V, M>
 where
-    V: View<S>,
+    V: View<M>,
 {
     fn into_view(self) -> V;
 
-    fn boxed(self) -> Box<dyn View<S>>
+    fn boxed(self) -> Box<dyn View<M>>
     where
         Self: Sized,
         V: 'static,
@@ -32,61 +29,70 @@ where
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
-pub trait View<S = ()> {
+pub trait View<M = ()> {
     fn render(&self, r: &mut Renderer) -> fmt::Result;
 }
 
-impl<S> View<S> for () {
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
+impl<M> View<M> for () {
+    fn render(&self, _r: &mut Renderer) -> fmt::Result {
         Ok(())
     }
 }
 
-impl<S> IntoView<(), S> for () {
+impl<M> IntoView<(), M> for () {
     fn into_view(self) {
         self
     }
 }
 
-impl<'a, S> View<S> for Cow<'a, str> {
+impl<'a, M> IntoView<&'a str, M> for &'a str {
+    fn into_view(self) -> &'a str {
+        self
+    }
+}
+impl<'a, M> View<M> for &'a str {
     fn render(&self, r: &mut Renderer) -> fmt::Result {
         // TODO: safe escape HTML
-        r.text(&self)
+        r.text(self)
     }
 }
 
-impl<'a, S> IntoView<Cow<'a, str>, S> for &'a str {
-    fn into_view(self) -> Cow<'a, str> {
-        Cow::Borrowed(self)
-    }
-}
-
-impl<'a, S> IntoView<Cow<'a, str>, S> for Cow<'a, str> {
+impl<'a, M> IntoView<Cow<'a, str>, M> for Cow<'a, str> {
     fn into_view(self) -> Cow<'a, str> {
         self
     }
 }
-
-impl<'a, S> IntoView<Cow<'static, str>, S> for String {
-    fn into_view(self) -> Cow<'static, str> {
-        Cow::Owned(self)
+impl<'a, M> View<M> for Cow<'a, str> {
+    fn render(&self, r: &mut Renderer) -> fmt::Result {
+        <&str as View<M>>::render(&self.as_ref(), r)
     }
 }
 
-impl<S> IntoView<Box<dyn View<S>>, S> for Box<dyn View<S>> {
-    fn into_view(self) -> Box<dyn View<S>> {
+impl<M> IntoView<String, M> for String {
+    fn into_view(self) -> String {
         self
     }
 }
-impl<S> View<S> for Box<dyn View<S>> {
+impl<M> View<M> for String {
+    fn render(&self, r: &mut Renderer) -> fmt::Result {
+        <&str as View<M>>::render(&self.as_str(), r)
+    }
+}
+
+impl<M> IntoView<Box<dyn View<M>>, M> for Box<dyn View<M>> {
+    fn into_view(self) -> Box<dyn View<M>> {
+        self
+    }
+}
+impl<M> View<M> for Box<dyn View<M>> {
     fn render(&self, out: &mut Renderer) -> fmt::Result {
         (**self).render(out)
     }
 }
 
-impl<V, S> View<S> for Option<V>
+impl<V, M> View<M> for Option<V>
 where
-    V: View<S>,
+    V: View<M>,
 {
     fn render(&self, r: &mut Renderer) -> fmt::Result {
         match self {
@@ -96,19 +102,37 @@ where
     }
 }
 
-impl<V, S> IntoView<Option<V>, S> for Option<V>
+impl<V, M> IntoView<Option<V>, M> for Option<V>
 where
-    V: View<S>,
+    V: View<M>,
 {
     fn into_view(self) -> Option<V> {
         self
     }
 }
 
+impl<'a, V, M> IntoView<&'a V, M> for &'a V
+where
+    V: View<M>,
+{
+    fn into_view(self) -> &'a V {
+        self
+    }
+}
+
+impl<'a, V, M> View<M> for &'a V
+where
+    V: View<M>,
+{
+    fn render(&self, r: &mut Renderer) -> fmt::Result {
+        (*self).render(r)
+    }
+}
+
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            impl<$( [<I$ix>]: IntoView<[<V$ix>], S>, [<V$ix>]: View<S> ),*, S> IntoView<($([<V$ix>], )*), S> for ($([<I$ix>],)*) {
+            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> ),*, M> IntoView<($([<V$ix>], )*), M> for ($([<I$ix>],)*) {
                 fn into_view(self) -> ($([<V$ix>], )*) {
                     (
                         $(
@@ -118,7 +142,7 @@ macro_rules! impl_tuple {
                 }
             }
 
-            impl<$( [<V$ix>]: View<S> ),*, S> View<S> for ($( [<V$ix>], )*) {
+            impl<$( [<V$ix>]: View<M> ),*, M> View<M> for ($( [<V$ix>], )*) {
                 fn render(&self, r: &mut Renderer) -> fmt::Result {
                     $(
                         self.$ix.render(r)?;

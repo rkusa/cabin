@@ -5,13 +5,13 @@ use super::IntoView;
 pub use super::View;
 use crate::render::Renderer;
 
-impl<I, V, S> IntoView<IteratorView<I::IntoIter, V, S>, S> for I
+impl<I, V, M> IntoView<IteratorView<I::IntoIter, V, M>, M> for I
 where
     I: IntoIterator<Item = V>,
     I::IntoIter: Clone,
-    V: View<S>,
+    V: View<M>,
 {
-    fn into_view(self) -> IteratorView<I::IntoIter, V, S> {
+    fn into_view(self) -> IteratorView<I::IntoIter, V, M> {
         IteratorView {
             iter: self.into_iter(),
             marker: PhantomData,
@@ -19,15 +19,15 @@ where
     }
 }
 
-pub struct IteratorView<I, V, S> {
+pub struct IteratorView<I, V, M> {
     iter: I,
-    marker: PhantomData<(V, S)>,
+    marker: PhantomData<(V, M)>,
 }
 
-impl<I, V, S> View<S> for IteratorView<I, V, S>
+impl<I, V, M> View<M> for IteratorView<I, V, M>
 where
     I: Iterator<Item = V> + Clone,
-    V: View<S>,
+    V: View<M>,
 {
     fn render(&self, r: &mut Renderer) -> fmt::Result {
         for i in self.iter.clone() {

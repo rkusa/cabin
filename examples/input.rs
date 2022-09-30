@@ -1,11 +1,14 @@
+#![feature(type_alias_impl_trait)]
+
 use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::html::InputEvent;
-use crabweb::{component, event, html, render, View, SERVER_COMPONENT_JS};
+use crabweb::html::events::InputValue;
+use crabweb::{html, render, Component, IntoView, Render, View, SERVER_COMPONENT_JS};
+use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::Buf;
 use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;
@@ -31,7 +34,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = input("".into());
+            let view = app();
             let html = render(view).unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -40,10 +43,9 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             html.into_response()
         }
 
-        post!("dispatch" / component / action / "input") => {
+        post!("dispatch" / component) => {
             // TODO: get rid of to_string()
             let id = component.to_string();
-            let action = action.to_string();
 
             // TODO: unwrap()
             let (body, _mime_type) = req.body_mut().take().unwrap();
@@ -57,9 +59,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             let whole_body = hyper::body::aggregate(body).await.unwrap();
             let rd = whole_body.reader();
 
-            let update = registry
-                .handle_event(&id, rd, &action, "input")
-                .expect("known component");
+            let update = registry.handle(&id, rd).expect("unknown component");
             json(update).into_response()
         }
 
@@ -67,15 +67,36 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
     }
 }
 
-#[event]
-fn handle_input(_state: Cow<'static, str>, ev: InputEvent) -> Cow<'static, str> {
-    ev.value.into()
+fn app() -> impl View {
+    Value::default().into_view()
 }
 
-#[component]
-pub fn input(value: Cow<'static, str>) -> impl View<Cow<'static, str>> {
-    (
-        html::div(format!("Value: {}", value)),
-        html::input().attr("value", value).on_input(handle_input),
-    )
+#[derive(Default, Serialize, Deserialize, Component)]
+struct Value(Cow<'static, str>);
+
+#[derive(Serialize, Deserialize)]
+enum ValueMessage {
+    SetValue(InputValue),
+}
+
+impl Render for Value {
+    type Message = ValueMessage;
+    type View<'v> = impl View<Self::Message> + 'v;
+
+    fn update(&mut self, message: Self::Message) {
+        match message {
+            ValueMessage::SetValue(value) => self.0 = value.into(),
+        }
+    }
+
+    fn render(&self) -> Self::View<'_> {
+        (
+            html::div(format!("Value: {}", self.0)),
+            // TODO: upon reload, Firefox keeps the previous value, so `on_input` might need to
+            // be executed on load
+            html::input()
+                .attr("value", &*self.0)
+                .on_input(|ev| ValueMessage::SetValue(ev.value)),
+        )
+    }
 }

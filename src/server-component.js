@@ -41,24 +41,22 @@ class ServerComponent extends HTMLElement {
             node.disabled = true;
           }
           try {
-            // TODO: get component id from DOM
-            const res = await fetch(
-              opts.eventPayload
-                ? `/dispatch/${this.dataset.id}/${node.dataset[eventName]}/${eventName}`
-                : `/dispatch/${this.dataset.id}/${node.dataset[eventName]}`,
-              {
-                signal,
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  state: this.state,
-                  hashTree: this.hashTree,
-                  event: opts.eventPayload?.(e),
-                }),
-              }
+            const message = node.dataset[eventName].replace(
+              "_##InputValue",
+              node.value
             );
+            const res = await fetch(`/dispatch/${this.dataset.id}`, {
+              signal,
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                state: this.state,
+                hashTree: this.hashTree,
+                message: JSON.parse(message),
+              }),
+            });
             if (signal.aborted) {
               console.log("already aborted, ignoring");
               return;

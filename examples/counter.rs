@@ -1,9 +1,12 @@
+#![feature(type_alias_impl_trait)]
+
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::{action, component, html, render, IntoView, View, SERVER_COMPONENT_JS};
+use crabweb::{html, render, Component, IntoView, Render, View, SERVER_COMPONENT_JS};
+use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::Buf;
 use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;
@@ -29,7 +32,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = counter(0);
+            let view = app();
             let html = render(view).unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -38,10 +41,9 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             html.into_response()
         }
 
-        post!("dispatch" / component / action) => {
+        post!("dispatch" / component) => {
             // TODO: get rid of to_string()
             let id = component.to_string();
-            let action = action.to_string();
 
             // TODO: unwrap()
             let (body, _mime_type) = req.body_mut().take().unwrap();
@@ -55,7 +57,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             let whole_body = hyper::body::aggregate(body).await.unwrap();
             let rd = whole_body.reader();
 
-            let update = registry.handle(&id, rd, &action).expect("known component");
+            let update = registry.handle(&id, rd).expect("unknown component");
             json(update).into_response()
         }
 
@@ -63,21 +65,32 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
     }
 }
 
-#[action]
-fn increment_counter(count: u32) -> u32 {
-    count + 1
+fn app() -> impl View {
+    Counter::default().into_view()
 }
 
-#[component]
-fn counter(count: u32) -> impl View<u32> {
-    (
-        //     (count == 0).then(|| ),
-        //     (count > 0).then(move || html::div(html::text!("Count: {}", count))),
-        if count > 0 {
-            html::div(html::text!("Count: {}", count)).boxed()
-        } else {
-            html::div("Hit `incr` to start counting ...").boxed()
-        },
-        html::button("incr").on_click(increment_counter),
-    )
+#[derive(Default, Serialize, Deserialize, Component)]
+struct Counter(u32);
+
+impl Render for Counter {
+    type Message = ();
+    type View<'v> = impl View<Self::Message> + 'v;
+
+    fn update(&mut self, _message: Self::Message) {
+        self.0 += 1;
+    }
+
+    fn render(&self) -> Self::View<'_> {
+        (
+            //     (self.0 == 0).then(|| ),
+            //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
+            if self.0 > 0 {
+                // TODO: reintroduce html::text!
+                html::div(format!("Count: {}", self.0)).boxed()
+            } else {
+                html::div("Hit `incr` to start counting ...").boxed()
+            },
+            html::button("incr").on_click(()),
+        )
+    }
 }

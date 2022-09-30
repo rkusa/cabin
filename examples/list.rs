@@ -1,10 +1,14 @@
+#![feature(type_alias_impl_trait)]
+
 use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::{action, component, html, render, View, SERVER_COMPONENT_JS};
+use crabweb::component::Render;
+use crabweb::{html, render, Component, IntoView, View, SERVER_COMPONENT_JS};
+use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::Buf;
 use solarsail::hyper::{self, header, StatusCode};
 use solarsail::response::json;
@@ -30,7 +34,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = items(vec!["first".into(), "second".into()]);
+            let view = app();
             let html = render(view).unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -39,10 +43,9 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             html.into_response()
         }
 
-        post!("dispatch" / component / action) => {
+        post!("dispatch" / component) => {
             // TODO: get rid of to_string()
             let id = component.to_string();
-            let action = action.to_string();
 
             // TODO: unwrap()
             let (body, _mime_type) = req.body_mut().take().unwrap();
@@ -56,7 +59,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             let whole_body = hyper::body::aggregate(body).await.unwrap();
             let rd = whole_body.reader();
 
-            let update = registry.handle(&id, rd, &action).expect("known component");
+            let update = registry.handle(&id, rd).expect("unknown component");
             json(update).into_response()
         }
 
@@ -64,19 +67,36 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
     }
 }
 
-#[action]
-fn add_item(mut items: Vec<Cow<'static, str>>) -> Vec<Cow<'static, str>> {
-    items.push("new item 1".into());
-    items.push("new item 2".into());
-    items
+// TODO: return impl IntoView ?
+fn app() -> impl View {
+    Items(vec!["first".into(), "second".into()]).into_view()
 }
 
-type Items = Vec<Cow<'static, str>>;
+#[derive(Serialize, Deserialize, Component)]
+struct Items(Vec<Cow<'static, str>>);
 
-#[component]
-fn items(items: Items) -> impl View<Items> {
-    (
-        html::ul(items.into_iter().map(html::li)),
-        html::div(html::button("add").on_click(add_item)),
-    )
+#[derive(Serialize, Deserialize)]
+enum ItemsAction {
+    Add,
+}
+
+impl Render for Items {
+    type Message = ItemsAction;
+    type View<'v> = impl View<Self::Message> + 'v;
+
+    fn update(&mut self, message: Self::Message) {
+        match message {
+            ItemsAction::Add => {
+                self.0.push("new item 1".into());
+                self.0.push("new item 2".into());
+            }
+        }
+    }
+
+    fn render(&self) -> Self::View<'_> {
+        (
+            html::ul(self.0.iter().map(html::li)),
+            html::div(html::button("add").on_click(ItemsAction::Add)),
+        )
+    }
 }

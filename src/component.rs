@@ -1,50 +1,53 @@
 pub mod registry;
 
+use std::borrow::Cow;
 use std::fmt::{self, Write};
 
+use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_json::value::RawValue;
 
 use crate::render::Renderer;
 use crate::view::{IntoView, View};
 use crate::ViewHashTree;
 
-// The conversion from View<A> to View<()> is the feature
-// that ensures the usage of #[component]
-pub struct Component<S, V> {
-    module: &'static str,
-    name: &'static str,
-    state: S,
-    render: fn(S) -> V,
+pub trait Component: Render {
+    fn id() -> Cow<'static, str>;
 }
 
-impl<S, V: View<S>> Component<S, V> {
-    pub fn new(module: &'static str, name: &'static str, state: S, render: fn(S) -> V) -> Self {
-        Component {
-            module,
-            name,
-            state,
-            render,
-        }
-    }
+// TODO: s/DeserializeOwned/Deserialize/ using GATs?
+pub trait Render: Serialize + DeserializeOwned {
+    type Message: Serialize + DeserializeOwned;
+    type View<'v>: View<Self::Message>
+    where
+        Self: 'v;
 
-    pub fn render_update(
-        self,
-        previous_tree: ViewHashTree,
-    ) -> Result<(String, ViewHashTree), fmt::Error> {
-        let mut r = Renderer::from_previous_tree(previous_tree);
-        (self.render)(self.state).render(&mut r)?;
-        let out = r.end();
-        Ok((out.view, out.hash_tree))
+    fn update(&mut self, _message: Self::Message) {}
+    fn render(&self) -> Self::View<'_>;
+}
+
+pub struct ComponentView<C>
+where
+    C: Component,
+{
+    component: C,
+}
+
+impl<C> IntoView<ComponentView<C>, ()> for C
+where
+    C: Component,
+{
+    fn into_view(self) -> ComponentView<C> {
+        ComponentView { component: self }
     }
 }
 
-impl<S: Serialize + Clone, V: View<S>> View<()> for Component<S, V> {
+impl<C> View<()> for ComponentView<C>
+where
+    C: Component,
+{
     fn render(&self, r: &mut Renderer) -> fmt::Result {
-        let content = (self.render)(self.state.clone());
-
         if r.is_update() {
-            return content.render(r);
+            return self.component.render().render(r);
         }
 
         #[derive(Serialize)]
@@ -55,28 +58,24 @@ impl<S: Serialize + Clone, V: View<S>> View<()> for Component<S, V> {
         }
 
         let mut content_renderer = Renderer::new();
-        content.render(&mut content_renderer)?;
+        self.component.render().render(&mut content_renderer)?;
         let out = content_renderer.end();
 
         // TODO: unwrap
-        let initial = serde_json::to_string(&Initial {
-            state: &self.state,
+        let initial = serde_json::to_string(&Initial::<C> {
+            state: &self.component,
             hash_tree: &out.hash_tree,
         })
         .unwrap();
 
         write!(
             r,
-            r#"<server-component data-id="{}::{}"><script type="application/json">{}</script>{}</server-component>"#,
-            self.module, self.name, initial, out.view
+            r#"<server-component data-id="{}"><script type="application/json">{}</script>{}</server-component>"#,
+            C::id(),
+            initial,
+            out.view
         )?;
 
         Ok(())
-    }
-}
-
-impl<S: Serialize + Clone, V: View<S>> IntoView<Component<S, V>, ()> for Component<S, V> {
-    fn into_view(self) -> Component<S, V> {
-        self
     }
 }
