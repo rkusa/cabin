@@ -1,8 +1,9 @@
 use std::hash::Hasher;
 
+use twox_hash::XxHash32;
+
 use super::marker::Marker;
 use super::Renderer;
-use twox_hash::XxHash32;
 
 #[test]
 fn test_server_render_basic() {
@@ -292,6 +293,54 @@ fn test_removed_items() {
             Marker::Start,
             Marker::End(727368102),
             Marker::End(1782583075),
+        ]
+        .into()
+    );
+}
+
+#[test]
+fn test_new_item_same_value() {
+    let mut r = Renderer::new();
+    let mut el = r.element("div").unwrap();
+    el.content().unwrap().text("1").unwrap();
+    el.end().unwrap();
+    r.text("E").unwrap();
+    let out = r.end();
+    assert_eq!(out.view, r#"<div>1</div>E"#);
+    assert_eq!(
+        out.hash_tree,
+        vec![
+            Marker::Start,
+            Marker::Start,
+            Marker::End(3068971186),
+            Marker::End(3652438263),
+            Marker::Start,
+            Marker::End(727368102),
+            Marker::End(1782583075),
+        ]
+        .into()
+    );
+
+    let mut r = Renderer::from_previous_tree(out.hash_tree);
+    let mut el = r.element("div").unwrap();
+    el.content().unwrap().text("1").unwrap();
+    el.content().unwrap().text("1").unwrap();
+    el.end().unwrap();
+    r.text("E").unwrap();
+    let out = r.end();
+    assert_eq!(out.view, r#"<div><!--unchanged-->1</div><!--unchanged-->"#);
+    assert_eq!(
+        out.hash_tree,
+        vec![
+            Marker::Start,
+            Marker::Start,
+            Marker::End(3068971186),
+            Marker::Start,
+            Marker::End(3068971186),
+            Marker::End(1614397666),
+            Marker::Start,
+            Marker::End(727368102),
+            Marker::End(4204980819),
         ]
         .into()
     );

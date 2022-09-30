@@ -91,7 +91,7 @@ impl Renderer {
         let previous = self
             .previous_tree
             .as_ref()
-            .and_then(|t| t.get(self.previous_position()));
+            .and_then(|t| t.get(self.next_position()));
         if let Some(Marker::End(_)) = previous {
             self.previous_offset += 2
         }
@@ -100,18 +100,28 @@ impl Renderer {
     }
 
     fn unchanged(&mut self, hash: u32, offset: usize) -> Result<bool, fmt::Error> {
-        let previous = self
+        let previous_position = self.next_position() - 1;
+        let mut previous = self
             .previous_tree
-            .as_ref()
-            .and_then(|t| t.get(self.previous_position() - 1));
-        match previous {
+            .as_mut()
+            .and_then(|t| t.get_mut(previous_position));
+        match previous.as_mut() {
             // Subtree did not change
-            Some(Marker::End(previous)) if *previous == hash => {
-                // TODO: any way to not write the content until the changed detection happens?
-                self.out.truncate(offset);
-                self.out.write_str("<!--unchanged-->")?;
+            Some(Marker::End(previous)) => {
+                let unchanged = *previous == hash;
 
-                return Ok(true);
+                // When the new tree has new items, it is compared to previous values in the old
+                // tree (due to the offset). To ensure that they never match, set the old tree
+                // hashes to 0 here.
+                *previous = 0;
+
+                if unchanged {
+                    // TODO: any way to not write the content until the changed detection happens?
+                    self.out.truncate(offset);
+                    self.out.write_str("<!--unchanged-->")?;
+
+                    return Ok(true);
+                }
             }
             // Encountered start marker, which means that the new tree has new items. Update the
             // offset accordingly.
@@ -122,7 +132,7 @@ impl Renderer {
         Ok(false)
     }
 
-    fn previous_position(&self) -> usize {
+    fn next_position(&self) -> usize {
         if self.previous_offset > 0 {
             self.hash_tree.len() - self.previous_offset as usize
         } else {
