@@ -6,6 +6,7 @@ use syn::{parse_macro_input, DeriveInput};
 #[proc_macro_derive(Component)]
 pub fn derive_component(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+    let generics = input.generics;
     let ident = input.ident;
     let snake_name = ident
         .to_string()
@@ -14,7 +15,7 @@ pub fn derive_component(input: TokenStream) -> TokenStream {
     let factory_ident = format_ident!("__register_{}", snake_name);
 
     quote! {
-        impl ::crabweb::component::Component for #ident {
+        impl #generics ::crabweb::component::Component for #ident #generics {
             fn id() -> ::std::borrow::Cow<'static, str> {
                 format!("{}::{}", module_path!(), #snake_name).into()
             }

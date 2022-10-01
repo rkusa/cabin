@@ -72,6 +72,7 @@ fn app() -> impl View {
     Items(vec!["first".into(), "second".into()]).into_view()
 }
 
+// TODO: allow Items<'a>(Vec<&'a str>)
 #[derive(Serialize, Deserialize, Component)]
 struct Items(Vec<Cow<'static, str>>);
 
