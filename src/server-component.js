@@ -114,6 +114,13 @@ function patchChildren(rootBefore, rootAfter) {
     nextAfter = null;
     console.log(nodeBefore, "vs", nodeAfter);
 
+    if (!nodeAfter) {
+      console.log("removed", nodeBefore);
+      nextBefore = nodeBefore.nextSibling;
+      rootBefore.removeChild(nodeBefore);
+      continue;
+    }
+
     if (
       nodeAfter.nodeType === Node.COMMENT_NODE &&
       nodeAfter.nodeValue === "unchanged"

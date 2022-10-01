@@ -78,6 +78,7 @@ struct Items(Vec<Cow<'static, str>>);
 #[derive(Serialize, Deserialize)]
 enum ItemsAction {
     Add,
+    Delete(Cow<'static, str>),
 }
 
 impl Render for Items {
@@ -90,12 +91,20 @@ impl Render for Items {
                 self.0.push("new item 1".into());
                 self.0.push("new item 2".into());
             }
+            ItemsAction::Delete(item) => self.0.retain(|i| i != &item),
         }
     }
 
     fn render(&self) -> Self::View<'_> {
         (
-            html::ul(self.0.iter().map(html::li)),
+            html::ul(self.0.iter().map(|item| {
+                html::li((
+                    item,
+                    // TODO:
+                    // html::button("x").on_click(ItemsAction::Delete(Cow::Borrowed(&item))),
+                    html::button("x").on_click(ItemsAction::Delete(item.clone())),
+                ))
+            })),
             html::div(html::button("add").on_click(ItemsAction::Add)),
         )
     }
