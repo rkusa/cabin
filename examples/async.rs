@@ -6,8 +6,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
+use crabweb::component::Render;
 use crabweb::html::events::InputValue;
-use crabweb::{html, render, Component, IntoView, Render, View, SERVER_COMPONENT_JS};
+use crabweb::{html, render, Component, IntoView, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::to_bytes;
 use solarsail::hyper::{header, StatusCode};
@@ -67,37 +68,51 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
     }
 }
 
+// TODO: return impl IntoView ?
 fn app() -> impl View {
-    Value::default().into_view()
+    Search::default().into_view()
 }
 
+// TODO: allow Items<'a>(Vec<&'a str>)
 #[derive(Default, Serialize, Deserialize, Component)]
-struct Value(Cow<'static, str>);
+struct Search {
+    query: Cow<'static, str>,
+    result: Vec<Cow<'static, str>>,
+}
 
 #[derive(Serialize, Deserialize)]
-enum ValueMessage {
-    SetValue(InputValue),
+enum SearchAction {
+    Search(InputValue),
 }
 
 #[async_trait::async_trait]
-impl Render for Value {
-    type Message<'v> = ValueMessage;
+impl Render for Search {
+    type Message<'v> = SearchAction;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
 
     async fn update(&mut self, message: Self::Message<'_>) {
         match message {
-            ValueMessage::SetValue(value) => self.0 = value.into(),
+            SearchAction::Search(v) => self.result = search(&v).await,
         }
     }
 
     fn render(&self) -> Self::View<'_> {
         (
-            html::div(format!("Value: {}", self.0)),
-            // TODO: upon reload, Firefox keeps the previous value, so `on_input` might need to
-            // be executed on load
-            html::input()
-                .attr("value", &*self.0)
-                .on_input(|ev| ValueMessage::SetValue(ev.value)),
+            html::div(html::input().on_input(|ev| SearchAction::Search(ev.value))),
+            html::div(html::ul(self.result.iter().map(html::li))),
         )
     }
+}
+
+async fn search(query: &str) -> Vec<Cow<'static, str>> {
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+    // Source: https://github.com/umpirsky/country-list/blob/master/data/en_US/country.txt
+    const COUNTRIES: &str = include_str!("./countries.txt");
+    let query = query.to_lowercase();
+    COUNTRIES
+        .lines()
+        .filter(|country| country.to_lowercase().contains(&query))
+        .map(Cow::Borrowed)
+        .collect()
 }

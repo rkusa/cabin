@@ -17,7 +17,7 @@ pub fn derive_component(input: TokenStream) -> TokenStream {
     quote! {
         impl #generics ::crabweb::component::Component for #ident #generics {
             fn id() -> ::std::borrow::Cow<'static, str> {
-                format!("{}::{}", module_path!(), #snake_name).into()
+                format!("{}::{}", module_path!().replace("r#", ""), #snake_name).into()
             }
         }
 

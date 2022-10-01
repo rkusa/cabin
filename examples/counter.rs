@@ -57,7 +57,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             // let whole_body = hyper::body::aggregate(body).await.unwrap();
             // let rd = whole_body.reader();
             let data = to_bytes(body).await.unwrap();
-            let update = registry.handle(&id, &data).expect("unknown component");
+            let update = registry.handle(&id, data).await.expect("unknown component");
             json(update).into_response()
         }
 
@@ -72,11 +72,12 @@ fn app() -> impl View {
 #[derive(Default, Serialize, Deserialize, Component)]
 struct Counter(u32);
 
+#[async_trait::async_trait]
 impl Render for Counter {
     type Message<'v> = ();
     type View<'v> = impl View<Self::Message<'v>> + 'v;
 
-    fn update(&mut self, _message: Self::Message<'_>) {
+    async fn update(&mut self, _message: Self::Message<'_>) {
         self.0 += 1;
     }
 

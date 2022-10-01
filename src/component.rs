@@ -15,13 +15,14 @@ pub trait Component: Render {
 }
 
 // TODO: s/DeserializeOwned/Deserialize/ using GATs?
+#[async_trait::async_trait]
 pub trait Render: Serialize + DeserializeOwned {
     type Message<'v>: Serialize + Deserialize<'v>;
     type View<'v>: View<Self::Message<'v>>
     where
         Self: 'v;
 
-    fn update(&mut self, _message: Self::Message<'_>) {}
+    async fn update(&mut self, message: Self::Message<'_>);
     fn render(&self) -> Self::View<'_>;
 }
 
