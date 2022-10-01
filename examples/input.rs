@@ -9,8 +9,8 @@ use crabweb::component::registry::ComponentRegistry;
 use crabweb::html::events::InputValue;
 use crabweb::{html, render, Component, IntoView, Render, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
-use solarsail::hyper::body::Buf;
-use solarsail::hyper::{self, header, StatusCode};
+use solarsail::hyper::body::to_bytes;
+use solarsail::hyper::{header, StatusCode};
 use solarsail::response::json;
 use solarsail::route::{get, post};
 use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
@@ -56,10 +56,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             //     }
             // }
 
-            let whole_body = hyper::body::aggregate(body).await.unwrap();
-            let rd = whole_body.reader();
-
-            let update = registry.handle(&id, rd).expect("unknown component");
+            // let whole_body = hyper::body::aggregate(body).await.unwrap();
+            // let rd = whole_body.reader();
+            let data = to_bytes(body).await.unwrap();
+            let update = registry.handle(&id, &data).expect("unknown component");
             json(update).into_response()
         }
 
@@ -80,10 +80,10 @@ enum ValueMessage {
 }
 
 impl Render for Value {
-    type Message = ValueMessage;
-    type View<'v> = impl View<Self::Message> + 'v;
+    type Message<'v> = ValueMessage;
+    type View<'v> = impl View<Self::Message<'v>> + 'v;
 
-    fn update(&mut self, message: Self::Message) {
+    fn update(&mut self, message: Self::Message<'_>) {
         match message {
             ValueMessage::SetValue(value) => self.0 = value.into(),
         }

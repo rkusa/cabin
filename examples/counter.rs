@@ -7,8 +7,8 @@ use std::sync::Arc;
 use crabweb::component::registry::ComponentRegistry;
 use crabweb::{html, render, Component, IntoView, Render, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
-use solarsail::hyper::body::Buf;
-use solarsail::hyper::{self, header, StatusCode};
+use solarsail::hyper::body::to_bytes;
+use solarsail::hyper::{header, StatusCode};
 use solarsail::response::json;
 use solarsail::route::{get, post};
 use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
@@ -54,10 +54,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             //     }
             // }
 
-            let whole_body = hyper::body::aggregate(body).await.unwrap();
-            let rd = whole_body.reader();
-
-            let update = registry.handle(&id, rd).expect("unknown component");
+            // let whole_body = hyper::body::aggregate(body).await.unwrap();
+            // let rd = whole_body.reader();
+            let data = to_bytes(body).await.unwrap();
+            let update = registry.handle(&id, &data).expect("unknown component");
             json(update).into_response()
         }
 
@@ -73,10 +73,10 @@ fn app() -> impl View {
 struct Counter(u32);
 
 impl Render for Counter {
-    type Message = ();
-    type View<'v> = impl View<Self::Message> + 'v;
+    type Message<'v> = ();
+    type View<'v> = impl View<Self::Message<'v>> + 'v;
 
-    fn update(&mut self, _message: Self::Message) {
+    fn update(&mut self, _message: Self::Message<'_>) {
         self.0 += 1;
     }
 

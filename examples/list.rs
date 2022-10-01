@@ -9,8 +9,8 @@ use crabweb::component::registry::ComponentRegistry;
 use crabweb::component::Render;
 use crabweb::{html, render, Component, IntoView, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
-use solarsail::hyper::body::Buf;
-use solarsail::hyper::{self, header, StatusCode};
+use solarsail::hyper::body::to_bytes;
+use solarsail::hyper::{header, StatusCode};
 use solarsail::response::json;
 use solarsail::route::{get, post};
 use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
@@ -56,10 +56,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             //     }
             // }
 
-            let whole_body = hyper::body::aggregate(body).await.unwrap();
-            let rd = whole_body.reader();
-
-            let update = registry.handle(&id, rd).expect("unknown component");
+            // let whole_body = hyper::body::aggregate(body).await.unwrap();
+            // let rd = whole_body.reader();
+            let data = to_bytes(body).await.unwrap();
+            let update = registry.handle(&id, &data).expect("unknown component");
             json(update).into_response()
         }
 
@@ -76,34 +76,29 @@ fn app() -> impl View {
 struct Items(Vec<Cow<'static, str>>);
 
 #[derive(Serialize, Deserialize)]
-enum ItemsAction {
+enum ItemsAction<'v> {
     Add,
-    Delete(Cow<'static, str>),
+    Delete(&'v str),
 }
 
 impl Render for Items {
-    type Message = ItemsAction;
-    type View<'v> = impl View<Self::Message> + 'v;
+    type Message<'v> = ItemsAction<'v>;
+    type View<'v> = impl View<Self::Message<'v>> + 'v;
 
-    fn update(&mut self, message: Self::Message) {
+    fn update(&mut self, message: Self::Message<'_>) {
         match message {
             ItemsAction::Add => {
                 self.0.push("new item 1".into());
                 self.0.push("new item 2".into());
             }
-            ItemsAction::Delete(item) => self.0.retain(|i| i != &item),
+            ItemsAction::Delete(item) => self.0.retain(|i| i != item),
         }
     }
 
     fn render(&self) -> Self::View<'_> {
         (
             html::ul(self.0.iter().map(|item| {
-                html::li((
-                    item,
-                    // TODO:
-                    // html::button("x").on_click(ItemsAction::Delete(Cow::Borrowed(&item))),
-                    html::button("x").on_click(ItemsAction::Delete(item.clone())),
-                ))
+                html::li((item, html::button("x").on_click(ItemsAction::Delete(item))))
             })),
             html::div(html::button("add").on_click(ItemsAction::Add)),
         )

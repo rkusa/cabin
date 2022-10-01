@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::fmt::{self, Write};
 
 use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::render::Renderer;
 use crate::view::{IntoView, View};
@@ -16,12 +16,12 @@ pub trait Component: Render {
 
 // TODO: s/DeserializeOwned/Deserialize/ using GATs?
 pub trait Render: Serialize + DeserializeOwned {
-    type Message: Serialize + DeserializeOwned;
-    type View<'v>: View<Self::Message>
+    type Message<'v>: Serialize + Deserialize<'v>;
+    type View<'v>: View<Self::Message<'v>>
     where
         Self: 'v;
 
-    fn update(&mut self, _message: Self::Message) {}
+    fn update(&mut self, _message: Self::Message<'_>) {}
     fn render(&self) -> Self::View<'_>;
 }
 

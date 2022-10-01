@@ -10,7 +10,7 @@ use crate::{IntoView, View, ViewHashTree};
 #[linkme::distributed_slice]
 pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
 
-type ComponentHandler = dyn Fn(&mut dyn std::io::Read) -> Update + Sync + Send;
+type ComponentHandler = dyn Fn(&[u8]) -> Update + Sync + Send;
 
 pub struct ComponentRegistry {
     handler: HashMap<String, Box<ComponentHandler>>,
@@ -52,13 +52,13 @@ impl ComponentRegistry {
     {
         self.handler.insert(
             C::id().into_owned(),
-            Box::new(move |rd: &mut dyn std::io::Read| {
+            Box::new(move |body: &[u8]| {
                 // TODO: unwraps
-                let Payload::<C, C::Message> {
+                let Payload::<C, C::Message<'_>> {
                     mut component,
                     hash_tree,
                     message,
-                } = serde_json::from_reader(rd).unwrap();
+                } = serde_json::from_slice(body).unwrap();
                 component.update(message);
                 let state = serde_json::value::to_raw_value(&component).unwrap();
 
@@ -76,8 +76,8 @@ impl ComponentRegistry {
         );
     }
 
-    pub fn handle(&self, id: &str, mut rd: impl std::io::Read + 'static) -> Option<Update> {
+    pub fn handle(&self, id: &str, body: &[u8]) -> Option<Update> {
         let handler = self.handler.get(id)?;
-        Some(handler(&mut rd))
+        Some(handler(body))
     }
 }
