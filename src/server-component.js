@@ -68,7 +68,7 @@ class ServerComponent extends HTMLElement {
             if (this.dataset.hash !== rootHash) {
               const template = document.createElement("template");
               template.innerHTML = html;
-              patchComponent(this, template.content);
+              patchChildren(this, template.content);
               this.hashTree = hashTree;
             }
           } catch (err) {
@@ -95,18 +95,24 @@ class ServerComponent extends HTMLElement {
 
 customElements.define("server-component", ServerComponent);
 
-function patchComponent(rootBefore, rootAfter) {
-  // console.log("apply", rootBefore, rootAfter);
+function patchChildren(rootBefore, rootAfter) {
+  console.log("apply", rootBefore, rootAfter);
 
-  const cmp = new TreeComparator(rootBefore, rootAfter);
-  const changes = [];
-  let parent = rootBefore;
-  for (const [nodeBefore, nodeAfter] of cmp) {
-    console.log(nodeBefore, nodeAfter);
+  let nodeBefore = rootBefore.firstChild;
+  let nodeAfter = rootAfter.firstChild;
 
-    if (nodeBefore?.parentNode) {
-      parent = nodeBefore.parentNode;
-    }
+  // Neither node has children, done here
+  if (!nodeBefore && !nodeAfter) {
+    return;
+  }
+
+  let nextBefore = null;
+  let nextAfter = null;
+
+  do {
+    nextBefore = null;
+    nextAfter = null;
+    console.log(nodeBefore, "vs", nodeAfter);
 
     if (
       nodeAfter.nodeType === Node.COMMENT_NODE &&
@@ -114,31 +120,30 @@ function patchComponent(rootBefore, rootAfter) {
     ) {
       // Skip over the children of the old three as they are not included in the new one.
       console.log("unchanged");
-      cmp.skipSubtree();
       continue;
     }
 
     // TODO: handle moved nodes
     // TODO: handle removed nodes
 
-    // New node
+    // This node and all its next siblings are new nodes and can be directly added
     if (nodeBefore === null) {
-      console.log("append new", nodeAfter);
-      cmp.skipSubtree();
-      changes.push({ type: "append", parent, child: nodeAfter });
-      continue;
+      console.log("append new", nodeAfter, "and siblings");
+      let node = nodeAfter;
+      while (node) {
+        let next = node.nextSibling;
+        rootBefore.appendChild(node);
+        node = next;
+      }
+      return;
     }
 
     // type changed, replace completely
-    if (nodeBefore.prototype !== nodeAfter.prototype) {
+    if (nodeBefore.nodeType !== nodeAfter.nodeType) {
       console.log("replace");
-      cmp.skipSubtree();
-      changes.push({
-        type: "replace",
-        parent: nodeBefore,
-        newChild: nodeAfter,
-        oldChild: nodeBefore,
-      });
+      nextBefore = nodeBefore.nextSibling;
+      nextAfter = nodeAfter.nextSibling;
+      rootBefore.replaceChild(nodeAfter, nodeBefore);
       continue;
     }
 
@@ -148,7 +153,9 @@ function patchComponent(rootBefore, rootAfter) {
 
       case Node.ELEMENT_NODE:
         // TODO: tag changed
+        console.log("patch attributes");
         patchAttributes(nodeBefore, nodeAfter);
+        patchChildren(nodeBefore, nodeAfter);
         break;
 
       case Node.TEXT_NODE:
@@ -160,21 +167,11 @@ function patchComponent(rootBefore, rootAfter) {
         }
         break;
     }
-  }
-
-  // TOOD: apply changes while iterating the tree?
-  for (const change of changes) {
-    switch (change.type) {
-      case "append":
-        change.parent.appendChild(change.child);
-        break;
-      case "replace":
-        change.parent.replace(change.newChild, change.oldChild);
-        break;
-      default:
-        throw new Error(`unknown change type: "${change.type}"`);
-    }
-  }
+  } while (
+    ((nodeAfter = nextAfter ?? nodeAfter?.nextSibling),
+    (nodeBefore = nextBefore ?? nodeBefore?.nextSibling),
+    nodeAfter || nodeBefore)
+  );
 }
 
 function patchAttributes(childBefore, childAfter) {
@@ -202,53 +199,5 @@ function patchAttributes(childBefore, childAfter) {
   for (const name in oldAttributeNames) {
     console.log("remove attribute", name);
     childBefore.removeAttribute(name);
-  }
-}
-
-class TreeComparator {
-  constructor(rootBefore, rootAfter) {
-    const filter =
-      NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT;
-    this.before = document.createTreeWalker(rootBefore, filter);
-    this.after = document.createTreeWalker(rootAfter, filter);
-
-    // skip over root nodes
-    this.before.nextNode();
-    this.after.nextNode();
-
-    this.nextBefore = this.before.nextNode();
-    this.nextAfter = this.after.nextNode();
-  }
-
-  next() {
-    if (!this.nextBefore && !this.nextAfter) {
-      this.nextBefore = this.before.nextNode();
-      this.nextAfter = this.after.nextNode();
-    }
-    if (!this.nextBefore && !this.nextAfter) {
-      return { done: true };
-    }
-
-    const value = [this.nextBefore, this.nextAfter];
-
-    this.nextBefore = null;
-    this.nextAfter = null;
-
-    return { done: false, value };
-  }
-
-  skipSubtree() {
-    this.nextBefore = this.before.nextSibling();
-    if (!this.nextBefore) {
-      while (this.before.lastChild()) {}
-    }
-    this.nextAfter = this.after.nextSibling();
-    if (!this.nextAfter) {
-      while (this.after.lastChild()) {}
-    }
-  }
-
-  [Symbol.iterator]() {
-    return this;
   }
 }
