@@ -1,6 +1,7 @@
 #![feature(type_alias_impl_trait)]
 
 use std::borrow::Cow;
+use std::future::Future;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -85,14 +86,16 @@ enum SearchAction {
     Search(InputValue),
 }
 
-#[async_trait::async_trait]
 impl Render for Search {
     type Message<'v> = SearchAction;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
+    type Update<'v> = impl Future<Output = ()> + Send + 'v;
 
-    async fn update(&mut self, message: Self::Message<'_>) {
-        match message {
-            SearchAction::Search(v) => self.result = search(&v).await,
+    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_> {
+        async move {
+            match message {
+                SearchAction::Search(v) => self.result = search(&v).await,
+            }
         }
     }
 

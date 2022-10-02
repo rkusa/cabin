@@ -2,6 +2,7 @@ pub mod registry;
 
 use std::borrow::Cow;
 use std::fmt::{self, Write};
+use std::future::Future;
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -15,14 +16,16 @@ pub trait Component: Render {
 }
 
 // TODO: s/DeserializeOwned/Deserialize/ using GATs?
-#[async_trait::async_trait]
 pub trait Render: Serialize + DeserializeOwned {
     type Message<'v>: Serialize + Deserialize<'v>;
     type View<'v>: View<Self::Message<'v>>
     where
         Self: 'v;
+    type Update<'v>: Future<Output = ()> + Send + 'v
+    where
+        Self: 'v;
 
-    async fn update(&mut self, message: Self::Message<'_>);
+    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_>;
     fn render(&self) -> Self::View<'_>;
 }
 

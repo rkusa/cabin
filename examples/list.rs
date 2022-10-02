@@ -82,12 +82,12 @@ enum ItemsAction<'v> {
     Delete(&'v str),
 }
 
-#[async_trait::async_trait]
 impl Render for Items {
     type Message<'v> = ItemsAction<'v>;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
+    type Update<'v> = std::future::Ready<()>;
 
-    async fn update(&mut self, message: Self::Message<'_>) {
+    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_> {
         match message {
             ItemsAction::Add => {
                 self.0.push("new item 1".into());
@@ -95,6 +95,7 @@ impl Render for Items {
             }
             ItemsAction::Delete(item) => self.0.retain(|i| i != item),
         }
+        std::future::ready(())
     }
 
     fn render(&self) -> Self::View<'_> {

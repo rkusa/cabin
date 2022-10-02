@@ -79,15 +79,16 @@ enum ValueMessage {
     SetValue(InputValue),
 }
 
-#[async_trait::async_trait]
 impl Render for Value {
     type Message<'v> = ValueMessage;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
+    type Update<'v> = std::future::Ready<()>;
 
-    async fn update(&mut self, message: Self::Message<'_>) {
+    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_> {
         match message {
             ValueMessage::SetValue(value) => self.0 = value.into(),
         }
+        std::future::ready(())
     }
 
     fn render(&self) -> Self::View<'_> {

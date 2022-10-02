@@ -72,13 +72,14 @@ fn app() -> impl View {
 #[derive(Default, Serialize, Deserialize, Component)]
 struct Counter(u32);
 
-#[async_trait::async_trait]
 impl Render for Counter {
     type Message<'v> = ();
     type View<'v> = impl View<Self::Message<'v>> + 'v;
+    type Update<'v> = std::future::Ready<()>;
 
-    async fn update(&mut self, _message: Self::Message<'_>) {
+    fn update(&mut self, _message: Self::Message<'_>) -> Self::Update<'_> {
         self.0 += 1;
+        std::future::ready(())
     }
 
     fn render(&self) -> Self::View<'_> {

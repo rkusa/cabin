@@ -53,7 +53,7 @@ struct Payload<C, M> {
 impl ComponentRegistry {
     pub fn register<C>(&mut self)
     where
-        C: Component + Send,
+        C: Component + Send + 'static,
         for<'v> C::Message<'v>: Send,
     {
         self.handler.insert(
