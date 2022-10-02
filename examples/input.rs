@@ -1,6 +1,7 @@
 #![feature(type_alias_impl_trait)]
 
 use std::borrow::Cow;
+use std::future::{ready, Ready};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -35,7 +36,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 
         get!() => {
             let view = app();
-            let html = render(view).unwrap();
+            let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
                 html
@@ -82,23 +83,25 @@ enum ValueMessage {
 impl Render for Value {
     type Message<'v> = ValueMessage;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
-    type Update<'v> = std::future::Ready<()>;
 
-    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_> {
+    type UpdateFuture<'v> = Ready<()>;
+    type RenderFuture<'v> = Ready<Self::View<'v>>;
+
+    fn update(&mut self, message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
         match message {
             ValueMessage::SetValue(value) => self.0 = value.into(),
         }
         std::future::ready(())
     }
 
-    fn render(&self) -> Self::View<'_> {
-        (
+    fn render(&self) -> Self::RenderFuture<'_> {
+        ready((
             html::div(format!("Value: {}", self.0)),
             // TODO: upon reload, Firefox keeps the previous value, so `on_input` might need to
             // be executed on load
             html::input()
                 .attr("value", &*self.0)
                 .on_input(|ev| ValueMessage::SetValue(ev.value)),
-        )
+        ))
     }
 }

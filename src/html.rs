@@ -3,6 +3,7 @@ pub mod events;
 
 use std::borrow::Cow;
 use std::fmt;
+use std::future::Future;
 
 use serde::Serialize;
 
@@ -90,45 +91,46 @@ impl<V, M, A> Html<V, M, A> {
 
 impl<V, M, A> View<M> for Html<V, M, A>
 where
-    V: View<M>,
-    M: Serialize,
-    A: Attributes,
+    V: View<M> + Send,
+    M: Serialize + Send,
+    A: Attributes + Send,
 {
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
-        let mut el = r.element(self.tag.tag)?;
+    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
 
-        if let Some(on_click) = &self.tag.on_click {
-            // TODO: avoid allocation
-            // TODO: unwrap
-            let action = serde_json::to_string(&on_click).unwrap();
-            el.attribute("data-click", &action)?;
+    fn render(self, r: Renderer) -> Self::Future {
+        async move {
+            let mut el = r.element(self.tag.tag)?;
+
+            if let Some(on_click) = &self.tag.on_click {
+                // TODO: avoid allocation
+                // TODO: unwrap
+                let action = serde_json::to_string(&on_click).unwrap();
+                el.attribute("data-click", &action)?;
+            }
+
+            if let Some(on_input) = &self.tag.on_input {
+                // TODO: avoid allocation
+                // TODO: unwrap
+                let action = serde_json::to_string(&on_input).unwrap();
+                el.attribute("data-input", &action)?;
+            }
+
+            self.tag.attrs.render(&mut el)?;
+
+            if !is_void_element(self.tag.tag) {
+                el.content(self.content).await
+            } else {
+                el.end()
+            }
         }
-
-        if let Some(on_input) = &self.tag.on_input {
-            // TODO: avoid allocation
-            // TODO: unwrap
-            let action = serde_json::to_string(&on_input).unwrap();
-            el.attribute("data-input", &action)?;
-        }
-
-        self.tag.attrs.render(&mut el)?;
-
-        if !is_void_element(self.tag.tag) {
-            let content = el.content()?;
-            self.content.render(content)?;
-        }
-
-        el.end()?;
-
-        Ok(())
     }
 }
 
 impl<V, M, A> IntoView<Html<V, M, A>, M> for Html<V, M, A>
 where
-    V: View<M>,
-    M: Serialize,
-    A: Attributes,
+    V: View<M> + Send,
+    M: Serialize + Send,
+    A: Attributes + Send,
 {
     fn into_view(self) -> Html<V, M, A> {
         self

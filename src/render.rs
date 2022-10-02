@@ -11,6 +11,7 @@ use twox_hash::XxHash32;
 
 use self::marker::Marker;
 pub use self::marker::ViewHashTree;
+use crate::View;
 
 pub struct Renderer {
     out: String,
@@ -55,7 +56,7 @@ impl Renderer {
         self.previous_tree.is_some()
     }
 
-    pub fn element<'a>(&'a mut self, tag: &'static str) -> Result<ElementRenderer<'a>, fmt::Error> {
+    pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, fmt::Error> {
         self.start();
 
         let parent_hasher = std::mem::take(&mut self.hasher);
@@ -141,15 +142,15 @@ impl Renderer {
     }
 }
 
-pub struct ElementRenderer<'a> {
+pub struct ElementRenderer {
     tag: &'static str,
     offset: usize,
-    renderer: &'a mut Renderer,
+    renderer: Renderer,
     parent_hasher: XxHash32,
     content_started: bool,
 }
 
-impl<'a> ElementRenderer<'a> {
+impl ElementRenderer {
     pub fn attribute(&mut self, name: &str, value: &str) -> Result<(), fmt::Error> {
         if self.content_started {
             todo!("throw error: content started");
@@ -164,7 +165,7 @@ impl<'a> ElementRenderer<'a> {
         )
     }
 
-    pub fn content(&mut self) -> Result<&mut Renderer, fmt::Error> {
+    pub async fn content<M>(mut self, view: impl View<M>) -> Result<Renderer, fmt::Error> {
         if is_void_element(self.tag) {
             todo!("throw error: void tags cannot have content");
         }
@@ -172,10 +173,12 @@ impl<'a> ElementRenderer<'a> {
             self.content_started = true;
             write!(&mut self.renderer.out, ">")?;
         }
-        Ok(self.renderer)
+
+        self.renderer = view.render(self.renderer).await?;
+        self.end()
     }
 
-    pub fn end(mut self) -> fmt::Result {
+    pub fn end(mut self) -> Result<Renderer, fmt::Error> {
         if !self.content_started && !is_void_element(self.tag) {
             write!(&mut self.renderer.out, ">")?;
         }
@@ -194,7 +197,7 @@ impl<'a> ElementRenderer<'a> {
             }
         }
 
-        Ok(())
+        Ok(self.renderer)
     }
 }
 

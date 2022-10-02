@@ -9,7 +9,7 @@ use serde_json::value::RawValue;
 
 use super::Component;
 use crate::render::Renderer;
-use crate::{IntoView, View, ViewHashTree};
+use crate::{IntoView, Render, View, ViewHashTree};
 
 #[linkme::distributed_slice]
 pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
@@ -54,6 +54,7 @@ impl ComponentRegistry {
     pub fn register<C>(&mut self)
     where
         C: Component + Send + 'static,
+        for<'v> <C as Render>::View<'v>: Send,
         for<'v> C::Message<'v>: Send,
     {
         self.handler.insert(
@@ -69,8 +70,10 @@ impl ComponentRegistry {
                     component.update(message).await;
                     let state = serde_json::value::to_raw_value(&component).unwrap();
 
-                    let mut r = Renderer::from_previous_tree(hash_tree);
-                    component.into_view().render(&mut r).unwrap();
+                    let r = Renderer::from_previous_tree(hash_tree);
+                    let view = component.into_view();
+                    let fut = view.render(r);
+                    let r = fut.await.unwrap();
 
                     let out = r.end();
 

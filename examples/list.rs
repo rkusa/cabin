@@ -1,6 +1,7 @@
 #![feature(type_alias_impl_trait)]
 
 use std::borrow::Cow;
+use std::future::{ready, Ready};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -35,7 +36,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 
         get!() => {
             let view = app();
-            let html = render(view).unwrap();
+            let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
                 html
@@ -85,9 +86,11 @@ enum ItemsAction<'v> {
 impl Render for Items {
     type Message<'v> = ItemsAction<'v>;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
-    type Update<'v> = std::future::Ready<()>;
 
-    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_> {
+    type UpdateFuture<'v> = Ready<()>;
+    type RenderFuture<'v> = Ready<Self::View<'v>>;
+
+    fn update(&mut self, message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
         match message {
             ItemsAction::Add => {
                 self.0.push("new item 1".into());
@@ -98,12 +101,12 @@ impl Render for Items {
         std::future::ready(())
     }
 
-    fn render(&self) -> Self::View<'_> {
-        (
+    fn render(&self) -> Self::RenderFuture<'_> {
+        ready((
             html::ul(self.0.iter().map(|item| {
                 html::li((item, html::button("x").on_click(ItemsAction::Delete(item))))
             })),
             html::div(html::button("add").on_click(ItemsAction::Add)),
-        )
+        ))
     }
 }

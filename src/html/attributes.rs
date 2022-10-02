@@ -10,11 +10,11 @@ pub struct Attribute<'a, N> {
 }
 
 pub trait Attributes {
-    fn render<'a>(&self, r: &mut ElementRenderer<'a>) -> Result<(), fmt::Error>;
+    fn render(&self, r: &mut ElementRenderer) -> Result<(), fmt::Error>;
 }
 
 impl Attributes for () {
-    fn render<'a>(&self, _r: &mut ElementRenderer<'a>) -> Result<(), fmt::Error> {
+    fn render(&self, _r: &mut ElementRenderer) -> Result<(), fmt::Error> {
         Ok(())
     }
 }
@@ -33,7 +33,7 @@ impl<'a, N> Attributes for Attribute<'a, N>
 where
     N: Attributes,
 {
-    fn render<'b>(&self, r: &mut ElementRenderer<'b>) -> Result<(), fmt::Error> {
+    fn render(&self, r: &mut ElementRenderer) -> Result<(), fmt::Error> {
         r.attribute(self.name, &self.value)?;
         self.next.render(r)
     }

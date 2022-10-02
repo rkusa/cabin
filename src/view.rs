@@ -1,10 +1,13 @@
+mod boxed;
 mod iter;
 
 use std::borrow::Cow;
 use std::fmt;
+use std::future::Future;
 
 use paste::paste;
 
+use self::boxed::BoxedView;
 use crate::render::Renderer;
 
 // Implementation note: It is not possible to implement [View] for both tupels and iterators
@@ -18,24 +21,28 @@ where
 {
     fn into_view(self) -> V;
 
-    fn boxed(self) -> Box<dyn View<M>>
+    fn boxed(self) -> BoxedView<M>
     where
         Self: Sized,
-        V: 'static,
+        V: Send + 'static,
+        V::Future: 'static,
     {
-        Box::new(self.into_view())
+        BoxedView::new(self.into_view())
     }
 }
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
 pub trait View<M = ()> {
-    fn render(&self, r: &mut Renderer) -> fmt::Result;
+    type Future: Future<Output = Result<Renderer, fmt::Error>> + Send;
+    fn render(self, r: Renderer) -> Self::Future;
 }
 
 impl<M> View<M> for () {
-    fn render(&self, _r: &mut Renderer) -> fmt::Result {
-        Ok(())
+    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+
+    fn render(self, r: Renderer) -> Self::Future {
+        std::future::ready(Ok(r))
     }
 }
 
@@ -51,20 +58,29 @@ impl<'a, M> IntoView<&'a str, M> for &'a str {
     }
 }
 impl<'a, M> View<M> for &'a str {
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
+    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+
+    fn render(self, mut r: Renderer) -> Self::Future {
         // TODO: safe escape HTML
-        r.text(self)
+        std::future::ready(r.text(self).map(|_| r))
     }
 }
 
+impl<'a, M> IntoView<Cow<'a, str>, M> for &'a Cow<'a, str> {
+    fn into_view(self) -> Cow<'a, str> {
+        Cow::Borrowed(&**self)
+    }
+}
 impl<'a, M> IntoView<Cow<'a, str>, M> for Cow<'a, str> {
     fn into_view(self) -> Cow<'a, str> {
         self
     }
 }
 impl<'a, M> View<M> for Cow<'a, str> {
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
-        <&str as View<M>>::render(&self.as_ref(), r)
+    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+
+    fn render(self, r: Renderer) -> Self::Future {
+        <&str as View<M>>::render(self.as_ref(), r)
     }
 }
 
@@ -74,65 +90,42 @@ impl<M> IntoView<String, M> for String {
     }
 }
 impl<M> View<M> for String {
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
-        <&str as View<M>>::render(&self.as_str(), r)
-    }
-}
+    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
-impl<M> IntoView<Box<dyn View<M>>, M> for Box<dyn View<M>> {
-    fn into_view(self) -> Box<dyn View<M>> {
-        self
-    }
-}
-impl<M> View<M> for Box<dyn View<M>> {
-    fn render(&self, out: &mut Renderer) -> fmt::Result {
-        (**self).render(out)
+    fn render(self, r: Renderer) -> Self::Future {
+        <&str as View<M>>::render(self.as_str(), r)
     }
 }
 
 impl<V, M> View<M> for Option<V>
 where
-    V: View<M>,
+    V: View<M> + Send,
 {
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
-        match self {
-            Some(i) => i.render(r),
-            None => Ok(()),
+    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+
+    fn render(self, r: Renderer) -> Self::Future {
+        async {
+            match self {
+                Some(i) => i.render(r).await,
+                None => Ok(r),
+            }
         }
     }
 }
 
 impl<V, M> IntoView<Option<V>, M> for Option<V>
 where
-    V: View<M>,
+    V: View<M> + Send,
 {
     fn into_view(self) -> Option<V> {
         self
     }
 }
 
-impl<'a, V, M> IntoView<&'a V, M> for &'a V
-where
-    V: View<M>,
-{
-    fn into_view(self) -> &'a V {
-        self
-    }
-}
-
-impl<'a, V, M> View<M> for &'a V
-where
-    V: View<M>,
-{
-    fn render(&self, r: &mut Renderer) -> fmt::Result {
-        (*self).render(r)
-    }
-}
-
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> ),*, M> IntoView<($([<V$ix>], )*), M> for ($([<I$ix>],)*) {
+            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> + Send ),*, M> IntoView<($([<V$ix>], )*), M> for ($([<I$ix>],)*) {
                 fn into_view(self) -> ($([<V$ix>], )*) {
                     (
                         $(
@@ -142,12 +135,16 @@ macro_rules! impl_tuple {
                 }
             }
 
-            impl<$( [<V$ix>]: View<M> ),*, M> View<M> for ($( [<V$ix>], )*) {
-                fn render(&self, r: &mut Renderer) -> fmt::Result {
-                    $(
-                        self.$ix.render(r)?;
-                    )*
-                    Ok(())
+            impl<$( [<V$ix>]: View<M> + Send ),*, M> View<M> for ($( [<V$ix>], )*) {
+                type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+
+                fn render(self, r: Renderer) -> Self::Future {
+                    async {
+                        $(
+                            let r = self.$ix.render(r).await?;
+                        )*
+                        Ok(r)
+                    }
                 }
             }
         }

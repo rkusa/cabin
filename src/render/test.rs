@@ -1,17 +1,49 @@
+#![allow(clippy::let_and_return)]
+
+use std::fmt;
+use std::future::Future;
 use std::hash::Hasher;
 
 use twox_hash::XxHash32;
 
 use super::marker::Marker;
 use super::Renderer;
+use crate::View;
 
-#[test]
-fn test_server_render_basic() {
-    let mut r = Renderer::new();
+struct Child<R, F>
+where
+    R: FnOnce(Renderer) -> F + Send,
+    F: Future<Output = Renderer> + Send,
+{
+    render: R,
+}
+
+impl<R, F> View<()> for Child<R, F>
+where
+    R: FnOnce(Renderer) -> F + Send,
+    F: Future<Output = Renderer> + Send,
+{
+    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+
+    fn render(self, r: Renderer) -> Self::Future {
+        async move { Ok((self.render)(r).await) }
+    }
+}
+
+fn child<R, F>(f: R) -> Child<R, F>
+where
+    R: FnOnce(Renderer) -> F + Send,
+    F: Future<Output = Renderer> + Send,
+{
+    Child { render: f }
+}
+
+#[tokio::test]
+async fn test_server_render_basic() {
+    let r = Renderer::new();
     let mut el = r.element("div").unwrap();
     el.attribute("class", "bg-black").unwrap();
-    el.content().unwrap().text("test").unwrap();
-    el.end().unwrap();
+    let r = el.content::<()>("test").await.unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div class="bg-black">test</div>"#);
 
@@ -44,32 +76,34 @@ fn test_server_render_basic() {
     );
 }
 
-#[test]
-fn test_server_render_empty() {
-    let mut r = Renderer::new();
-    r.element("div").unwrap().end().unwrap();
+#[tokio::test]
+async fn test_server_render_empty() {
+    let r = Renderer::new();
+    let r = r.element("div").unwrap().end().unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div></div>"#);
 }
 
-#[test]
-fn test_server_render_nested() {
-    let mut r = Renderer::new();
-    let mut wrapper = r.element("div").unwrap();
-    let content = wrapper.content().unwrap();
-    {
-        let mut el = content.element("div").unwrap();
-        el.attribute("class", "bg-red").unwrap();
-        el.content().unwrap().text("red").unwrap();
-        el.end().unwrap();
-    }
-    {
-        let mut el = content.element("div").unwrap();
-        el.attribute("class", "bg-green").unwrap();
-        el.content().unwrap().text("green").unwrap();
-        el.end().unwrap();
-    }
-    wrapper.end().unwrap();
+#[tokio::test]
+async fn test_server_render_nested() {
+    let r = Renderer::new();
+    let wrapper = r.element("div").unwrap();
+    let r = wrapper
+        .content(child(|r| async move {
+            let r = {
+                let mut el = r.element("div").unwrap();
+                el.attribute("class", "bg-red").unwrap();
+                el.content::<()>("red").await.unwrap()
+            };
+            let r = {
+                let mut el = r.element("div").unwrap();
+                el.attribute("class", "bg-green").unwrap();
+                el.content::<()>("green").await.unwrap()
+            };
+            r
+        }))
+        .await
+        .unwrap();
     let out = r.end();
     assert_eq!(
         out.view,
@@ -131,13 +165,17 @@ fn test_server_render_nested() {
     );
 }
 
-#[test]
-fn test_unchanged() {
-    let mut r = Renderer::new();
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("test").unwrap();
-    el.content().unwrap().element("div").unwrap().end().unwrap();
-    el.end().unwrap();
+#[tokio::test]
+async fn test_unchanged() {
+    let r = Renderer::new();
+    let el = r.element("div").unwrap();
+    let r = el
+        .content(child(|mut r| async move {
+            r.text("test").unwrap();
+            r.element("div").unwrap().end().unwrap()
+        }))
+        .await
+        .unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div>test<div></div></div>"#);
     assert_eq!(
@@ -154,12 +192,16 @@ fn test_unchanged() {
         .into()
     );
 
-    let mut r = Renderer::from_previous_tree(out.hash_tree);
+    let r = Renderer::from_previous_tree(out.hash_tree);
     let mut el = r.element("div").unwrap();
     el.attribute("class", "bg-black").unwrap();
-    el.content().unwrap().text("test").unwrap();
-    el.content().unwrap().element("div").unwrap().end().unwrap();
-    el.end().unwrap();
+    let r = el
+        .content(child(|mut r| async move {
+            r.text("test").unwrap();
+            r.element("div").unwrap().end().unwrap()
+        }))
+        .await
+        .unwrap();
     let out = r.end();
     assert_eq!(
         out.view,
@@ -179,12 +221,16 @@ fn test_unchanged() {
         .into()
     );
 
-    let mut r = Renderer::from_previous_tree(out.hash_tree);
+    let r = Renderer::from_previous_tree(out.hash_tree);
     let mut el = r.element("div").unwrap();
     el.attribute("class", "bg-black").unwrap();
-    el.content().unwrap().text("test").unwrap();
-    el.content().unwrap().element("div").unwrap().end().unwrap();
-    el.end().unwrap();
+    let r = el
+        .content(child(|mut r| async move {
+            r.text("test").unwrap();
+            r.element("div").unwrap().end().unwrap()
+        }))
+        .await
+        .unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<!--unchanged-->"#);
     assert_eq!(
@@ -202,12 +248,11 @@ fn test_unchanged() {
     );
 }
 
-#[test]
-fn test_new_items() {
-    let mut r = Renderer::new();
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.end().unwrap();
+#[tokio::test]
+async fn test_new_items() {
+    let r = Renderer::new();
+    let el = r.element("div").unwrap();
+    let mut r = el.content::<()>("1").await.unwrap();
     r.text("E").unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div>1</div>E"#);
@@ -225,11 +270,16 @@ fn test_new_items() {
         .into()
     );
 
-    let mut r = Renderer::from_previous_tree(out.hash_tree);
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.content().unwrap().text("2").unwrap();
-    el.end().unwrap();
+    let r = Renderer::from_previous_tree(out.hash_tree);
+    let el = r.element("div").unwrap();
+    let mut r = el
+        .content(child(|mut r| async move {
+            r.text("1").unwrap();
+            r.text("2").unwrap();
+            r
+        }))
+        .await
+        .unwrap();
     r.text("E").unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged-->2</div><!--unchanged-->"#);
@@ -250,13 +300,18 @@ fn test_new_items() {
     );
 }
 
-#[test]
-fn test_removed_items() {
-    let mut r = Renderer::new();
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.content().unwrap().text("2").unwrap();
-    el.end().unwrap();
+#[tokio::test]
+async fn test_removed_items() {
+    let r = Renderer::new();
+    let el = r.element("div").unwrap();
+    let mut r = el
+        .content(child(|mut r| async move {
+            r.text("1").unwrap();
+            r.text("2").unwrap();
+            r
+        }))
+        .await
+        .unwrap();
     r.text("E").unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div>12</div>E"#);
@@ -276,10 +331,9 @@ fn test_removed_items() {
         .into()
     );
 
-    let mut r = Renderer::from_previous_tree(out.hash_tree);
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.end().unwrap();
+    let r = Renderer::from_previous_tree(out.hash_tree);
+    let el = r.element("div").unwrap();
+    let mut r = el.content::<()>("1").await.unwrap();
     r.text("E").unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged--></div><!--unchanged-->"#);
@@ -298,12 +352,11 @@ fn test_removed_items() {
     );
 }
 
-#[test]
-fn test_new_item_same_value() {
-    let mut r = Renderer::new();
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.end().unwrap();
+#[tokio::test]
+async fn test_new_item_same_value() {
+    let r = Renderer::new();
+    let el = r.element("div").unwrap();
+    let mut r = el.content::<()>("1").await.unwrap();
     r.text("E").unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div>1</div>E"#);
@@ -321,11 +374,16 @@ fn test_new_item_same_value() {
         .into()
     );
 
-    let mut r = Renderer::from_previous_tree(out.hash_tree);
-    let mut el = r.element("div").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.content().unwrap().text("1").unwrap();
-    el.end().unwrap();
+    let r = Renderer::from_previous_tree(out.hash_tree);
+    let el = r.element("div").unwrap();
+    let mut r = el
+        .content(child(|mut r| async move {
+            r.text("1").unwrap();
+            r.text("1").unwrap();
+            r
+        }))
+        .await
+        .unwrap();
     r.text("E").unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged-->1</div><!--unchanged-->"#);

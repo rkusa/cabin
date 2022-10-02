@@ -1,5 +1,6 @@
 #![feature(type_alias_impl_trait)]
 
+use std::future::{ready, Ready};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -33,7 +34,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 
         get!() => {
             let view = app();
-            let html = render(view).unwrap();
+            let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
                 html
@@ -75,15 +76,17 @@ struct Counter(u32);
 impl Render for Counter {
     type Message<'v> = ();
     type View<'v> = impl View<Self::Message<'v>> + 'v;
-    type Update<'v> = std::future::Ready<()>;
 
-    fn update(&mut self, _message: Self::Message<'_>) -> Self::Update<'_> {
+    type UpdateFuture<'v> = Ready<()>;
+    type RenderFuture<'v> = Ready<Self::View<'v>>;
+
+    fn update(&mut self, _message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
         self.0 += 1;
         std::future::ready(())
     }
 
-    fn render(&self) -> Self::View<'_> {
-        (
+    fn render(&self) -> Self::RenderFuture<'_> {
+        ready((
             //     (self.0 == 0).then(|| ),
             //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
             if self.0 > 0 {
@@ -93,6 +96,6 @@ impl Render for Counter {
                 html::div("Hit `incr` to start counting ...").boxed()
             },
             html::button("incr").on_click(()),
-        )
+        ))
     }
 }

@@ -1,7 +1,7 @@
 #![feature(type_alias_impl_trait)]
 
 use std::borrow::Cow;
-use std::future::Future;
+use std::future::{ready, Future, Ready};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -36,8 +36,8 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = app();
-            let html = render(view).unwrap();
+            let view = app().await;
+            let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
                 html
@@ -70,15 +70,23 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 }
 
 // TODO: return impl IntoView ?
-fn app() -> impl View {
-    Search::default().into_view()
+async fn app() -> impl View {
+    Search::new("G").await.into_view()
 }
 
-// TODO: allow Items<'a>(Vec<&'a str>)
 #[derive(Default, Serialize, Deserialize, Component)]
 struct Search {
     query: Cow<'static, str>,
     result: Vec<Cow<'static, str>>,
+}
+
+impl Search {
+    async fn new(query: &'static str) -> Self {
+        Search {
+            query: query.into(),
+            result: search(query).await,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -89,9 +97,11 @@ enum SearchAction {
 impl Render for Search {
     type Message<'v> = SearchAction;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
-    type Update<'v> = impl Future<Output = ()> + Send + 'v;
 
-    fn update(&mut self, message: Self::Message<'_>) -> Self::Update<'_> {
+    type UpdateFuture<'v> = impl Future<Output = ()> + Send + 'v;
+    type RenderFuture<'v> = Ready<Self::View<'v>>;
+
+    fn update(&mut self, message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
         async move {
             match message {
                 SearchAction::Search(v) => self.result = search(&v).await,
@@ -99,11 +109,15 @@ impl Render for Search {
         }
     }
 
-    fn render(&self) -> Self::View<'_> {
-        (
-            html::div(html::input().on_input(|ev| SearchAction::Search(ev.value))),
+    fn render(&self) -> Self::RenderFuture<'_> {
+        ready((
+            html::div(
+                html::input()
+                    .attr("value", "G")
+                    .on_input(|ev| SearchAction::Search(ev.value)),
+            ),
             html::div(html::ul(self.result.iter().map(html::li))),
-        )
+        ))
     }
 }
 
