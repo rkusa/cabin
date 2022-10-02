@@ -2,10 +2,8 @@
 
 use std::fmt;
 
-pub use component::Component;
 pub use crabweb_macros::ServerComponent;
-use render::Renderer;
-pub use render::ViewHashTree;
+pub use render::{Renderer, ViewHashTree};
 pub use view::{IntoView, View};
 
 pub mod component;

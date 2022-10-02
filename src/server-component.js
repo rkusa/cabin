@@ -52,11 +52,9 @@ class ServerComponent extends HTMLElement {
             node.disabled = true;
           }
           try {
-            const message = node.dataset[eventName].replace(
-              "_##InputValue",
-              node.value
-            );
-            const res = await fetch(`/dispatch/${this.dataset.id}`, {
+            const component = this.dataset.id;
+            const action = node.dataset[eventName];
+            const res = await fetch(`/dispatch/${component}/${action}`, {
               signal,
               method: "POST",
               headers: {
@@ -65,7 +63,7 @@ class ServerComponent extends HTMLElement {
               body: JSON.stringify({
                 state: this.state,
                 hashTree: this.hashTree,
-                message: JSON.parse(message),
+                payload: opts?.eventPayload?.(e) ?? null,
               }),
             });
             if (signal.aborted) {

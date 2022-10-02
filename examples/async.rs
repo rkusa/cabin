@@ -1,15 +1,13 @@
 #![feature(type_alias_impl_trait)]
 
 use std::borrow::Cow;
-use std::future::{ready, Future, Ready};
 use std::net::SocketAddr;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::component::Component;
-use crabweb::html::events::InputValue;
-use crabweb::{html, render, IntoView, ServerComponent, View, SERVER_COMPONENT_JS};
+use crabweb::component::ServerComponent;
+use crabweb::{html, render, View, SERVER_COMPONENT_JS};
+use html::events::InputEvent;
 use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::to_bytes;
 use solarsail::hyper::{header, StatusCode};
@@ -19,14 +17,15 @@ use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
 
 #[tokio::main]
 async fn main() {
-    let registry = ComponentRegistry::default();
+    // ensure registry is initialized
+    ComponentRegistry::global();
 
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
-    let app = SolarSail::new(Arc::new(registry), handle_request);
+    let app = SolarSail::new((), handle_request);
     app.run(&addr).await.unwrap();
 }
 
-async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> Response {
+async fn handle_request(_: (), mut req: Request) -> Response {
     match req.route().as_tuple() {
         get!("health") => "Ok".into_response(),
 
@@ -36,7 +35,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = app();
+            let view = app().await;
             let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -45,9 +44,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             html.into_response()
         }
 
-        post!("dispatch" / component) => {
+        post!("dispatch" / component / action) => {
             // TODO: get rid of to_string()
             let id = component.to_string();
+            let action = action.to_string();
 
             // TODO: unwrap()
             let (body, _mime_type) = req.body_mut().take().unwrap();
@@ -61,7 +61,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             // let whole_body = hyper::body::aggregate(body).await.unwrap();
             // let rd = whole_body.reader();
             let data = to_bytes(body).await.unwrap();
-            let update = registry.handle(&id, data).await.expect("unknown component");
+            let update = ComponentRegistry::global()
+                .handle(&id, &action, data)
+                .await
+                .expect("unknown component");
             json(update).into_response()
         }
 
@@ -70,58 +73,67 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 }
 
 // TODO: return impl IntoView ?
-fn app() -> impl View {
-    Search::new("G").into_view()
+async fn app() -> impl View {
+    search(Search::new("Ge")).await
 }
 
-#[derive(Default, Serialize, Deserialize, ServerComponent)]
+#[derive(Default, Serialize, Deserialize)]
 struct Search {
     query: Cow<'static, str>,
 }
 
 impl Search {
     fn new(query: &'static str) -> Self {
-        Search {
+        Self {
             query: query.into(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
-enum SearchAction {
-    Search(InputValue),
-}
+// #[component]
+async fn search(state: Search) -> impl View {
+    static ID: once_cell::race::OnceBox<String> = once_cell::race::OnceBox::new();
 
-impl Component for Search {
-    type Message<'v> = SearchAction;
-    type View<'v> = impl View<Self::Message<'v>> + 'v;
-
-    type UpdateFuture<'v> = Ready<()>;
-    type RenderFuture<'v> = impl Future<Output = Self::View<'v>> + Send + 'v;
-
-    fn update(&mut self, message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
-        match message {
-            SearchAction::Search(v) => self.query = v.into(),
-        };
-        ready(())
-    }
-
-    fn render(&self) -> Self::RenderFuture<'_> {
-        async move {
-            let items = search(&self.query).await;
-            (
-                html::div(
-                    html::input()
-                        .attr("value", Cow::Borrowed(&*self.query))
-                        .on_input(|ev| SearchAction::Search(ev.value)),
-                ),
-                html::div(html::ul(items.into_iter().map(html::li))),
-            )
+    async fn search(state: Search) -> impl View<Search> {
+        #[::linkme::distributed_slice(crabweb::component::registry::COMPONENT_FACTORIES)]
+        fn __register_search_component(r: &mut ComponentRegistry) {
+            let id = ID.get_or_init(|| {
+                Box::new(format!(
+                    "{}::{}",
+                    module_path!().replace("r#", ""),
+                    // TODO: don't forget #snake_name
+                    "search"
+                ))
+            });
+            r.register::<Search, InputEvent, _, _, _>(id, "set_query", set_query, search);
         }
+
+        // #[component::init]
+        async fn init(_state: &mut Search) {
+            // state.results = search(&state.query).await;
+        }
+
+        // TODO: allow both async and sync (convert sync to async?)
+        // #[component::action] ?
+        async fn set_query(mut state: Search, ev: InputEvent) -> Search {
+            state.query = ev.value.into();
+            state
+        }
+        // const set_query: Action = Action::new(module_path!(), "set_query", set_query);
+
+        // TODO: memo?
+        let items = search_countries(&state.query).await;
+
+        // TODO: wrap in <server-component>
+        (
+            html::div(html::input().attr("value", state.query).on_input(set_query)),
+            html::div(html::ul(items.into_iter().map(html::li))),
+        )
     }
+    ServerComponent::new(ID.get().unwrap(), state, search)
 }
 
-async fn search(query: &str) -> Vec<Cow<'static, str>> {
+async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
     tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
     // Source: https://github.com/umpirsky/country-list/blob/master/data/en_US/country.txt

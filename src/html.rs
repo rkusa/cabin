@@ -4,11 +4,13 @@ pub mod events;
 use std::borrow::Cow;
 use std::fmt;
 use std::future::Future;
+use std::marker::PhantomData;
 
 use serde::Serialize;
 
 use self::attributes::{Attribute, Attributes};
 use self::events::InputEvent;
+use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
 use crate::view::{IntoView, View};
 
@@ -39,6 +41,7 @@ pub fn custom<V: View<M>, M>(tag: &'static str, content: impl IntoView<V, M>) ->
             attrs: (),
             on_click: None,
             on_input: None,
+            marker: PhantomData,
         },
         content: content.into_view(),
     }
@@ -47,8 +50,9 @@ pub fn custom<V: View<M>, M>(tag: &'static str, content: impl IntoView<V, M>) ->
 struct HtmlTag<M, A> {
     tag: &'static str,
     attrs: A,
-    on_click: Option<M>,
-    on_input: Option<M>,
+    on_click: Option<&'static str>,
+    on_input: Option<&'static str>,
+    marker: PhantomData<M>,
 }
 
 pub struct Html<V, M, A> {
@@ -71,20 +75,25 @@ impl<V, M, A> Html<V, M, A> {
                 attrs: Attribute::new(name, value, self.tag.attrs),
                 on_click: self.tag.on_click,
                 on_input: self.tag.on_input,
+                marker: PhantomData,
             },
             content: self.content,
         }
     }
 
     // TODO: not available for all tags (e.g. only for buttons)
-    pub fn on_click(mut self, message: M) -> Self {
-        self.tag.on_click = Some(message);
+    pub fn on_click<F: Future<Output = M>>(mut self, action: fn(M) -> F) -> Self {
+        let name = ComponentRegistry::global().action_name(action as usize);
+        debug_assert!(name.is_some(), "action not registered");
+        self.tag.on_click = name;
         self
     }
 
     // TODO: not available for all tags (e.g. only for inputs)
-    pub fn on_input(mut self, message: impl FnOnce(InputEvent) -> M) -> Self {
-        self.tag.on_input = Some(message(InputEvent::default()));
+    pub fn on_input<F: Future<Output = M>>(mut self, action: fn(M, InputEvent) -> F) -> Self {
+        let name = ComponentRegistry::global().action_name(action as usize);
+        debug_assert!(name.is_some(), "action not registered");
+        self.tag.on_input = name;
         self
     }
 }
@@ -102,17 +111,11 @@ where
             let mut el = r.element(self.tag.tag)?;
 
             if let Some(on_click) = &self.tag.on_click {
-                // TODO: avoid allocation
-                // TODO: unwrap
-                let action = serde_json::to_string(&on_click).unwrap();
-                el.attribute("data-click", &action)?;
+                el.attribute("data-click", on_click)?;
             }
 
             if let Some(on_input) = &self.tag.on_input {
-                // TODO: avoid allocation
-                // TODO: unwrap
-                let action = serde_json::to_string(&on_input).unwrap();
-                el.attribute("data-input", &action)?;
+                el.attribute("data-input", on_input)?;
             }
 
             self.tag.attrs.render(&mut el)?;
