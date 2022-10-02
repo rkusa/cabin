@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -9,6 +10,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
+use super::ComponentId;
 use crate::render::Renderer;
 use crate::{View, ViewHashTree};
 
@@ -21,7 +23,7 @@ type ComponentHandler =
     dyn Fn(Bytes) -> SyncFuture<Pin<Box<dyn Future<Output = Update> + Send>>> + Send + Sync;
 
 pub struct ComponentRegistry {
-    handler: HashMap<(&'static str, &'static str), Arc<ComponentHandler>>,
+    handler: HashMap<(Cow<'static, str>, &'static str), Arc<ComponentHandler>>,
     action_names: HashMap<usize, &'static str>,
 }
 
@@ -57,7 +59,7 @@ impl ComponentRegistry {
 
     pub fn register<S, M, V, R, U>(
         &mut self,
-        id: &'static str,
+        id: ComponentId,
         action: &'static str,
         update: fn(S, M) -> U,
         render: fn(S) -> R,
@@ -70,7 +72,7 @@ impl ComponentRegistry {
     {
         self.action_names.insert(update as usize, action);
         self.handler.insert(
-            (id, action),
+            (id.to_string().into(), action),
             Arc::new(move |body: Bytes| {
                 SyncFuture::new(Box::pin(async move {
                     // TODO: unwraps
@@ -104,7 +106,7 @@ impl ComponentRegistry {
     }
 
     pub async fn handle(&self, id: &str, action: &str, body: Bytes) -> Option<Update> {
-        let handler = Arc::clone(self.handler.get(&(id, action))?);
+        let handler = Arc::clone(self.handler.get(&(id.into(), action))?);
         let fut = handler(body);
         Some(fut.await)
     }

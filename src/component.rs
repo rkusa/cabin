@@ -12,20 +12,32 @@ use crate::view::View;
 use crate::ViewHashTree;
 
 pub struct ServerComponent<F, V, S> {
-    id: &'static str,
+    id: ComponentId,
     state: S,
     component: fn(S) -> F,
     marker: PhantomData<V>,
 }
 
+#[derive(Clone, Copy)]
+pub struct ComponentId {
+    module: &'static str,
+    name: &'static str,
+}
+
 impl<F, V, S> ServerComponent<F, V, S> {
-    pub fn new(id: &'static str, state: S, component: fn(S) -> F) -> Self {
+    pub fn new(id: ComponentId, state: S, component: fn(S) -> F) -> Self {
         Self {
             id,
             state,
             component,
             marker: PhantomData,
         }
+    }
+}
+
+impl ComponentId {
+    pub const fn new(module: &'static str, name: &'static str) -> Self {
+        Self { module, name }
     }
 }
 
@@ -73,5 +85,23 @@ where
 
             Ok(r)
         }
+    }
+}
+
+impl fmt::Display for ComponentId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO: somehow do only once?
+        f.write_str(if self.module.starts_with("r#") {
+            &self.module[2..]
+        } else {
+            self.module
+        })?;
+        f.write_str("::")?;
+        f.write_str(if self.name.starts_with("r#") {
+            &self.name[2..]
+        } else {
+            self.name
+        })?;
+        Ok(())
     }
 }

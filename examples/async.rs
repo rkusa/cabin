@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::component::ServerComponent;
+use crabweb::component::{ComponentId, ServerComponent};
 use crabweb::{html, render, View, SERVER_COMPONENT_JS};
 use html::events::InputEvent;
 use serde::{Deserialize, Serialize};
@@ -92,20 +92,12 @@ impl Search {
 
 // #[component]
 async fn search(state: Search) -> impl View {
-    static ID: once_cell::race::OnceBox<String> = once_cell::race::OnceBox::new();
+    static ID: ComponentId = ComponentId::new(module_path!(), "search");
 
     async fn search(state: Search) -> impl View<Search> {
         #[::linkme::distributed_slice(crabweb::component::registry::COMPONENT_FACTORIES)]
         fn __register_search_component(r: &mut ComponentRegistry) {
-            let id = ID.get_or_init(|| {
-                Box::new(format!(
-                    "{}::{}",
-                    module_path!().replace("r#", ""),
-                    // TODO: don't forget #snake_name
-                    "search"
-                ))
-            });
-            r.register::<Search, InputEvent, _, _, _>(id, "set_query", set_query, search);
+            r.register::<Search, InputEvent, _, _, _>(ID, "set_query", set_query, search);
         }
 
         // #[component::init]
@@ -130,7 +122,8 @@ async fn search(state: Search) -> impl View {
             html::div(html::ul(items.into_iter().map(html::li))),
         )
     }
-    ServerComponent::new(ID.get().unwrap(), state, search)
+    // TODO: remove possible r# prefix
+    ServerComponent::new(ID, state, search)
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
