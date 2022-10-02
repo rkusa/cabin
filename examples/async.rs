@@ -36,7 +36,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = app().await;
+            let view = app();
             let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -70,21 +70,19 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
 }
 
 // TODO: return impl IntoView ?
-async fn app() -> impl View {
-    Search::new("G").await.into_view()
+fn app() -> impl View {
+    Search::new("G").into_view()
 }
 
 #[derive(Default, Serialize, Deserialize, Component)]
 struct Search {
     query: Cow<'static, str>,
-    result: Vec<Cow<'static, str>>,
 }
 
 impl Search {
-    async fn new(query: &'static str) -> Self {
+    fn new(query: &'static str) -> Self {
         Search {
             query: query.into(),
-            result: search(query).await,
         }
     }
 }
@@ -98,26 +96,28 @@ impl Render for Search {
     type Message<'v> = SearchAction;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
 
-    type UpdateFuture<'v> = impl Future<Output = ()> + Send + 'v;
-    type RenderFuture<'v> = Ready<Self::View<'v>>;
+    type UpdateFuture<'v> = Ready<()>;
+    type RenderFuture<'v> = impl Future<Output = Self::View<'v>> + Send + 'v;
 
     fn update(&mut self, message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
-        async move {
-            match message {
-                SearchAction::Search(v) => self.result = search(&v).await,
-            }
-        }
+        match message {
+            SearchAction::Search(v) => self.query = v.into(),
+        };
+        ready(())
     }
 
     fn render(&self) -> Self::RenderFuture<'_> {
-        ready((
-            html::div(
-                html::input()
-                    .attr("value", "G")
-                    .on_input(|ev| SearchAction::Search(ev.value)),
-            ),
-            html::div(html::ul(self.result.iter().map(html::li))),
-        ))
+        async move {
+            let items = search(&self.query).await;
+            (
+                html::div(
+                    html::input()
+                        .attr("value", "G")
+                        .on_input(|ev| SearchAction::Search(ev.value)),
+                ),
+                html::div(html::ul(items.into_iter().map(html::li))),
+            )
+        }
     }
 }
 
