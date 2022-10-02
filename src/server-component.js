@@ -14,6 +14,17 @@ class ServerComponent extends HTMLElement {
     this.setUpEventListener("input", {
       eventPayload: (e) => ({ value: e.target.value }),
     });
+
+    // If the browser restored previous form values, detect them and trigger an input event
+    const inputs = this.querySelectorAll("input");
+    inputs.forEach((input) => {
+      if (input.value !== input.getAttribute("value")) {
+        console.log("input", input, "changed, manually trigger input event");
+        input.dispatchEvent(
+          new Event("input", { bubbles: true, cancelable: true })
+        );
+      }
+    });
   }
 
   setUpEventListener(eventName, opts) {
