@@ -7,9 +7,9 @@ use hyper::body::Bytes;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
-use super::Component;
+use super::ServerComponent;
 use crate::render::Renderer;
-use crate::{IntoView, Render, View, ViewHashTree};
+use crate::{Component, IntoView, View, ViewHashTree};
 
 #[linkme::distributed_slice]
 pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
@@ -53,8 +53,8 @@ struct Payload<C, M> {
 impl ComponentRegistry {
     pub fn register<C>(&mut self)
     where
-        C: Component + Send + 'static,
-        for<'v> <C as Render>::View<'v>: Send,
+        C: ServerComponent + Send + 'static,
+        for<'v> <C as Component>::View<'v>: Send,
         for<'v> C::Message<'v>: Send,
     {
         self.handler.insert(

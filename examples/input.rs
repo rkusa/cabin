@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
 use crabweb::html::events::InputValue;
-use crabweb::{html, render, Component, IntoView, Render, View, SERVER_COMPONENT_JS};
+use crabweb::{html, render, Component, IntoView, ServerComponent, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::to_bytes;
 use solarsail::hyper::{header, StatusCode};
@@ -72,7 +72,7 @@ fn app() -> impl View {
     Value::default().into_view()
 }
 
-#[derive(Default, Serialize, Deserialize, Component)]
+#[derive(Default, Serialize, Deserialize, ServerComponent)]
 struct Value(Cow<'static, str>);
 
 #[derive(Serialize, Deserialize)]
@@ -80,7 +80,7 @@ enum ValueMessage {
     SetValue(InputValue),
 }
 
-impl Render for Value {
+impl Component for Value {
     type Message<'v> = ValueMessage;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
 

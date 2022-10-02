@@ -7,9 +7,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::component::Render;
+use crabweb::component::Component;
 use crabweb::html::events::InputValue;
-use crabweb::{html, render, Component, IntoView, View, SERVER_COMPONENT_JS};
+use crabweb::{html, render, IntoView, ServerComponent, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::to_bytes;
 use solarsail::hyper::{header, StatusCode};
@@ -74,7 +74,7 @@ fn app() -> impl View {
     Search::new("G").into_view()
 }
 
-#[derive(Default, Serialize, Deserialize, Component)]
+#[derive(Default, Serialize, Deserialize, ServerComponent)]
 struct Search {
     query: Cow<'static, str>,
 }
@@ -92,7 +92,7 @@ enum SearchAction {
     Search(InputValue),
 }
 
-impl Render for Search {
+impl Component for Search {
     type Message<'v> = SearchAction;
     type View<'v> = impl View<Self::Message<'v>> + 'v;
 
@@ -112,7 +112,7 @@ impl Render for Search {
             (
                 html::div(
                     html::input()
-                        .attr("value", "G")
+                        .attr("value", Cow::Borrowed(&*self.query))
                         .on_input(|ev| SearchAction::Search(ev.value)),
                 ),
                 html::div(html::ul(items.into_iter().map(html::li))),

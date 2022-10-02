@@ -11,12 +11,12 @@ use crate::render::Renderer;
 use crate::view::{IntoView, View};
 use crate::ViewHashTree;
 
-pub trait Component: Render {
+pub trait ServerComponent: Component {
     fn id() -> Cow<'static, str>;
 }
 
 // TODO: s/DeserializeOwned/Deserialize/ using GATs?
-pub trait Render: Serialize + DeserializeOwned {
+pub trait Component: Serialize + DeserializeOwned {
     type Message<'v>: Serialize + Deserialize<'v>;
     type View<'v>: View<Self::Message<'v>>
     where
@@ -35,15 +35,15 @@ pub trait Render: Serialize + DeserializeOwned {
 
 pub struct ComponentView<C>
 where
-    C: Component,
+    C: ServerComponent,
 {
     component: C,
 }
 
 impl<C> IntoView<ComponentView<C>, ()> for C
 where
-    C: Component + Send + 'static,
-    for<'v> <C as Render>::View<'v>: Send,
+    C: ServerComponent + Send + 'static,
+    for<'v> <C as Component>::View<'v>: Send,
 {
     fn into_view(self) -> ComponentView<C> {
         ComponentView { component: self }
@@ -52,8 +52,8 @@ where
 
 impl<C> View<()> for ComponentView<C>
 where
-    C: Component + Send + 'static,
-    for<'v> <C as Render>::View<'v>: Send,
+    C: ServerComponent + Send + 'static,
+    for<'v> <C as Component>::View<'v>: Send,
 {
     type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
 
