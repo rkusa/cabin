@@ -1,14 +1,9 @@
-#![feature(type_alias_impl_trait)]
-
 use std::borrow::Cow;
-use std::future::{ready, Ready};
 use std::net::SocketAddr;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::component::Component;
-use crabweb::{html, render, IntoView, ServerComponent, View, SERVER_COMPONENT_JS};
+use crabweb::{html, render, View, SERVER_COMPONENT_JS};
 use serde::{Deserialize, Serialize};
 use solarsail::hyper::body::to_bytes;
 use solarsail::hyper::{header, StatusCode};
@@ -18,14 +13,15 @@ use solarsail::{http, IntoResponse, Request, RequestExt, Response, SolarSail};
 
 #[tokio::main]
 async fn main() {
-    let registry = ComponentRegistry::default();
+    // ensure registry is initialized
+    ComponentRegistry::global();
 
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
-    let app = SolarSail::new(Arc::new(registry), handle_request);
+    let app = SolarSail::new((), handle_request);
     app.run(&addr).await.unwrap();
 }
 
-async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> Response {
+async fn handle_request(_: (), mut req: Request) -> Response {
     match req.route().as_tuple() {
         get!("health") => "Ok".into_response(),
 
@@ -35,7 +31,7 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             .unwrap(),
 
         get!() => {
-            let view = app();
+            let view = app().await;
             let html = render(view).await.unwrap();
             let html = format!(
                 r#"<script src="/server-component.js" async></script>{}"#,
@@ -44,9 +40,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             html.into_response()
         }
 
-        post!("dispatch" / component) => {
+        post!("dispatch" / component / action) => {
             // TODO: get rid of to_string()
             let id = component.to_string();
+            let action = action.to_string();
 
             // TODO: unwrap()
             let (body, _mime_type) = req.body_mut().take().unwrap();
@@ -60,7 +57,10 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
             // let whole_body = hyper::body::aggregate(body).await.unwrap();
             // let rd = whole_body.reader();
             let data = to_bytes(body).await.unwrap();
-            let update = registry.handle(&id, data).await.expect("unknown component");
+            let update = ComponentRegistry::global()
+                .handle(&id, &action, data)
+                .await
+                .expect("unknown component");
             json(update).into_response()
         }
 
@@ -68,45 +68,57 @@ async fn handle_request(registry: Arc<ComponentRegistry>, mut req: Request) -> R
     }
 }
 
-// TODO: return impl IntoView ?
-fn app() -> impl View {
-    Items(vec!["first".into(), "second".into()]).into_view()
+async fn app() -> impl View {
+    items(Items(vec![
+        Item {
+            id: 1,
+            name: "first".into(),
+        },
+        Item {
+            id: 2,
+            name: "second".into(),
+        },
+    ]))
+    .await
 }
-
-// TODO: allow Items<'a>(Vec<&'a str>)
-#[derive(Serialize, Deserialize, ServerComponent)]
-struct Items(Vec<Cow<'static, str>>);
 
 #[derive(Serialize, Deserialize)]
-enum ItemsAction<'v> {
-    Add,
-    Delete(&'v str),
+struct Item {
+    id: usize,
+    name: Cow<'static, str>,
 }
 
-impl Component for Items {
-    type Message<'v> = ItemsAction<'v>;
-    type View<'v> = impl View<Self::Message<'v>> + 'v;
+#[derive(Serialize, Deserialize)]
+struct Items(Vec<Item>);
 
-    type UpdateFuture<'v> = Ready<()>;
-    type RenderFuture<'v> = Ready<Self::View<'v>>;
-
-    fn update(&mut self, message: Self::Message<'_>) -> Self::UpdateFuture<'_> {
-        match message {
-            ItemsAction::Add => {
-                self.0.push("new item 1".into());
-                self.0.push("new item 2".into());
-            }
-            ItemsAction::Delete(item) => self.0.retain(|i| i != item),
-        }
-        std::future::ready(())
+#[crabweb::component]
+async fn items(items: Items) -> impl View<Items> {
+    async fn add(mut items: Items, _: ()) -> Items {
+        let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
+        items.0.push(Item {
+            id: max_id + 1,
+            name: "new item 1".into(),
+        });
+        items.0.push(Item {
+            id: max_id + 2,
+            name: "new item 2".into(),
+        });
+        items
     }
 
-    fn render(&self) -> Self::RenderFuture<'_> {
-        ready((
-            html::ul(self.0.iter().map(|item| {
-                html::li((item, html::button("x").on_click(ItemsAction::Delete(item))))
-            })),
-            html::div(html::button("add").on_click(ItemsAction::Add)),
-        ))
+    // TODO: concurrent deletes race each other
+    async fn delete(mut items: Items, id: usize) -> Items {
+        items.0.retain(|i| i.id != id);
+        items
     }
+
+    (
+        html::ul(
+            items
+                .0
+                .into_iter()
+                .map(|item| html::li((item.name, html::button("x").on_click(delete, item.id)))),
+        ),
+        html::div(html::button("add").on_click(add, ())),
+    )
 }

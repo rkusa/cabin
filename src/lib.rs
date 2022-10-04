@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-pub use crabweb_macros::ServerComponent;
+pub use crabweb_macros::component;
 pub use render::{Renderer, ViewHashTree};
 pub use view::{IntoView, View};
 

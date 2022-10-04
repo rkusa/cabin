@@ -6,6 +6,7 @@ use std::fmt;
 use std::future::Future;
 use std::marker::PhantomData;
 
+use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use self::attributes::{Attribute, Attributes};
@@ -50,7 +51,7 @@ pub fn custom<V: View<M>, M>(tag: &'static str, content: impl IntoView<V, M>) ->
 struct HtmlTag<M, A> {
     tag: &'static str,
     attrs: A,
-    on_click: Option<&'static str>,
+    on_click: Option<(&'static str, String)>,
     on_input: Option<&'static str>,
     marker: PhantomData<M>,
 }
@@ -82,10 +83,20 @@ impl<V, M, A> Html<V, M, A> {
     }
 
     // TODO: not available for all tags (e.g. only for buttons)
-    pub fn on_click<F: Future<Output = M>>(mut self, action: fn(M) -> F) -> Self {
+    pub fn on_click<F: Future<Output = M>, P: Serialize + DeserializeOwned>(
+        mut self,
+        action: fn(M, P) -> F,
+        payload: P,
+    ) -> Self {
         let name = ComponentRegistry::global().action_name(action as usize);
         debug_assert!(name.is_some(), "action not registered");
-        self.tag.on_click = name;
+
+        if let Some(name) = name {
+            // TODO: unwrap
+            // TODO: delay serialization?
+            let payload = serde_json::to_string(&payload).unwrap();
+            self.tag.on_click = Some((name, payload));
+        }
         self
     }
 
@@ -110,8 +121,9 @@ where
         async move {
             let mut el = r.element(self.tag.tag)?;
 
-            if let Some(on_click) = &self.tag.on_click {
+            if let Some((on_click, payload)) = &self.tag.on_click {
                 el.attribute("data-click", on_click)?;
+                el.attribute("data-click-payload", payload)?;
             }
 
             if let Some(on_input) = &self.tag.on_input {

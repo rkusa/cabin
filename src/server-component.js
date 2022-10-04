@@ -54,6 +54,9 @@ class ServerComponent extends HTMLElement {
           try {
             const component = this.dataset.id;
             const action = node.dataset[eventName];
+            const payload =
+              opts?.eventPayload?.(e) ??
+              JSON.parse(node.dataset[`${eventName}Payload`]);
             const res = await fetch(`/dispatch/${component}/${action}`, {
               signal,
               method: "POST",
@@ -63,7 +66,7 @@ class ServerComponent extends HTMLElement {
               body: JSON.stringify({
                 state: this.state,
                 hashTree: this.hashTree,
-                payload: opts?.eventPayload?.(e) ?? null,
+                payload: payload,
               }),
             });
             if (signal.aborted) {

@@ -1,30 +1,116 @@
-use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
-use quote::{format_ident, quote};
-use syn::{parse_macro_input, DeriveInput};
+use quote::quote;
+use syn::spanned::Spanned;
+use syn::{parse_macro_input, Error, FnArg, Item, ItemFn, Signature, Stmt};
 
-#[proc_macro_derive(ServerComponent)]
-pub fn derive_server_component(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let generics = input.generics;
-    let ident = input.ident;
-    let snake_name = ident
-        .to_string()
-        .from_case(Case::Pascal)
-        .to_case(Case::Snake);
-    let factory_ident = format_ident!("__register_{}", snake_name);
+#[proc_macro_attribute]
+pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(item as ItemFn);
 
-    quote! {
-        impl #generics ::crabweb::component::ServerComponent for #ident #generics {
-            fn id() -> ::std::borrow::Cow<'static, str> {
-                format!("{}::{}", module_path!().replace("r#", ""), #snake_name).into()
-            }
+    let ItemFn {
+        attrs,
+        vis,
+        sig,
+        block,
+    } = item;
+    let Signature {
+        constness,
+        asyncness,
+        unsafety,
+        abi,
+        fn_token: _,
+        ident,
+        generics,
+        paren_token: _,
+        inputs,
+        variadic,
+        output,
+    } = sig;
+
+    if inputs.len() != 1 {
+        return Error::new(
+            inputs.span(),
+            "Exactly one function argument expected (the component state)",
+        )
+        .into_compile_error()
+        .into();
+    }
+
+    let (state_ident, state_type) = match &inputs[0] {
+        arg @ FnArg::Receiver(_) => {
+            return Error::new(arg.span(), "State cannot be a self argument")
+                .into_compile_error()
+                .into()
         }
+        FnArg::Typed(pat_type) => (&pat_type.pat, &pat_type.ty),
+    };
 
-        #[::linkme::distributed_slice(::crabweb::component::registry::COMPONENT_FACTORIES)]
-        fn #factory_ident(r: &mut ::crabweb::component::registry::ComponentRegistry) {
-            r.register::<#ident>();
+    // find actions (`fn`s inside of the components content)
+    let mut actions = Vec::new();
+    for stmt in &block.stmts {
+        if let Stmt::Item(Item::Fn(f)) = stmt {
+            if f.sig.inputs.len() != 2 {
+                return Error::new(
+                    f.sig.inputs.span(),
+                    "Exactly two function arguments expected for actions \
+                            (the component state and the action payload)",
+                )
+                .into_compile_error()
+                .into();
+            }
+
+            match &f.sig.inputs[0] {
+                arg @ FnArg::Receiver(_) => {
+                    return Error::new(arg.span(), "State cannot be a self argument")
+                        .into_compile_error()
+                        .into()
+                }
+                arg @ FnArg::Typed(pat_type) => {
+                    if pat_type.ty != *state_type {
+                        return Error::new(arg.span(), "Action and component state type mismatch")
+                            .into_compile_error()
+                            .into();
+                    }
+                }
+            }
+
+            let payload_type = match &f.sig.inputs[1] {
+                arg @ FnArg::Receiver(_) => {
+                    return Error::new(arg.span(), "Payload cannot be a self argument")
+                        .into_compile_error()
+                        .into()
+                }
+                FnArg::Typed(pat_type) => &pat_type.ty,
+            };
+
+            let action_ident = &f.sig.ident;
+            let name = action_ident.to_string();
+            actions.push(quote! {
+                r.register::<#state_type, #payload_type, _, _, _>(ID, #name, #action_ident, __inner);
+            })
         }
     }
-    .into()
+
+    let name = ident.to_string();
+    let block = block.stmts;
+
+    let wrapped_fn = quote! {
+        #(#attrs)*
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> impl View {
+            static ID: ::crabweb::component::ComponentId = ::crabweb::component::ComponentId::new(module_path!(), #name);
+
+            #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {
+                #[::linkme::distributed_slice(crabweb::component::registry::COMPONENT_FACTORIES)]
+                fn __register(r: &mut ::crabweb::component::registry::ComponentRegistry) {
+                    #(#actions)*
+                }
+
+                #(#block)*
+            }
+
+            ::crabweb::component::ServerComponent::new(ID, #state_ident, __inner)
+        }
+    };
+
+    wrapped_fn.into()
 }

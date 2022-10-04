@@ -1,11 +1,8 @@
-#![feature(type_alias_impl_trait)]
-
 use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
 use crabweb::component::registry::ComponentRegistry;
-use crabweb::component::{ComponentId, ServerComponent};
 use crabweb::{html, render, View, SERVER_COMPONENT_JS};
 use html::events::InputEvent;
 use serde::{Deserialize, Serialize};
@@ -90,40 +87,19 @@ impl Search {
     }
 }
 
-// #[component]
-async fn search(state: Search) -> impl View {
-    static ID: ComponentId = ComponentId::new(module_path!(), "search");
-
-    async fn search(state: Search) -> impl View<Search> {
-        #[::linkme::distributed_slice(crabweb::component::registry::COMPONENT_FACTORIES)]
-        fn __register_search_component(r: &mut ComponentRegistry) {
-            r.register::<Search, InputEvent, _, _, _>(ID, "set_query", set_query, search);
-        }
-
-        // #[component::init]
-        async fn init(_state: &mut Search) {
-            // state.results = search(&state.query).await;
-        }
-
-        // TODO: allow both async and sync (convert sync to async?)
-        // #[component::action] ?
-        async fn set_query(mut state: Search, ev: InputEvent) -> Search {
-            state.query = ev.value.into();
-            state
-        }
-        // const set_query: Action = Action::new(module_path!(), "set_query", set_query);
-
-        // TODO: memo?
-        let items = search_countries(&state.query).await;
-
-        // TODO: wrap in <server-component>
-        (
-            html::div(html::input().attr("value", state.query).on_input(set_query)),
-            html::div(html::ul(items.into_iter().map(html::li))),
-        )
+#[crabweb::component]
+async fn search(state: Search) -> impl View<Search> {
+    async fn set_query(mut state: Search, ev: InputEvent) -> Search {
+        state.query = ev.value.into();
+        state
     }
-    // TODO: remove possible r# prefix
-    ServerComponent::new(ID, state, search)
+
+    let items = search_countries(&state.query).await;
+
+    (
+        html::div(html::input().attr("value", state.query).on_input(set_query)),
+        html::div(html::ul(items.into_iter().map(html::li))),
+    )
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
