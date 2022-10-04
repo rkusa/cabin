@@ -82,6 +82,10 @@ impl Renderer {
         }
     }
 
+    pub fn skip(self) -> Self {
+        self
+    }
+
     fn start(&mut self) {
         let previous = self
             .previous_tree

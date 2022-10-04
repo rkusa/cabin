@@ -96,7 +96,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let wrapped_fn = quote! {
         #(#attrs)*
-        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> impl View {
+        #vis #constness #asyncness #unsafety #abi fn #ident<S>(#inputs #variadic) -> impl View<S> {
             static ID: ::rustend::component::ComponentId = ::rustend::component::ComponentId::new(module_path!(), #name);
 
             #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {

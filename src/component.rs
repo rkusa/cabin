@@ -42,7 +42,7 @@ impl ComponentId {
     }
 }
 
-impl<F, V, S> View<()> for ServerComponent<F, V, S>
+impl<F, V, S, E> View<E> for ServerComponent<F, V, S>
 where
     F: Future<Output = V> + Send + 'static,
     V: View<S> + Send + 'static,
@@ -54,8 +54,11 @@ where
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
             if r.is_update() {
-                let view = (self.component)(self.state).await;
-                return view.render(r).await;
+                // TODO: nested update
+                // TODO: is update, but first render of  that component (e.g. due to if/else)
+                // TODO: nested no-update in list
+                // Components are self-contained by default and parent re-renders are ignored.
+                return Ok(r.skip());
             }
 
             // TODO: unwrap
