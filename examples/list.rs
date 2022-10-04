@@ -4,13 +4,13 @@ use std::future::ready;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-use crabweb::{html, View};
 use hyper::service::make_service_fn;
+use rustend::{html, View};
 use serde::{Deserialize, Serialize};
 
 #[tokio::main]
 async fn main() {
-    let app = crabweb_service::app(app);
+    let app = rustend_service::app(app);
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
     let server = hyper::Server::bind(&addr)
         .serve(make_service_fn(|_| ready(Ok::<_, Infallible>(app.clone()))));
@@ -41,7 +41,7 @@ struct Item {
 #[derive(Serialize, Deserialize)]
 struct Items(Vec<Item>);
 
-#[crabweb::component]
+#[rustend::component]
 async fn items(items: Items) -> impl View<Items> {
     async fn add(mut items: Items, _: ()) -> Items {
         let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);

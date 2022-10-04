@@ -4,14 +4,14 @@ use std::future::ready;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-use crabweb::{html, View};
 use html::events::InputEvent;
 use hyper::service::make_service_fn;
+use rustend::{html, View};
 use serde::{Deserialize, Serialize};
 
 #[tokio::main]
 async fn main() {
-    let app = crabweb_service::app(app);
+    let app = rustend_service::app(app);
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
     let server = hyper::Server::bind(&addr)
         .serve(make_service_fn(|_| ready(Ok::<_, Infallible>(app.clone()))));
@@ -36,7 +36,7 @@ impl Search {
     }
 }
 
-#[crabweb::component]
+#[rustend::component]
 async fn search(state: Search) -> impl View<Search> {
     async fn set_query(mut state: Search, ev: InputEvent) -> Search {
         state.query = ev.value.into();

@@ -1,11 +1,11 @@
 [package]
-name = "crabweb-service"
+name = "rustend-service"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 bytes = "1.2"
-crabweb = { path = "../" }
+rustend = { path = "../" }
 http = "0.2"
 http-body = "0.4"
 hyper = { version = "0.14" }

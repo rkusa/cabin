@@ -5,33 +5,33 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
-use crabweb::component::registry::ComponentRegistry;
-use crabweb::{render, View, SERVER_COMPONENT_JS};
 use http::{header, Method, Request, Response, StatusCode};
 use http_body::Body as HttpBody;
 use hyper::body::to_bytes;
 use hyper::Body;
 use mime::Mime;
+use rustend::component::registry::ComponentRegistry;
+use rustend::{render, View, SERVER_COMPONENT_JS};
 use tower_service::Service;
 
-pub struct CrabwebService<A, F, V> {
+pub struct RustendService<A, F, V> {
     app: Arc<A>,
     marker: PhantomData<(F, V)>,
 }
 
-pub fn app<A, F, V>(app: A) -> CrabwebService<A, F, V>
+pub fn app<A, F, V>(app: A) -> RustendService<A, F, V>
 where
     A: Fn() -> F + Send + 'static,
     F: Future<Output = V> + Send + 'static,
     V: View + Send + 'static,
 {
-    CrabwebService {
+    RustendService {
         app: Arc::new(app),
         marker: PhantomData,
     }
 }
 
-impl<A, F, V, ReqBody> Service<Request<ReqBody>> for CrabwebService<A, F, V>
+impl<A, F, V, ReqBody> Service<Request<ReqBody>> for RustendService<A, F, V>
 where
     A: Fn() -> F + Send + Sync + 'static,
     F: Future<Output = V> + Send + 'static,
@@ -119,9 +119,9 @@ where
     }
 }
 
-impl<A, F, V> Clone for CrabwebService<A, F, V> {
+impl<A, F, V> Clone for RustendService<A, F, V> {
     fn clone(&self) -> Self {
-        CrabwebService {
+        RustendService {
             app: self.app.clone(),
             marker: PhantomData,
         }

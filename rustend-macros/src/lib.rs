@@ -97,18 +97,18 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let wrapped_fn = quote! {
         #(#attrs)*
         #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) -> impl View {
-            static ID: ::crabweb::component::ComponentId = ::crabweb::component::ComponentId::new(module_path!(), #name);
+            static ID: ::rustend::component::ComponentId = ::rustend::component::ComponentId::new(module_path!(), #name);
 
             #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {
-                #[::linkme::distributed_slice(crabweb::component::registry::COMPONENT_FACTORIES)]
-                fn __register(r: &mut ::crabweb::component::registry::ComponentRegistry) {
+                #[::linkme::distributed_slice(rustend::component::registry::COMPONENT_FACTORIES)]
+                fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
                     #(#actions)*
                 }
 
                 #(#block)*
             }
 
-            ::crabweb::component::ServerComponent::new(ID, #state_ident, __inner)
+            ::rustend::component::ServerComponent::new(ID, #state_ident, __inner)
         }
     };
 

@@ -1,7 +1,7 @@
 use std::fmt;
 
-pub use crabweb_macros::component;
 pub use render::{Renderer, ViewHashTree};
+pub use rustend_macros::component;
 pub use view::{IntoView, View};
 
 pub mod component;

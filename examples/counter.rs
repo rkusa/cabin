@@ -3,12 +3,12 @@ use std::future::ready;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-use crabweb::{html, IntoView, View};
 use hyper::service::make_service_fn;
+use rustend::{html, IntoView, View};
 
 #[tokio::main]
 async fn main() {
-    let app = crabweb_service::app(app);
+    let app = rustend_service::app(app);
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
     let server = hyper::Server::bind(&addr)
         .serve(make_service_fn(|_| ready(Ok::<_, Infallible>(app.clone()))));
@@ -20,7 +20,7 @@ async fn app() -> impl View {
     counter(0).await
 }
 
-#[crabweb::component]
+#[rustend::component]
 async fn counter(count: u32) -> impl View<u32> {
     async fn incr(count: u32, _: ()) -> u32 {
         count + 1
