@@ -4,7 +4,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use hyper::body::Bytes;
+use bytes::Bytes;
 use once_cell::race::OnceBox;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
