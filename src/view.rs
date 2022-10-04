@@ -4,6 +4,7 @@ mod iter;
 use std::borrow::Cow;
 use std::fmt;
 use std::future::Future;
+use std::pin::Pin;
 
 use paste::paste;
 
@@ -99,23 +100,26 @@ impl<M> View<M> for String {
 
 impl<V, M> View<M> for Option<V>
 where
-    V: View<M> + Send,
+    // TODO: remove `+ 'static` once removing away from boxed future
+    V: View<M> + Send + 'static,
 {
-    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
-        async {
+        Box::pin(async {
             match self {
                 Some(i) => i.render(r).await,
                 None => Ok(r),
             }
-        }
+        })
     }
 }
 
 impl<V, M> IntoView<Option<V>, M> for Option<V>
 where
-    V: View<M> + Send,
+    // TODO: remove `+ 'static` once removing away from boxed future
+    V: View<M> + Send + 'static,
 {
     fn into_view(self) -> Option<V> {
         self
@@ -125,7 +129,8 @@ where
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> + Send ),*, M> IntoView<($([<V$ix>], )*), M> for ($([<I$ix>],)*) {
+            // TODO: remove `+ 'static` once removing away from boxed future
+            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> + Send + 'static),*, M> IntoView<($([<V$ix>], )*), M> for ($([<I$ix>],)*) {
                 fn into_view(self) -> ($([<V$ix>], )*) {
                     (
                         $(
@@ -135,16 +140,18 @@ macro_rules! impl_tuple {
                 }
             }
 
-            impl<$( [<V$ix>]: View<M> + Send ),*, M> View<M> for ($( [<V$ix>], )*) {
-                type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+            // TODO: remove `+ 'static` once removing away from boxed future
+            impl<$( [<V$ix>]: View<M> + Send + 'static),*, M> View<M> for ($( [<V$ix>], )*) {
+                // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+                type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
                 fn render(self, r: Renderer) -> Self::Future {
-                    async {
+                    Box::pin(async {
                         $(
                             let r = self.$ix.render(r).await?;
                         )*
                         Ok(r)
-                    }
+                    })
                 }
             }
         }

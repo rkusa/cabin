@@ -66,7 +66,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         .into()
                 }
                 arg @ FnArg::Typed(pat_type) => {
-                    if pat_type.ty != *state_type {
+                    if &pat_type.ty != state_type {
                         return Error::new(arg.span(), "Action and component state type mismatch")
                             .into_compile_error()
                             .into();

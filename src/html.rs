@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use std::fmt;
 use std::future::Future;
 use std::marker::PhantomData;
+use std::pin::Pin;
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -111,14 +112,16 @@ impl<V, M, A> Html<V, M, A> {
 
 impl<V, M, A> View<M> for Html<V, M, A>
 where
-    V: View<M> + Send,
+    // TODO: remove `+ 'static` once removing away from boxed future
+    V: View<M> + Send + 'static,
     M: Serialize + Send,
-    A: Attributes + Send,
+    A: Attributes + Send + 'static,
 {
-    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
-        async move {
+        Box::pin(async move {
             let mut el = r.element(self.tag.tag)?;
 
             if let Some((on_click, payload)) = &self.tag.on_click {
@@ -137,15 +140,16 @@ where
             } else {
                 el.end()
             }
-        }
+        })
     }
 }
 
 impl<V, M, A> IntoView<Html<V, M, A>, M> for Html<V, M, A>
 where
-    V: View<M> + Send,
+    // TODO: remove `+ 'static` once removing away from boxed future
+    V: View<M> + Send + 'static,
     M: Serialize + Send,
-    A: Attributes + Send,
+    A: Attributes + Send + 'static,
 {
     fn into_view(self) -> Html<V, M, A> {
         self

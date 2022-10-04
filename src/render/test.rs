@@ -3,6 +3,7 @@
 use std::fmt;
 use std::future::Future;
 use std::hash::Hasher;
+use std::pin::Pin;
 
 use twox_hash::XxHash32;
 
@@ -20,13 +21,15 @@ where
 
 impl<R, F> View<()> for Child<R, F>
 where
-    R: FnOnce(Renderer) -> F + Send,
+    // TODO: remove `+ 'static` once removing away from boxed future
+    R: FnOnce(Renderer) -> F + Send + 'static,
     F: Future<Output = Renderer> + Send,
 {
-    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
-        async move { Ok((self.render)(r).await) }
+        Box::pin(async move { Ok((self.render)(r).await) })
     }
 }
 

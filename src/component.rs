@@ -3,6 +3,7 @@ pub mod registry;
 use std::fmt::{self, Write};
 use std::future::Future;
 use std::marker::PhantomData;
+use std::pin::Pin;
 
 use serde::Serialize;
 use serde_json::value::RawValue;
@@ -43,14 +44,15 @@ impl ComponentId {
 
 impl<F, V, S> View<()> for ServerComponent<F, V, S>
 where
-    F: Future<Output = V> + Send,
+    F: Future<Output = V> + Send + 'static,
     V: View<S> + Send + 'static,
-    S: Serialize + Send,
+    S: Serialize + Send + 'static,
 {
-    type Future = impl Future<Output = Result<Renderer, fmt::Error>> + Send;
+    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
     fn render(self, mut r: Renderer) -> Self::Future {
-        async move {
+        Box::pin(async move {
             if r.is_update() {
                 let view = (self.component)(self.state).await;
                 return view.render(r).await;
@@ -84,7 +86,7 @@ where
             )?;
 
             Ok(r)
-        }
+        })
     }
 }
 
