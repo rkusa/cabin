@@ -72,20 +72,14 @@ impl Renderer {
         })
     }
 
-    pub fn text(&mut self, text: &str) -> Result<(), fmt::Error> {
+    pub fn text(mut self) -> TextRenderer {
         self.start();
 
-        let mut hasher = XxHash32::default();
-        hasher.write(text.as_bytes());
-        let hash = hasher.finish() as u32;
-        self.write_u32(hash);
-        self.hash_tree.push(Marker::End(hash));
-
-        if !self.unchanged(hash, self.out.len())? {
-            self.out.write_str(text)?;
+        TextRenderer {
+            hasher: Default::default(),
+            previous_len: self.out.len(),
+            renderer: self,
         }
-
-        Ok(())
     }
 
     fn start(&mut self) {
@@ -201,6 +195,25 @@ impl ElementRenderer {
     }
 }
 
+pub struct TextRenderer {
+    hasher: XxHash32,
+    renderer: Renderer,
+    previous_len: usize,
+}
+
+impl TextRenderer {
+    pub fn end(mut self) -> Result<Renderer, fmt::Error> {
+        let hash = self.hasher.finish() as u32;
+        self.renderer.write_u32(hash);
+        self.renderer.hash_tree.push(Marker::End(hash));
+
+        // Already written, so no need to handle what unchanged returns.
+        self.renderer.unchanged(hash, self.previous_len)?;
+
+        Ok(self.renderer)
+    }
+}
+
 pub fn escape_attribute_value(input: &str) -> Cow<str> {
     let mut replacements = input
         .char_indices()
@@ -236,9 +249,16 @@ impl Hasher for Renderer {
     }
 }
 
+impl Write for TextRenderer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.hasher.write(s.as_bytes());
+        self.renderer.out.write_str(s)
+    }
+}
+
 impl Write for Renderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.text(s)
+        self.out.write_str(s)
     }
 }
 

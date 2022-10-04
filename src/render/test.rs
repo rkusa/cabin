@@ -1,6 +1,6 @@
 #![allow(clippy::let_and_return)]
 
-use std::fmt;
+use std::fmt::{self, Write};
 use std::future::Future;
 use std::hash::Hasher;
 use std::pin::Pin;
@@ -173,8 +173,10 @@ async fn test_unchanged() {
     let r = Renderer::new();
     let el = r.element("div").unwrap();
     let r = el
-        .content(child(|mut r| async move {
-            r.text("test").unwrap();
+        .content(child(|r| async move {
+            let mut txt = r.text();
+            txt.write_str("test").unwrap();
+            let r = txt.end().unwrap();
             r.element("div").unwrap().end().unwrap()
         }))
         .await
@@ -199,8 +201,10 @@ async fn test_unchanged() {
     let mut el = r.element("div").unwrap();
     el.attribute("class", "bg-black").unwrap();
     let r = el
-        .content(child(|mut r| async move {
-            r.text("test").unwrap();
+        .content(child(|r| async move {
+            let mut txt = r.text();
+            txt.write_str("test").unwrap();
+            let r = txt.end().unwrap();
             r.element("div").unwrap().end().unwrap()
         }))
         .await
@@ -228,8 +232,10 @@ async fn test_unchanged() {
     let mut el = r.element("div").unwrap();
     el.attribute("class", "bg-black").unwrap();
     let r = el
-        .content(child(|mut r| async move {
-            r.text("test").unwrap();
+        .content(child(|r| async move {
+            let mut txt = r.text();
+            txt.write_str("test").unwrap();
+            let r = txt.end().unwrap();
             r.element("div").unwrap().end().unwrap()
         }))
         .await
@@ -255,8 +261,12 @@ async fn test_unchanged() {
 async fn test_new_items() {
     let r = Renderer::new();
     let el = r.element("div").unwrap();
-    let mut r = el.content::<()>("1").await.unwrap();
-    r.text("E").unwrap();
+    let r = el.content::<()>("1").await.unwrap();
+
+    let mut txt = r.text();
+    txt.write_str("E").unwrap();
+    let r = txt.end().unwrap();
+
     let out = r.end();
     assert_eq!(out.view, r#"<div>1</div>E"#);
     assert_eq!(
@@ -275,15 +285,24 @@ async fn test_new_items() {
 
     let r = Renderer::from_previous_tree(out.hash_tree);
     let el = r.element("div").unwrap();
-    let mut r = el
-        .content(child(|mut r| async move {
-            r.text("1").unwrap();
-            r.text("2").unwrap();
+    let r = el
+        .content(child(|r| async move {
+            let mut txt = r.text();
+            txt.write_str("1").unwrap();
+            let r = txt.end().unwrap();
+
+            let mut txt = r.text();
+            txt.write_str("2").unwrap();
+            let r = txt.end().unwrap();
             r
         }))
         .await
         .unwrap();
-    r.text("E").unwrap();
+
+    let mut txt = r.text();
+    txt.write_str("E").unwrap();
+    let r = txt.end().unwrap();
+
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged-->2</div><!--unchanged-->"#);
     assert_eq!(
@@ -307,15 +326,25 @@ async fn test_new_items() {
 async fn test_removed_items() {
     let r = Renderer::new();
     let el = r.element("div").unwrap();
-    let mut r = el
-        .content(child(|mut r| async move {
-            r.text("1").unwrap();
-            r.text("2").unwrap();
+    let r = el
+        .content(child(|r| async move {
+            let mut txt = r.text();
+            txt.write_str("1").unwrap();
+            let r = txt.end().unwrap();
+
+            let mut txt = r.text();
+            txt.write_str("2").unwrap();
+            let r = txt.end().unwrap();
+
             r
         }))
         .await
         .unwrap();
-    r.text("E").unwrap();
+
+    let mut txt = r.text();
+    txt.write_str("E").unwrap();
+    let r = txt.end().unwrap();
+
     let out = r.end();
     assert_eq!(out.view, r#"<div>12</div>E"#);
     assert_eq!(
@@ -336,8 +365,12 @@ async fn test_removed_items() {
 
     let r = Renderer::from_previous_tree(out.hash_tree);
     let el = r.element("div").unwrap();
-    let mut r = el.content::<()>("1").await.unwrap();
-    r.text("E").unwrap();
+    let r = el.content::<()>("1").await.unwrap();
+
+    let mut txt = r.text();
+    txt.write_str("E").unwrap();
+    let r = txt.end().unwrap();
+
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged--></div><!--unchanged-->"#);
     assert_eq!(
@@ -359,8 +392,12 @@ async fn test_removed_items() {
 async fn test_new_item_same_value() {
     let r = Renderer::new();
     let el = r.element("div").unwrap();
-    let mut r = el.content::<()>("1").await.unwrap();
-    r.text("E").unwrap();
+    let r = el.content::<()>("1").await.unwrap();
+
+    let mut txt = r.text();
+    txt.write_str("E").unwrap();
+    let r = txt.end().unwrap();
+
     let out = r.end();
     assert_eq!(out.view, r#"<div>1</div>E"#);
     assert_eq!(
@@ -379,15 +416,25 @@ async fn test_new_item_same_value() {
 
     let r = Renderer::from_previous_tree(out.hash_tree);
     let el = r.element("div").unwrap();
-    let mut r = el
-        .content(child(|mut r| async move {
-            r.text("1").unwrap();
-            r.text("1").unwrap();
+    let r = el
+        .content(child(|r| async move {
+            let mut txt = r.text();
+            txt.write_str("1").unwrap();
+            let r = txt.end().unwrap();
+
+            let mut txt = r.text();
+            txt.write_str("1").unwrap();
+            let r = txt.end().unwrap();
+
             r
         }))
         .await
         .unwrap();
-    r.text("E").unwrap();
+
+    let mut txt = r.text();
+    txt.write_str("E").unwrap();
+    let r = txt.end().unwrap();
+
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged-->1</div><!--unchanged-->"#);
     assert_eq!(

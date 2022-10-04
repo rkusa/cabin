@@ -30,8 +30,7 @@ async fn counter(count: u32) -> impl View<u32> {
         //     (self.0 == 0).then(|| ),
         //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
         if count > 0 {
-            // TODO: reintroduce html::text!
-            html::div(format!("Count: {}", count)).boxed()
+            html::div(html::text!("Count: {}", count)).boxed()
         } else {
             html::div("Hit `incr` to start counting ...").boxed()
         },

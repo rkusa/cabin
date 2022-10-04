@@ -1,8 +1,9 @@
 mod boxed;
 mod iter;
+pub(crate) mod text;
 
 use std::borrow::Cow;
-use std::fmt;
+use std::fmt::{self, Write};
 use std::future::Future;
 use std::pin::Pin;
 
@@ -61,9 +62,10 @@ impl<'a, M> IntoView<&'a str, M> for &'a str {
 impl<'a, M> View<M> for &'a str {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
-    fn render(self, mut r: Renderer) -> Self::Future {
+    fn render(self, r: Renderer) -> Self::Future {
         // TODO: safe escape HTML
-        std::future::ready(r.text(self).map(|_| r))
+        let mut txt = r.text();
+        std::future::ready(txt.write_str(self).and_then(|_| txt.end()))
     }
 }
 

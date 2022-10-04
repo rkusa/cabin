@@ -14,6 +14,7 @@ use self::attributes::{Attribute, Attributes};
 use self::events::InputEvent;
 use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
+pub use crate::view::text::{text, Text};
 use crate::view::{IntoView, View};
 
 pub fn div<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
