@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use std::fmt;
 
 pub use render::{Renderer, ViewHashTree};

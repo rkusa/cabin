@@ -19,8 +19,7 @@ pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
 
 static REGISTRY: OnceBox<ComponentRegistry> = OnceBox::new();
 
-type ComponentHandler =
-    dyn Fn(Bytes) -> SyncFuture<Pin<Box<dyn Future<Output = Update> + Send>>> + Send + Sync;
+type ComponentHandler = dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = Update> + Send>> + Send + Sync;
 
 pub struct ComponentRegistry {
     handler: HashMap<(Cow<'static, str>, &'static str), Arc<ComponentHandler>>,
@@ -74,7 +73,7 @@ impl ComponentRegistry {
         self.handler.insert(
             (id.to_string().into(), action),
             Arc::new(move |body: Bytes| {
-                SyncFuture::new(Box::pin(async move {
+                Box::pin(async move {
                     // TODO: unwraps
                     let Payload::<S, M> {
                         state,
@@ -96,7 +95,7 @@ impl ComponentRegistry {
                         hash_tree: out.hash_tree,
                         html: out.view,
                     }
-                }))
+                })
             }),
         );
     }
@@ -109,27 +108,5 @@ impl ComponentRegistry {
         let handler = Arc::clone(self.handler.get(&(id.into(), action))?);
         let fut = handler(body);
         Some(fut.await)
-    }
-}
-
-// TODO: get rid of?
-pub struct SyncFuture<F> {
-    inner: F,
-}
-
-impl<F: Future> SyncFuture<F> {
-    pub fn new(inner: F) -> Self {
-        Self { inner }
-    }
-}
-unsafe impl<T> Sync for SyncFuture<T> {}
-impl<F: Future + Send> Future for SyncFuture<F> {
-    type Output = F::Output;
-    fn poll(
-        self: Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Self::Output> {
-        let inner = unsafe { self.map_unchecked_mut(|x| &mut x.inner) };
-        inner.poll(cx)
     }
 }
