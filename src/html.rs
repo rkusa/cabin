@@ -15,7 +15,7 @@ use self::events::InputEvent;
 use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
-use crate::view::{IntoView, View};
+use crate::view::{IntoView, View, ViewWrapper};
 
 pub fn div<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
     custom("div", content)
@@ -33,7 +33,7 @@ pub fn button<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
     custom("button", content)
 }
 
-pub fn input<M>() -> Html<(), M, ()> {
+pub fn input<M>() -> Html<ViewWrapper<()>, M, ()> {
     custom("input", ())
 }
 
@@ -142,17 +142,5 @@ where
                 el.end()
             }
         })
-    }
-}
-
-impl<V, M, A> IntoView<Html<V, M, A>, M> for Html<V, M, A>
-where
-    // TODO: remove `+ 'static` once removing away from boxed future
-    V: View<M> + Send + 'static,
-    M: Serialize + Send,
-    A: Attributes + Send + 'static,
-{
-    fn into_view(self) -> Html<V, M, A> {
-        self
     }
 }

@@ -1,7 +1,7 @@
 use std::fmt;
 use std::future::{ready, Ready};
 
-use super::{IntoView, View};
+use super::View;
 use crate::render::Renderer;
 
 #[macro_export]
@@ -49,15 +49,6 @@ where
 
     fn render(self, r: Renderer) -> Self::Future {
         ready((self.0)(r))
-    }
-}
-
-impl<S, F> IntoView<Text<F>, S> for Text<F>
-where
-    F: Fn(Renderer) -> Result<Renderer, fmt::Error>,
-{
-    fn into_view(self) -> Text<F> {
-        self
     }
 }
 

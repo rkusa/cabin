@@ -21,9 +21,7 @@ async fn app(_state: ()) -> impl View {
     async fn reset(_state: (), _: ()) {}
 
     (
-        // TODO: IntoView for View
-        // html::div(counter(0).await),
-        html::div([counter(0).await]),
+        html::div(counter(0).await),
         html::button("reset").on_click(reset, ()),
     )
 }

@@ -40,6 +40,30 @@ pub trait View<M = ()> {
     fn render(self, r: Renderer) -> Self::Future;
 }
 
+// This wrapper is necessary to allow the [IntoView] implementation for any [View].
+// TODO: better name
+pub struct ViewWrapper<V>(V);
+
+impl<V, M> IntoView<ViewWrapper<V>, M> for V
+where
+    V: View<M>,
+{
+    fn into_view(self) -> ViewWrapper<V> {
+        ViewWrapper(self)
+    }
+}
+
+impl<V, M> View<M> for ViewWrapper<V>
+where
+    V: View<M>,
+{
+    type Future = V::Future;
+
+    fn render(self, r: Renderer) -> Self::Future {
+        self.0.render(r)
+    }
+}
+
 impl<M> View<M> for () {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
@@ -48,17 +72,6 @@ impl<M> View<M> for () {
     }
 }
 
-impl<M> IntoView<(), M> for () {
-    fn into_view(self) {
-        self
-    }
-}
-
-impl<'a, M> IntoView<&'a str, M> for &'a str {
-    fn into_view(self) -> &'a str {
-        self
-    }
-}
 impl<'a, M> View<M> for &'a str {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
@@ -74,11 +87,6 @@ impl<'a, M> IntoView<Cow<'a, str>, M> for &'a Cow<'a, str> {
         Cow::Borrowed(&**self)
     }
 }
-impl<'a, M> IntoView<Cow<'a, str>, M> for Cow<'a, str> {
-    fn into_view(self) -> Cow<'a, str> {
-        self
-    }
-}
 impl<'a, M> View<M> for Cow<'a, str> {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
@@ -87,11 +95,6 @@ impl<'a, M> View<M> for Cow<'a, str> {
     }
 }
 
-impl<M> IntoView<String, M> for String {
-    fn into_view(self) -> String {
-        self
-    }
-}
 impl<M> View<M> for String {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
@@ -118,30 +121,9 @@ where
     }
 }
 
-impl<V, M> IntoView<Option<V>, M> for Option<V>
-where
-    // TODO: remove `+ 'static` once removing away from boxed future
-    V: View<M> + Send + 'static,
-{
-    fn into_view(self) -> Option<V> {
-        self
-    }
-}
-
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            // TODO: remove `+ 'static` once removing away from boxed future
-            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> + Send + 'static),*, M> IntoView<($([<V$ix>], )*), M> for ($([<I$ix>],)*) {
-                fn into_view(self) -> ($([<V$ix>], )*) {
-                    (
-                        $(
-                            self.$ix.into_view(),
-                        )*
-                    )
-                }
-            }
-
             // TODO: remove `+ 'static` once removing away from boxed future
             impl<$( [<V$ix>]: View<M> + Send + 'static),*, M> View<M> for ($( [<V$ix>], )*) {
                 // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
