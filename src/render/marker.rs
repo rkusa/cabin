@@ -7,6 +7,7 @@ pub struct ViewHashTree(pub(crate) Vec<Marker>);
 pub(crate) enum Marker {
     Start,
     End(u32),
+    Component,
 }
 
 impl Serialize for Marker {
@@ -17,6 +18,7 @@ impl Serialize for Marker {
         match self {
             Marker::Start => s.serialize_str("s"),
             Marker::End(hash) => s.serialize_u32(*hash),
+            Marker::Component => s.serialize_str("c"),
         }
     }
 }
@@ -98,10 +100,10 @@ mod deserialize {
         where
             E: de::Error,
         {
-            if v == "s" {
-                Ok(Marker::Start)
-            } else {
-                Err(de::Error::invalid_type(de::Unexpected::Str(v), &self))
+            match v {
+                "s" => Ok(Marker::Start),
+                "c" => Ok(Marker::Component),
+                _ => Err(de::Error::invalid_type(de::Unexpected::Str(v), &self)),
             }
         }
     }
@@ -130,6 +132,7 @@ fn test_serde() {
         Marker::End(1),
         Marker::Start,
         Marker::Start,
+        Marker::Component,
         Marker::End(2),
         Marker::Start,
         Marker::End(3),
@@ -137,7 +140,7 @@ fn test_serde() {
         Marker::End(5),
     ];
     let serialized = serde_json::to_string(&hash_tree).unwrap();
-    assert_eq!(serialized, r#"["s",1,"s","s",2,"s",3,4,5]"#);
+    assert_eq!(serialized, r#"["s",1,"s","s","c",2,"s",3,4,5]"#);
     let deserialized: Vec<Marker> = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, hash_tree);
 }

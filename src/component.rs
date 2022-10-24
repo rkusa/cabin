@@ -19,7 +19,7 @@ pub struct ServerComponent<F, V, S> {
     marker: PhantomData<V>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash)]
 pub struct ComponentId {
     module: &'static str,
     name: &'static str,
@@ -53,12 +53,11 @@ where
 
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
-            if r.is_update() {
+            if !r.component(self.id)? {
                 // TODO: nested update
-                // TODO: is update, but first render of  that component (e.g. due to if/else)
                 // TODO: nested no-update in list
                 // Components are self-contained by default and parent re-renders are ignored.
-                return Ok(r.skip());
+                return Ok(r);
             }
 
             // TODO: unwrap

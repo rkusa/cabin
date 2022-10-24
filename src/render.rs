@@ -4,13 +4,14 @@ mod tests;
 
 use std::borrow::Cow;
 use std::fmt::{self, Write};
-use std::hash::Hasher;
+use std::hash::{Hash, Hasher};
 use std::ops::Neg;
 
 use twox_hash::XxHash32;
 
 use self::marker::Marker;
 pub use self::marker::ViewHashTree;
+use crate::component::ComponentId;
 use crate::View;
 
 pub struct Renderer {
@@ -52,10 +53,6 @@ impl Renderer {
         }
     }
 
-    pub fn is_update(&self) -> bool {
-        self.previous_tree.is_some()
-    }
-
     pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, fmt::Error> {
         self.start();
 
@@ -82,8 +79,26 @@ impl Renderer {
         }
     }
 
-    pub fn skip(self) -> Self {
-        self
+    /// Adds a component to the tree and returns whether it is a new component.
+    pub fn component(&mut self, id: ComponentId) -> Result<bool, fmt::Error> {
+        id.hash(self);
+        let previous = self
+            .previous_tree
+            .as_ref()
+            .and_then(|t| t.get(self.next_position()));
+        self.hash_tree.push(Marker::Component);
+        match previous {
+            Some(Marker::Component) => {
+                self.out.write_str("<!--unchanged-->")?;
+                return Ok(false);
+            }
+            Some(_) => {
+                // component is new
+                self.previous_offset -= 1;
+            }
+            _ => {}
+        }
+        Ok(true)
     }
 
     fn start(&mut self) {
@@ -91,8 +106,10 @@ impl Renderer {
             .previous_tree
             .as_ref()
             .and_then(|t| t.get(self.next_position()));
-        if let Some(Marker::End(_)) = previous {
-            self.previous_offset += 2
+        match previous {
+            Some(Marker::End(_)) => self.previous_offset += 2,
+            Some(Marker::Component) => self.previous_offset += 1,
+            _ => {}
         }
 
         self.hash_tree.push(Marker::Start);
