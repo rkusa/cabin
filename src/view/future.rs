@@ -1,5 +1,5 @@
 use std::fmt;
-use std::future::Future;
+use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
 use std::pin::Pin;
 
@@ -7,32 +7,32 @@ use super::IntoView;
 pub use super::View;
 use crate::render::Renderer;
 
-impl<Iter, I, V, M> IntoView<IteratorView<Iter::IntoIter, I, V, M>, M> for Iter
+impl<F, I, V, M> IntoView<FutureView<F::IntoFuture, I, V, M>, M> for F
 where
-    Iter: IntoIterator<Item = I>,
+    F: IntoFuture<Output = I>,
     // TODO: remove `+ 'static` once removing away from boxed future
-    Iter::IntoIter: Send + 'static,
+    F::IntoFuture: Send + 'static,
     I: IntoView<V, M> + Send,
     V: View<M> + Send,
     M: Send,
 {
-    fn into_view(self) -> IteratorView<Iter::IntoIter, I, V, M> {
-        IteratorView {
-            iter: self.into_iter(),
+    fn into_view(self) -> FutureView<F::IntoFuture, I, V, M> {
+        FutureView {
+            future: self.into_future(),
             marker: PhantomData,
         }
     }
 }
 
-pub struct IteratorView<Iter, I, V, M> {
-    iter: Iter,
+pub struct FutureView<F, I, V, M> {
+    future: F,
     marker: PhantomData<(I, V, M)>,
 }
 
-impl<Iter, I, V, M> View<M> for IteratorView<Iter, I, V, M>
+impl<F, I, V, M> View<M> for FutureView<F, I, V, M>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    Iter: Iterator<Item = I> + Send + 'static,
+    F: Future<Output = I> + Send + 'static,
     I: IntoView<V, M> + Send,
     V: View<M> + Send,
     M: Send,
@@ -40,13 +40,10 @@ where
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
-    fn render(self, mut r: Renderer) -> Self::Future {
+    fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {
-            for i in self.iter {
-                let fut = i.into_view().render(r);
-                r = fut.await?;
-            }
-            Ok(r)
+            let view = self.future.await.into_view();
+            view.render(r).await
         })
     }
 }

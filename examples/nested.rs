@@ -29,7 +29,7 @@ async fn app(enabled: bool) -> impl View<bool> {
 
     (
         html::div(if enabled {
-            counter(0).await.boxed()
+            counter(0).boxed()
         } else {
             "...".boxed()
         }),

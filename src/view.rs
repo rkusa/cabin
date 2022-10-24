@@ -1,4 +1,5 @@
 mod boxed;
+mod future;
 mod iter;
 pub(crate) mod text;
 
