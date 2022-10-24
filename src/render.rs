@@ -1,6 +1,6 @@
 mod marker;
 #[cfg(test)]
-mod test;
+mod tests;
 
 use std::borrow::Cow;
 use std::fmt::{self, Write};

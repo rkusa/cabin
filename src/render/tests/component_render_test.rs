@@ -2,9 +2,8 @@ use std::hash::Hasher;
 
 use twox_hash::XxHash32;
 
-use super::marker::Marker;
-use super::Renderer;
-use crate::{html, View};
+use crate::render::marker::Marker;
+use crate::{html, Renderer, View};
 
 #[tokio::test]
 async fn test_server_render_basic() {
