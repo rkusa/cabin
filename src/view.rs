@@ -125,8 +125,21 @@ where
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
+            pub struct [<Tuple $count View>]<$([<V$ix>],)*>($([<V$ix>],)*);
+
             // TODO: remove `+ 'static` once removing away from boxed future
-            impl<$( [<V$ix>]: View<M> + Send + 'static),*, M> View<M> for ($( [<V$ix>], )*) {
+            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> + Send + 'static),*, M> IntoView<[<Tuple $count View>]<$([<V$ix>],)*>, M> for ($([<I$ix>],)*) {
+                fn into_view(self) -> [<Tuple $count View>]<$([<V$ix>],)*> {
+                    [<Tuple $count View>](
+                        $(
+                            self.$ix.into_view(),
+                        )*
+                    )
+                }
+            }
+
+            // TODO: remove `+ 'static` once removing away from boxed future
+            impl<$( [<V$ix>]: View<M> + Send + 'static),*, M> View<M> for [<Tuple $count View>]<$([<V$ix>],)*> {
                 // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
                 type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
