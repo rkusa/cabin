@@ -42,6 +42,25 @@ mod internal {
             (self.f)(previous.unwrap_or_default())
         }
     }
+
+    pub struct PreviousOr<T> {
+        initial: T,
+    }
+
+    impl<T> PreviousOr<T> {
+        pub fn new(initial: T) -> Self {
+            Self { initial }
+        }
+    }
+
+    impl<T> FromPrevious<T> for PreviousOr<T>
+    where
+        T: Serialize + DeserializeOwned + Send,
+    {
+        fn next_from_previous(self, previous: Option<T>) -> T {
+            previous.unwrap_or(self.initial)
+        }
+    }
 }
 
 pub fn previous<T>(f: impl FnOnce(T) -> T + Send) -> impl FromPrevious<T>
@@ -49,6 +68,13 @@ where
     T: Default + Serialize + DeserializeOwned + Send,
 {
     internal::PreviousFn::new(f)
+}
+
+pub fn previous_or<T>(initial: T) -> impl FromPrevious<T>
+where
+    T: Serialize + DeserializeOwned + Send,
+{
+    internal::PreviousOr::new(initial)
 }
 
 #[cfg(test)]
