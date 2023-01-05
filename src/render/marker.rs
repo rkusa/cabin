@@ -4,10 +4,11 @@ use serde::{Deserialize, Serialize};
 pub struct ViewHashTree(pub(crate) Vec<Marker>);
 
 #[derive(Debug, PartialEq, Eq)]
+#[repr(i64)]
 pub(crate) enum Marker {
-    Start,
+    Start = -1,
     End(u32),
-    Component,
+    Component = -2,
 }
 
 impl Serialize for Marker {
@@ -16,9 +17,9 @@ impl Serialize for Marker {
         S: serde::Serializer,
     {
         match self {
-            Marker::Start => s.serialize_str("s"),
+            Marker::Start => s.serialize_i32(-1),
             Marker::End(hash) => s.serialize_u32(*hash),
-            Marker::Component => s.serialize_str("c"),
+            Marker::Component => s.serialize_i32(-2),
         }
     }
 }
@@ -37,7 +38,7 @@ mod deserialize {
         type Value = Marker;
 
         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str(r#"an u32 or "s""#)
+            formatter.write_str(r#"an i64"#)
         }
 
         fn visit_i8<E>(self, v: i8) -> Result<Self::Value, E>
@@ -58,14 +59,22 @@ mod deserialize {
         where
             E: de::Error,
         {
-            Ok(Marker::End(v.try_into().map_err(de::Error::custom)?))
+            match v {
+                -1 => Ok(Marker::Start),
+                -2 => Ok(Marker::Component),
+                _ => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
+            }
         }
 
         fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
         where
             E: de::Error,
         {
-            Ok(Marker::End(v.try_into().map_err(de::Error::custom)?))
+            match v {
+                -1 => Ok(Marker::Start),
+                -2 => Ok(Marker::Component),
+                _ => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
+            }
         }
 
         fn visit_u8<E>(self, v: u8) -> Result<Self::Value, E>
@@ -94,17 +103,6 @@ mod deserialize {
             E: de::Error,
         {
             Ok(Marker::End(v.try_into().map_err(de::Error::custom)?))
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
-            match v {
-                "s" => Ok(Marker::Start),
-                "c" => Ok(Marker::Component),
-                _ => Err(de::Error::invalid_type(de::Unexpected::Str(v), &self)),
-            }
         }
     }
 
@@ -140,7 +138,7 @@ fn test_serde() {
         Marker::End(5),
     ];
     let serialized = serde_json::to_string(&hash_tree).unwrap();
-    assert_eq!(serialized, r#"["s",1,"s","s","c",2,"s",3,4,5]"#);
+    assert_eq!(serialized, r#"[-1,1,-1,-1,-2,2,-1,3,4,5]"#);
     let deserialized: Vec<Marker> = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, hash_tree);
 }

@@ -20,7 +20,7 @@ async fn test_unchanged() {
     assert_eq!(
         out.view,
         "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[\"s\",1212501170,1918658755]}</script>0</server-component>text</div>"
+        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component>text</div>"
     );
     assert_eq!(
         out.hash_tree,
@@ -111,7 +111,7 @@ async fn test_added() {
     assert_eq!(
         out.view,
         "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[\"s\",1212501170,1918658755]}</script>0</server-component><!--unchanged--></div>"
+        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component><!--unchanged--></div>"
     );
     assert_eq!(
         out.hash_tree,
@@ -184,7 +184,7 @@ async fn test_added_as_replacement() {
     assert_eq!(
         out.view,
         "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[\"s\",1212501170,1918658755]}</script>0</server-component><!--unchanged--></div>"
+        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component><!--unchanged--></div>"
     );
     assert_eq!(
         out.hash_tree,
@@ -216,7 +216,7 @@ async fn test_removed() {
     assert_eq!(
         out.view,
         "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[\"s\",1212501170,1918658755]}</script>0</server-component>a</div>"
+        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component>a</div>"
     );
     assert_eq!(
         out.hash_tree,
@@ -264,7 +264,7 @@ async fn test_removed_by_being_replaced() {
     assert_eq!(
         out.view,
         "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-            \"hashTree\":[\"s\",1212501170,1918658755]}</script>0</server-component>b</div>"
+            \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component>b</div>"
     );
     assert_eq!(
         out.hash_tree,
