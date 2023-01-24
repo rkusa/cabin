@@ -8,8 +8,6 @@ use std::fmt::{self, Write};
 use std::future::Future;
 use std::pin::Pin;
 
-use paste::paste;
-
 use self::boxed::BoxedView;
 use crate::render::Renderer;
 
@@ -122,47 +120,51 @@ where
     }
 }
 
-macro_rules! impl_tuple {
-    ( $count:tt; $( $ix:tt ),* ) => {
-        paste!{
-            pub struct [<Tuple $count View>]<$([<V$ix>],)*>($([<V$ix>],)*);
-
-            // TODO: remove `+ 'static` once removing away from boxed future
-            impl<$( [<I$ix>]: IntoView<[<V$ix>]>, [<V$ix>]: View + Send + 'static),*> IntoView<[<Tuple $count View>]<$([<V$ix>],)*>> for ($([<I$ix>],)*) {
-                fn into_view(self) -> [<Tuple $count View>]<$([<V$ix>],)*> {
-                    [<Tuple $count View>](
-                        $(
-                            self.$ix.into_view(),
-                        )*
-                    )
-                }
-            }
-
-            // TODO: remove `+ 'static` once removing away from boxed future
-            impl<$( [<V$ix>]: View + Send + 'static),*> View for [<Tuple $count View>]<$([<V$ix>],)*> {
-                // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-                type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
-
-                fn render(self, r: Renderer) -> Self::Future {
-                    Box::pin(async {
-                        $(
-                            let r = self.$ix.render(r).await?;
-                        )*
-                        Ok(r)
-                    })
-                }
-            }
-        }
-    };
+pub struct Pair<L, R> {
+    left: L,
+    right: R,
 }
 
-impl_tuple!( 1; 0);
-impl_tuple!( 2; 0, 1);
-impl_tuple!( 3; 0, 1, 2);
-impl_tuple!( 4; 0, 1, 2, 3);
-impl_tuple!( 5; 0, 1, 2, 3, 4);
-impl_tuple!( 6; 0, 1, 2, 3, 4, 5);
-impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6);
-impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7);
-impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8);
-impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+impl<L, R> Pair<L, R> {
+    pub fn new(left: L, right: R) -> Self
+    where
+        L: View + Send + 'static,
+        R: View + Send + 'static,
+    {
+        Pair { left, right }
+    }
+}
+
+impl<L, R> View for Pair<L, R>
+where
+    L: View + Send + 'static,
+    R: View + Send + 'static,
+{
+    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
+
+    fn render(self, r: Renderer) -> Self::Future {
+        Box::pin(async {
+            let r = self.left.render(r).await?;
+            let r = self.right.render(r).await?;
+            Ok(r)
+        })
+    }
+}
+
+#[macro_export]
+macro_rules! view {
+    () => (
+        ()
+    );
+    ($left:expr) => (
+        $left
+    );
+    ($left:expr, $right:expr) => (
+        $crate::view::Pair::new($left, $right)
+    );
+    ($left:expr, $($tail:expr),*) => (
+        $crate::view::Pair::new($left, view![$($tail),*])
+    );
+    ($($x:expr,)*) => (view![$($x),*])
+}

@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use hyper::service::make_service_fn;
-use rustend::{html, IntoView, View};
+use rustend::{html, view, IntoView, View};
 
 #[tokio::main]
 async fn main() {
@@ -27,13 +27,13 @@ async fn app(enabled: bool) -> impl View {
         enabled
     }
 
-    (
+    view![
         html::div(if enabled {
             counter(0).boxed()
         } else {
             "...".boxed()
         }),
-        (
+        view![
             html::button(if enabled {
                 "remove counter"
             } else {
@@ -41,8 +41,8 @@ async fn app(enabled: bool) -> impl View {
             })
             .on_click(toggle, ()),
             html::button("force rerender").on_click(reset, ()),
-        ),
-    )
+        ]
+    ]
 }
 
 #[rustend::component]

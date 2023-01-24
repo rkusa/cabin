@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use hyper::service::make_service_fn;
-use rustend::{html, IntoView, View};
+use rustend::{html, view, IntoView, View};
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +26,7 @@ async fn counter(count: u32) -> impl View {
         count + 1
     }
 
-    (
+    view![
         //     (self.0 == 0).then(|| ),
         //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
         if count > 0 {
@@ -35,5 +35,5 @@ async fn counter(count: u32) -> impl View {
             html::div("Hit `incr` to start counting ...").boxed()
         },
         html::button("incr").on_click(incr, ()),
-    )
+    ]
 }

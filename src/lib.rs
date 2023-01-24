@@ -9,7 +9,7 @@ pub use view::{IntoView, View};
 pub mod component;
 pub mod html;
 mod render;
-mod view;
+pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 

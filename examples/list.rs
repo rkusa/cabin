@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use hyper::service::make_service_fn;
-use rustend::{html, View};
+use rustend::{html, view, View};
 use serde::{Deserialize, Serialize};
 
 #[tokio::main]
@@ -62,13 +62,11 @@ async fn items(items: Items) -> impl View {
         items
     }
 
-    (
-        html::ul(
-            items
-                .0
-                .into_iter()
-                .map(|item| html::li((item.name, html::button("x").on_click(delete, item.id)))),
-        ),
+    view![
+        html::ul(items.0.into_iter().map(|item| html::li(view![
+            item.name,
+            html::button("x").on_click(delete, item.id)
+        ]))),
         html::div(html::button("add").on_click(add, ())),
-    )
+    ]
 }

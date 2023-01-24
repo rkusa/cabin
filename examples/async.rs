@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use html::events::InputEvent;
 use hyper::service::make_service_fn;
-use rustend::{html, View};
+use rustend::{html, view, View};
 use serde::{Deserialize, Serialize};
 
 #[tokio::main]
@@ -45,10 +45,10 @@ async fn search(state: Search) -> impl View {
 
     let items = search_countries(&state.query).await;
 
-    (
+    view![
         html::div(html::input().attr("value", state.query).on_input(set_query)),
         html::div(html::ul(items.into_iter().map(html::li))),
-    )
+    ]
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
