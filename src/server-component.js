@@ -57,6 +57,15 @@ class ServerComponent extends HTMLElement {
             const payload =
               opts?.eventPayload?.(e) ??
               JSON.parse(node.dataset[`${eventName}Payload`]);
+            const descendants = Object.fromEntries(
+              this.hashTree
+                .filter((entry) => typeof entry === "string")
+                .map((id) => {
+                  // TODO: handle if not found, or not a server-component
+                  const el = document.getElementById(id);
+                  return [id, { state: el.state, hashTree: el.hashTree }];
+                })
+            );
             const res = await fetch(`/dispatch/${component}/${action}`, {
               signal,
               method: "POST",
@@ -67,6 +76,7 @@ class ServerComponent extends HTMLElement {
                 state: this.state,
                 hashTree: this.hashTree,
                 payload: payload,
+                descendants,
               }),
             });
             if (signal.aborted) {

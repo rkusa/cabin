@@ -12,7 +12,7 @@ const ALPHABET: [u8; 64] = [
     b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
 pub struct NanoId([u8; SIZE]);
 
 impl NanoId {

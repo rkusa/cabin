@@ -10,8 +10,9 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
+use super::id::NanoId;
 use super::ComponentId;
-use crate::render::Renderer;
+use crate::render::{PreviousComponent, Renderer};
 use crate::{View, ViewHashTree};
 
 #[linkme::distributed_slice]
@@ -40,6 +41,7 @@ struct Payload<S, M> {
     state: S,
     hash_tree: ViewHashTree,
     payload: M,
+    descendants: HashMap<NanoId, PreviousComponent>,
 }
 
 impl ComponentRegistry {
@@ -79,12 +81,13 @@ impl ComponentRegistry {
                         state,
                         hash_tree,
                         payload,
+                        descendants,
                     } = serde_json::from_slice(&body).unwrap();
                     // TODO: async
                     let state = update(state, payload).await;
                     let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
 
-                    let r = Renderer::from_previous_tree(hash_tree);
+                    let r = Renderer::from_previous_tree(hash_tree).with_descendants(descendants);
                     let view = render(state).await;
                     let fut = view.render(r);
                     let r = fut.await.unwrap();

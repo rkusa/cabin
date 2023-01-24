@@ -3,21 +3,24 @@ pub mod registry;
 
 use std::fmt::{self, Write};
 use std::future::Future;
+use std::hash::Hasher;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
+use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::value::RawValue;
 
+use crate::previous::FromPrevious;
 use crate::render::Renderer;
 use crate::view::View;
 use crate::ViewHashTree;
 
-pub struct ServerComponent<F, V, S> {
+pub struct ServerComponent<F, V, P, S> {
     id: ComponentId,
-    state: S,
+    state: P,
     component: fn(S) -> F,
-    marker: PhantomData<V>,
+    marker: PhantomData<(V, P)>,
 }
 
 #[derive(Clone, Copy, Hash)]
@@ -26,8 +29,8 @@ pub struct ComponentId {
     name: &'static str,
 }
 
-impl<F, V, S> ServerComponent<F, V, S> {
-    pub fn new(id: ComponentId, state: S, component: fn(S) -> F) -> Self {
+impl<F, V, P, S> ServerComponent<F, V, P, S> {
+    pub fn new(id: ComponentId, state: P, component: fn(S) -> F) -> Self {
         Self {
             id,
             state,
@@ -43,32 +46,34 @@ impl ComponentId {
     }
 }
 
-impl<F, V, S> View for ServerComponent<F, V, S>
+impl<F, V, P, S> View for ServerComponent<F, V, P, S>
 where
     F: Future<Output = V> + Send + 'static,
     V: View + Send + 'static,
-    S: Serialize + Send + 'static,
+    P: FromPrevious<S> + 'static,
+    S: Default + Serialize + DeserializeOwned + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
-            let (is_new, id) = r.component(self.id)?;
-            if !is_new {
-                // TODO: nested update
-                // TODO: nested no-update in list
-                // Components are self-contained by default and parent re-renders are ignored.
-                return Ok(r);
-            }
+            let (id, prev) = r.component(self.id)?;
 
             // TODO: unwrap
             // TODO: Box (of raw value)
-            let state_serialized = serde_json::value::to_raw_value(&self.state).unwrap();
+            let previous: Option<S> = if let Some(p) = prev {
+                Some(serde_json::from_str(p.state.get()).unwrap())
+            } else {
+                None
+            };
+            let state = self.state.next_from_previous(previous);
+            let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
 
-            let content_renderer = Renderer::new();
-            let view = (self.component)(self.state).await;
+            let content_renderer = Renderer::new(); // TODO: use prev.hash_tree
+            let view = (self.component)(state).await;
             let content_renderer = view.render(content_renderer).await?;
+            r.write_u64(content_renderer.finish());
             let out = content_renderer.end();
 
             #[derive(Serialize)]

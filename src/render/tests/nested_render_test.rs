@@ -9,7 +9,7 @@ use crate::{html, view, Renderer, View};
 #[tokio::test]
 async fn test_unchanged() {
     let component = || {
-        ServerComponent::<_, String, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
             ready(format!("{}", state))
         })
     };
@@ -82,7 +82,7 @@ async fn test_unchanged() {
 #[tokio::test]
 async fn test_added() {
     let component = || {
-        ServerComponent::<_, String, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
             ready(format!("{}", state))
         })
     };
@@ -145,7 +145,7 @@ async fn test_added() {
 #[tokio::test]
 async fn test_added_as_replacement() {
     let component = || {
-        ServerComponent::<_, String, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
             ready(format!("{}", state))
         })
     };
@@ -196,7 +196,7 @@ async fn test_added_as_replacement() {
 #[tokio::test]
 async fn test_removed() {
     let component = || {
-        ServerComponent::<_, String, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
             ready(format!("{}", state))
         })
     };
@@ -245,7 +245,7 @@ async fn test_removed() {
 #[tokio::test]
 async fn test_removed_by_being_replaced() {
     let component = || {
-        ServerComponent::<_, String, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
             ready(format!("{}", state))
         })
     };

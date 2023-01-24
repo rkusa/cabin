@@ -3,10 +3,13 @@ mod marker;
 mod tests;
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::{Hash, Hasher};
 use std::ops::Neg;
 
+use serde::Deserialize;
+use serde_json::value::RawValue;
 use twox_hash::XxHash32;
 
 use self::marker::Marker;
@@ -21,10 +24,19 @@ pub struct Renderer {
     hasher: XxHash32,
     previous_tree: Option<Vec<Marker>>,
     previous_offset: isize,
+    previous_descendants: Option<HashMap<NanoId, PreviousComponent>>,
 }
 
 pub(crate) struct Out {
     pub view: String,
+    pub hash_tree: ViewHashTree,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviousComponent {
+    // TODO: avoid box?
+    pub state: Box<RawValue>,
     pub hash_tree: ViewHashTree,
 }
 
@@ -36,6 +48,7 @@ impl Renderer {
             hasher: XxHash32::default(),
             previous_tree: None,
             previous_offset: 0,
+            previous_descendants: None,
         }
     }
 
@@ -44,6 +57,14 @@ impl Renderer {
             previous_tree: Some(previous_tree.0),
             ..Self::new()
         }
+    }
+
+    pub(crate) fn with_descendants(
+        mut self,
+        descendants: HashMap<NanoId, PreviousComponent>,
+    ) -> Self {
+        self.previous_descendants = Some(descendants);
+        self
     }
 
     pub(crate) fn end(mut self) -> Out {
@@ -81,7 +102,10 @@ impl Renderer {
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(&mut self, type_id: ComponentId) -> Result<(bool, NanoId), fmt::Error> {
+    pub fn component(
+        &mut self,
+        type_id: ComponentId,
+    ) -> Result<(NanoId, Option<PreviousComponent>), fmt::Error> {
         type_id.hash(self);
         let previous = self
             .previous_tree
@@ -91,9 +115,16 @@ impl Renderer {
         match previous {
             // TODO: ensure same type_id
             Some(Marker::Component(id)) => {
-                self.hash_tree.push(Marker::Component(*id));
-                self.out.write_str("<!--unchanged-->")?;
-                return Ok((false, *id));
+                if let Some(previous) = self
+                    .previous_descendants
+                    .as_mut()
+                    .and_then(|d| d.remove(id))
+                {
+                    self.hash_tree.push(Marker::Component(*id));
+                    // TODO: unchanged if nothing changed
+                    // self.out.write_str("<!--unchanged-->")?;
+                    return Ok((*id, Some(previous)));
+                }
             }
             Some(_) => {
                 // component is new
@@ -104,7 +135,7 @@ impl Renderer {
 
         let id = NanoId::random();
         self.hash_tree.push(Marker::Component(id));
-        Ok((true, id))
+        Ok((id, None))
     }
 
     fn start(&mut self) {

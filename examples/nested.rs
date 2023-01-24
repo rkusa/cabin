@@ -4,6 +4,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use hyper::service::make_service_fn;
+use rustend::previous::previous;
 use rustend::{html, view, IntoView, View};
 
 #[tokio::main]
@@ -29,7 +30,7 @@ async fn app(enabled: bool) -> impl View {
 
     view![
         html::div(if enabled {
-            counter(0).boxed()
+            counter(previous(|count| count + 1)).boxed()
         } else {
             "...".boxed()
         }),
