@@ -81,17 +81,19 @@ impl Renderer {
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(&mut self, type_id: ComponentId, id: NanoId) -> Result<bool, fmt::Error> {
+    pub fn component(&mut self, type_id: ComponentId) -> Result<(bool, NanoId), fmt::Error> {
         type_id.hash(self);
         let previous = self
             .previous_tree
             .as_ref()
             .and_then(|t| t.get(self.next_position()));
-        self.hash_tree.push(Marker::Component(id));
+
         match previous {
-            Some(Marker::Component(_)) => {
+            // TODO: ensure same type_id
+            Some(Marker::Component(id)) => {
+                self.hash_tree.push(Marker::Component(*id));
                 self.out.write_str("<!--unchanged-->")?;
-                return Ok(false);
+                return Ok((false, *id));
             }
             Some(_) => {
                 // component is new
@@ -99,7 +101,10 @@ impl Renderer {
             }
             _ => {}
         }
-        Ok(true)
+
+        let id = NanoId::random();
+        self.hash_tree.push(Marker::Component(id));
+        Ok((true, id))
     }
 
     fn start(&mut self) {

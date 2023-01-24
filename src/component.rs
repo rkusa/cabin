@@ -9,7 +9,6 @@ use std::pin::Pin;
 use serde::Serialize;
 use serde_json::value::RawValue;
 
-use crate::component::id::NanoId;
 use crate::render::Renderer;
 use crate::view::View;
 use crate::ViewHashTree;
@@ -55,8 +54,8 @@ where
 
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
-            let id = NanoId::random();
-            if !r.component(self.id, id)? {
+            let (is_new, id) = r.component(self.id)?;
+            if !is_new {
                 // TODO: nested update
                 // TODO: nested no-update in list
                 // Components are self-contained by default and parent re-renders are ignored.
