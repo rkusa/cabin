@@ -4,7 +4,6 @@ pub mod events;
 use std::borrow::Cow;
 use std::fmt;
 use std::future::Future;
-use std::marker::PhantomData;
 use std::pin::Pin;
 
 use serde::de::DeserializeOwned;
@@ -17,58 +16,56 @@ use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
 use crate::view::{IntoView, View, ViewWrapper};
 
-pub fn div<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
+pub fn div<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("div", content)
 }
 
-pub fn ul<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
+pub fn ul<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("ul", content)
 }
 
-pub fn li<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
+pub fn li<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("li", content)
 }
 
-pub fn button<V: View<M>, M>(content: impl IntoView<V, M>) -> Html<V, M, ()> {
+pub fn button<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("button", content)
 }
 
-pub fn input<M>() -> Html<ViewWrapper<()>, M, ()> {
+pub fn input() -> Html<ViewWrapper<()>, ()> {
     custom("input", ())
 }
 
-pub fn custom<V: View<M>, M>(tag: &'static str, content: impl IntoView<V, M>) -> Html<V, M, ()> {
+pub fn custom<V: View>(tag: &'static str, content: impl IntoView<V>) -> Html<V, ()> {
     Html {
         tag: HtmlTag {
             tag,
             attrs: (),
             on_click: None,
             on_input: None,
-            marker: PhantomData,
         },
         content: content.into_view(),
     }
 }
 
-struct HtmlTag<M, A> {
+struct HtmlTag<A> {
     tag: &'static str,
     attrs: A,
     on_click: Option<(&'static str, String)>,
     on_input: Option<&'static str>,
-    marker: PhantomData<M>,
 }
 
-pub struct Html<V, M, A> {
-    tag: HtmlTag<M, A>,
+pub struct Html<V, A> {
+    tag: HtmlTag<A>,
     content: V,
 }
 
-impl<V, M, A> Html<V, M, A> {
+impl<V, A> Html<V, A> {
     pub fn attr<'a>(
         self,
         name: &'static str,
         value: impl Into<Cow<'a, str>>,
-    ) -> Html<V, M, impl Attributes + 'a>
+    ) -> Html<V, impl Attributes + 'a>
     where
         A: Attributes + 'a,
     {
@@ -78,14 +75,13 @@ impl<V, M, A> Html<V, M, A> {
                 attrs: Attribute::new(name, value, self.tag.attrs),
                 on_click: self.tag.on_click,
                 on_input: self.tag.on_input,
-                marker: PhantomData,
             },
             content: self.content,
         }
     }
 
     // TODO: not available for all tags (e.g. only for buttons)
-    pub fn on_click<F: Future<Output = M>, P: Serialize + DeserializeOwned>(
+    pub fn on_click<M, F: Future<Output = M>, P: Serialize + DeserializeOwned>(
         mut self,
         action: fn(M, P) -> F,
         payload: P,
@@ -103,7 +99,7 @@ impl<V, M, A> Html<V, M, A> {
     }
 
     // TODO: not available for all tags (e.g. only for inputs)
-    pub fn on_input<F: Future<Output = M>>(mut self, action: fn(M, InputEvent) -> F) -> Self {
+    pub fn on_input<M, F: Future<Output = M>>(mut self, action: fn(M, InputEvent) -> F) -> Self {
         let name = ComponentRegistry::global().action_name(action as usize);
         debug_assert!(name.is_some(), "action not registered");
         self.tag.on_input = name;
@@ -111,11 +107,10 @@ impl<V, M, A> Html<V, M, A> {
     }
 }
 
-impl<V, M, A> View<M> for Html<V, M, A>
+impl<V, A> View for Html<V, A>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    V: View<M> + Send + 'static,
-    M: Serialize + Send,
+    V: View + Send + 'static,
     A: Attributes + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable

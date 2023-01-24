@@ -37,7 +37,7 @@ impl Search {
 }
 
 #[rustend::component]
-async fn search(state: Search) -> impl View<Search> {
+async fn search(state: Search) -> impl View {
     async fn set_query(mut state: Search, ev: InputEvent) -> Search {
         state.query = ev.value.into();
         state

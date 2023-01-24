@@ -13,7 +13,7 @@ mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
-pub async fn render<M>(view: impl View<M>) -> Result<String, fmt::Error> {
+pub async fn render(view: impl View) -> Result<String, fmt::Error> {
     let mut r = Renderer::new();
     r = view.render(r).await?;
     Ok(r.end().view)

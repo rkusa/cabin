@@ -41,7 +41,7 @@ impl<F: Fn(Renderer) -> Result<Renderer, fmt::Error>> Text<F> {
     }
 }
 
-impl<S, F> View<S> for Text<F>
+impl<F> View for Text<F>
 where
     F: Fn(Renderer) -> Result<Renderer, fmt::Error>,
 {

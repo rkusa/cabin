@@ -18,13 +18,13 @@ use crate::render::Renderer;
 // additional indirection. By putting the resulting view into a generic (and not an associated),
 // and since both have a different resulting view (the tuple returns itself, and the iterator
 // is wrapped into [IteratorView]), it can be implemented for both.
-pub trait IntoView<V, M>
+pub trait IntoView<V>
 where
-    V: View<M>,
+    V: View,
 {
     fn into_view(self) -> V;
 
-    fn boxed(self) -> BoxedView<M>
+    fn boxed(self) -> BoxedView
     where
         Self: Sized,
         V: Send + 'static,
@@ -36,7 +36,7 @@ where
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
-pub trait View<M = ()> {
+pub trait View {
     type Future: Future<Output = Result<Renderer, fmt::Error>> + Send;
     fn render(self, r: Renderer) -> Self::Future;
 }
@@ -45,18 +45,18 @@ pub trait View<M = ()> {
 // TODO: better name
 pub struct ViewWrapper<V>(V);
 
-impl<V, M> IntoView<ViewWrapper<V>, M> for V
+impl<V> IntoView<ViewWrapper<V>> for V
 where
-    V: View<M>,
+    V: View,
 {
     fn into_view(self) -> ViewWrapper<V> {
         ViewWrapper(self)
     }
 }
 
-impl<V, M> View<M> for ViewWrapper<V>
+impl<V> View for ViewWrapper<V>
 where
-    V: View<M>,
+    V: View,
 {
     type Future = V::Future;
 
@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<M> View<M> for () {
+impl View for () {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
@@ -73,7 +73,7 @@ impl<M> View<M> for () {
     }
 }
 
-impl<'a, M> View<M> for &'a str {
+impl<'a> View for &'a str {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
@@ -83,31 +83,31 @@ impl<'a, M> View<M> for &'a str {
     }
 }
 
-impl<'a, M> IntoView<Cow<'a, str>, M> for &'a Cow<'a, str> {
+impl<'a> IntoView<Cow<'a, str>> for &'a Cow<'a, str> {
     fn into_view(self) -> Cow<'a, str> {
         Cow::Borrowed(&**self)
     }
 }
-impl<'a, M> View<M> for Cow<'a, str> {
+impl<'a> View for Cow<'a, str> {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
-        <&str as View<M>>::render(self.as_ref(), r)
+        <&str as View>::render(self.as_ref(), r)
     }
 }
 
-impl<M> View<M> for String {
+impl View for String {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
-        <&str as View<M>>::render(self.as_str(), r)
+        <&str as View>::render(self.as_str(), r)
     }
 }
 
-impl<V, M> View<M> for Option<V>
+impl<V> View for Option<V>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    V: View<M> + Send + 'static,
+    V: View + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
@@ -128,7 +128,7 @@ macro_rules! impl_tuple {
             pub struct [<Tuple $count View>]<$([<V$ix>],)*>($([<V$ix>],)*);
 
             // TODO: remove `+ 'static` once removing away from boxed future
-            impl<$( [<I$ix>]: IntoView<[<V$ix>], M>, [<V$ix>]: View<M> + Send + 'static),*, M> IntoView<[<Tuple $count View>]<$([<V$ix>],)*>, M> for ($([<I$ix>],)*) {
+            impl<$( [<I$ix>]: IntoView<[<V$ix>]>, [<V$ix>]: View + Send + 'static),*> IntoView<[<Tuple $count View>]<$([<V$ix>],)*>> for ($([<I$ix>],)*) {
                 fn into_view(self) -> [<Tuple $count View>]<$([<V$ix>],)*> {
                     [<Tuple $count View>](
                         $(
@@ -139,7 +139,7 @@ macro_rules! impl_tuple {
             }
 
             // TODO: remove `+ 'static` once removing away from boxed future
-            impl<$( [<V$ix>]: View<M> + Send + 'static),*, M> View<M> for [<Tuple $count View>]<$([<V$ix>],)*> {
+            impl<$( [<V$ix>]: View + Send + 'static),*> View for [<Tuple $count View>]<$([<V$ix>],)*> {
                 // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
                 type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 

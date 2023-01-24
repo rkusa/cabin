@@ -1,6 +1,5 @@
 use std::fmt;
 use std::future::Future;
-use std::marker::PhantomData;
 use std::pin::Pin;
 
 use crate::render::Renderer;
@@ -10,25 +9,23 @@ use crate::View;
 type ViewBoxRenderer = dyn FnOnce(Renderer) -> Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send + 'static>>
     + Send;
 
-pub struct BoxedView<M> {
+pub struct BoxedView {
     view: Box<ViewBoxRenderer>,
-    marker: PhantomData<M>,
 }
 
-impl<M> BoxedView<M> {
+impl BoxedView {
     pub fn new<V>(view: V) -> Self
     where
-        V: View<M> + Send + 'static,
+        V: View + Send + 'static,
         V::Future: 'static,
     {
         BoxedView {
             view: Box::new(|r: Renderer| Box::pin(view.render(r))),
-            marker: PhantomData,
         }
     }
 }
 
-impl<M> View<M> for BoxedView<M> {
+impl View for BoxedView {
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send + 'static>>;
 
     fn render(self, r: Renderer) -> Self::Future {

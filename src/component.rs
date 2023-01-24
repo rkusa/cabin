@@ -42,10 +42,10 @@ impl ComponentId {
     }
 }
 
-impl<F, V, S, E> View<E> for ServerComponent<F, V, S>
+impl<F, V, S> View for ServerComponent<F, V, S>
 where
     F: Future<Output = V> + Send + 'static,
-    V: View<S> + Send + 'static,
+    V: View + Send + 'static,
     S: Serialize + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable

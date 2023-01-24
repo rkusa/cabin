@@ -17,7 +17,7 @@ async fn main() {
 }
 
 #[rustend::component]
-async fn app(enabled: bool) -> impl View<bool> {
+async fn app(enabled: bool) -> impl View {
     async fn toggle(enabled: bool, _: ()) -> bool {
         !enabled
     }
@@ -46,7 +46,7 @@ async fn app(enabled: bool) -> impl View<bool> {
 }
 
 #[rustend::component]
-async fn counter(count: u32) -> impl View<u32> {
+async fn counter(count: u32) -> impl View {
     async fn incr(count: u32, _: ()) -> u32 {
         count + 1
     }

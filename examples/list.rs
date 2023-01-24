@@ -42,7 +42,7 @@ struct Item {
 struct Items(Vec<Item>);
 
 #[rustend::component]
-async fn items(items: Items) -> impl View<Items> {
+async fn items(items: Items) -> impl View {
     async fn add(mut items: Items, _: ()) -> Items {
         let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
         items.0.push(Item {

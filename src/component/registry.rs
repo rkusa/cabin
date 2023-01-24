@@ -65,7 +65,7 @@ impl ComponentRegistry {
     ) where
         S: Serialize + DeserializeOwned + Send + 'static,
         M: DeserializeOwned + Send + 'static,
-        V: View<S> + Send + 'static,
+        V: View + Send + 'static,
         U: Future<Output = S> + Send + 'static,
         R: Future<Output = V> + Send + 'static,
     {

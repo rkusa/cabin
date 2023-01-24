@@ -180,7 +180,7 @@ impl ElementRenderer {
         )
     }
 
-    pub async fn content<M>(mut self, view: impl View<M>) -> Result<Renderer, fmt::Error> {
+    pub async fn content(mut self, view: impl View) -> Result<Renderer, fmt::Error> {
         if is_void_element(self.tag) {
             todo!("throw error: void tags cannot have content");
         }
