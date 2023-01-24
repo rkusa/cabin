@@ -1,5 +1,7 @@
 use std::future::ready;
+use std::str::FromStr;
 
+use crate::component::id::NanoId;
 use crate::component::{ComponentId, ServerComponent};
 use crate::render::marker::Marker;
 use crate::{html, view, Renderer, View};
@@ -19,14 +21,15 @@ async fn test_unchanged() {
     let out = r.end();
     assert_eq!(
         out.view,
-        "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component>text</div>"
+        "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><script \
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,1918658755]}</script>\
+        0</server-component>text</div>"
     );
     assert_eq!(
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(2564554603), // text
             Marker::End(2250130625), // div
@@ -46,7 +49,7 @@ async fn test_unchanged() {
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(2564554603), // text
             Marker::End(2250130625), // div
@@ -66,7 +69,7 @@ async fn test_unchanged() {
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(1584409650), // text
             Marker::End(1087932597), // div (changed due to text change)
@@ -104,14 +107,15 @@ async fn test_added() {
     let out = r.end();
     assert_eq!(
         out.view,
-        "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component><!--unchanged--></div>"
+        "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><script \
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,1918658755]}</script>\
+        0</server-component><!--unchanged--></div>"
     );
     assert_eq!(
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(1426945110), // text
             Marker::End(2793600937), // div (changed due to added component)
@@ -128,7 +132,7 @@ async fn test_added() {
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(1426945110), // text
             Marker::End(2793600937), // div
@@ -171,14 +175,15 @@ async fn test_added_as_replacement() {
     let out = r.end();
     assert_eq!(
         out.view,
-        "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component><!--unchanged--></div>"
+        "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><script \
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,1918658755]}</script>\
+        0</server-component><!--unchanged--></div>"
     );
     assert_eq!(
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(2718739903), // text
             Marker::End(192546232),  // div
@@ -203,14 +208,15 @@ async fn test_removed() {
     let out = r.end();
     assert_eq!(
         out.view,
-        "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-        \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component>a</div>"
+        "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><script \
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,1918658755]}</script>\
+        0</server-component>a</div>"
     );
     assert_eq!(
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(1426945110), // text
             Marker::End(2793600937), // div
@@ -251,14 +257,15 @@ async fn test_removed_by_being_replaced() {
     let out = r.end();
     assert_eq!(
         out.view,
-        "<div><server-component data-id=\"a::b\"><script type=\"application/json\">{\"state\":0,\
-            \"hashTree\":[-1,1212501170,1918658755]}</script>0</server-component>b</div>"
+        "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><script \
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,1918658755]}</script>\
+        0</server-component>b</div>"
     );
     assert_eq!(
         out.hash_tree,
         vec![
             Marker::Start, // div
-            Marker::Component,
+            Marker::Component(NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap()),
             Marker::Start,           // text
             Marker::End(2718739903), // text
             Marker::End(192546232),  // div

@@ -1,3 +1,4 @@
+pub mod id;
 pub mod registry;
 
 use std::fmt::{self, Write};
@@ -8,6 +9,7 @@ use std::pin::Pin;
 use serde::Serialize;
 use serde_json::value::RawValue;
 
+use crate::component::id::NanoId;
 use crate::render::Renderer;
 use crate::view::View;
 use crate::ViewHashTree;
@@ -53,7 +55,8 @@ where
 
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
-            if !r.component(self.id)? {
+            let id = NanoId::random();
+            if !r.component(self.id, id)? {
                 // TODO: nested update
                 // TODO: nested no-update in list
                 // Components are self-contained by default and parent re-renders are ignored.
@@ -83,8 +86,8 @@ where
 
             write!(
                 r,
-                r#"<server-component data-id="{}"><script type="application/json">{}</script>{}</server-component>"#,
-                self.id, initial, out.view
+                r#"<server-component id="{}" data-id="{}"><script type="application/json">{}</script>{}</server-component>"#,
+                id, self.id, initial, out.view
             )?;
 
             Ok(r)

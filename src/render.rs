@@ -11,6 +11,7 @@ use twox_hash::XxHash32;
 
 use self::marker::Marker;
 pub use self::marker::ViewHashTree;
+use crate::component::id::NanoId;
 use crate::component::ComponentId;
 use crate::View;
 
@@ -80,15 +81,15 @@ impl Renderer {
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(&mut self, id: ComponentId) -> Result<bool, fmt::Error> {
-        id.hash(self);
+    pub fn component(&mut self, type_id: ComponentId, id: NanoId) -> Result<bool, fmt::Error> {
+        type_id.hash(self);
         let previous = self
             .previous_tree
             .as_ref()
             .and_then(|t| t.get(self.next_position()));
-        self.hash_tree.push(Marker::Component);
+        self.hash_tree.push(Marker::Component(id));
         match previous {
-            Some(Marker::Component) => {
+            Some(Marker::Component(_)) => {
                 self.out.write_str("<!--unchanged-->")?;
                 return Ok(false);
             }
@@ -108,7 +109,7 @@ impl Renderer {
             .and_then(|t| t.get(self.next_position()));
         match previous {
             Some(Marker::End(_)) => self.previous_offset += 2,
-            Some(Marker::Component) => self.previous_offset += 1,
+            Some(Marker::Component(_)) => self.previous_offset += 1,
             _ => {}
         }
 

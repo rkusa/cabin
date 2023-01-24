@@ -1,14 +1,14 @@
+use crate::component::id::NanoId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ViewHashTree(pub(crate) Vec<Marker>);
 
 #[derive(Debug, PartialEq, Eq)]
-#[repr(i64)]
 pub(crate) enum Marker {
-    Start = -1,
+    Start,
     End(u32),
-    Component = -2,
+    Component(NanoId),
 }
 
 impl Serialize for Marker {
@@ -19,16 +19,19 @@ impl Serialize for Marker {
         match self {
             Marker::Start => s.serialize_i32(-1),
             Marker::End(hash) => s.serialize_u32(*hash),
-            Marker::Component => s.serialize_i32(-2),
+            Marker::Component(id) => id.serialize(s),
         }
     }
 }
 
 mod deserialize {
     use std::fmt;
+    use std::str::FromStr;
 
     use serde::de::{self, Visitor};
     use serde::Deserialize;
+
+    use crate::component::id::NanoId;
 
     use super::Marker;
 
@@ -61,7 +64,6 @@ mod deserialize {
         {
             match v {
                 -1 => Ok(Marker::Start),
-                -2 => Ok(Marker::Component),
                 _ => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
             }
         }
@@ -72,7 +74,6 @@ mod deserialize {
         {
             match v {
                 -1 => Ok(Marker::Start),
-                -2 => Ok(Marker::Component),
                 _ => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
             }
         }
@@ -104,6 +105,15 @@ mod deserialize {
         {
             Ok(Marker::End(v.try_into().map_err(de::Error::custom)?))
         }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(Marker::Component(
+                NanoId::from_str(v).map_err(de::Error::custom)?,
+            ))
+        }
     }
 
     impl<'de> Deserialize<'de> for Marker {
@@ -125,12 +135,14 @@ impl From<Vec<Marker>> for ViewHashTree {
 
 #[test]
 fn test_serde() {
+    use std::str::FromStr;
+
     let hash_tree = vec![
         Marker::Start,
         Marker::End(1),
         Marker::Start,
         Marker::Start,
-        Marker::Component,
+        Marker::Component(NanoId::from_str("1234567890abcdefghijk").unwrap()),
         Marker::End(2),
         Marker::Start,
         Marker::End(3),
@@ -138,7 +150,10 @@ fn test_serde() {
         Marker::End(5),
     ];
     let serialized = serde_json::to_string(&hash_tree).unwrap();
-    assert_eq!(serialized, r#"[-1,1,-1,-1,-2,2,-1,3,4,5]"#);
+    assert_eq!(
+        serialized,
+        r#"[-1,1,-1,-1,"1234567890abcdefghijk",2,-1,3,4,5]"#
+    );
     let deserialized: Vec<Marker> = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, hash_tree);
 }
