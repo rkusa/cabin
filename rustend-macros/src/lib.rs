@@ -99,6 +99,10 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
             static ID: ::rustend::component::ComponentId = ::rustend::component::ComponentId::new(module_path!(), #name);
 
+            // Ensure that state implements merge
+            fn ensure_previous(_: &impl ::rustend::previous::Previous) {}
+            ensure_previous(&#state_ident);
+
             #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {
                 // TODO: Get rid into_view()
                 ::rustend::IntoView::into_view({

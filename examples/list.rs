@@ -38,7 +38,7 @@ struct Item {
     name: Cow<'static, str>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 struct Items(Vec<Item>);
 
 #[rustend::component]
