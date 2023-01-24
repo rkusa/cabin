@@ -45,7 +45,7 @@ async fn search(state: Search) -> impl View {
 
     let items = search_countries(&state.query).await;
 
-    view![
+    html::div![
         html::div(html::input().attr("value", state.query).on_input(set_query)),
         html::div(html::ul(items.into_iter().map(html::li))),
     ]

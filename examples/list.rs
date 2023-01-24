@@ -63,10 +63,12 @@ async fn items(items: Items) -> impl View {
     }
 
     view![
-        html::ul(items.0.into_iter().map(|item| html::li(view![
-            item.name,
-            html::button("x").on_click(delete, item.id)
-        ]))),
+        html::ul(
+            items
+                .0
+                .into_iter()
+                .map(|item| html::li![item.name, html::button("x").on_click(delete, item.id)])
+        ),
         html::div(html::button("add").on_click(add, ())),
     ]
 }
