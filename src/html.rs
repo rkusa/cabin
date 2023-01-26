@@ -30,6 +30,10 @@ pub fn li<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("li", content)
 }
 
+pub fn fieldset<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
+    custom("fieldset", content)
+}
+
 pub fn button<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("button", content)
 }

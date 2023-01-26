@@ -14,8 +14,13 @@ macro_rules! li {
 }
 
 #[macro_export]
+macro_rules! fieldset {
+    ($($x:tt)*) => ($crate::html::custom("fieldset", $crate::view![$($x)*]))
+}
+
+#[macro_export]
 macro_rules! button {
     ($($x:tt)*) => ($crate::html::custom("button", $crate::view![$($x)*]))
 }
 
-pub use {button, div, li, ul};
+pub use {button, div, fieldset, li, ul};
