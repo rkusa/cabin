@@ -3,8 +3,8 @@ class ServerComponent extends HTMLElement {
     super();
 
     // TODO: handle missing
-    const initial = JSON.parse(this.firstElementChild.textContent);
-    this.removeChild(this.firstElementChild);
+    const initial = JSON.parse(this.lastElementChild.textContent);
+    this.removeChild(this.lastElementChild);
 
     this.state = initial.state;
     this.hashTree = initial.hashTree;
@@ -57,15 +57,21 @@ class ServerComponent extends HTMLElement {
             const payload =
               opts?.eventPayload?.(e) ??
               JSON.parse(node.dataset[`${eventName}Payload`]);
-            const descendants = Object.fromEntries(
-              this.hashTree
-                .filter((entry) => typeof entry === "string")
-                .map((id) => {
-                  // TODO: handle if not found, or not a server-component
-                  const el = document.getElementById(id);
-                  return [id, { state: el.state, hashTree: el.hashTree }];
-                })
-            );
+
+            // Collect descendant components and update their hash in the current component's hash
+            // tree
+            const descendants = {};
+            for (let i = 0; i < this.hashTree.length; ++i) {
+              if (typeof this.hashTree[i] !== "string") {
+                continue;
+              }
+
+              const id = this.hashTree[i];
+              const el = document.getElementById(id);
+              descendants[id] = { state: el.state, hashTree: el.hashTree };
+              this.hashTree[i + 1] = el.hashTree[el.hashTree.length - 1];
+            }
+
             const res = await fetch(`/dispatch/${component}/${action}`, {
               signal,
               method: "POST",
@@ -117,8 +123,29 @@ class ServerComponent extends HTMLElement {
 
 customElements.define("server-component", ServerComponent);
 
+/**
+ * @param {Node} rootBefore
+ * @param {Node} rootAfter
+ */
 function patchChildren(rootBefore, rootAfter) {
   console.log("apply", rootBefore, rootAfter);
+
+  // Skip first script element for server components
+  if (
+    rootAfter.nodeType === Node.ELEMENT_NODE &&
+    rootAfter.nodeName === "SERVER-COMPONENT"
+  ) {
+    // TODO: validate that it is the expected script element
+
+    console.log("update server component state and hash tree");
+
+    // Update state and hash tree
+    const initial = JSON.parse(rootAfter.lastElementChild.textContent);
+    rootAfter.removeChild(rootAfter.lastElementChild);
+
+    rootBefore.state = initial.state;
+    rootBefore.hashTree = initial.hashTree;
+  }
 
   let nodeBefore = rootBefore.firstChild;
   let nodeAfter = rootAfter.firstChild;
@@ -128,7 +155,9 @@ function patchChildren(rootBefore, rootAfter) {
     return;
   }
 
+  /** @type {Node | null} */
   let nextBefore = null;
+  /** @type {Node | null} */
   let nextAfter = null;
 
   do {
@@ -168,7 +197,12 @@ function patchChildren(rootBefore, rootAfter) {
     }
 
     // type changed, replace completely
-    if (nodeBefore.nodeType !== nodeAfter.nodeType) {
+    if (
+      nodeBefore.nodeType !== nodeAfter.nodeType ||
+      nodeBefore.nodeName !== nodeAfter.nodeName ||
+      (nodeAfter.nodeName === "SERVER-COMPONENT" &&
+        nodeBefore.dataset.id !== nodeAfter.dataset.id)
+    ) {
       console.log("replace");
       nextBefore = nodeBefore.nextSibling;
       nextAfter = nodeAfter.nextSibling;
@@ -203,6 +237,10 @@ function patchChildren(rootBefore, rootAfter) {
   );
 }
 
+/**
+ * @param {Element} childBefore
+ * @param {Element} childAfter
+ */
 function patchAttributes(childBefore, childAfter) {
   const oldAttributeNames = new Set(childBefore.getAttributeNames());
   for (const name of childAfter.getAttributeNames()) {

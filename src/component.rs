@@ -3,7 +3,6 @@ pub mod registry;
 
 use std::fmt::{self, Write};
 use std::future::Future;
-use std::hash::Hasher;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
@@ -56,43 +55,45 @@ where
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
-    fn render(self, mut r: Renderer) -> Self::Future {
+    fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {
-            let (id, prev) = r.component(self.id)?;
+            let mut component = r.component(self.id);
 
             // TODO: unwrap
-            // TODO: Box (of raw value)
-            let previous: Option<S> = if let Some(p) = prev {
-                Some(serde_json::from_str(p.state.get()).unwrap())
-            } else {
-                None
-            };
-            let state = self.state.next_from_previous(previous);
+            let previous_state = component.previous_state().unwrap();
+            let state = self.state.next_from_previous(previous_state);
             let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
 
-            let content_renderer = Renderer::new(); // TODO: use prev.hash_tree
-            let view = (self.component)(state).await;
-            let content_renderer = view.render(content_renderer).await?;
-            r.write_u64(content_renderer.finish());
-            let out = content_renderer.end();
-
-            #[derive(Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct Initial<'a> {
-                state: Box<RawValue>,
-                hash_tree: &'a ViewHashTree,
-            }
-            let initial = serde_json::to_string(&Initial {
-                state: state_serialized,
-                hash_tree: &out.hash_tree,
-            })
-            .unwrap();
-
             write!(
-                r,
-                r#"<server-component id="{}" data-id="{}"><script type="application/json">{}</script>{}</server-component>"#,
-                id, self.id, initial, out.view
+                component,
+                r#"<server-component id="{}" data-id="{}">"#,
+                component.id(),
+                self.id,
             )?;
+
+            let view = (self.component)(state).await;
+            let (mut r, hash_tree, changed) = component.content(view).await?;
+
+            // If changed, add updated state and hash tree to output
+            if changed {
+                #[derive(Serialize)]
+                #[serde(rename_all = "camelCase")]
+                struct Initial<'a> {
+                    state: Box<RawValue>,
+                    hash_tree: &'a ViewHashTree,
+                }
+                let initial = serde_json::to_string(&Initial {
+                    state: state_serialized,
+                    hash_tree: &hash_tree,
+                })
+                .unwrap();
+
+                write!(
+                    r,
+                    r#"<script type="application/json">{}</script></server-component>"#,
+                    initial
+                )?;
+            }
 
             Ok(r)
         })

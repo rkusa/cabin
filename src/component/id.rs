@@ -12,7 +12,7 @@ const ALPHABET: [u8; 64] = [
     b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
 ];
 
-#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq)]
 pub struct NanoId([u8; SIZE]);
 
 impl NanoId {
@@ -42,6 +42,14 @@ impl NanoId {
                 }
             }
         }
+    }
+}
+
+impl fmt::Debug for NanoId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("NanoId")
+            .field(&std::str::from_utf8(&self.0).unwrap())
+            .finish()
     }
 }
 

@@ -6,8 +6,10 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::{Hash, Hasher};
+use std::mem;
 use std::ops::Neg;
 
+use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::value::RawValue;
 use twox_hash::XxHash32;
@@ -102,17 +104,14 @@ impl Renderer {
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(
-        &mut self,
-        type_id: ComponentId,
-    ) -> Result<(NanoId, Option<PreviousComponent>), fmt::Error> {
-        type_id.hash(self);
+    pub fn component(mut self, type_id: ComponentId) -> ComponentRenderer {
+        type_id.hash(&mut self);
         let previous = self
             .previous_tree
             .as_ref()
             .and_then(|t| t.get(self.next_position()));
 
-        match previous {
+        let (instance_id, previous) = match previous {
             // TODO: ensure same type_id
             Some(Marker::Component(id)) => {
                 if let Some(previous) = self
@@ -120,22 +119,25 @@ impl Renderer {
                     .as_mut()
                     .and_then(|d| d.remove(id))
                 {
-                    self.hash_tree.push(Marker::Component(*id));
-                    // TODO: unchanged if nothing changed
-                    // self.out.write_str("<!--unchanged-->")?;
-                    return Ok((*id, Some(previous)));
+                    (*id, Some(previous))
+                } else {
+                    (NanoId::random(), None)
                 }
             }
             Some(_) => {
                 // component is new
-                self.previous_offset -= 1;
+                self.previous_offset += 2;
+                (NanoId::random(), None)
             }
-            _ => {}
-        }
+            _ => (NanoId::random(), None),
+        };
 
-        let id = NanoId::random();
-        self.hash_tree.push(Marker::Component(id));
-        Ok((id, None))
+        ComponentRenderer {
+            previous_len: self.out.len(),
+            renderer: self,
+            instance_id,
+            previous,
+        }
     }
 
     fn start(&mut self) {
@@ -145,19 +147,20 @@ impl Renderer {
             .and_then(|t| t.get(self.next_position()));
         match previous {
             Some(Marker::End(_)) => self.previous_offset += 2,
-            Some(Marker::Component(_)) => self.previous_offset += 1,
+            Some(Marker::Component(_)) => self.previous_offset += 2,
             _ => {}
         }
 
         self.hash_tree.push(Marker::Start);
     }
 
-    fn unchanged(&mut self, hash: u32, offset: usize) -> Result<bool, fmt::Error> {
+    fn changed(&mut self, hash: u32, offset: usize) -> Result<bool, fmt::Error> {
         let previous_position = self.next_position() - 1;
         let mut previous = self
             .previous_tree
             .as_mut()
             .and_then(|t| t.get_mut(previous_position));
+
         match previous.as_mut() {
             // Subtree did not change
             Some(Marker::End(previous)) => {
@@ -173,7 +176,7 @@ impl Renderer {
                     self.out.truncate(offset);
                     self.out.write_str("<!--unchanged-->")?;
 
-                    return Ok(true);
+                    return Ok(false);
                 }
             }
             // Encountered start marker, which means that the new tree has new items. Update the
@@ -182,7 +185,7 @@ impl Renderer {
             _ => {}
         }
 
-        Ok(false)
+        Ok(true)
     }
 
     fn next_position(&self) -> usize {
@@ -240,7 +243,7 @@ impl ElementRenderer {
         self.parent_hasher.write_u32(hash);
         std::mem::swap(&mut self.renderer.hasher, &mut self.parent_hasher);
 
-        if !self.renderer.unchanged(hash, self.offset)? {
+        if self.renderer.changed(hash, self.offset)? {
             // Handle void elements. Content is simply ignored.
             if is_void_element(self.tag) {
                 write!(&mut self.renderer.out, "/>")?;
@@ -266,9 +269,74 @@ impl TextRenderer {
         self.renderer.hash_tree.push(Marker::End(hash));
 
         // Already written, so no need to handle what unchanged returns.
-        self.renderer.unchanged(hash, self.previous_len)?;
+        self.renderer.changed(hash, self.previous_len)?;
 
         Ok(self.renderer)
+    }
+}
+
+pub struct ComponentRenderer {
+    renderer: Renderer,
+    previous_len: usize,
+    instance_id: NanoId,
+    previous: Option<PreviousComponent>,
+}
+
+impl ComponentRenderer {
+    pub fn id(&self) -> NanoId {
+        self.instance_id
+    }
+
+    pub fn previous_state<S: DeserializeOwned>(&self) -> Result<Option<S>, serde_json::Error> {
+        // TODO: Box (of raw value)
+        if let Some(p) = &self.previous {
+            Ok(Some(serde_json::from_str(p.state.get())?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub async fn content(
+        mut self,
+        view: impl View,
+    ) -> Result<(Renderer, ViewHashTree, bool), fmt::Error> {
+        let r = Renderer {
+            out: mem::take(&mut self.renderer.out),
+            hash_tree: Vec::with_capacity(32),
+            hasher: XxHash32::default(),
+            previous_tree: self.previous.take().map(|t| t.hash_tree.0),
+            previous_offset: 0,
+            previous_descendants: mem::take(&mut self.renderer.previous_descendants),
+        };
+        let mut r = view.render(r).await?;
+
+        let hash = r.finish() as u32;
+        r.hash_tree.push(Marker::End(hash));
+        let inner_hash_tree = ViewHashTree(r.hash_tree);
+
+        // Restore parent renderer
+        self.renderer.out = mem::take(&mut r.out);
+        self.renderer.previous_descendants = mem::take(&mut r.previous_descendants);
+
+        // Add component to parent renderer
+        self.renderer.write_u32(hash);
+        self.renderer
+            .hash_tree
+            .push(Marker::Component(self.instance_id));
+        self.renderer.hash_tree.push(Marker::End(hash));
+
+        // Already written, so no need to handle what unchanged returns.
+        let changed = self.renderer.changed(hash, self.previous_len)?;
+
+        // Write a random hash to ensure the ascendents of a changed compontent are always
+        // invalidated
+        // TODO: anyway around that?
+        #[cfg(not(test))]
+        if changed {
+            self.renderer.write_u32(rand::random());
+        }
+
+        Ok((self.renderer, inner_hash_tree, changed))
     }
 }
 
@@ -310,6 +378,13 @@ impl Hasher for Renderer {
 impl Write for TextRenderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.hasher.write(s.as_bytes());
+        self.renderer.out.write_str(s)
+    }
+}
+
+impl Write for ComponentRenderer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.renderer.write(s.as_bytes());
         self.renderer.out.write_str(s)
     }
 }

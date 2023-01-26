@@ -1,10 +1,10 @@
 use crate::component::id::NanoId;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ViewHashTree(pub(crate) Vec<Marker>);
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Marker {
     Start,
     End(u32),

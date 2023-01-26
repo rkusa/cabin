@@ -30,7 +30,14 @@ async fn app(enabled: bool) -> impl View {
 
     view![
         html::div(if enabled {
-            counter(previous(|count| count + 1)).boxed()
+            view![
+                html::div![counter(0), " (state reset on parent rerender)"],
+                html::div![
+                    counter(previous(|c| c)),
+                    " (state restored on parent rerender)"
+                ],
+            ]
+            .boxed()
         } else {
             "...".boxed()
         }),

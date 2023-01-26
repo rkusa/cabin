@@ -9,8 +9,8 @@ impl<T> FromPrevious<T> for T
 where
     T: Serialize + DeserializeOwned + Send,
 {
-    fn next_from_previous(self, previous: Option<T>) -> T {
-        previous.unwrap_or(self)
+    fn next_from_previous(self, _previous: Option<T>) -> T {
+        self
     }
 }
 
@@ -49,4 +49,20 @@ where
     T: Default + Serialize + DeserializeOwned + Send,
 {
     internal::PreviousFn::new(f)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_take_new_value_by_default() {
+        assert_eq!(42u32.next_from_previous(Some(1)), 42);
+    }
+
+    #[test]
+    fn test_previous() {
+        assert_eq!(previous::<u32>(|n| n + 1).next_from_previous(None), 1); // starts at default
+        assert_eq!(previous::<u32>(|n| n + 1).next_from_previous(Some(42)), 43);
+    }
 }
