@@ -23,7 +23,7 @@ async fn app() -> impl View {
     search(Search::new("Ge")).await
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Hash, Serialize, Deserialize)]
 struct Search {
     query: Cow<'static, str>,
 }

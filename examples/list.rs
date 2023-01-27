@@ -32,13 +32,13 @@ async fn app() -> impl View {
     .await
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Hash, Serialize, Deserialize)]
 struct Item {
     id: usize,
     name: Cow<'static, str>,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Hash, Serialize, Deserialize)]
 struct Items(Vec<Item>);
 
 #[rustend::component]

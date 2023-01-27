@@ -22,7 +22,7 @@ async fn app() -> impl View {
     level1(Entry::default()).await
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Hash, Serialize, Deserialize)]
 struct Entry {
     count: u32,
     has_child: bool,

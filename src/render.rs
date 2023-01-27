@@ -133,6 +133,7 @@ impl Renderer {
         };
 
         ComponentRenderer {
+            hasher: XxHash32::default(),
             previous_len: self.out.len(),
             renderer: self,
             instance_id,
@@ -276,6 +277,7 @@ impl TextRenderer {
 }
 
 pub struct ComponentRenderer {
+    hasher: XxHash32,
     renderer: Renderer,
     previous_len: usize,
     instance_id: NanoId,
@@ -303,7 +305,7 @@ impl ComponentRenderer {
         let r = Renderer {
             out: mem::take(&mut self.renderer.out),
             hash_tree: Vec::with_capacity(32),
-            hasher: XxHash32::default(),
+            hasher: self.hasher,
             previous_tree: self.previous.take().map(|t| t.hash_tree.0),
             previous_offset: 0,
             previous_descendants: mem::take(&mut self.renderer.previous_descendants),
@@ -379,6 +381,16 @@ impl Write for TextRenderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.hasher.write(s.as_bytes());
         self.renderer.out.write_str(s)
+    }
+}
+
+impl Hasher for ComponentRenderer {
+    fn finish(&self) -> u64 {
+        self.hasher.finish()
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        self.hasher.write(bytes);
     }
 }
 

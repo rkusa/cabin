@@ -19,8 +19,8 @@ async fn test_previous_state() {
     let id = NanoId::from_str("ZJGbMZEVVDBciW-4k8Ld0").unwrap();
     let hash_tree: ViewHashTree = vec![
         Marker::Component(id),
-        Marker::End(878693578),  // component
-        Marker::End(1389501289), // root
+        Marker::End(1848809075), // component
+        Marker::End(1079271567), // root
     ]
     .into();
     let r = Renderer::from_previous_tree(hash_tree.clone()).with_descendants(
@@ -63,7 +63,7 @@ async fn test_previous_default() {
     assert_eq!(
         out.view,
         "<server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><div></div>1<script \
-        type=\"application/json\">{\"state\":1,\"hashTree\":[-1,3201766860,-1,3068971186,878693578]\
-        }</script></server-component>"
+        type=\"application/json\">{\"state\":1,\"hashTree\":[-1,3201766860,-1,3068971186,\
+        1848809075]}</script></server-component>"
     );
 }

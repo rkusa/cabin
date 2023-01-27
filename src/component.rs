@@ -3,6 +3,7 @@ pub mod registry;
 
 use std::fmt::{self, Write};
 use std::future::Future;
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
@@ -50,7 +51,7 @@ where
     F: Future<Output = V> + Send + 'static,
     V: View + Send + 'static,
     P: FromPrevious<S> + 'static,
-    S: Default + Serialize + DeserializeOwned + Send + 'static,
+    S: Default + Hash + Serialize + DeserializeOwned + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
@@ -63,6 +64,10 @@ where
             let previous_state = component.previous_state().unwrap();
             let state = self.state.next_from_previous(previous_state);
             let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
+
+            // Include state in hash to ensure state changes update the component (even if its view
+            // doesn't change)
+            state.hash(&mut component);
 
             write!(
                 component,
