@@ -1,7 +1,13 @@
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{parse_macro_input, Error, FnArg, Item, ItemFn, Signature, Stmt};
+use syn::token::Comma;
+use syn::{parse_macro_input, Error, ExprCall, FnArg, Item, ItemFn, Signature, Stmt};
 
 #[proc_macro_attribute]
 pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -116,4 +122,47 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     wrapped_fn.into()
+}
+
+#[derive(Debug, Hash)]
+struct Styles {
+    styles: Punctuated<ExprCall, Comma>,
+}
+
+impl Parse for Styles {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        Ok(Styles {
+            styles: Punctuated::<ExprCall, Comma>::parse_terminated(input)?,
+        })
+    }
+}
+
+#[proc_macro]
+pub fn css(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as Styles);
+    // dbg!(&input);
+
+    // TODO: sort before creating hash
+    let mut hasher = DefaultHasher::new();
+    input.hash(&mut hasher);
+    let name = format!("c{:x}", hasher.finish());
+
+    let styles = input
+        .styles
+        .into_iter()
+        .map(|expr| quote!(s.append(#expr);));
+
+    quote! {
+        {
+            #[::linkme::distributed_slice(rustend::style::registry::STYLES)]
+            fn __register(r: &mut ::rustend::style::registry::StyleRegistry) {
+                r.add(#name, |mut s| {
+                    #(#styles)*
+                });
+            }
+
+            #name
+        }
+    }
+    .into()
 }

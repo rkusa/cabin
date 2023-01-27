@@ -11,6 +11,7 @@ use hyper::body::to_bytes;
 use hyper::Body;
 use mime::Mime;
 use rustend::component::registry::ComponentRegistry;
+use rustend::style::registry::StyleRegistry;
 use rustend::{render, View, SERVER_COMPONENT_JS};
 use tower_service::Service;
 
@@ -65,14 +66,19 @@ where
                     .header(header::CONTENT_TYPE, "text/javascript")
                     .body(SERVER_COMPONENT_JS.into())?),
 
+                (&Method::GET, &["styles.css"]) => Ok(Response::builder()
+                    .header(header::CONTENT_TYPE, "text/css")
+                    .body(StyleRegistry::global().style_sheet().into())?),
+
                 (&Method::GET, &[]) => {
                     // Ensure that component registry has been initialized
                     let _ = ComponentRegistry::global();
 
                     let view = (app)().await;
                     let html = render(view).await.unwrap();
-                    let html =
-                        format!(r#"<script src="/server-component.js" async></script>{html}"#);
+                    const STYLESHEET: &str = r#"<link rel="stylesheet" href="/styles.css">"#;
+                    const SCRIPT: &str = r#"<script src="/server-component.js" async></script>"#;
+                    let html = format!("{STYLESHEET}\n{SCRIPT}\n{html}");
                     Ok(Response::builder()
                         .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
                         .body(html.into())?)

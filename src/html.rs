@@ -86,6 +86,21 @@ impl<V, A> Html<V, A> {
         }
     }
 
+    pub fn class<'a>(self, value: impl Into<Cow<'a, str>>) -> Html<V, impl Attributes + 'a>
+    where
+        A: Attributes + 'a,
+    {
+        Html {
+            tag: HtmlTag {
+                tag: self.tag.tag,
+                attrs: Attribute::new("class", value, self.tag.attrs),
+                on_click: self.tag.on_click,
+                on_input: self.tag.on_input,
+            },
+            content: self.content,
+        }
+    }
+
     // TODO: not available for all tags (e.g. only for buttons)
     pub fn on_click<M, F: Future<Output = M>, P: Serialize + DeserializeOwned>(
         mut self,

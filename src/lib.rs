@@ -3,13 +3,14 @@
 use std::fmt;
 
 pub use render::{Renderer, ViewHashTree};
-pub use rustend_macros::component;
+pub use rustend_macros::{component, css};
 pub use view::{IntoView, View};
 
 pub mod component;
 pub mod html;
 pub mod previous;
 mod render;
+pub mod style;
 pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
