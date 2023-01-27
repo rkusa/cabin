@@ -7,6 +7,7 @@ use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
+pub use macros::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -16,7 +17,6 @@ use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
 use crate::view::{IntoView, View, ViewWrapper};
-pub use macros::*;
 
 pub fn div<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("div", content)

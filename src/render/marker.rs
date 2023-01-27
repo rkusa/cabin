@@ -1,5 +1,6 @@
-use crate::component::id::NanoId;
 use serde::{Deserialize, Serialize};
+
+use crate::component::id::NanoId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ViewHashTree(pub(crate) Vec<Marker>);
@@ -31,9 +32,8 @@ mod deserialize {
     use serde::de::{self, Visitor};
     use serde::Deserialize;
 
-    use crate::component::id::NanoId;
-
     use super::Marker;
+    use crate::component::id::NanoId;
 
     struct MarkerVisitor;
 

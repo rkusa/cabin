@@ -15,7 +15,7 @@ async fn main() {
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
     let server = hyper::Server::bind(&addr)
         .serve(make_service_fn(|_| ready(Ok::<_, Infallible>(app.clone()))));
-    println!("Listening on http://{}", addr);
+    println!("Listening on http://{addr}");
     server.await.unwrap();
 }
 
@@ -34,7 +34,7 @@ async fn root(count: u32) -> impl View {
             .on_click(incr, ())
             .attr("style", "min-width:40px"),
         dropdown(previous(move |s: DropdownState| s.with_items(
-            (0..count).map(|i| format!("Item {}", i).into()).collect()
+            (0..count).map(|i| format!("Item {i}").into()).collect()
         )))
     ]
 }

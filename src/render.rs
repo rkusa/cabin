@@ -83,7 +83,7 @@ impl Renderer {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
         let offset = self.out.len();
-        write!(&mut self.out, "<{}", tag)?;
+        write!(&mut self.out, "<{tag}")?;
         Ok(ElementRenderer {
             tag,
             offset,

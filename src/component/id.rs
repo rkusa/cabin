@@ -1,7 +1,8 @@
 use core::fmt;
 use std::str::FromStr;
 
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use serde::Serialize;
 
 const SIZE: usize = 21;
@@ -86,7 +87,7 @@ impl std::error::Error for ParseError {}
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseError::Byte(b) => write!(f, "byte `{}` not in nanoid alphabet", b),
+            ParseError::Byte(b) => write!(f, "byte `{b}` not in nanoid alphabet"),
             ParseError::Length => f.write_str("nanoid must be exactly 21 characters long"),
         }
     }

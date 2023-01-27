@@ -15,7 +15,7 @@ async fn main() {
     let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
     let server = hyper::Server::bind(&addr)
         .serve(make_service_fn(|_| ready(Ok::<_, Infallible>(app.clone()))));
-    println!("Listening on http://{}", addr);
+    println!("Listening on http://{addr}");
     server.await.unwrap();
 }
 

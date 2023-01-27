@@ -95,8 +95,7 @@ where
 
                 write!(
                     r,
-                    r#"<script type="application/json">{}</script></server-component>"#,
-                    initial
+                    r#"<script type="application/json">{initial}</script></server-component>"#
                 )?;
             }
 

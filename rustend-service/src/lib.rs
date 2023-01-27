@@ -71,10 +71,8 @@ where
 
                     let view = (app)().await;
                     let html = render(view).await.unwrap();
-                    let html = format!(
-                        r#"<script src="/server-component.js" async></script>{}"#,
-                        html
-                    );
+                    let html =
+                        format!(r#"<script src="/server-component.js" async></script>{html}"#);
                     Ok(Response::builder()
                         .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
                         .body(html.into())?)

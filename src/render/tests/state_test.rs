@@ -12,7 +12,7 @@ use crate::{html, view, Renderer, View, ViewHashTree};
 async fn test_previous_state() {
     fn component(state: impl FromPrevious<u32> + 'static) -> impl View {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(view![html::div(()), format!("{}", state)])
+            ready(view![html::div(()), format!("{state}")])
         })
     }
 
@@ -51,7 +51,7 @@ async fn test_previous_state() {
 async fn test_previous_default() {
     fn component(state: impl FromPrevious<u32> + 'static) -> impl View {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(view![html::div(()), format!("{}", state)])
+            ready(view![html::div(()), format!("{state}")])
         })
     }
 

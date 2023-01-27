@@ -11,7 +11,7 @@ use crate::{html, view, Renderer, View, ViewHashTree};
 async fn test_unchanged() {
     let component = || {
         ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{}", state))
+            ready(format!("{state}"))
         })
     };
 
@@ -87,7 +87,7 @@ async fn test_unchanged() {
 async fn test_changed() {
     let component = |state: u32| {
         ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(format!("{}", state))
+            ready(format!("{state}"))
         })
     };
 
@@ -147,7 +147,7 @@ async fn test_changed() {
 async fn test_added_as_additional() {
     let component = || {
         ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{}", state))
+            ready(format!("{state}"))
         })
     };
 
@@ -212,7 +212,7 @@ async fn test_added_as_additional() {
 async fn test_added_as_replacement() {
     let component = || {
         ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{}", state))
+            ready(format!("{state}"))
         })
     };
 
@@ -264,7 +264,7 @@ async fn test_added_as_replacement() {
 async fn test_removed_without_replacement() {
     let component = || {
         ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{}", state))
+            ready(format!("{state}"))
         })
     };
 
@@ -314,7 +314,7 @@ async fn test_removed_without_replacement() {
 async fn test_removed_by_being_replaced() {
     let component = || {
         ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{}", state))
+            ready(format!("{state}"))
         })
     };
 
@@ -366,7 +366,7 @@ async fn test_removed_by_being_replaced() {
 async fn test_inner_partial_update() {
     let component = |state: u32| {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(view![html::div(()), format!("{}", state)])
+            ready(view![html::div(()), format!("{state}")])
         })
     };
 
