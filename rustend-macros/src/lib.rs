@@ -134,12 +134,17 @@ enum StyleExpr {
         paren_token: Paren,
         args: Punctuated<ExprLit, Comma>,
     },
-    MethodCall {
+    MethodCalls {
         path: Path,
-        dot_token: Dot,
-        method: Ident,
-        paren_token: Paren,
+        method_calls: Vec<StyleMethodCall>,
     },
+}
+
+#[derive(Debug, Hash)]
+struct StyleMethodCall {
+    dot_token: Dot,
+    method: Ident,
+    paren_token: Paren,
 }
 
 impl Parse for StyleExpr {
@@ -154,14 +159,18 @@ impl Parse for StyleExpr {
                 args: content.parse_terminated(ExprLit::parse)?,
             })
         } else if input.peek(Dot) {
-            #[allow(unused)]
-            let content;
-            Ok(StyleExpr::MethodCall {
-                path,
-                dot_token: input.parse()?,
-                method: input.parse()?,
-                paren_token: syn::parenthesized!(content in input),
-            })
+            let mut method_calls = Vec::with_capacity(1);
+            while input.peek(Dot) {
+                #[allow(unused)]
+                let content;
+                method_calls.push(StyleMethodCall {
+                    dot_token: input.parse()?,
+                    method: input.parse()?,
+                    paren_token: syn::parenthesized!(content in input),
+                });
+            }
+
+            Ok(StyleExpr::MethodCalls { path, method_calls })
         } else {
             Ok(StyleExpr::Path { path })
         }
@@ -184,18 +193,26 @@ impl ToTokens for StyleExpr {
                     args.to_tokens(tokens);
                 });
             }
-            StyleExpr::MethodCall {
-                path,
-                dot_token,
-                method,
-                paren_token,
-            } => {
+            StyleExpr::MethodCalls { path, method_calls } => {
                 path.to_tokens(tokens);
-                dot_token.to_tokens(tokens);
-                method.to_tokens(tokens);
-                paren_token.surround(tokens, |_| {});
+                for method_call in method_calls {
+                    method_call.to_tokens(tokens);
+                }
             }
         }
+    }
+}
+
+impl ToTokens for StyleMethodCall {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let StyleMethodCall {
+            dot_token,
+            method,
+            paren_token,
+        } = self;
+        dot_token.to_tokens(tokens);
+        method.to_tokens(tokens);
+        paren_token.surround(tokens, |_| {});
     }
 }
 

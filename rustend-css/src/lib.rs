@@ -27,6 +27,13 @@ pub trait Style {
     {
         pseudo::hover::Hover(self)
     }
+
+    fn focus(self) -> pseudo::focus::Focus<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::focus::Focus(self)
+    }
 }
 
 pub enum Length {
