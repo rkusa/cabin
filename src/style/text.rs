@@ -1,25 +1,40 @@
 use std::fmt;
 
+use super::length::Length;
 use super::Style;
 
-pub trait TextStyle {
-    fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+pub struct TextColor(&'static str);
+
+impl TextColor {
+    pub const fn custom(color: &'static str) -> Self {
+        Self(color)
+    }
 }
 
-pub fn text(style: impl TextStyle) -> impl Style {
-    internal::TextStyle(style)
+impl Style for TextColor {
+    fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "color: {};", self.0)
+    }
 }
 
-mod internal {
-    use std::fmt;
+pub struct FontSize {
+    font_size: Length,
+    line_height: Length,
+}
 
-    use crate::style::Style;
-
-    pub struct TextStyle<S: super::TextStyle>(pub S);
-
-    impl<S: super::TextStyle> Style for TextStyle<S> {
-        fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            self.0.css(f)
+impl FontSize {
+    pub const fn custom(font_size: Length, line_height: Length) -> Self {
+        Self {
+            font_size,
+            line_height,
         }
+    }
+}
+
+impl Style for FontSize {
+    fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "font-size: {};", self.font_size)?;
+        writeln!(f, "line-height: {};", self.line_height)?;
+        Ok(())
     }
 }

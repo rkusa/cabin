@@ -4,9 +4,8 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use hyper::service::make_service_fn;
-use rustend::style::preset::{BLACK, SM};
-use rustend::style::text;
 use rustend::{css, html, View};
+use rustend_preset::text;
 
 #[tokio::main]
 async fn main() {
@@ -32,6 +31,5 @@ async fn counter(count: u32) -> impl View {
         .on_click(incr, ())
         // TODO: prevent dynamic values
         // TODO: conditional styles
-        // TODO: auto-complete
-        .class(css!(text(BLACK), text(SM)))
+        .class(css!(text::BLACK, text::SM))
 }

@@ -7,7 +7,7 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::Comma;
-use syn::{parse_macro_input, Error, ExprCall, FnArg, Item, ItemFn, Signature, Stmt};
+use syn::{parse_macro_input, Error, ExprPath, FnArg, Item, ItemFn, Signature, Stmt};
 
 #[proc_macro_attribute]
 pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -126,13 +126,13 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 #[derive(Debug, Hash)]
 struct Styles {
-    styles: Punctuated<ExprCall, Comma>,
+    styles: Punctuated<ExprPath, Comma>,
 }
 
 impl Parse for Styles {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Styles {
-            styles: Punctuated::<ExprCall, Comma>::parse_terminated(input)?,
+            styles: Punctuated::<ExprPath, Comma>::parse_terminated(input)?,
         })
     }
 }
