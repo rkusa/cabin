@@ -4,8 +4,8 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use hyper::service::make_service_fn;
-use rustend::{css, html, View};
-use rustend_preset::text;
+use rustend::{html, View};
+use rustend_preset::{css, text};
 
 #[tokio::main]
 async fn main() {

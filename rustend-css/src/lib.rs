@@ -1,4 +1,8 @@
+pub mod text;
+
 use std::fmt;
+
+pub use rustend_macros::css;
 
 pub enum Length {
     Px(f32),

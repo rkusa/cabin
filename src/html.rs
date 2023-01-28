@@ -1,4 +1,5 @@
 mod attributes;
+mod class_name;
 pub mod events;
 mod macros;
 
@@ -15,9 +16,9 @@ use self::attributes::{Attribute, Attributes};
 use self::events::InputEvent;
 use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
-use crate::style::ClassName;
 pub use crate::view::text::{text, Text};
 use crate::view::{IntoView, View, ViewWrapper};
+pub use class_name::ClassName;
 
 pub fn div<V: View>(content: impl IntoView<V>) -> Html<V, ()> {
     custom("div", content)

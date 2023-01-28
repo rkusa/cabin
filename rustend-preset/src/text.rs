@@ -1,5 +1,5 @@
-use rustend::style::length::Length;
-use rustend::style::text::{FontSize, TextColor};
+use rustend_css::text::{FontSize, TextColor};
+use rustend_css::Length;
 
 pub const BLACK: TextColor = TextColor::custom("black");
 

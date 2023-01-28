@@ -108,7 +108,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
             #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {
                 // TODO: Get rid into_view()
                 ::rustend::IntoView::into_view({
-                    #[::linkme::distributed_slice(rustend::component::registry::COMPONENT_FACTORIES)]
+                    #[::linkme::distributed_slice(::rustend::component::registry::COMPONENT_FACTORIES)]
                     fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
                         #(#actions)*
                     }
@@ -203,14 +203,14 @@ pub fn css(item: TokenStream) -> TokenStream {
 
     quote! {
         {
-            #[::linkme::distributed_slice(rustend::style::registry::STYLES)]
+            #[::linkme::distributed_slice(::rustend::style::registry::STYLES)]
             fn __register(r: &mut ::rustend::style::registry::StyleRegistry) {
                 r.add(#name, |mut s| {
                     #(#styles)*
                 });
             }
 
-            ::rustend::style::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))
+            ::rustend::html::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))
         }
     }
     .into()
