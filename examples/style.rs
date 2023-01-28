@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use hyper::service::make_service_fn;
 use rustend::{html, View};
-use rustend_preset::{css, text};
+use rustend_css::{self as css, css};
 
 #[tokio::main]
 async fn main() {
@@ -29,5 +29,8 @@ async fn counter(count: u32) -> impl View {
 
     html::button(html::text!("{count}"))
         .on_click(incr, ())
-        .class(css!(text::BLACK, text::SM) + (count == 0).then_some(css!(text::color("red"))))
+        .class(
+            css!(css::BLOCK, css::text::BLACK, css::text::SM)
+                + (count == 0).then_some(css!(css::text::color("red"))),
+        )
 }

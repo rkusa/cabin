@@ -1,4 +1,5 @@
 mod class_name;
+pub mod display;
 pub mod registry;
 pub mod text;
 
