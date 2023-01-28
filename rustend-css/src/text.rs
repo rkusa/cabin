@@ -1,41 +1,54 @@
-use std::fmt;
+use self::internal::{FontSize, TextColor};
+use crate::Length;
 
-use rustend::style::Style;
+pub const BLACK: TextColor = TextColor::custom("black");
 
-use super::Length;
+pub const XS: FontSize = FontSize::custom(Length::Rem(0.75), Length::Rem(1.0));
 
-pub struct TextColor(&'static str);
+pub const SM: FontSize = FontSize::custom(Length::Rem(0.875), Length::Rem(1.25));
 
-impl TextColor {
-    pub const fn custom(color: &'static str) -> Self {
-        Self(color)
-    }
+pub fn color(color: &'static str) -> TextColor {
+    TextColor::custom(color)
 }
 
-impl Style for TextColor {
-    fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "color: {};", self.0)
-    }
-}
+mod internal {
+    use std::fmt;
 
-pub struct FontSize {
-    font_size: Length,
-    line_height: Length,
-}
+    use crate::{Length, Style};
 
-impl FontSize {
-    pub const fn custom(font_size: Length, line_height: Length) -> Self {
-        Self {
-            font_size,
-            line_height,
+    pub struct TextColor(&'static str);
+
+    impl TextColor {
+        pub const fn custom(color: &'static str) -> Self {
+            Self(color)
         }
     }
-}
 
-impl Style for FontSize {
-    fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "font-size: {};", self.font_size)?;
-        writeln!(f, "line-height: {};", self.line_height)?;
-        Ok(())
+    impl Style for TextColor {
+        fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            writeln!(f, "color: {};", self.0)
+        }
+    }
+
+    pub struct FontSize {
+        font_size: Length,
+        line_height: Length,
+    }
+
+    impl FontSize {
+        pub const fn custom(font_size: Length, line_height: Length) -> Self {
+            Self {
+                font_size,
+                line_height,
+            }
+        }
+    }
+
+    impl Style for FontSize {
+        fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            writeln!(f, "font-size: {};", self.font_size)?;
+            writeln!(f, "line-height: {};", self.line_height)?;
+            Ok(())
+        }
     }
 }

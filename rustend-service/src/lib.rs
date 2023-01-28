@@ -11,7 +11,6 @@ use hyper::body::to_bytes;
 use hyper::Body;
 use mime::Mime;
 use rustend::component::registry::ComponentRegistry;
-use rustend::style::registry::StyleRegistry;
 use rustend::{render, View, SERVER_COMPONENT_JS};
 use tower_service::Service;
 
@@ -66,9 +65,14 @@ where
                     .header(header::CONTENT_TYPE, "text/javascript")
                     .body(SERVER_COMPONENT_JS.into())?),
 
+                #[cfg(feature = "rustend-css")]
                 (&Method::GET, &["styles.css"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/css")
-                    .body(StyleRegistry::global().style_sheet().into())?),
+                    .body(
+                        rustend_css::registry::StyleRegistry::global()
+                            .style_sheet()
+                            .into(),
+                    )?),
 
                 (&Method::GET, &[]) => {
                     // Ensure that component registry has been initialized

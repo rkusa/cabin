@@ -1,5 +1,4 @@
 mod attributes;
-mod class_name;
 pub mod events;
 mod macros;
 
@@ -8,7 +7,6 @@ use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
-pub use class_name::ClassName;
 pub use macros::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -88,14 +86,14 @@ impl<V, A> Html<V, A> {
         }
     }
 
-    pub fn class<'a>(self, value: impl Into<ClassName<'a>>) -> Html<V, impl Attributes + 'a>
+    pub fn class<'a>(self, value: impl Into<Cow<'a, str>>) -> Html<V, impl Attributes + 'a>
     where
         A: Attributes + 'a,
     {
         Html {
             tag: HtmlTag {
                 tag: self.tag.tag,
-                attrs: Attribute::new("class", value.into(), self.tag.attrs),
+                attrs: Attribute::new("class", value, self.tag.attrs),
                 on_click: self.tag.on_click,
                 on_input: self.tag.on_input,
             },

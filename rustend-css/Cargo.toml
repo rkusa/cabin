@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 linkme = "0.3"
+once_cell = "1.15"
 rustend = { version = "0.1", path = "../" }
 rustend-macros = { path = "../rustend-macros", version = "0.1" }
 

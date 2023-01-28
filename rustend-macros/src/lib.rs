@@ -203,14 +203,14 @@ pub fn css(item: TokenStream) -> TokenStream {
 
     quote! {
         {
-            #[::linkme::distributed_slice(::rustend::style::registry::STYLES)]
-            fn __register(r: &mut ::rustend::style::registry::StyleRegistry) {
+            #[::linkme::distributed_slice(::rustend_css::registry::STYLES)]
+            fn __register(r: &mut ::rustend_css::registry::StyleRegistry) {
                 r.add(#name, |mut s| {
                     #(#styles)*
                 });
             }
 
-            ::rustend::html::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))
+            ::rustend_css::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))
         }
     }
     .into()

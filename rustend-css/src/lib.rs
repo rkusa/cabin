@@ -1,8 +1,16 @@
+mod class_name;
+pub mod registry;
 pub mod text;
 
 use std::fmt;
 
+pub use class_name::ClassName;
+pub use display::*;
 pub use rustend_macros::css;
+
+pub trait Style {
+    fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+}
 
 pub enum Length {
     Px(f32),
@@ -16,20 +24,4 @@ impl fmt::Display for Length {
             Length::Rem(v) => write!(f, "{v}rem"),
         }
     }
-}
-
-#[cfg(feature = "preflight")]
-#[::linkme::distributed_slice(rustend::style::registry::BASE)]
-fn __preflight(r: &mut rustend::style::registry::StyleRegistry) {
-    use std::fmt::Write;
-    r.write_str(include_str!("./preflight/preflight-v3.2.4.css"))
-        .unwrap();
-}
-
-#[cfg(feature = "forms  ")]
-#[::linkme::distributed_slice(rustend::style::registry::BASE)]
-fn __forms(r: &mut rustend::style::registry::StyleRegistry) {
-    use std::fmt::Write;
-    r.write_str(include_str!("./forms/forms-v0.5.3.css"))
-        .unwrap();
 }

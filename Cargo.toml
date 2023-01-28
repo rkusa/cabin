@@ -7,7 +7,6 @@ edition = "2021"
 members = [
     "rustend-css",
     "rustend-macros",
-    "rustend-preset",
     "rustend-service",
 ]
 
@@ -22,7 +21,7 @@ serde_json = { version = "1.0", features = ["raw_value"] }
 twox-hash = "1.6"
 
 [dev-dependencies]
-rustend-preset = { path = "./rustend-preset", default-features = false }
+rustend-css = { path = "./rustend-css", default-features = false }
 rustend-service = { path = "./rustend-service" }
 hyper = { version = "0.14", features = ["server", "tcp", "http1", "http2"] }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
