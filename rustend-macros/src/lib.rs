@@ -2,12 +2,12 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::token::Comma;
-use syn::{parse_macro_input, Error, ExprPath, FnArg, Item, ItemFn, Signature, Stmt};
+use syn::token::{Comma, Paren};
+use syn::{parse_macro_input, Error, ExprLit, FnArg, Item, ItemFn, Path, Signature, Stmt};
 
 #[proc_macro_attribute]
 pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -125,14 +125,63 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 #[derive(Debug, Hash)]
+enum StyleExpr {
+    Path {
+        path: Path,
+    },
+    Call {
+        func: Path,
+        paren_token: Paren,
+        args: Punctuated<ExprLit, Comma>,
+    },
+}
+
+impl Parse for StyleExpr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let path = Path::parse(input)?;
+
+        if input.peek(Paren) {
+            let content;
+            Ok(StyleExpr::Call {
+                func: path,
+                paren_token: syn::parenthesized!(content in input),
+                args: content.parse_terminated(ExprLit::parse)?,
+            })
+        } else {
+            Ok(StyleExpr::Path { path })
+        }
+    }
+}
+
+impl ToTokens for StyleExpr {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        match self {
+            StyleExpr::Path { path } => {
+                path.to_tokens(tokens);
+            }
+            StyleExpr::Call {
+                func,
+                paren_token,
+                args,
+            } => {
+                func.to_tokens(tokens);
+                paren_token.surround(tokens, |tokens| {
+                    args.to_tokens(tokens);
+                });
+            }
+        }
+    }
+}
+
+#[derive(Debug, Hash)]
 struct Styles {
-    styles: Punctuated<ExprPath, Comma>,
+    styles: Punctuated<StyleExpr, Comma>,
 }
 
 impl Parse for Styles {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Styles {
-            styles: Punctuated::<ExprPath, Comma>::parse_terminated(input)?,
+            styles: Punctuated::<StyleExpr, Comma>::parse_terminated(input)?,
         })
     }
 }
