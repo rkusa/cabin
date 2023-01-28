@@ -30,11 +30,16 @@ async fn counter(count: u32) -> impl View {
     html::button(html::text!("{count}"))
         .on_click(incr, ())
         .class(
+            // TODO: modifier groups?
+            // TODO: autocomplate after XZY. (for modifiers)
+            // TODO: autocomplete after text::
             css!(
                 css::BLOCK,
                 css::text::BLACK,
                 css::text::SM,
-                css::bg::BLACK.hover().focus() // TODO: groups
+                css::bg::BLACK.hover(),
+                css::text::WHITE.hover(),
+                css::text::XS.hover().focus(),
             ) + (count == 0).then_some(css!(css::text::color("red"))),
         )
 }

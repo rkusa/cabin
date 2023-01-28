@@ -143,8 +143,8 @@ enum StyleExpr {
 #[derive(Debug, Hash)]
 struct StyleMethodCall {
     dot_token: Dot,
-    method: Ident,
-    paren_token: Paren,
+    method: Option<Ident>,      // optional to allow incomplete inputs
+    paren_token: Option<Paren>, // optional to allow incomplete inputs
 }
 
 impl Parse for StyleExpr {
@@ -161,12 +161,20 @@ impl Parse for StyleExpr {
         } else if input.peek(Dot) {
             let mut method_calls = Vec::with_capacity(1);
             while input.peek(Dot) {
-                #[allow(unused)]
-                let content;
                 method_calls.push(StyleMethodCall {
                     dot_token: input.parse()?,
-                    method: input.parse()?,
-                    paren_token: syn::parenthesized!(content in input),
+                    method: if input.peek(Ident) {
+                        Some(input.parse()?)
+                    } else {
+                        None
+                    },
+                    paren_token: if input.peek(Paren) {
+                        #[allow(unused)]
+                        let content;
+                        Some(syn::parenthesized!(content in input))
+                    } else {
+                        None
+                    },
                 });
             }
 
@@ -212,7 +220,9 @@ impl ToTokens for StyleMethodCall {
         } = self;
         dot_token.to_tokens(tokens);
         method.to_tokens(tokens);
-        paren_token.surround(tokens, |_| {});
+        if let Some(paren_token) = paren_token {
+            paren_token.surround(tokens, |_| {});
+        }
     }
 }
 
