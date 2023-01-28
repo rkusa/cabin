@@ -73,7 +73,7 @@ mod internal {
     pub struct Display(pub(crate) &'static str);
 
     impl Style for Display {
-        fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             writeln!(f, "display: {};", self.0)
         }
     }

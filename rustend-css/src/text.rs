@@ -25,7 +25,7 @@ mod internal {
     }
 
     impl Style for TextColor {
-        fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             writeln!(f, "color: {};", self.0)
         }
     }
@@ -45,7 +45,7 @@ mod internal {
     }
 
     impl Style for FontSize {
-        fn css(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             writeln!(f, "font-size: {};", self.font_size)?;
             writeln!(f, "line-height: {};", self.line_height)?;
             Ok(())

@@ -6,8 +6,8 @@ use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::token::{Comma, Paren};
-use syn::{parse_macro_input, Error, ExprLit, FnArg, Item, ItemFn, Path, Signature, Stmt};
+use syn::token::{Comma, Dot, Paren};
+use syn::{parse_macro_input, Error, ExprLit, FnArg, Ident, Item, ItemFn, Path, Signature, Stmt};
 
 #[proc_macro_attribute]
 pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -134,6 +134,12 @@ enum StyleExpr {
         paren_token: Paren,
         args: Punctuated<ExprLit, Comma>,
     },
+    MethodCall {
+        path: Path,
+        dot_token: Dot,
+        method: Ident,
+        paren_token: Paren,
+    },
 }
 
 impl Parse for StyleExpr {
@@ -146,6 +152,15 @@ impl Parse for StyleExpr {
                 func: path,
                 paren_token: syn::parenthesized!(content in input),
                 args: content.parse_terminated(ExprLit::parse)?,
+            })
+        } else if input.peek(Dot) {
+            #[allow(unused)]
+            let content;
+            Ok(StyleExpr::MethodCall {
+                path,
+                dot_token: input.parse()?,
+                method: input.parse()?,
+                paren_token: syn::parenthesized!(content in input),
             })
         } else {
             Ok(StyleExpr::Path { path })
@@ -168,6 +183,17 @@ impl ToTokens for StyleExpr {
                 paren_token.surround(tokens, |tokens| {
                     args.to_tokens(tokens);
                 });
+            }
+            StyleExpr::MethodCall {
+                path,
+                dot_token,
+                method,
+                paren_token,
+            } => {
+                path.to_tokens(tokens);
+                dot_token.to_tokens(tokens);
+                method.to_tokens(tokens);
+                paren_token.surround(tokens, |_| {});
             }
         }
     }
@@ -196,18 +222,14 @@ pub fn css(item: TokenStream) -> TokenStream {
     input.hash(&mut hasher);
     let name = format!("c{:x}", hasher.finish());
 
-    let styles = input
-        .styles
-        .into_iter()
-        .map(|expr| quote!(s.append(#expr);));
+    // Partition into ones without any modifier, and the ones with modifieres
+    let styles = input.styles.into_iter();
 
     quote! {
         {
             #[::linkme::distributed_slice(::rustend_css::registry::STYLES)]
             fn __register(r: &mut ::rustend_css::registry::StyleRegistry) {
-                r.add(#name, |mut s| {
-                    #(#styles)*
-                });
+                r.add(#name, &[#(&#styles,)*]);
             }
 
             ::rustend_css::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))

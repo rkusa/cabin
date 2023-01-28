@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 bytes = "1.2"
 rustend = { version = "0.1", path = "../" }
-rustend-css = { version = "0.1", path = "../rustend-css", optional = true }
+rustend-css = { version = "0.1", path = "../rustend-css", default-features = false, optional = true }
 http = "0.2"
 http-body = "0.4"
 hyper = { version = "0.14" }

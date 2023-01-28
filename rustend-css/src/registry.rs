@@ -1,4 +1,7 @@
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::fmt::{self, Write};
+use std::hash::Hasher;
 
 use once_cell::race::OnceBox;
 
@@ -11,10 +14,6 @@ static REGISTRY: OnceBox<StyleRegistry> = OnceBox::new();
 
 pub struct StyleRegistry {
     out: String,
-}
-
-pub struct DeclarationBlock<'a> {
-    out: &'a mut String,
 }
 
 impl StyleRegistry {
@@ -43,10 +42,8 @@ impl StyleRegistry {
         })
     }
 
-    pub fn add(&mut self, name: &str, f: impl FnOnce(DeclarationBlock)) {
-        writeln!(&mut self.out, ".{name} {{").unwrap();
-        (f)(DeclarationBlock { out: &mut self.out });
-        writeln!(&mut self.out, "}}").unwrap();
+    pub fn add(&mut self, name: &str, styles: &[&dyn Style]) {
+        write!(self.out, "{}", StyleWritter { name, styles }).unwrap();
     }
 
     pub fn style_sheet(&self) -> &str {
@@ -54,22 +51,36 @@ impl StyleRegistry {
     }
 }
 
-impl<'a> DeclarationBlock<'a> {
-    pub fn append(&mut self, style: impl Style) {
-        write!(self.out, "{}", StyleWritter(style)).unwrap();
-    }
+struct StyleWritter<'s> {
+    name: &'s str,
+    styles: &'s [&'s dyn Style],
 }
 
-struct StyleWritter<S>(S);
-
-impl<S: Style> fmt::Display for StyleWritter<S> {
+impl<'s> fmt::Display for StyleWritter<'s> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.css(f)
-    }
-}
+        let grouped = self
+            .styles
+            .iter()
+            .fold(HashMap::<_, Vec<_>>::new(), |mut grouped, style| {
+                let mut hasher = DefaultHasher::new();
+                style.hash_modifier(&mut hasher);
+                let hash = hasher.finish();
+                grouped.entry(hash).or_default().push(style);
+                grouped
+            });
 
-impl fmt::Write for StyleRegistry {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.out.write_str(s)
+        for styles in grouped.into_values() {
+            write!(f, ".{}", self.name).unwrap();
+            for style in &styles {
+                style.selector_prefix(f)?;
+            }
+            writeln!(f, " {{").unwrap();
+            for style in &styles {
+                style.declarations(f)?;
+            }
+            writeln!(f, "}}").unwrap();
+        }
+
+        Ok(())
     }
 }

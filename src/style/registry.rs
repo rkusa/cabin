@@ -16,10 +16,6 @@ pub struct StyleRegistry {
     out: String,
 }
 
-pub struct DeclarationBlock<'a> {
-    out: &'a mut String,
-}
-
 impl StyleRegistry {
     pub fn global() -> &'static Self {
         REGISTRY.get_or_init(|| {
