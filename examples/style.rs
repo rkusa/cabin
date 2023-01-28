@@ -29,6 +29,5 @@ async fn counter(count: u32) -> impl View {
 
     html::button(html::text!("{count}"))
         .on_click(incr, ())
-        // TODO: conditional styles
-        .class(css!(text::color("red"), text::SM))
+        .class(css!(text::BLACK, text::SM) + (count == 0).then_some(css!(text::color("red"))))
 }

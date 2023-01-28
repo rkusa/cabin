@@ -210,7 +210,7 @@ pub fn css(item: TokenStream) -> TokenStream {
                 });
             }
 
-            #name
+            ::rustend::style::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))
         }
     }
     .into()

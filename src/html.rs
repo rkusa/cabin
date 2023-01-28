@@ -15,6 +15,7 @@ use self::attributes::{Attribute, Attributes};
 use self::events::InputEvent;
 use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
+use crate::style::ClassName;
 pub use crate::view::text::{text, Text};
 use crate::view::{IntoView, View, ViewWrapper};
 
@@ -86,14 +87,14 @@ impl<V, A> Html<V, A> {
         }
     }
 
-    pub fn class<'a>(self, value: impl Into<Cow<'a, str>>) -> Html<V, impl Attributes + 'a>
+    pub fn class<'a>(self, value: impl Into<ClassName<'a>>) -> Html<V, impl Attributes + 'a>
     where
         A: Attributes + 'a,
     {
         Html {
             tag: HtmlTag {
                 tag: self.tag.tag,
-                attrs: Attribute::new("class", value, self.tag.attrs),
+                attrs: Attribute::new("class", value.into(), self.tag.attrs),
                 on_click: self.tag.on_click,
                 on_input: self.tag.on_input,
             },
