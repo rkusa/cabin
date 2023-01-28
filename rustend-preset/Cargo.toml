@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rustend-css = { version = "0.1", path = "../rustend-css" }
+rustend-css = { version = "0.1", path = "../rustend-css", default-features = false }
+
+[features]
+default = ["rustend-css/preflight"]
+forms = ["rustend-css/forms"]

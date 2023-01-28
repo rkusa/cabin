@@ -7,6 +7,9 @@ use super::Style;
 #[linkme::distributed_slice]
 pub static STYLES: [fn(&mut StyleRegistry)] = [..];
 
+#[linkme::distributed_slice]
+pub static BASE: [fn(&mut StyleRegistry)] = [..];
+
 static REGISTRY: OnceBox<StyleRegistry> = OnceBox::new();
 
 pub struct StyleRegistry {
@@ -23,6 +26,9 @@ impl StyleRegistry {
             let mut registry = Self {
                 out: Default::default(),
             };
+            for f in BASE {
+                (f)(&mut registry);
+            }
             for f in STYLES {
                 (f)(&mut registry);
             }
@@ -52,5 +58,11 @@ struct StyleWritter<S>(S);
 impl<S: Style> fmt::Display for StyleWritter<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.css(f)
+    }
+}
+
+impl fmt::Write for StyleRegistry {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.out.write_str(s)
     }
 }

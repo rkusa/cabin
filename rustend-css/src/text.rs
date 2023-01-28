@@ -1,7 +1,8 @@
 use std::fmt;
 
-use super::Length;
 use rustend::style::Style;
+
+use super::Length;
 
 pub struct TextColor(&'static str);
 

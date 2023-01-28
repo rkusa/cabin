@@ -17,3 +17,19 @@ impl fmt::Display for Length {
         }
     }
 }
+
+#[cfg(feature = "preflight")]
+#[::linkme::distributed_slice(rustend::style::registry::BASE)]
+fn __preflight(r: &mut rustend::style::registry::StyleRegistry) {
+    use std::fmt::Write;
+    r.write_str(include_str!("./preflight/preflight-v3.2.4.css"))
+        .unwrap();
+}
+
+#[cfg(feature = "forms  ")]
+#[::linkme::distributed_slice(rustend::style::registry::BASE)]
+fn __forms(r: &mut rustend::style::registry::StyleRegistry) {
+    use std::fmt::Write;
+    r.write_str(include_str!("./forms/forms-v0.5.3.css"))
+        .unwrap();
+}
