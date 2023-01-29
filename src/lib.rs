@@ -9,6 +9,7 @@ pub use view::{IntoView, View};
 pub mod component;
 pub mod html;
 pub mod previous;
+pub mod private;
 mod render;
 pub mod view;
 
