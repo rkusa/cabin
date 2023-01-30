@@ -1,26 +1,26 @@
 #[macro_export]
 macro_rules! div {
-    ($($x:tt)*) => ($crate::view![$crate::html::div(()); $($x)*])
+    ($($x:tt)*) => ($crate::html::custom("div", $crate::view![$($x)*]))
 }
 
 #[macro_export]
 macro_rules! ul {
-    ($($x:tt)*) => ($crate::view![$crate::html::ul(()); $($x)*])
+    ($($x:tt)*) => ($crate::html::custom("ul", $crate::view![$($x)*]))
 }
 
 #[macro_export]
 macro_rules! li {
-    ($($x:tt)*) => ($crate::view![$crate::html::li(()); $($x)*])
+    ($($x:tt)*) => ($crate::html::custom("li", $crate::view![$($x)*]))
 }
 
 #[macro_export]
 macro_rules! fieldset {
-    ($($x:tt)*) => ($crate::view![$crate::html::fieldset(()); $($x)*])
+    ($($x:tt)*) => ($crate::html::custom("fieldset", $crate::view![$($x)*]))
 }
 
 #[macro_export]
 macro_rules! button {
-    ($($x:tt)*) => ($crate::view![$crate::html::button(()); $($x)*])
+    ($($x:tt)*) => ($crate::html::custom("button", $crate::view![$($x)*]))
 }
 
 pub use {button, div, fieldset, li, ul};

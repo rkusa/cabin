@@ -6,6 +6,7 @@ pub(crate) mod text;
 use std::borrow::Cow;
 use std::fmt::{self, Write};
 use std::future::Future;
+use std::marker::PhantomData;
 use std::pin::Pin;
 
 use self::boxed::BoxedView;
@@ -120,33 +121,42 @@ where
     }
 }
 
-pub struct Pair<L, R> {
+pub struct Pair<L, LV, R, RV> {
     left: L,
     right: R,
+    marker: PhantomData<(LV, RV)>,
 }
 
-impl<L, R> Pair<L, R> {
+impl<L, LV, R, RV> Pair<L, LV, R, RV> {
     pub fn new(left: L, right: R) -> Self
     where
-        L: View + Send + 'static,
-        R: View + Send + 'static,
+        L: IntoView<LV> + Send + 'static,
+        LV: View + Send + 'static,
+        R: IntoView<RV> + Send + 'static,
+        RV: View + Send + 'static,
     {
-        Pair { left, right }
+        Pair {
+            left,
+            right,
+            marker: PhantomData,
+        }
     }
 }
 
-impl<L, R> View for Pair<L, R>
+impl<L, LV, R, RV> View for Pair<L, LV, R, RV>
 where
-    L: View + Send + 'static,
-    R: View + Send + 'static,
+    L: IntoView<LV> + Send + 'static,
+    LV: View + Send + 'static,
+    R: IntoView<RV> + Send + 'static,
+    RV: View + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async {
-            let r = self.left.render(r).await?;
-            let r = self.right.render(r).await?;
+            let r = self.left.into_view().render(r).await?;
+            let r = self.right.into_view().render(r).await?;
             Ok(r)
         })
     }
@@ -157,25 +167,14 @@ macro_rules! view {
     () => (
         ()
     );
-    ($el:expr;) => (
-        $el
+    ($left:expr) => (
+        $left
     );
-    ($el:expr; $last:expr) => (
-        $crate::html::AddChild::add_child($el, $crate::view::IntoView::into_view($last))
+    ($left:expr, $right:expr) => (
+        $crate::view::Pair::new($left, $right)
     );
-    ($el:expr; $next:expr, $($tail:expr),*) => (
-        view![
-            $crate::html::AddChild::add_child($el, $crate::view::IntoView::into_view($next));
-            $($tail),*
-        ]
+    ($left:expr, $($tail:expr),*) => (
+        $crate::view::Pair::new($left, view![$($tail),*])
     );
-    ($el:expr; $($x:expr,)*) => (
-        view![$el; $($x),*]
-    );
-    ($($views:expr),*) => (
-        view![$crate::html::Fragment::default(); $($views),*]
-    );
-    ($($x:expr,)*) => (
-        view![$($x),*]
-    );
+    ($($x:expr,)*) => (view![$($x),*])
 }
