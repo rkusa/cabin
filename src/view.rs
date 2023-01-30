@@ -6,7 +6,6 @@ pub(crate) mod text;
 use std::borrow::Cow;
 use std::fmt::{self, Write};
 use std::future::Future;
-use std::marker::PhantomData;
 use std::pin::Pin;
 
 use self::boxed::BoxedView;
@@ -121,34 +120,25 @@ where
     }
 }
 
-pub struct Pair<L, LV, R, RV> {
+pub struct Pair<L, R> {
     left: L,
     right: R,
-    marker: PhantomData<(LV, RV)>,
 }
 
-impl<L, LV, R, RV> Pair<L, LV, R, RV> {
+impl<L, R> Pair<L, R> {
     pub fn new(left: L, right: R) -> Self
     where
-        L: IntoView<LV> + Send + 'static,
-        LV: View + Send + 'static,
-        R: IntoView<RV> + Send + 'static,
-        RV: View + Send + 'static,
+        L: View + Send + 'static,
+        R: View + Send + 'static,
     {
-        Pair {
-            left,
-            right,
-            marker: PhantomData,
-        }
+        Pair { left, right }
     }
 }
 
-impl<L, LV, R, RV> View for Pair<L, LV, R, RV>
+impl<L, R> View for Pair<L, R>
 where
-    L: IntoView<LV> + Send + 'static,
-    LV: View + Send + 'static,
-    R: IntoView<RV> + Send + 'static,
-    RV: View + Send + 'static,
+    L: View + Send + 'static,
+    R: View + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
@@ -171,10 +161,16 @@ macro_rules! view {
         $left
     );
     ($left:expr, $right:expr) => (
-        $crate::view::Pair::new($left, $right)
+        $crate::view::Pair::new(
+            $crate::view::IntoView::into_view($left),
+            $crate::view::IntoView::into_view($right)
+        )
     );
     ($left:expr, $($tail:expr),*) => (
-        $crate::view::Pair::new($left, view![$($tail),*])
+        $crate::view::Pair::new(
+            $crate::view::IntoView::into_view($left),
+            view![$($tail),*]
+        )
     );
     ($($x:expr,)*) => (view![$($x),*])
 }
