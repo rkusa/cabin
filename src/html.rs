@@ -1,6 +1,7 @@
 mod attributes;
 pub mod elements;
 pub mod events;
+mod fragment;
 mod macros;
 
 use std::borrow::Cow;
@@ -8,6 +9,7 @@ use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
+pub use elements::*;
 pub use macros::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -16,31 +18,8 @@ use self::attributes::{Attribute, Attributes};
 use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
-use crate::view::{IntoView, View, ViewWrapper};
-
-pub fn div<V: View>(content: impl IntoView<V>) -> Html<V, (), ()> {
-    custom("div", content)
-}
-
-pub fn ul<V: View>(content: impl IntoView<V>) -> Html<V, (), ()> {
-    custom("ul", content)
-}
-
-pub fn li<V: View>(content: impl IntoView<V>) -> Html<V, (), ()> {
-    custom("li", content)
-}
-
-pub fn fieldset<V: View>(content: impl IntoView<V>) -> Html<V, (), ()> {
-    custom("fieldset", content)
-}
-
-pub fn button<V: View>(content: impl IntoView<V>) -> Html<V, (), ()> {
-    custom("button", content)
-}
-
-pub fn input() -> Html<ViewWrapper<()>, (), elements::input::Input> {
-    create("input", ())
-}
+use crate::view::{IntoView, View};
+pub use fragment::Fragment;
 
 pub fn custom<V: View>(tag: &'static str, content: impl IntoView<V>) -> Html<V, (), ()> {
     Html {
@@ -52,13 +31,13 @@ pub fn custom<V: View>(tag: &'static str, content: impl IntoView<V>) -> Html<V, 
     }
 }
 
-fn create<V: View, K: Default>(tag: &'static str, content: impl IntoView<V>) -> Html<V, (), K> {
+fn create<V: View, K>(tag: &'static str, kind: K, content: V) -> Html<V, (), K> {
     Html {
         tag,
         attrs: (),
         on_click: None,
-        kind: K::default(),
-        content: content.into_view(),
+        kind,
+        content,
     }
 }
 
@@ -68,6 +47,15 @@ pub struct Html<V, A, K> {
     on_click: Option<(&'static str, String)>,
     kind: K,
     content: V,
+}
+
+pub trait AddChild<C = Self>
+where
+    C: View,
+{
+    type Output;
+
+    fn add_child(self, child: C) -> Self::Output;
 }
 
 impl<V, A, K> Html<V, A, K> {
