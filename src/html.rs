@@ -7,6 +7,7 @@ use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
+pub use elements::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -15,7 +16,6 @@ use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
 use crate::view::{IntoView, View};
-pub use elements::*;
 
 pub fn custom<V: View>(tag: &'static str, content: impl IntoView<V>) -> Html<V, (), ()> {
     Html {
