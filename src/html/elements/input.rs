@@ -4,6 +4,7 @@ use crate::component::registry::ComponentRegistry;
 use crate::html::attributes::Attributes;
 use crate::html::events::InputEvent;
 use crate::html::Html;
+use crate::render::ElementRenderer;
 
 #[derive(Default)]
 pub struct Input {
@@ -20,7 +21,7 @@ impl<V, A> Html<V, A, Input> {
 }
 
 impl Attributes for Input {
-    fn render(&self, r: &mut crate::render::ElementRenderer) -> Result<(), std::fmt::Error> {
+    fn render(&self, r: &mut ElementRenderer) -> Result<(), std::fmt::Error> {
         if let Some(on_input) = &self.on_input {
             r.attribute("data-input", on_input)?;
         }

@@ -1,12 +1,16 @@
 use super::{create, Html};
 
+mod anchor;
 mod input;
 
 #[macro_export]
 macro_rules! element {
     ($dollar:tt, $mod:ident, $name:ident) => {
-        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), ()> {
-            $crate::html::custom(stringify!($name), content)
+        element!($dollar, $mod, $name, ());
+    };
+    ($dollar:tt, $mod:ident, $name:ident, $kind:ty) => {
+        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), $kind> {
+            $crate::html::create(stringify!($name), content.into_view())
         }
 
         mod $mod {
@@ -19,6 +23,10 @@ macro_rules! element {
         }
         pub use $mod::*;
     };
+}
+
+#[macro_export]
+macro_rules! void_element {
     ($dollar:tt, $mod:ident, $name:ident, $kind:ty) => {
         pub fn $name() -> Html<(), (), $kind> {
             create(stringify!($name), ())
@@ -26,6 +34,7 @@ macro_rules! element {
     };
 }
 
+element!($, __a, a, anchor::Anchor);
 element!($, __button, button);
 element!($, __caption, caption);
 element!($, __col, col);
@@ -39,7 +48,7 @@ element!($, __h4, h4);
 element!($, __h5, h5);
 element!($, __h6, h6);
 element!($, __hgroup, hgroup);
-element!($, __input, input, input::Input);
+void_element!($, __input, input, input::Input);
 element!($, __li, li);
 element!($, __table, table);
 element!($, __tbody, tbody);
