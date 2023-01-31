@@ -1,9 +1,9 @@
 use self::internal::BgColor;
 
-pub const BLACK: BgColor = BgColor::custom("black");
+pub const BLACK: BgColor = BgColor("black");
 
 pub fn color(color: &'static str) -> BgColor {
-    BgColor::custom(color)
+    BgColor(color)
 }
 
 mod internal {
@@ -11,13 +11,7 @@ mod internal {
 
     use crate::Style;
 
-    pub struct BgColor(&'static str);
-
-    impl BgColor {
-        pub const fn custom(color: &'static str) -> Self {
-            Self(color)
-        }
-    }
+    pub struct BgColor(pub(super) &'static str);
 
     impl Style for BgColor {
         fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

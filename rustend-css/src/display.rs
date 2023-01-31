@@ -70,7 +70,9 @@ mod internal {
 
     use crate::Style;
 
-    pub struct Display(pub(crate) &'static str);
+    /// Element's _display type_ ([`display`]).
+    /// [`display`]: https://w3c.github.io/csswg-drafts/css-display/#the-display-properties
+    pub struct Display(pub(super) &'static str);
 
     impl Style for Display {
         fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
