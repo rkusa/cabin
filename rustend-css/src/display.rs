@@ -2,67 +2,109 @@
 
 use internal::Display;
 
-/// Displays the element as `block` (css `display` property).
+/// ```
+/// display: block;
+/// ```
 pub const BLOCK: Display = Display("block");
 
-/// Displays the element as `inline-block` (css `display` property).
+/// ```
+/// display: inline-block;
+/// ```
 pub const INLINE_BLOCK: Display = Display("inline-block");
 
-/// Displays the element as `inline` (css `display` property).
+/// ```
+/// display: inline;
+/// ```
 pub const INLINE: Display = Display("inline");
 
-/// Displays the element as `flex` (css `display` property).
+/// ```
+/// display: flex;
+/// ```
 pub const FLEX: Display = Display("flex");
 
-/// Displays the element as `inline-flex` (css `display` property).
+/// ```
+/// display: inline-flex;
+/// ```
 pub const INLINE_FLEX: Display = Display("inline-flex");
 
-/// Displays the element as `table` (css `display` property).
+/// ```
+/// display: table;
+/// ```
 pub const TABLE: Display = Display("table");
 
-/// Displays the element as `inline-table` (css `display` property).
+/// ```
+/// display: inline-table;
+/// ```
 pub const INLINE_TABLE: Display = Display("inline-table");
 
-/// Displays the element as `table-caption` (css `display` property).
+/// ```
+/// display: table-caption;
+/// ```
 pub const TABLE_CAPTION: Display = Display("table-caption");
 
-/// Displays the element as `table-cell` (css `display` property).
+/// ```
+/// display: table-cell;
+/// ```
 pub const TABLE_CELL: Display = Display("table-cell");
 
-/// Displays the element as `table-column` (css `display` property).
+/// ```
+/// display: table-column;
+/// ```
 pub const TABLE_COLUMN: Display = Display("table-column");
 
-/// Displays the element as `table-column-group` (css `display` property).
+/// ```
+/// display: table-column-group;
+/// ```
 pub const TABLE_COLUMN_GROUP: Display = Display("table-column-group");
 
-/// Displays the element as `table-footer-group` (css `display` property).
+/// ```
+/// display: table-footer-group;
+/// ```
 pub const TABLE_FOOTER_GROUP: Display = Display("table-footer-group");
 
-/// Displays the element as `table-header-group` (css `display` property).
+/// ```
+/// display: table-header-group;
+/// ```
 pub const TABLE_HEADER_GROUP: Display = Display("table-header-group");
 
-/// Displays the element as `table-row-group` (css `display` property).
+/// ```
+/// display: table-row-group;
+/// ```
 pub const TABLE_ROW_GROUP: Display = Display("table-row-group");
 
-/// Displays the element as `table-row` (css `display` property).
+/// ```
+/// display: table-row;
+/// ```
 pub const TABLE_ROW: Display = Display("table-row");
 
-/// Displays the element as `flow-root` (css `display` property).
+/// ```
+/// display: flow-root;
+/// ```
 pub const FLOW_ROOT: Display = Display("flow-root");
 
-/// Displays the element as `grid` (css `display` property).
+/// ```
+/// display: grid;
+/// ```
 pub const GRID: Display = Display("grid");
 
-/// Displays the element as `inline-grid` (css `display` property).
+/// ```
+/// display: inline-grid;
+/// ```
 pub const INLINE_GRID: Display = Display("inline-grid");
 
-/// Displays the element as `contents` (css `display` property).
+/// ```
+/// display: contents;
+/// ```
 pub const CONTENTS: Display = Display("contents");
 
-/// Displays the element as `list-item` (css `display` property).
+/// ```
+/// display: list-item;
+/// ```
 pub const LIST_ITEM: Display = Display("list-item");
 
-/// Displays the element as `none` (css `display` property).
+/// ```
+/// display: none;
+/// ```
 pub const HIDDEN: Display = Display("none");
 
 mod internal {

@@ -2,13 +2,19 @@
 
 use internal::AspectRatio;
 
-/// No preferred aspect ratio.
+/// ```
+/// aspect-ratio: auto;
+/// ```
 pub const AUTO: AspectRatio = AspectRatio("auto");
 
-/// Preferred aspect ratio of 1 / 1.
+/// ```
+/// aspect-ratio: 1 / 1;
+/// ```
 pub const SQUARE: AspectRatio = AspectRatio("1 / 1");
 
-/// Preferred aspect ratio of 19 / 9.
+/// ```
+/// aspect-ratio: 19 / 9;
+/// ```
 pub const VIDEO: AspectRatio = AspectRatio("16 / 9");
 
 // Custom preferred aspect ratio. Examples: "4 / 3", "0.5".

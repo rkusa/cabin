@@ -2,6 +2,7 @@ pub mod aspect;
 pub mod bg;
 mod class_name;
 pub mod display;
+pub mod position;
 mod pseudo;
 pub mod registry;
 pub mod text;
@@ -11,6 +12,7 @@ use std::hash::Hasher;
 
 pub use class_name::ClassName;
 pub use display::*;
+pub use position::*;
 pub use rustend_macros::css;
 
 pub trait Style {
