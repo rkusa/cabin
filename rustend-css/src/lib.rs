@@ -1,8 +1,5 @@
-pub mod aspect;
 pub mod bg;
 mod class_name;
-pub mod display;
-pub mod position;
 mod pseudo;
 pub mod registry;
 pub mod text;
@@ -11,9 +8,14 @@ use std::fmt;
 use std::hash::Hasher;
 
 pub use class_name::ClassName;
-pub use display::*;
-pub use position::*;
 pub use rustend_macros::css;
+pub use utilities::*;
+
+pub mod utilities {
+    use super::Style;
+
+    include!(concat!(env!("OUT_DIR"), "/rustend-css-build.rs"));
+}
 
 pub trait Style {
     fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
