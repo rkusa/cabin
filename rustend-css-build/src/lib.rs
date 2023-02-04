@@ -58,6 +58,15 @@ pub fn build() -> Result<(), Box<dyn std::error::Error>> {
         ],
     )?;
 
+    // Flexbox & Grid
+
+    b.add_utility(
+        "FlexBasis",
+        Some("basis"),
+        |v| format!("flex-basis: {v};"),
+        Spacing,
+    )?;
+
     Ok(())
 }
 
@@ -71,27 +80,23 @@ impl<'a> Builder<'a> {
         ident: &str,
         prefix: Option<&str>,
         template: impl Fn(&str) -> String,
-        variants: impl IntoIterator<Item = (&'static str, &'static str)>,
+        variants: impl Variants,
     ) -> Result<(), io::Error> {
         let mod_ident = prefix
             .map(Cow::Borrowed)
             .unwrap_or_else(|| Cow::Owned(ident.to_lowercase()));
         writeln!(self.out, r#"pub mod {mod_ident} {{"#,)?;
         {
-            writeln!(self.out, r#"use super::Style;"#)?;
-            for (name, value) in variants {
-                let name = name.to_uppercase().replace('-', "_");
-                writeln!(self.out, r#"/// ```css"#)?;
-                writeln!(self.out, r#"/// {}"#, template(value))?;
-                writeln!(self.out, r#"/// ```"#)?;
-                writeln!(
-                    self.out,
-                    r#"pub const {name}: internal::{ident} = internal::{ident}("{value}");"#
-                )?;
-            }
+            writeln!(self.out, r#"#[allow(unused_imports)]"#)?;
+            writeln!(self.out, r#"use super::{{Length, Style}};"#)?;
+            variants.write_variants(ident, &template, self.out)?;
             writeln!(self.out, r#"mod internal {{"#)?;
             {
-                writeln!(self.out, r#"pub struct {ident}(pub(super) &'static str);"#)?;
+                writeln!(
+                    self.out,
+                    r#"pub struct {ident}(pub(super) {});"#,
+                    variants.inner_type()
+                )?;
                 writeln!(self.out, r#"impl super::Style for {ident} {{"#)?;
                 {
                     writeln!(
@@ -113,6 +118,122 @@ impl<'a> Builder<'a> {
             writeln!(self.out, r#"pub use {mod_ident}::*;"#)?;
         }
 
+        Ok(())
+    }
+}
+
+trait Variants {
+    fn write_variants<T: Fn(&str) -> String>(
+        &self,
+        ident: &str,
+        template: T,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()>;
+
+    fn inner_type(&self) -> &'static str {
+        "&'static str"
+    }
+}
+
+struct Spacing;
+
+impl Variants for Spacing {
+    fn write_variants<T: Fn(&str) -> String>(
+        &self,
+        ident: &str,
+        template: T,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        for (name, value, formatted) in [
+            ("ZERO", "super::Length::Px(0.0)", "0"),
+            ("auto", "super::Length::Auto", "auto"),
+            ("px", "super::Length::Px(1.0)", "1px"),
+            ("full", "super::Length::Percent(100.0)", "100%"),
+        ] {
+            let name = name.to_uppercase().replace('-', "_");
+            writeln!(out, r#"/// ```css"#)?;
+            writeln!(out, r#"/// {}"#, (template)(formatted))?;
+            writeln!(out, r#"/// ```"#)?;
+            writeln!(
+                out,
+                r#"pub const {name}: internal::{ident} = internal::{ident}({value});"#
+            )?;
+        }
+
+        writeln!(out, r#"/// Multiple of `0.25rem` (`4px` by default)."#,)?;
+        writeln!(out, r#"/// ```css"#)?;
+        writeln!(out, r#"/// {}"#, (template)("{unit * 0.25}rem"))?;
+        writeln!(out, r#"/// ```"#)?;
+        writeln!(out, r#"pub fn unit(unit: u16) -> internal::{ident} {{"#)?;
+        writeln!(
+            out,
+            r#"  internal::{ident}(super::Length::Rem(f32::from(unit) * 0.25))"#
+        )?;
+        writeln!(out, r#"}}"#)?;
+
+        writeln!(out, r#"/// Multiple of `0.25rem` (`4px` by default)."#,)?;
+        writeln!(out, r#"/// ```css"#)?;
+        writeln!(out, r#"/// {}"#, (template)("{unit * 0.25}rem"))?;
+        writeln!(out, r#"/// ```"#)?;
+        writeln!(out, r#"pub fn unitf(unit: f32) -> internal::{ident} {{"#)?;
+        writeln!(
+            out,
+            r#"  internal::{ident}(super::Length::Rem(unit * 0.25))"#
+        )?;
+        writeln!(out, r#"}}"#)?;
+
+        writeln!(out, r#"/// ```css"#)?;
+        writeln!(out, r#"/// {}"#, (template)("{rem}rem"))?;
+        writeln!(out, r#"/// ```"#)?;
+        writeln!(out, r#"pub fn rem(rem: f32) -> internal::{ident} {{"#)?;
+        writeln!(out, r#"  internal::{ident}(super::Length::Rem(rem))"#)?;
+        writeln!(out, r#"}}"#)?;
+
+        writeln!(out, r#"/// ```css"#)?;
+        writeln!(out, r#"/// {}"#, (template)("{px}px"))?;
+        writeln!(out, r#"/// ```"#)?;
+        writeln!(out, r#"pub fn px(px: f32) -> internal::{ident} {{"#)?;
+        writeln!(out, r#"  internal::{ident}(super::Length::Px(px))"#)?;
+        writeln!(out, r#"}}"#)?;
+
+        writeln!(out, r#"/// ```css"#)?;
+        writeln!(out, r#"/// {}"#, (template)("{percent}%"))?;
+        writeln!(out, r#"/// ```"#)?;
+        writeln!(
+            out,
+            r#"pub fn percent(percent: f32) -> internal::{ident} {{"#
+        )?;
+        writeln!(
+            out,
+            r#"  internal::{ident}(super::Length::Percent(percent))"#
+        )?;
+        writeln!(out, r#"}}"#)?;
+
+        Ok(())
+    }
+
+    fn inner_type(&self) -> &'static str {
+        "super::Length"
+    }
+}
+
+impl<const N: usize> Variants for [(&'static str, &'static str); N] {
+    fn write_variants<T: Fn(&str) -> String>(
+        &self,
+        ident: &str,
+        template: T,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        for (name, value) in self.iter() {
+            let name = name.to_uppercase().replace('-', "_");
+            writeln!(out, r#"/// ```css"#)?;
+            writeln!(out, r#"/// {}"#, (template)(value))?;
+            writeln!(out, r#"/// ```"#)?;
+            writeln!(
+                out,
+                r#"pub const {name}: internal::{ident} = internal::{ident}("{value}");"#
+            )?;
+        }
         Ok(())
     }
 }

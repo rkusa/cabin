@@ -12,7 +12,7 @@ pub use rustend_macros::css;
 pub use utilities::*;
 
 pub mod utilities {
-    use super::Style;
+    use super::{Length, Style};
 
     include!(concat!(env!("OUT_DIR"), "/rustend-css-build.rs"));
 }
@@ -42,15 +42,19 @@ pub trait Style {
 }
 
 pub enum Length {
+    Auto,
     Px(f32),
     Rem(f32),
+    Percent(f32),
 }
 
 impl fmt::Display for Length {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Length::Auto => f.write_str("auto"),
             Length::Px(v) => write!(f, "{v}px"),
             Length::Rem(v) => write!(f, "{v}rem"),
+            Length::Percent(v) => write!(f, "{v}%"),
         }
     }
 }
