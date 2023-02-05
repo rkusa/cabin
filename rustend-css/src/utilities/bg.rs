@@ -1,4 +1,4 @@
-//! Set the background color an element.
+//! Set the background color an element (`background-color`).
 //!
 //! <https://developer.mozilla.org/en-US/docs/Web/CSS/background-color>
 

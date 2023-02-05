@@ -35,10 +35,20 @@ pub trait Style {
 }
 
 pub struct Property<V = &'static str>(pub(crate) &'static str, pub(crate) V);
+pub struct PropertyTwice<V = &'static str>(
+    pub(crate) &'static str,
+    pub(crate) &'static str,
+    pub(crate) V,
+);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Length {
     Auto,
+    MinContent,
+    MaxContent,
+    FitContent,
+    Vw(u16),
+    Vh(u16),
     Px(f32),
     Rem(f32),
     Percent(f32),
@@ -47,7 +57,8 @@ pub enum Length {
 impl Length {
     fn is_zero(&self) -> bool {
         match self {
-            Length::Auto => false,
+            Length::Auto | Length::MinContent | Length::MaxContent | Length::FitContent => false,
+            Length::Vw(v) | Length::Vh(v) => *v == 0,
             Length::Px(v) | Length::Rem(v) | Length::Percent(v) => v.abs() < f32::EPSILON,
         }
     }
@@ -61,6 +72,11 @@ impl fmt::Display for Length {
 
         match self {
             Length::Auto => f.write_str("auto"),
+            Length::MinContent => f.write_str("min-content"),
+            Length::MaxContent => f.write_str("max-content"),
+            Length::FitContent => f.write_str("fit-content"),
+            Length::Vw(v) => write!(f, "{v}vw"),
+            Length::Vh(v) => write!(f, "{v}vh"),
             Length::Px(v) => write!(f, "{v}px"),
             Length::Rem(v) => write!(f, "{v}rem"),
             Length::Percent(v) => write!(f, "{v}%"),
@@ -71,5 +87,13 @@ impl fmt::Display for Length {
 impl<V: fmt::Display> Style for Property<V> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.1)
+    }
+}
+
+impl<V: fmt::Display> Style for PropertyTwice<V> {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        writeln!(f, "{}: {};", self.0, self.2)?;
+        writeln!(f, "{}: {};", self.1, self.2)?;
+        Ok(())
     }
 }

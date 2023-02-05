@@ -29,16 +29,31 @@ pub fn unitf(x: f32) -> Property<Length> {
 }
 
 /// `flex-basis: {x}rem;`
-pub fn rem(x: f32) -> Property<Length> {
+pub fn rem(x: i16) -> Property<Length> {
+    Property(FLEX_BASIS, Length::Rem(f32::from(x)))
+}
+
+/// `flex-basis: {x}rem;`
+pub fn remf(x: f32) -> Property<Length> {
     Property(FLEX_BASIS, Length::Rem(x))
 }
 
 /// `flex-basis: {x}px;`
-pub fn px(x: f32) -> Property<Length> {
+pub fn px(x: i16) -> Property<Length> {
+    Property(FLEX_BASIS, Length::Px(f32::from(x)))
+}
+
+/// `flex-basis: {x}px;`
+pub fn pxf(x: f32) -> Property<Length> {
     Property(FLEX_BASIS, Length::Px(x))
 }
 
 /// `flex-basis: {x}%;`
-pub fn percent(x: f32) -> Property<Length> {
+pub fn percent(x: i16) -> Property<Length> {
+    Property(FLEX_BASIS, Length::Percent(f32::from(x)))
+}
+
+/// `flex-basis: {x}%;`
+pub fn percentf(x: f32) -> Property<Length> {
     Property(FLEX_BASIS, Length::Percent(x))
 }
