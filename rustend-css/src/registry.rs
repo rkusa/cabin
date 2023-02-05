@@ -63,7 +63,7 @@ impl StyleRegistry {
         for styles in grouped.into_values() {
             let pos = self.out.len();
 
-            write!(&mut self.out, "         ").unwrap();
+            write!(&mut self.out, "          ").unwrap();
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.get(0) {
                 style.selector_prefix(&mut self.out).unwrap();
@@ -78,14 +78,14 @@ impl StyleRegistry {
             hasher.write(self.out[pos..].as_bytes());
             let hash = hasher.finish() as u32;
 
-            // write actual class name
-            let name = format!("{hash:x}");
+            // write actual class name, prepend `_` as it class names must not start with a number
+            let name = format!("_{hash:x}");
 
             if !self.hashes.insert(hash) {
                 // already known, remove just written stuff from output
                 self.out.truncate(pos);
             } else {
-                let offset = pos + 8 - name.len();
+                let offset = pos + 9 - name.len();
                 self.out.replace_range(offset..offset + 1, ".");
                 self.out
                     .replace_range(offset + 1..offset + 1 + name.len(), &name);
