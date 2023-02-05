@@ -10,6 +10,7 @@ use http_body::{Body as HttpBody, Empty, Full};
 use mime::Mime;
 use rustend::component::registry::ComponentRegistry;
 use rustend::SERVER_COMPONENT_JS;
+use rustend_css::registry::StyleRegistry;
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -52,6 +53,8 @@ where
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         let _ = ComponentRegistry::global();
+        let _ = StyleRegistry::global();
+
         let mut service = self.service.clone();
         Box::pin(async move {
             let path = cleanup_path(req.uri().path());
