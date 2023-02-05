@@ -64,7 +64,8 @@ impl StyleRegistry {
             let pos = self.out.len();
 
             write!(&mut self.out, "         ").unwrap();
-            for style in &styles {
+            // already grouped by variants, so just writing it once (from the first), is enough
+            if let Some(style) = styles.get(0) {
                 style.selector_prefix(&mut self.out).unwrap();
             }
             writeln!(&mut self.out, " {{").unwrap();

@@ -23,6 +23,22 @@ fn main() {
         .unwrap();
     }
 
+    // background-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("background-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(
+            out,
+            r#"/// `background-color: {color};` <b style="color:{color}">⏺</b>"#
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: Property = Property(BACKGROUND_COLOR, "{color}");"#
+        )
+        .unwrap();
+    }
+
     // font-size
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("font-size.rs");
     let out = &mut File::create(path).unwrap();

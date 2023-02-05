@@ -23,7 +23,7 @@ async fn counter(count: u32) -> impl View {
                 css::BLOCK,
                 css::text::BLACK,
                 css::text::SM,
-                // css::bg::BLACK.hover(),
+                css::bg::BLACK.hover(),
                 css::text::WHITE.hover(),
                 css::text::XS.hover().focus(),
             ) + (count == 0).then_some(css!(css::text::color("red"))),
