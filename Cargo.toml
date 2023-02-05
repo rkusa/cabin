@@ -6,7 +6,6 @@ edition = "2021"
 [workspace]
 members = [
     "rustend-css",
-    "rustend-css-build",
     "rustend-macros",
     "rustend-service",
 ]
