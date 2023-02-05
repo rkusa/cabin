@@ -1,22 +1,8 @@
 use std::borrow::Cow;
-use std::convert::Infallible;
-use std::future::ready;
 use std::net::SocketAddr;
-use std::str::FromStr;
 
-use hyper::service::make_service_fn;
 use rustend::{html, view, View};
 use serde::{Deserialize, Serialize};
-
-#[tokio::main]
-async fn main() {
-    let app = rustend_service::app(app);
-    let addr = SocketAddr::from_str("127.0.0.1:3000").unwrap();
-    let server = hyper::Server::bind(&addr)
-        .serve(make_service_fn(|_| ready(Ok::<_, Infallible>(app.clone()))));
-    println!("Listening on http://{addr}");
-    server.await.unwrap();
-}
 
 async fn app() -> impl View {
     items(Items(vec![
@@ -71,4 +57,23 @@ async fn items(items: Items) -> impl View {
         ),
         html::div(html::button("add").on_click(add, ())),
     ]
+}
+
+#[tokio::main]
+async fn main() {
+    let server = axum::Router::new()
+        .route(
+            "/",
+            axum::routing::get(|| async {
+                axum::response::Html(rustend::render(app().await).await.unwrap())
+            }),
+        )
+        .layer(rustend_service::framework());
+
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    println!("Listening on http://{addr}");
+    axum::Server::bind(&addr)
+        .serve(server.into_make_service())
+        .await
+        .unwrap();
 }

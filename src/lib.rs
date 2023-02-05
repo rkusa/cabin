@@ -18,5 +18,9 @@ pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 pub async fn render(view: impl View) -> Result<String, fmt::Error> {
     let mut r = Renderer::new();
     r = view.render(r).await?;
-    Ok(r.end().view)
+    let html = r.end().view;
+    const STYLESHEET: &str = r#"<link rel="stylesheet" href="/styles.css">"#;
+    const SCRIPT: &str = r#"<script src="/server-component.js" async></script>"#;
+    let html = format!("{STYLESHEET}\n{SCRIPT}\n{html}");
+    Ok(html)
 }
