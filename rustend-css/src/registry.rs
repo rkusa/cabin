@@ -1,9 +1,10 @@
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
-use std::fmt::{self, Write};
+use std::collections::{HashMap, HashSet};
+use std::fmt::Write;
 use std::hash::Hasher;
 
 use once_cell::race::OnceBox;
+use twox_hash::XxHash32;
 
 use super::Style;
 
@@ -14,6 +15,7 @@ static REGISTRY: OnceBox<StyleRegistry> = OnceBox::new();
 
 pub struct StyleRegistry {
     out: String,
+    hashes: HashSet<u32>,
 }
 
 impl StyleRegistry {
@@ -21,6 +23,7 @@ impl StyleRegistry {
         REGISTRY.get_or_init(|| {
             let mut registry = Self {
                 out: Default::default(),
+                hashes: Default::default(),
             };
 
             #[cfg(feature = "preflight")]
@@ -42,24 +45,11 @@ impl StyleRegistry {
         })
     }
 
-    pub fn add(&mut self, name: &str, styles: &[&dyn Style]) {
-        write!(self.out, "{}", StyleWritter { name, styles }).unwrap();
-    }
+    pub fn add(&mut self, styles: &[&dyn Style]) -> String {
+        // TODO: sort before creating hash?
+        let mut all_names = String::with_capacity(8);
 
-    pub fn style_sheet(&self) -> &str {
-        &self.out
-    }
-}
-
-struct StyleWritter<'s> {
-    name: &'s str,
-    styles: &'s [&'s dyn Style],
-}
-
-impl<'s> fmt::Display for StyleWritter<'s> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let grouped = self
-            .styles
+        let grouped = styles
             .iter()
             .fold(HashMap::<_, Vec<_>>::new(), |mut grouped, style| {
                 let mut hasher = DefaultHasher::new();
@@ -69,18 +59,47 @@ impl<'s> fmt::Display for StyleWritter<'s> {
                 grouped
             });
 
+        // TODO: unwraps?
         for styles in grouped.into_values() {
-            write!(f, ".{}", self.name).unwrap();
+            let pos = self.out.len();
+
+            write!(&mut self.out, "         ").unwrap();
             for style in &styles {
-                style.selector_prefix(f)?;
+                style.selector_prefix(&mut self.out).unwrap();
             }
-            writeln!(f, " {{").unwrap();
+            writeln!(&mut self.out, " {{").unwrap();
             for style in &styles {
-                style.declarations(f)?;
+                style.declarations(&mut self.out).unwrap();
             }
-            writeln!(f, "}}").unwrap();
+            writeln!(&mut self.out, "}}").unwrap();
+
+            let mut hasher = XxHash32::default();
+            hasher.write(self.out[pos..].as_bytes());
+            let hash = hasher.finish() as u32;
+
+            // write actual class name
+            let name = format!("{hash:x}");
+
+            if !self.hashes.insert(hash) {
+                // already known, remove just written stuff from output
+                self.out.truncate(pos);
+            } else {
+                let offset = pos + 8 - name.len();
+                self.out.replace_range(offset..offset + 1, ".");
+                self.out
+                    .replace_range(offset + 1..offset + 1 + name.len(), &name);
+            }
+
+            if !all_names.is_empty() {
+                all_names.push(' ');
+            }
+            all_names.push_str(&name);
         }
 
-        Ok(())
+        all_names
+    }
+
+    pub fn style_sheet(&self) -> &str {
+        &self.out
     }
 }

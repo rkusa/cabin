@@ -37,7 +37,7 @@ pub const fn size(font_size: Length, line_height: LineHeight) -> FontSize {
 }
 
 impl Style for FontSize {
-    fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "font-size: {};", self.font_size)?;
         writeln!(f, "line-height: {};", self.line_height)?;
         Ok(())

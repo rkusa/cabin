@@ -1,4 +1,3 @@
-pub mod bg;
 mod class_name;
 mod pseudo;
 pub mod registry;
@@ -12,9 +11,9 @@ pub use rustend_macros::css;
 pub use utilities::*;
 
 pub trait Style {
-    fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result;
 
-    fn selector_prefix(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn selector_prefix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
         Ok(())
     }
 
@@ -70,7 +69,7 @@ impl fmt::Display for Length {
 }
 
 impl<V: fmt::Display> Style for Property<V> {
-    fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.1)
     }
 }

@@ -1,6 +1,3 @@
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
@@ -245,23 +242,23 @@ pub fn css(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as Styles);
     // dbg!(&input);
 
-    // TODO: sort before creating hash
-    let mut hasher = DefaultHasher::new();
-    input.hash(&mut hasher);
-    let name = format!("c{:x}", hasher.finish());
-
     // Partition into ones without any modifier, and the ones with modifieres
     let styles = input.styles.into_iter();
 
     quote! {
         {
+            static NAME: ::once_cell::sync::OnceCell<String> = ::once_cell::sync::OnceCell::new();
+
             #[::rustend::private::linkme::distributed_slice(::rustend_css::registry::STYLES)]
             #[linkme(crate = ::rustend::private::linkme)]
             fn __register(r: &mut ::rustend_css::registry::StyleRegistry) {
-                r.add(#name, &[#(&#styles,)*]);
+                let name = r.add(&[#(&#styles,)*]);
+                NAME.set(name).ok();
             }
 
-            ::rustend_css::ClassName(Some(::std::borrow::Cow::Borrowed(#name)))
+            ::rustend_css::ClassName(Some(::std::borrow::Cow::Borrowed(
+                NAME.get().map(|s| s.as_str()).unwrap_or_default()
+            )))
         }
     }
     .into()

@@ -69,19 +69,3 @@ pub const LIST_ITEM: Property = Property(DISPLAY, "list-item");
 
 /// `display: none;`
 pub const HIDDEN: Property = Property(DISPLAY, "none");
-
-mod internal {
-    use std::fmt;
-
-    use crate::Style;
-
-    /// Element's _display type_ ([`display`]).
-    /// [`display`]: https://w3c.github.io/csswg-drafts/css-display/#the-display-properties
-    pub struct Display(pub(super) &'static str);
-
-    impl Style for Display {
-        fn declarations(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            writeln!(f, "display: {};", self.0)
-        }
-    }
-}
