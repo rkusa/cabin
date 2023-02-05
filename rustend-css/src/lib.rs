@@ -2,7 +2,6 @@ pub mod bg;
 mod class_name;
 mod pseudo;
 pub mod registry;
-pub mod text;
 mod utilities;
 
 use std::fmt;
@@ -38,6 +37,7 @@ pub trait Style {
 
 pub struct Property<V = &'static str>(pub(crate) &'static str, pub(crate) V);
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Length {
     Auto,
     Px(f32),

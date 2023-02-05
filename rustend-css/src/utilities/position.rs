@@ -6,27 +6,17 @@ use crate::Property;
 
 const POSITION: &str = "position";
 
-/// ```
-/// position: static;
-/// ```
+/// `position: static;`
 pub const STATIC: Property = Property(POSITION, "static");
 
-/// ```
-/// position: relative;
-/// ```
+/// `position: relative;`
 pub const RELATIVE: Property = Property(POSITION, "relative");
 
-/// ```
-/// position: absolute;
-/// ```
+/// `position: absolute;`
 pub const ABSOLUTE: Property = Property(POSITION, "absolute");
 
-/// ```
-/// position: sticky;
-/// ```
+/// `position: sticky;`
 pub const STICKY: Property = Property(POSITION, "sticky");
 
-/// ```
-/// position: fixed;
-/// ```
+/// `position: fixed;`
 pub const FIXED: Property = Property(POSITION, "fixed");

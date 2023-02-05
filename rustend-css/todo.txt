@@ -63,7 +63,6 @@ Sizing
 Typography
     
     Font Family
-    Font Size
     Font Smoothing
     Font Style
     Font Weight
