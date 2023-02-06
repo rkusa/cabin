@@ -1,0 +1,66 @@
+//! Set the padding area on all four sides of an element (`padding`).
+//!
+//! <https://developer.mozilla.org/en-US/docs/Web/CSS/padding>
+
+use crate::{Length, Property};
+
+const PADDING: &str = "padding";
+
+/// `padding: 0;`
+pub const ZERO: Property<Length> = Property(PADDING, Length::Px(0.0));
+
+/// `padding: auto;`
+pub const AUTO: Property<Length> = Property(PADDING, Length::Auto);
+
+/// `padding: 1px;`
+pub const PX: Property<Length> = Property(PADDING, Length::Px(1.0));
+
+/// Multiple of `0.25rem` (`4px` by default): `padding: {x * 0.25}rem;`
+pub fn unit(x: u16) -> Property<Length> {
+    Property(PADDING, Length::Rem(f32::from(x) * 0.25))
+}
+
+/// Multiple of `0.25rem` (`4px` by default): `padding: {x * 0.25}rem;`
+pub fn unitf(x: f32) -> Property<Length> {
+    Property(PADDING, Length::Rem(x * 0.25))
+}
+
+/// `padding: {x}rem;`
+pub fn rem(x: i16) -> Property<Length> {
+    Property(PADDING, Length::Rem(f32::from(x)))
+}
+
+/// `padding: {x}rem;`
+pub fn remf(x: f32) -> Property<Length> {
+    Property(PADDING, Length::Rem(x))
+}
+
+/// `padding: {x}px;`
+pub fn px(x: i16) -> Property<Length> {
+    Property(PADDING, Length::Px(f32::from(x)))
+}
+
+/// `padding: {x}px;`
+pub fn pxf(x: f32) -> Property<Length> {
+    Property(PADDING, Length::Px(x))
+}
+
+/// `padding: {x}%;`
+pub fn percent(x: i16) -> Property<Length> {
+    Property(PADDING, Length::Percent(f32::from(x)))
+}
+
+/// `padding: {x}%;`
+pub fn percentf(x: f32) -> Property<Length> {
+    Property(PADDING, Length::Percent(x))
+}
+
+/// `padding: {x}vw;`
+pub fn vw(x: u16) -> Property<Length> {
+    Property(PADDING, Length::Vw(x))
+}
+
+/// `padding: {x}vh;`
+pub fn vh(x: u16) -> Property<Length> {
+    Property(PADDING, Length::Vh(x))
+}

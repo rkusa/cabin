@@ -11,7 +11,14 @@ pub mod mr;
 pub mod mt;
 pub mod mx;
 pub mod my;
+pub mod p;
+pub mod pb;
+pub mod pl;
 pub mod position;
+pub mod pr;
+pub mod pt;
+pub mod px;
+pub mod py;
 pub mod text;
 pub mod w;
 
