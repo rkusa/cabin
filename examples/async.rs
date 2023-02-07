@@ -2,11 +2,15 @@ use std::borrow::Cow;
 use std::net::SocketAddr;
 
 use html::events::InputEvent;
-use rustend::{html, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    search(Search::new("Ge")).await
+    view![
+        rustend_stylesheets(),
+        rustend_scripts(),
+        search(Search::new("Ge")).await
+    ]
 }
 
 #[derive(Default, Hash, Serialize, Deserialize)]

@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use rustend::{html, view, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 
 async fn app() -> impl View {
-    counter(0).await
+    view![rustend_stylesheets(), rustend_scripts(), counter(0).await]
 }
 
 #[rustend::component]

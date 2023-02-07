@@ -1,11 +1,15 @@
 use std::net::SocketAddr;
 
 use rustend::previous::previous;
-use rustend::{html, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    level1(Entry::default()).await
+    view![
+        rustend_stylesheets(),
+        rustend_scripts(),
+        level1(Entry::default()).await
+    ]
 }
 
 #[derive(Debug, Default, Hash, Serialize, Deserialize)]

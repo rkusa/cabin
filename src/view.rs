@@ -34,7 +34,7 @@ where
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
-pub trait View {
+pub trait View: Send {
     type Future: Future<Output = Result<Renderer, fmt::Error>> + Send;
     fn render(self, r: Renderer) -> Self::Future;
 }
@@ -71,6 +71,7 @@ impl View for () {
     }
 }
 
+// TODO: escape html!
 impl<'a> View for &'a str {
     type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
 

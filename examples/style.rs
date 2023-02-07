@@ -1,10 +1,10 @@
 use std::net::SocketAddr;
 
-use rustend::{html, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use rustend_css::{self as css, css, Style};
 
 async fn app() -> impl View {
-    counter(0).await
+    view![rustend_stylesheets(), rustend_scripts(), counter(0).await]
 }
 
 #[rustend::component]

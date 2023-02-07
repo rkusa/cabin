@@ -1,21 +1,25 @@
 use std::borrow::Cow;
 use std::net::SocketAddr;
 
-use rustend::{html, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    items(Items(vec![
-        Item {
-            id: 1,
-            name: "first".into(),
-        },
-        Item {
-            id: 2,
-            name: "second".into(),
-        },
-    ]))
-    .await
+    view![
+        rustend_stylesheets(),
+        rustend_scripts(),
+        items(Items(vec![
+            Item {
+                id: 1,
+                name: "first".into(),
+            },
+            Item {
+                id: 2,
+                name: "second".into(),
+            },
+        ]))
+        .await
+    ]
 }
 
 #[derive(Hash, Serialize, Deserialize)]

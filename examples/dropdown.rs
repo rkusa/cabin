@@ -2,11 +2,11 @@ use std::borrow::Cow;
 use std::net::SocketAddr;
 
 use rustend::previous::previous;
-use rustend::{html, view, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    root(2).await
+    view![rustend_stylesheets(), rustend_scripts(), root(2).await]
 }
 
 #[rustend::component]

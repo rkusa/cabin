@@ -15,12 +15,18 @@ pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
+// TODO: move behind feature flag?
+pub fn rustend_stylesheets() -> impl View {
+    r#"<link rel="stylesheet" href="/styles.css">"#
+}
+
+pub fn rustend_scripts() -> impl View {
+    r#"<script src="/server-component.js" async></script>"#
+}
+
 pub async fn render(view: impl View) -> Result<String, fmt::Error> {
     let mut r = Renderer::new();
     r = view.render(r).await?;
     let html = r.end().view;
-    const STYLESHEET: &str = r#"<link rel="stylesheet" href="/styles.css">"#;
-    const SCRIPT: &str = r#"<script src="/server-component.js" async></script>"#;
-    let html = format!("{STYLESHEET}\n{SCRIPT}\n{html}");
     Ok(html)
 }

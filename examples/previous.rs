@@ -1,10 +1,14 @@
 use std::net::SocketAddr;
 
 use rustend::previous::previous;
-use rustend::{html, view, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
+
+async fn app() -> impl View {
+    view![rustend_stylesheets(), rustend_scripts(), root(true).await]
+}
 
 #[rustend::component]
-async fn app(enabled: bool) -> impl View {
+async fn root(enabled: bool) -> impl View {
     async fn toggle(enabled: bool, _: ()) -> bool {
         !enabled
     }
@@ -54,7 +58,7 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app(true).await).await.unwrap())
+                axum::response::Html(rustend::render(app().await).await.unwrap())
             }),
         )
         .layer(rustend_service::framework());
