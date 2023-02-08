@@ -19,6 +19,7 @@ async fn root(enabled: bool) -> impl View {
     }
 
     view![
+        // TODO: toggle doesn't work
         html::div(if enabled {
             view![
                 html::div![counter(0), " (state reset on parent rerender)"],

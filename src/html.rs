@@ -27,7 +27,7 @@ pub fn custom<V: View>(tag: &'static str, content: impl IntoView<V>) -> Html<V, 
     }
 }
 
-fn create<V: View, K: Default>(tag: &'static str, content: V) -> Html<V, (), K> {
+pub fn create<V: View, K: Default>(tag: &'static str, content: V) -> Html<V, (), K> {
     Html {
         tag,
         attrs: (),

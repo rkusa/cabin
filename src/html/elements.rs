@@ -1,22 +1,34 @@
 use super::{create, Html};
 
-mod anchor;
-mod input;
+pub mod anchor;
+pub mod input;
 
 #[macro_export]
 macro_rules! element {
     ($dollar:tt, $mod:ident, $name:ident) => {
-        element!($dollar, $mod, $name, ());
-    };
-    ($dollar:tt, $mod:ident, $name:ident, $kind:ty) => {
-        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), $kind> {
+        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), ()> {
             $crate::html::create(stringify!($name), content.into_view())
         }
 
         mod $mod {
             #[macro_export]
             macro_rules! $name {
-                ($dollar($x:tt)*) => ($crate::html::custom(stringify!($name), $crate::view![$dollar($x)*]))
+                ($dollar($x:tt)*) => ($crate::html::create::<_, ()>(stringify!($name), $crate::view![$dollar($x)*]))
+            }
+
+            pub use $name;
+        }
+        pub use $mod::*;
+    };
+    ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
+        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
+            $crate::html::create(stringify!($name), content.into_view())
+        }
+
+        mod $mod {
+            #[macro_export]
+            macro_rules! $name {
+                ($dollar($x:tt)*) => ($crate::html::create::<_, $crate::html::elements::$kind_mod::$kind_type>(stringify!($name), $crate::view![$dollar($x)*]))
             }
 
             pub use $name;
@@ -27,14 +39,14 @@ macro_rules! element {
 
 #[macro_export]
 macro_rules! void_element {
-    ($dollar:tt, $mod:ident, $name:ident, $kind:ty) => {
-        pub fn $name() -> Html<(), (), $kind> {
+    ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
+        pub fn $name() -> Html<(), (), $crate::html::elements::$kind_mod::$kind_type> {
             create(stringify!($name), ())
         }
     };
 }
 
-element!($, __a, a, anchor::Anchor);
+element!($, __a, a, anchor, Anchor);
 element!($, __button, button);
 element!($, __caption, caption);
 element!($, __col, col);
@@ -48,7 +60,7 @@ element!($, __h4, h4);
 element!($, __h5, h5);
 element!($, __h6, h6);
 element!($, __hgroup, hgroup);
-void_element!($, __input, input, input::Input);
+void_element!($, __input, input, input, Input);
 element!($, __li, li);
 element!($, __table, table);
 element!($, __tbody, tbody);

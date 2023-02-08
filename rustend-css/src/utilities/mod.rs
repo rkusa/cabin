@@ -2,6 +2,7 @@ pub mod aspect;
 pub mod basis;
 pub mod bg;
 pub mod display;
+pub mod grid_cols;
 pub mod m;
 pub mod max_w;
 pub mod mb;

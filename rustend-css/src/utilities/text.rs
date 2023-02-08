@@ -1,6 +1,9 @@
-//! Set the foreground color value of an element's text and text decorations.
+//! Utilities for controlling text layout, behaviour and color, including:
 //!
-//! <https://developer.mozilla.org/en-US/docs/Web/CSS/color>
+//! - `color` <https://developer.mozilla.org/en-US/docs/Web/CSS/color>
+//! - `font-size` <https://developer.mozilla.org/en-US/docs/Web/CSS/font-size>
+//! - `line-height` <https://developer.mozilla.org/en-US/docs/Web/CSS/line-height>
+//! - `text-align` <https://developer.mozilla.org/en-US/docs/Web/CSS/text-align>
 
 use core::fmt;
 
@@ -52,3 +55,23 @@ impl fmt::Display for LineHeight {
         }
     }
 }
+
+const TEXT_ALIGN: &str = "text-align";
+
+/// `text-align: left;`
+pub const LEFT: Property = Property(TEXT_ALIGN, "left");
+
+/// `text-align: center;`
+pub const CENTER: Property = Property(TEXT_ALIGN, "center");
+
+/// `text-align: right;`
+pub const RIGHT: Property = Property(TEXT_ALIGN, "right");
+
+/// `text-align: justify;`
+pub const JUSTIFY: Property = Property(TEXT_ALIGN, "justify");
+
+/// `text-align: start;`
+pub const START: Property = Property(TEXT_ALIGN, "start");
+
+/// `text-align: end;`
+pub const END: Property = Property(TEXT_ALIGN, "end");
