@@ -18,7 +18,7 @@ pub const AUTO: PropertyTwice<Length> = PropertyTwice(MARGIN_TOP, MARGIN_BOTTOM,
 pub const PX: PropertyTwice<Length> = PropertyTwice(MARGIN_TOP, MARGIN_BOTTOM, Length::Px(1.0));
 
 /// Multiple of `0.25rem` (`4px` by default): `margin-top: {x * 0.25}rem; margin-bottom: {x * 0.25}rem`
-pub fn unit(x: u16) -> PropertyTwice<Length> {
+pub fn unit(x: i16) -> PropertyTwice<Length> {
     PropertyTwice(MARGIN_TOP, MARGIN_BOTTOM, Length::Rem(f32::from(x) * 0.25))
 }
 

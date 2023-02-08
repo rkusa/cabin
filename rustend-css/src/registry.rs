@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -61,12 +62,15 @@ impl StyleRegistry {
 
         // TODO: unwraps?
         for styles in grouped.into_values() {
-            let pos = self.out.len();
-
-            write!(&mut self.out, "          ").unwrap();
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.get(0) {
                 style.selector_prefix(&mut self.out).unwrap();
+            }
+            let pos = self.out.len();
+            write!(&mut self.out, "          ").unwrap();
+            // already grouped by variants, so just writing it once (from the first), is enough
+            if let Some(style) = styles.get(0) {
+                style.selector_suffix(&mut self.out).unwrap();
             }
             writeln!(&mut self.out, " {{").unwrap();
             for style in &styles {
@@ -79,7 +83,10 @@ impl StyleRegistry {
             let hash = hasher.finish() as u32;
 
             // write actual class name, prepend `_` as it class names must not start with a number
-            let name = format!("_{hash:x}");
+            let name = styles
+                .get(0)
+                .and_then(|s| s.override_class_name().map(Cow::Borrowed))
+                .unwrap_or_else(|| Cow::Owned(format!("_{hash:x}")));
 
             if !self.hashes.insert(hash) {
                 // already known, remove just written stuff from output

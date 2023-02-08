@@ -16,7 +16,7 @@ pub const AUTO: Property<Length> = Property(MARGIN_RIGHT, Length::Auto);
 pub const PX: Property<Length> = Property(MARGIN_RIGHT, Length::Px(1.0));
 
 /// Multiple of `0.25rem` (`4px` by default): `margin-right: {x * 0.25}rem;`
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(MARGIN_RIGHT, Length::Rem(f32::from(x) * 0.25))
 }
 

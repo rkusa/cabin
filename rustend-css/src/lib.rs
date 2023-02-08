@@ -17,7 +17,15 @@ pub trait Style {
         Ok(())
     }
 
+    fn selector_suffix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
+        Ok(())
+    }
+
     fn hash_modifier(&self, _hasher: &mut dyn Hasher) {}
+
+    fn override_class_name(&self) -> Option<&str> {
+        None
+    }
 
     fn hover(self) -> pseudo::hover::Hover<Self>
     where
@@ -32,6 +40,13 @@ pub trait Style {
     {
         pseudo::focus::Focus(self)
     }
+
+    fn group_hover(self) -> pseudo::group_hover::GroupHover<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::group_hover::GroupHover(self)
+    }
 }
 
 pub struct Property<V = &'static str>(pub(crate) &'static str, pub(crate) V);
@@ -40,6 +55,8 @@ pub struct PropertyTwice<V = &'static str>(
     pub(crate) &'static str,
     pub(crate) V,
 );
+
+pub struct StaticClass(pub(crate) &'static str);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Length {
@@ -95,5 +112,19 @@ impl<V: fmt::Display> Style for PropertyTwice<V> {
         writeln!(f, "{}: {};", self.0, self.2)?;
         writeln!(f, "{}: {};", self.1, self.2)?;
         Ok(())
+    }
+}
+
+impl Style for StaticClass {
+    fn declarations(&self, _: &mut dyn fmt::Write) -> fmt::Result {
+        Ok(())
+    }
+
+    fn hash_modifier(&self, hasher: &mut dyn Hasher) {
+        hasher.write(self.0.as_bytes());
+    }
+
+    fn override_class_name(&self) -> Option<&str> {
+        Some("group")
     }
 }

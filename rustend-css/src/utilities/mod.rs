@@ -25,3 +25,7 @@ pub mod w;
 
 pub use display::*;
 pub use position::*;
+
+use crate::StaticClass;
+
+pub const GROUP: StaticClass = StaticClass("group");

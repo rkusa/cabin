@@ -9,9 +9,9 @@ impl<S: Style> Style for Hover<S> {
         self.0.declarations(f)
     }
 
-    fn selector_prefix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+    fn selector_suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         f.write_str(":hover")?;
-        self.0.selector_prefix(f)
+        self.0.selector_suffix(f)
     }
 
     fn hash_modifier(&self, hasher: &mut dyn std::hash::Hasher) {

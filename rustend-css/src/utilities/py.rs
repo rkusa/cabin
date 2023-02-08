@@ -19,7 +19,11 @@ pub const PX: PropertyTwice<Length> = PropertyTwice(PADDING_TOP, PADDING_BOTTOM,
 
 /// Multiple of `0.25rem` (`4px` by default): `padding-top: {x * 0.25}rem; padding-bottom: {x * 0.25}rem`
 pub fn unit(x: u16) -> PropertyTwice<Length> {
-    PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Rem(f32::from(x) * 0.25))
+    PropertyTwice(
+        PADDING_TOP,
+        PADDING_BOTTOM,
+        Length::Rem(f32::from(x) * 0.25),
+    )
 }
 
 /// Multiple of `0.25rem` (`4px` by default): `padding-top: {x * 0.25}rem; padding-bottom: {x * 0.25}rem`
