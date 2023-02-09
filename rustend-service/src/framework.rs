@@ -117,7 +117,19 @@ where
                                 .unwrap());
                         }
                     };
-                    let update = ComponentRegistry::global().handle(&id, &action, data).await;
+                    let update = match ComponentRegistry::global().handle(&id, &action, data).await
+                    {
+                        Ok(update) => update,
+                        Err(err) => {
+                            let res = Response::<Bytes>::from(err);
+                            let (parts, body) = res.into_parts();
+
+                            return Ok(Response::from_parts(
+                                parts,
+                                UnsyncBoxBody::new(Full::new(body).map_err(|_| unreachable!())),
+                            ));
+                        }
+                    };
 
                     match update {
                         Some(update) => match serde_json::to_vec(&update) {

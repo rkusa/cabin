@@ -1,4 +1,3 @@
-use std::fmt;
 use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -36,7 +35,7 @@ where
     V: View + Send,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {

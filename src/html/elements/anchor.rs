@@ -17,9 +17,10 @@ impl<V, A> Html<V, A, Anchor> {
 }
 
 impl Attributes for Anchor {
-    fn render(&self, r: &mut ElementRenderer) -> Result<(), std::fmt::Error> {
+    fn render(&self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(href) = &self.href {
-            r.attribute("href", href)?;
+            r.attribute("href", href)
+                .map_err(crate::error::InternalError::from)?;
         }
 
         Ok(())

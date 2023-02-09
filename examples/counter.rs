@@ -1,5 +1,8 @@
+use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use axum::body::{Full, HttpBody};
+use axum::response::Response;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 
 async fn app() -> impl View {
@@ -7,12 +10,12 @@ async fn app() -> impl View {
 }
 
 #[rustend::component]
-async fn counter(count: u32) -> impl View {
+async fn counter(count: u32) -> Result<impl View, Infallible> {
     async fn incr(count: u32, _: ()) -> u32 {
         count + 1
     }
 
-    view![
+    Ok(view![
         //     (self.0 == 0).then(|| ),
         //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
         if count > 0 {
@@ -21,7 +24,7 @@ async fn counter(count: u32) -> impl View {
             html::div("Hit `incr` to start counting ...").boxed()
         },
         html::button("incr").on_click(incr, ()),
-    ]
+    ])
 }
 
 #[tokio::main]
@@ -30,7 +33,9 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app().await).await.unwrap())
+                let res = rustend::render_to_response(app().await).await;
+                let (parts, body) = res.into_parts();
+                Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
         .layer(rustend_service::framework());

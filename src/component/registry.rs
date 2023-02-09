@@ -20,7 +20,9 @@ pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
 
 static REGISTRY: OnceBox<ComponentRegistry> = OnceBox::new();
 
-type ComponentHandler = dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = Update> + Send>> + Send + Sync;
+type ComponentHandler = dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = Result<Update, crate::Error>> + Send>>
+    + Send
+    + Sync;
 
 pub struct ComponentRegistry {
     handler: HashMap<(Cow<'static, str>, &'static str), Arc<ComponentHandler>>,
@@ -58,7 +60,7 @@ impl ComponentRegistry {
         })
     }
 
-    pub fn register<S, M, V, R, U>(
+    pub fn register<S, M, V, R, U, E>(
         &mut self,
         id: ComponentId,
         action: &'static str,
@@ -68,8 +70,10 @@ impl ComponentRegistry {
         S: Serialize + DeserializeOwned + Send + 'static,
         M: DeserializeOwned + Send + 'static,
         V: View + Send + 'static,
+        E: Send + 'static,
+        crate::Error: From<E>,
         U: Future<Output = S> + Send + 'static,
-        R: Future<Output = V> + Send + 'static,
+        R: Future<Output = Result<V, E>> + Send + 'static,
     {
         self.action_names.insert(update as usize, action);
         self.handler.insert(
@@ -88,16 +92,16 @@ impl ComponentRegistry {
                     let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
 
                     let r = Renderer::from_previous_tree(hash_tree).with_descendants(descendants);
-                    let view = render(state).await;
+                    let view = render(state).await?;
                     let fut = view.render(r);
                     let r = fut.await.unwrap();
                     let out = r.end();
 
-                    Update {
+                    Ok(Update {
                         state: state_serialized,
                         hash_tree: out.hash_tree,
                         html: out.view,
-                    }
+                    })
                 })
             }),
         );
@@ -107,9 +111,17 @@ impl ComponentRegistry {
         self.action_names.get(&addr).copied()
     }
 
-    pub async fn handle(&self, id: &str, action: &str, body: Bytes) -> Option<Update> {
-        let handler = Arc::clone(self.handler.get(&(id.into(), action))?);
+    pub async fn handle(
+        &self,
+        id: &str,
+        action: &str,
+        body: Bytes,
+    ) -> Result<Option<Update>, crate::Error> {
+        let Some(handler) = self.handler.get(&(id.into(), action)) else {
+            return Ok(None)
+        };
+        let handler = Arc::clone(handler);
         let fut = handler(body);
-        Some(fut.await)
+        fut.await.map(Some)
     }
 }

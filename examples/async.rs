@@ -1,6 +1,9 @@
 use std::borrow::Cow;
+use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use axum::body::{Full, HttpBody};
+use axum::response::Response;
 use html::events::InputEvent;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
@@ -27,7 +30,7 @@ impl Search {
 }
 
 #[rustend::component]
-async fn search(state: Search) -> impl View {
+async fn search(state: Search) -> Result<impl View, Infallible> {
     async fn set_query(mut state: Search, ev: InputEvent) -> Search {
         state.query = ev.value.into();
         state
@@ -35,10 +38,10 @@ async fn search(state: Search) -> impl View {
 
     let items = search_countries(&state.query).await;
 
-    html::div![
+    Ok(html::div![
         html::div(html::input().attr("value", state.query).on_input(set_query)),
         html::div(html::ul(items.into_iter().map(html::li))),
-    ]
+    ])
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
@@ -60,7 +63,9 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app().await).await.unwrap())
+                let res = rustend::render_to_response(app().await).await;
+                let (parts, body) = res.into_parts();
+                Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
         .layer(rustend_service::framework());

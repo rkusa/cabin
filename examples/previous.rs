@@ -1,5 +1,8 @@
+use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use axum::body::{Full, HttpBody};
+use axum::response::Response;
 use rustend::previous::previous;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 
@@ -8,7 +11,7 @@ async fn app() -> impl View {
 }
 
 #[rustend::component]
-async fn root(enabled: bool) -> impl View {
+async fn root(enabled: bool) -> Result<impl View, Infallible> {
     async fn toggle(enabled: bool, _: ()) -> bool {
         !enabled
     }
@@ -18,7 +21,7 @@ async fn root(enabled: bool) -> impl View {
         enabled
     }
 
-    view![
+    Ok(view![
         // TODO: toggle doesn't work
         html::div(if enabled {
             view![
@@ -41,16 +44,16 @@ async fn root(enabled: bool) -> impl View {
             .on_click(toggle, ()),
             html::button("force rerender").on_click(reset, ()),
         ]
-    ]
+    ])
 }
 
 #[rustend::component]
-async fn counter(count: u32) -> impl View {
+async fn counter(count: u32) -> Result<impl View, Infallible> {
     async fn incr(count: u32, _: ()) -> u32 {
         count + 1
     }
 
-    html::button(html::text!("👍 {}", count)).on_click(incr, ())
+    Ok(html::button(html::text!("👍 {}", count)).on_click(incr, ()))
 }
 
 #[tokio::main]
@@ -59,7 +62,9 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app().await).await.unwrap())
+                let res = rustend::render_to_response(app().await).await;
+                let (parts, body) = res.into_parts();
+                Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
         .layer(rustend_service::framework());

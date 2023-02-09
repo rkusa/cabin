@@ -77,13 +77,13 @@ impl Renderer {
         }
     }
 
-    pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, fmt::Error> {
+    pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, crate::Error> {
         self.start();
 
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
         let offset = self.out.len();
-        write!(&mut self.out, "<{tag}")?;
+        write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
         Ok(ElementRenderer {
             tag,
             offset,
@@ -155,7 +155,7 @@ impl Renderer {
         self.hash_tree.push(Marker::Start);
     }
 
-    fn changed(&mut self, hash: u32, offset: usize) -> Result<bool, fmt::Error> {
+    fn changed(&mut self, hash: u32, offset: usize) -> Result<bool, crate::Error> {
         let previous_position = self.next_position() - 1;
         let mut previous = self
             .previous_tree
@@ -175,7 +175,9 @@ impl Renderer {
                 if unchanged {
                     // TODO: any way to not write the content until the changed detection happens?
                     self.out.truncate(offset);
-                    self.out.write_str("<!--unchanged-->")?;
+                    self.out
+                        .write_str("<!--unchanged-->")
+                        .map_err(crate::error::InternalError::from)?;
 
                     return Ok(false);
                 }
@@ -221,22 +223,22 @@ impl ElementRenderer {
         )
     }
 
-    pub async fn content(mut self, view: impl View) -> Result<Renderer, fmt::Error> {
+    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
         if is_void_element(self.tag) {
             todo!("throw error: void tags cannot have content");
         }
         if !self.content_started {
             self.content_started = true;
-            write!(&mut self.renderer.out, ">")?;
+            write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
         }
 
         self.renderer = view.render(self.renderer).await?;
         self.end()
     }
 
-    pub fn end(mut self) -> Result<Renderer, fmt::Error> {
+    pub fn end(mut self) -> Result<Renderer, crate::Error> {
         if !self.content_started && !is_void_element(self.tag) {
-            write!(&mut self.renderer.out, ">")?;
+            write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
         }
 
         let hash = self.renderer.finish() as u32;
@@ -247,9 +249,10 @@ impl ElementRenderer {
         if self.renderer.changed(hash, self.offset)? {
             // Handle void elements. Content is simply ignored.
             if is_void_element(self.tag) {
-                write!(&mut self.renderer.out, "/>")?;
+                write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
             } else {
-                write!(&mut self.renderer.out, "</{}>", self.tag)?;
+                write!(&mut self.renderer.out, "</{}>", self.tag)
+                    .map_err(crate::error::InternalError::from)?;
             }
         }
 
@@ -264,7 +267,7 @@ pub struct TextRenderer {
 }
 
 impl TextRenderer {
-    pub fn end(mut self) -> Result<Renderer, fmt::Error> {
+    pub fn end(mut self) -> Result<Renderer, crate::Error> {
         let hash = self.hasher.finish() as u32;
         self.renderer.write_u32(hash);
         self.renderer.hash_tree.push(Marker::End(hash));
@@ -301,7 +304,7 @@ impl ComponentRenderer {
     pub async fn content(
         mut self,
         view: impl View,
-    ) -> Result<(Renderer, ViewHashTree, bool), fmt::Error> {
+    ) -> Result<(Renderer, ViewHashTree, bool), crate::Error> {
         let r = Renderer {
             out: mem::take(&mut self.renderer.out),
             hash_tree: Vec::with_capacity(32),

@@ -1,6 +1,9 @@
 use std::borrow::Cow;
+use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use axum::body::{Full, HttpBody};
+use axum::response::Response;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
@@ -32,7 +35,7 @@ struct Item {
 struct Items(Vec<Item>);
 
 #[rustend::component]
-async fn items(items: Items) -> impl View {
+async fn items(items: Items) -> Result<impl View, Infallible> {
     async fn add(mut items: Items, _: ()) -> Items {
         let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
         items.0.push(Item {
@@ -52,7 +55,7 @@ async fn items(items: Items) -> impl View {
         items
     }
 
-    view![
+    Ok(view![
         html::ul(
             items
                 .0
@@ -60,7 +63,7 @@ async fn items(items: Items) -> impl View {
                 .map(|item| html::li![item.name, html::button("x").on_click(delete, item.id)])
         ),
         html::div(html::button("add").on_click(add, ())),
-    ]
+    ])
 }
 
 #[tokio::main]
@@ -69,7 +72,9 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app().await).await.unwrap())
+                let res = rustend::render_to_response(app().await).await;
+                let (parts, body) = res.into_parts();
+                Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
         .layer(rustend_service::framework());

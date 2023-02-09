@@ -16,11 +16,11 @@ use crate::render::Renderer;
 use crate::view::View;
 use crate::ViewHashTree;
 
-pub struct ServerComponent<F, V, P, S> {
+pub struct ServerComponent<F, V, P, S, E> {
     id: ComponentId,
     state: P,
     component: fn(S) -> F,
-    marker: PhantomData<(V, P)>,
+    marker: PhantomData<(V, P, E)>,
 }
 
 #[derive(Clone, Copy, Hash)]
@@ -29,7 +29,7 @@ pub struct ComponentId {
     name: &'static str,
 }
 
-impl<F, V, P, S> ServerComponent<F, V, P, S> {
+impl<F, V, P, S, E> ServerComponent<F, V, P, S, E> {
     pub fn new(id: ComponentId, state: P, component: fn(S) -> F) -> Self {
         Self {
             id,
@@ -46,15 +46,17 @@ impl ComponentId {
     }
 }
 
-impl<F, V, P, S> View for ServerComponent<F, V, P, S>
+impl<F, V, P, S, E> View for ServerComponent<F, V, P, S, E>
 where
-    F: Future<Output = V> + Send + 'static,
+    F: Future<Output = Result<V, E>> + Send + 'static,
     V: View + Send + 'static,
+    E: Send + 'static,
+    crate::Error: From<E>,
     P: FromPrevious<S> + 'static,
     S: Default + Hash + Serialize + DeserializeOwned + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {
@@ -74,9 +76,10 @@ where
                 r#"<server-component id="{}" data-id="{}">"#,
                 component.id(),
                 self.id,
-            )?;
+            )
+            .map_err(crate::error::InternalError::from)?;
 
-            let view = (self.component)(state).await;
+            let view = (self.component)(state).await?;
             let (mut r, hash_tree, changed) = component.content(view).await?;
 
             // If changed, add updated state and hash tree to output
@@ -96,7 +99,8 @@ where
                 write!(
                     r,
                     r#"<script type="application/json">{initial}</script></server-component>"#
-                )?;
+                )
+                .map_err(crate::error::InternalError::from)?;
             }
 
             Ok(r)

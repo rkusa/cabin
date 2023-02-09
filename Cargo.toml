@@ -13,6 +13,7 @@ members = [
 [dependencies]
 rustend-macros = { path = "./rustend-macros", version = "0.1" }
 bytes = "1.2"
+http = "0.2"
 linkme = "0.3"
 once_cell = "1.15"
 rand = "0.8"

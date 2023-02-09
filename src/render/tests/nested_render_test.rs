@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use std::future::ready;
 use std::str::FromStr;
 
@@ -10,8 +11,8 @@ use crate::{html, view, Renderer, View, ViewHashTree};
 #[tokio::test]
 async fn test_unchanged() {
     let component = || {
-        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{state}"))
+        ServerComponent::<_, String, _, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+            ready(Ok::<_, Infallible>(format!("{state}")))
         })
     };
 
@@ -86,9 +87,11 @@ async fn test_unchanged() {
 #[tokio::test]
 async fn test_changed() {
     let component = |state: u32| {
-        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(format!("{state}"))
-        })
+        ServerComponent::<_, String, _, _, _>::new(
+            ComponentId::new("a", "b"),
+            state,
+            |state: u32| ready(Ok::<_, Infallible>(format!("{state}"))),
+        )
     };
 
     let r = html::div(view![component(1), "text"])
@@ -146,8 +149,8 @@ async fn test_changed() {
 #[tokio::test]
 async fn test_added_as_additional() {
     let component = || {
-        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{state}"))
+        ServerComponent::<_, String, _, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+            ready(Ok::<_, Infallible>(format!("{state}")))
         })
     };
 
@@ -211,8 +214,8 @@ async fn test_added_as_additional() {
 #[tokio::test]
 async fn test_added_as_replacement() {
     let component = || {
-        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{state}"))
+        ServerComponent::<_, String, _, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+            ready(Ok::<_, Infallible>(format!("{state}")))
         })
     };
 
@@ -263,8 +266,8 @@ async fn test_added_as_replacement() {
 #[tokio::test]
 async fn test_removed_without_replacement() {
     let component = || {
-        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{state}"))
+        ServerComponent::<_, String, _, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+            ready(Ok::<_, Infallible>(format!("{state}")))
         })
     };
 
@@ -313,8 +316,8 @@ async fn test_removed_without_replacement() {
 #[tokio::test]
 async fn test_removed_by_being_replaced() {
     let component = || {
-        ServerComponent::<_, String, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
-            ready(format!("{state}"))
+        ServerComponent::<_, String, _, _, _>::new(ComponentId::new("a", "b"), 0, |state: u32| {
+            ready(Ok::<_, Infallible>(format!("{state}")))
         })
     };
 
@@ -366,7 +369,10 @@ async fn test_removed_by_being_replaced() {
 async fn test_inner_partial_update() {
     let component = |state: u32| {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(view![html::div(()), format!("{state}")])
+            ready(Ok::<_, Infallible>(view![
+                html::div(()),
+                format!("{state}")
+            ]))
         })
     };
 

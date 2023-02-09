@@ -4,7 +4,7 @@ mod iter;
 pub(crate) mod text;
 
 use std::borrow::Cow;
-use std::fmt::{self, Write};
+use std::fmt::Write;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -35,7 +35,7 @@ where
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
 pub trait View: Send {
-    type Future: Future<Output = Result<Renderer, fmt::Error>> + Send;
+    type Future: Future<Output = Result<Renderer, crate::Error>> + Send;
     fn render(self, r: Renderer) -> Self::Future;
 }
 
@@ -64,7 +64,7 @@ where
 }
 
 impl View for () {
-    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         std::future::ready(Ok(r))
@@ -73,12 +73,17 @@ impl View for () {
 
 // TODO: escape html!
 impl<'a> View for &'a str {
-    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         // TODO: safe escape HTML
         let mut txt = r.text();
-        std::future::ready(txt.write_str(self).and_then(|_| txt.end()))
+        std::future::ready(
+            txt.write_str(self)
+                .map_err(crate::error::InternalError::from)
+                .map_err(crate::error::Error::from)
+                .and_then(|_| txt.end()),
+        )
     }
 }
 
@@ -88,7 +93,7 @@ impl<'a> IntoView<Cow<'a, str>> for &'a Cow<'a, str> {
     }
 }
 impl<'a> View for Cow<'a, str> {
-    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         <&str as View>::render(self.as_ref(), r)
@@ -96,7 +101,7 @@ impl<'a> View for Cow<'a, str> {
 }
 
 impl View for String {
-    type Future = std::future::Ready<Result<Renderer, fmt::Error>>;
+    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         <&str as View>::render(self.as_str(), r)
@@ -109,7 +114,7 @@ where
     V: View + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async {
@@ -142,7 +147,7 @@ where
     R: View + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async {

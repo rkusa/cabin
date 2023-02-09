@@ -3,7 +3,6 @@ pub mod elements;
 pub mod events;
 
 use std::borrow::Cow;
-use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -102,15 +101,17 @@ where
     K: Attributes + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {
             let mut el = r.element(self.tag)?;
 
             if let Some((on_click, payload)) = &self.on_click {
-                el.attribute("data-click", on_click)?;
-                el.attribute("data-click-payload", payload)?;
+                el.attribute("data-click", on_click)
+                    .map_err(crate::error::InternalError::from)?;
+                el.attribute("data-click-payload", payload)
+                    .map_err(crate::error::InternalError::from)?;
             }
 
             self.attrs.render(&mut el)?;

@@ -89,7 +89,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
             let action_ident = &f.sig.ident;
             let name = action_ident.to_string();
             actions.push(quote! {
-                r.register::<#state_type, #payload_type, _, _, _>(ID, #name, #action_ident, __inner);
+                r.register::<#state_type, #payload_type, _, _, _, _>(ID, #name, #action_ident, __inner);
             })
         }
     }
@@ -103,19 +103,16 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
             static ID: ::rustend::component::ComponentId = ::rustend::component::ComponentId::new(module_path!(), #name);
 
             #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {
-                // TODO: Get rid into_view()
-                ::rustend::IntoView::into_view({
-                    #[::rustend::private::linkme::distributed_slice(::rustend::component::registry::COMPONENT_FACTORIES)]
-                    #[linkme(crate = ::rustend::private::linkme)]
-                    fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
-                        #(#actions)*
-                    }
+                #[::rustend::private::linkme::distributed_slice(::rustend::component::registry::COMPONENT_FACTORIES)]
+                #[linkme(crate = ::rustend::private::linkme)]
+                fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
+                    #(#actions)*
+                }
 
-                    #(#block)*
-                })
+                #(#block)*
             }
 
-            ::rustend::component::ServerComponent::new(ID, #state_ident, __inner)
+            Ok(::rustend::component::ServerComponent::new(ID, #state_ident, __inner))
         }
     };
 
@@ -247,7 +244,7 @@ pub fn css(item: TokenStream) -> TokenStream {
 
     quote! {
         {
-            static NAME: ::once_cell::sync::OnceCell<String> = ::once_cell::sync::OnceCell::new();
+            static NAME: ::rustend::private::OnceCell<String> = ::rustend::private::OnceCell::new();
 
             #[::rustend::private::linkme::distributed_slice(::rustend_css::registry::STYLES)]
             #[linkme(crate = ::rustend::private::linkme)]

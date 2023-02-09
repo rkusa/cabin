@@ -1,5 +1,8 @@
+use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use axum::body::{Full, HttpBody};
+use axum::response::Response;
 use rustend::previous::previous;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
@@ -19,7 +22,7 @@ struct Entry {
 }
 
 #[rustend::component]
-async fn level1(state: Entry) -> impl View {
+async fn level1(state: Entry) -> Result<impl View, Infallible> {
     async fn incr(mut state: Entry, _: ()) -> Entry {
         state.count += 1;
         state
@@ -30,15 +33,15 @@ async fn level1(state: Entry) -> impl View {
         state
     }
 
-    html::fieldset![
+    Ok(html::fieldset![
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
         state.has_child.then(|| level2(previous(|e| e)))
-    ]
+    ])
 }
 
 #[rustend::component]
-async fn level2(state: Entry) -> impl View {
+async fn level2(state: Entry) -> Result<impl View, Infallible> {
     async fn incr(mut state: Entry, _: ()) -> Entry {
         state.count += 1;
         state
@@ -49,15 +52,15 @@ async fn level2(state: Entry) -> impl View {
         state
     }
 
-    html::fieldset![
+    Ok(html::fieldset![
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
         state.has_child.then(|| level3(previous(|e| e)))
-    ]
+    ])
 }
 
 #[rustend::component]
-async fn level3(state: Entry) -> impl View {
+async fn level3(state: Entry) -> Result<impl View, Infallible> {
     async fn incr(mut state: Entry, _: ()) -> Entry {
         state.count += 1;
         state
@@ -68,21 +71,25 @@ async fn level3(state: Entry) -> impl View {
         state
     }
 
-    html::fieldset![
+    Ok(html::fieldset![
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
         state.has_child.then(|| level4(previous(|e| e)))
-    ]
+    ])
 }
 
 #[rustend::component]
-async fn level4(state: Entry) -> impl View {
+async fn level4(state: Entry) -> Result<impl View, Infallible> {
     async fn incr(mut state: Entry, _: ()) -> Entry {
         state.count += 1;
         state
     }
 
-    html::fieldset![html::button(html::text!("{}", state.count)).on_click(incr, ())]
+    Ok(html::fieldset![html::button(html::text!(
+        "{}",
+        state.count
+    ))
+    .on_click(incr, ())])
 }
 
 #[tokio::main]
@@ -91,7 +98,9 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app().await).await.unwrap())
+                let res = rustend::render_to_response(app().await).await;
+                let (parts, body) = res.into_parts();
+                Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
         .layer(rustend_service::framework());

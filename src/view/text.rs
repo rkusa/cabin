@@ -9,10 +9,10 @@ macro_rules! text {
     ($fmt:expr) => {
         ::rustend::html::Text::new(
             move |r: ::rustend::Renderer|
-                -> Result<::rustend::Renderer, ::std::fmt::Error>
+                -> Result<::rustend::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
-                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt))?;
+                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt)).map_err($crate::error::InternalError::from)?;
                 txt.end()
             },
         )
@@ -20,10 +20,10 @@ macro_rules! text {
     ($fmt:expr, $($args:tt)*) => {
         ::rustend::html::Text::new(
             move |r: ::rustend::Renderer|
-                -> Result<::rustend::Renderer, ::std::fmt::Error>
+                -> Result<::rustend::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
-                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt, $($args)*))?;
+                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt, $($args)*)).map_err($crate::error::InternalError::from)?;
                 txt.end()
             },
         )
@@ -35,7 +35,7 @@ pub use text;
 // Note: Cannot directly implement View for std::fmt::Arguments due to resulting lifetime issues.
 pub struct Text<F>(F);
 
-impl<F: Fn(Renderer) -> Result<Renderer, fmt::Error>> Text<F> {
+impl<F: Fn(Renderer) -> Result<Renderer, crate::Error>> Text<F> {
     pub fn new(write: F) -> Self {
         Text(write)
     }
@@ -43,9 +43,9 @@ impl<F: Fn(Renderer) -> Result<Renderer, fmt::Error>> Text<F> {
 
 impl<F> View for Text<F>
 where
-    F: Fn(Renderer) -> Result<Renderer, fmt::Error> + Send,
+    F: Fn(Renderer) -> Result<Renderer, crate::Error> + Send,
 {
-    type Future = Ready<Result<Renderer, fmt::Error>>;
+    type Future = Ready<Result<Renderer, crate::Error>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         ready((self.0)(r))

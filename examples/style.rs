@@ -1,5 +1,8 @@
+use std::convert::Infallible;
 use std::net::SocketAddr;
 
+use axum::body::{Full, HttpBody};
+use axum::response::Response;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use rustend_css::{self as css, css, Style};
 
@@ -8,12 +11,12 @@ async fn app() -> impl View {
 }
 
 #[rustend::component]
-async fn counter(count: u32) -> impl View {
+async fn counter(count: u32) -> Result<impl View, Infallible> {
     async fn incr(count: u32, _: ()) -> u32 {
         count + 1
     }
 
-    html::button(html::text!("{count}"))
+    Ok(html::button(html::text!("{count}"))
         .on_click(incr, ())
         .class(
             // TODO: modifier groups?
@@ -27,7 +30,7 @@ async fn counter(count: u32) -> impl View {
                 css::text::WHITE.hover(),
                 css::text::XS.hover().focus(),
             ) + (count == 0).then_some(css!(css::text::color("red"))),
-        )
+        ))
 }
 
 #[tokio::main]
@@ -36,7 +39,9 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                axum::response::Html(rustend::render(app().await).await.unwrap())
+                let res = rustend::render_to_response(app().await).await;
+                let (parts, body) = res.into_parts();
+                Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
         .layer(rustend_service::framework());

@@ -21,9 +21,10 @@ impl<V, A> Html<V, A, Input> {
 }
 
 impl Attributes for Input {
-    fn render(&self, r: &mut ElementRenderer) -> Result<(), std::fmt::Error> {
+    fn render(&self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(on_input) = &self.on_input {
-            r.attribute("data-input", on_input)?;
+            r.attribute("data-input", on_input)
+                .map_err(crate::error::InternalError::from)?;
         }
 
         Ok(())

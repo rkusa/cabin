@@ -1,4 +1,3 @@
-use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -6,7 +5,9 @@ use crate::render::Renderer;
 use crate::View;
 
 // TODO: any way to reduce this type to one single Box instead of two
-type ViewBoxRenderer = dyn FnOnce(Renderer) -> Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send + 'static>>
+type ViewBoxRenderer = dyn FnOnce(
+        Renderer,
+    ) -> Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send + 'static>>
     + Send;
 
 pub struct BoxedView {
@@ -26,7 +27,7 @@ impl BoxedView {
 }
 
 impl View for BoxedView {
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, fmt::Error>> + Send + 'static>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send + 'static>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         (self.view)(r)
