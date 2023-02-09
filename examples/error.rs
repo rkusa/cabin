@@ -1,9 +1,7 @@
-use std::error;
-use std::fmt;
 use std::net::SocketAddr;
+use std::{error, fmt};
 
-use axum::body::Full;
-use axum::body::HttpBody;
+use axum::body::{Full, HttpBody};
 use http::Response;
 use rustend::{rustend_scripts, rustend_stylesheets, view, View};
 

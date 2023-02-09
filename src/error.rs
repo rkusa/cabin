@@ -1,10 +1,8 @@
 use std::convert::Infallible;
-use std::error;
-use std::fmt;
+use std::{error, fmt};
 
 use bytes::Bytes;
-use http::Response;
-use http::StatusCode;
+use http::{Response, StatusCode};
 
 #[derive(Debug)]
 pub struct Error {
