@@ -27,13 +27,15 @@ pub trait Style {
         None
     }
 
-    fn hover(self) -> pseudo::hover::Hover<Self>
+    /// Apply style only when the element is being pressed (`:active`).
+    fn active(self) -> pseudo::active::Active<Self>
     where
         Self: Sized,
     {
-        pseudo::hover::Hover(self)
+        pseudo::active::Active(self)
     }
 
+    /// Apply style only when the element has focus (`:foucs`).
     fn focus(self) -> pseudo::focus::Focus<Self>
     where
         Self: Sized,
@@ -41,11 +43,43 @@ pub trait Style {
         pseudo::focus::Focus(self)
     }
 
+    /// Apply style only when the element has been focused using the keyboard (`:foucs-visible`).
+    fn focus_visible(self) -> pseudo::focus_visible::FocusVisible<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::focus_visible::FocusVisible(self)
+    }
+
+    /// Apply style only when the element or one of its descendants has focus (`:foucs-within`).
+    fn focus_within(self) -> pseudo::focus_within::FocusWithin<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::focus_within::FocusWithin(self)
+    }
+
     fn group_hover(self) -> pseudo::group_hover::GroupHover<Self>
     where
         Self: Sized,
     {
         pseudo::group_hover::GroupHover(self)
+    }
+
+    /// Apply style only when the user hovers over the element (`:hover`).
+    fn hover(self) -> pseudo::hover::Hover<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::hover::Hover(self)
+    }
+
+    /// Apply style only when the link has already been visited (`:visited`).
+    fn visited(self) -> pseudo::visited::Visited<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::visited::Visited(self)
     }
 }
 
