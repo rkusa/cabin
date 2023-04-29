@@ -39,80 +39,88 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         .into();
     }
 
-    let (state_ident, state_type) = match &inputs[0] {
+    let state_type = match &inputs[0] {
         arg @ FnArg::Receiver(_) => {
             return Error::new(arg.span(), "State cannot be a self argument")
                 .into_compile_error()
                 .into()
         }
-        FnArg::Typed(pat_type) => (&pat_type.pat, &pat_type.ty),
+        FnArg::Typed(pat_type) => &pat_type.ty,
     };
 
     // find actions (`fn`s inside of the components content)
-    let mut actions = Vec::new();
-    for stmt in &block.stmts {
+    let mut action_registrations = Vec::new();
+    let (actions, other): (Vec<_>, Vec<_>) = block.stmts.into_iter().partition(|stmt| {
         if let Stmt::Item(Item::Fn(f)) = stmt {
             if f.sig.inputs.len() != 2 {
-                return Error::new(
-                    f.sig.inputs.span(),
-                    "Exactly two function arguments expected for actions \
-                            (the component state and the action payload)",
-                )
-                .into_compile_error()
-                .into();
+                return false;
+                // return Error::new(
+                //     f.sig.inputs.span(),
+                //     "Exactly two function arguments expected for actions \
+                //             (the component state and the action payload)",
+                // )
+                // .into_compile_error()
+                // .into();
             }
 
             match &f.sig.inputs[0] {
-                arg @ FnArg::Receiver(_) => {
-                    return Error::new(arg.span(), "State cannot be a self argument")
-                        .into_compile_error()
-                        .into()
+                FnArg::Receiver(_) => {
+                    return false;
+                    // return Error::new(arg.span(), "State cannot be a self argument")
+                    //     .into_compile_error()
+                    //     .into()
                 }
-                arg @ FnArg::Typed(pat_type) => {
+                FnArg::Typed(pat_type) => {
                     if &pat_type.ty != state_type {
-                        return Error::new(arg.span(), "Action and component state type mismatch")
-                            .into_compile_error()
-                            .into();
+                        return false;
+                        // return Error::new(arg.span(), "Action and component state type mismatch")
+                        //     .into_compile_error()
+                        //     .into();
                     }
                 }
             }
 
             let payload_type = match &f.sig.inputs[1] {
-                arg @ FnArg::Receiver(_) => {
-                    return Error::new(arg.span(), "Payload cannot be a self argument")
-                        .into_compile_error()
-                        .into()
+                FnArg::Receiver(_) => {
+                    return false;
+                    // return Error::new(arg.span(), "Payload cannot be a self argument")
+                    //     .into_compile_error()
+                    //     .into()
                 }
                 FnArg::Typed(pat_type) => &pat_type.ty,
             };
 
             let action_ident = &f.sig.ident;
             let name = action_ident.to_string();
-            actions.push(quote! {
-                r.register::<#state_type, #payload_type, _, _, _, _>(ID, #name, #action_ident, __inner);
-            })
+            action_registrations.push(quote! {
+                r.register::<#state_type, #payload_type, _, _, _, _>(ID, #name, #action_ident, #ident);
+            });
+            true
+        } else {
+            false
         }
-    }
+    });
 
     let name = ident.to_string();
-    let block = block.stmts;
 
     let wrapped_fn = quote! {
-        #(#attrs)*
-        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#state_ident: impl rustend::previous::FromPrevious<#state_type> + 'static) #output {
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(__state: impl rustend::previous::FromPrevious<#state_type> + 'static) #output {
             static ID: ::rustend::component::ComponentId = ::rustend::component::ComponentId::new(module_path!(), #name);
 
-            #constness async #unsafety #abi fn __inner #generics(#inputs #variadic) #output {
-                #[::rustend::private::linkme::distributed_slice(::rustend::component::registry::COMPONENT_FACTORIES)]
-                #[linkme(crate = ::rustend::private::linkme)]
-                fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
-                    #(#actions)*
-                }
+            #(#actions)*
 
-                #(#block)*
+            #[::rustend::private::linkme::distributed_slice(::rustend::component::registry::COMPONENT_FACTORIES)]
+            #[linkme(crate = ::rustend::private::linkme)]
+            fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
+                #(#action_registrations)*
             }
 
-            Ok(::rustend::component::ServerComponent::new(ID, #state_ident, __inner))
+            #(#attrs)*
+            #constness async #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
+                #(#other)*
+            }
+
+            Ok(::rustend::component::ServerComponent::new(ID, __state, #ident))
         }
     };
 

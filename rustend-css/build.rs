@@ -54,8 +54,6 @@ fn main() {
         )
         .unwrap();
     }
-
-    // pub const XS: FontSize = FontSize::custom(Length::Rem(0.75), Length::Rem(1.0));
 }
 
 struct Theme {
