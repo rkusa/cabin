@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -56,12 +56,9 @@ async fn items(items: Items) -> Result<impl View, Infallible> {
     }
 
     Ok(view![
-        html::ul(
-            items
-                .0
-                .into_iter()
-                .map(|item| html::li![item.name, html::button("x").on_click(delete, item.id)])
-        ),
+        html::ul(items.0.into_iter().map(|item| {
+            html::li![item.name, html::button("x").on_click(delete, item.id)].with_key(item.id)
+        })),
         html::div(html::button("add").on_click(add, ())),
     ])
 }

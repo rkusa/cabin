@@ -51,7 +51,7 @@ async fn dropdown(state: DropdownState) -> Result<impl View, Infallible> {
     Ok(html::div![
         html::button("open").on_click(toggle, ()),
         if state.opened {
-            html::ul(state.items.into_iter().map(|item| html::li(item).attr("style", "white-space:nowrap;")))
+            html::ul(state.items.into_iter().map(|item| html::li(item.clone()).attr("style", "white-space:nowrap;").with_key(item)))
                 .attr(
                     "style",
                     "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;padding:4px;",
