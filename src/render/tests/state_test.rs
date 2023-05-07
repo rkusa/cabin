@@ -70,7 +70,7 @@ async fn test_previous_default() {
     assert_eq!(
         out.view,
         "<server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><div></div>1<script \
-        type=\"application/json\">{\"state\":1,\"hashTree\":[-1,3201766860,-1,3068971186,\
+        type=\"application/json\">{\"state\":1,\"hashTree\":[0,3201766860,0,3068971186,\
         1848809075]}</script></server-component>"
     );
 }
