@@ -27,6 +27,8 @@ impl StyleRegistry {
                 hashes: Default::default(),
             };
 
+            registry.out.write_str(include_str!("./base.css")).unwrap();
+
             #[cfg(feature = "preflight")]
             registry
                 .out
