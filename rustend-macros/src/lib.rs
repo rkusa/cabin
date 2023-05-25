@@ -159,7 +159,7 @@ impl Parse for StyleExpr {
             Ok(StyleExpr::Call {
                 func: path,
                 paren_token: syn::parenthesized!(content in input),
-                args: content.parse_terminated(ExprLit::parse)?,
+                args: content.parse_terminated(ExprLit::parse, Comma)?,
             })
         } else if input.peek(Dot) {
             let mut method_calls = Vec::with_capacity(1);
