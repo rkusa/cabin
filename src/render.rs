@@ -142,53 +142,6 @@ impl Renderer {
     }
 
     pub async fn iter_item(mut self, key: u32, view: impl View) -> Result<Renderer, crate::Error> {
-        let next_position = self.next_position();
-        if let Some(previous) = &mut self.previous_tree {
-            match previous.get_mut(next_position) {
-                Some(&mut Marker::Item(k)) if k == key => {
-                    // same item at same position, nothing to do
-                }
-                Some(&mut Marker::Item(_)) => {
-                    // different item at that position, try to reorder the tree
-                    if let Some(mut from) = previous[next_position..]
-                        .iter()
-                        .position(|m| *m == Marker::Item(key))
-                    {
-                        from += next_position;
-                        let mut to = from;
-                        let mut unclosed_start = 0usize;
-                        for m in &previous[from + 1..] {
-                            match m {
-                                Marker::Start => {
-                                    unclosed_start += 1;
-                                    to += 1;
-                                    continue;
-                                }
-                                Marker::End(_) => {
-                                    unclosed_start -= 1;
-                                }
-                                Marker::Component(_) | Marker::Item(_) => {}
-                            }
-
-                            to += 1;
-                            if unclosed_start == 0 {
-                                break;
-                            }
-                        }
-
-                        let item = previous[from..=to].to_vec();
-                        let len = item.len();
-                        previous.copy_within(next_position..from, next_position + len);
-                        previous[next_position..(next_position + len)].copy_from_slice(&item);
-                    }
-                }
-                m => {
-                    // TODO: don't panic?
-                    unreachable!("unexpected item marker `{m:?}`");
-                }
-            }
-        }
-
         self.hash_tree.push(Marker::Item(key));
         view.render(self).await
     }
