@@ -36,7 +36,7 @@ async fn level1(state: Entry) -> Result<impl View, Infallible> {
     Ok(html::fieldset![
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
-        state.has_child.then(|| level2(previous(|e| e)))
+        state.has_child.then(|| level2(previous(2, |e| e)))
     ])
 }
 
@@ -55,7 +55,7 @@ async fn level2(state: Entry) -> Result<impl View, Infallible> {
     Ok(html::fieldset![
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
-        state.has_child.then(|| level3(previous(|e| e)))
+        state.has_child.then(|| level3(previous(3, |e| e)))
     ])
 }
 
@@ -74,7 +74,7 @@ async fn level3(state: Entry) -> Result<impl View, Infallible> {
     Ok(html::fieldset![
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
-        state.has_child.then(|| level4(previous(|e| e)))
+        state.has_child.then(|| level4(previous(4, |e| e)))
     ])
 }
 

@@ -3,57 +3,63 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::previous::previous;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
+use rustend::previous::previous_or;
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    view![rustend_stylesheets(), rustend_scripts(), root(true).await]
+    view![
+        rustend_stylesheets(),
+        rustend_scripts(),
+        items(Items(vec![Item { id: 1 }, Item { id: 2 },])).await
+    ]
 }
 
+#[derive(Hash, Serialize, Deserialize)]
+struct Item {
+    id: usize,
+}
+
+#[derive(Default, Hash, Serialize, Deserialize)]
+struct Items(Vec<Item>);
+
 #[rustend::component]
-async fn root(enabled: bool) -> Result<impl View, Infallible> {
-    async fn toggle(enabled: bool, _: ()) -> bool {
-        !enabled
+async fn items(items: Items) -> Result<impl View, Infallible> {
+    async fn add_above(mut items: Items, _: ()) -> Items {
+        let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
+        items.0.insert(0, Item { id: max_id + 1 });
+        items
     }
 
-    // Just a way to test a rerender without actually chaning anything
-    async fn reset(enabled: bool, _: ()) -> bool {
-        enabled
+    async fn add_below(mut items: Items, _: ()) -> Items {
+        let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
+        items.0.push(Item { id: max_id + 1 });
+        items
+    }
+
+    // TODO: concurrent deletes race each other
+    async fn delete(mut items: Items, id: usize) -> Items {
+        items.0.retain(|i| i.id != id);
+        items
     }
 
     Ok(view![
-        // TODO: toggle doesn't work
-        html::div(if enabled {
-            view![
-                html::div![counter(0), " (state reset on parent rerender)"],
-                html::div![
-                    counter(previous(|c| c)),
-                    " (state restored on parent rerender)"
-                ],
-            ]
-            .boxed()
-        } else {
-            "...".boxed()
-        }),
-        view![
-            html::button(if enabled {
-                "remove counter"
-            } else {
-                "add counter"
-            })
-            .on_click(toggle, ()),
-            html::button("force rerender").on_click(reset, ()),
-        ]
+        html::div(html::button("add above").on_click(add_above, ())),
+        html::ul(items.0.into_iter().enumerate().map(|(i, item)| html::li![
+            counter(previous_or(item.id, i + 1)),
+            html::button("x").on_click(delete, item.id)
+        ])),
+        html::div(html::button("add below").on_click(add_below, ())),
     ])
 }
 
 #[rustend::component]
-async fn counter(count: u32) -> Result<impl View, Infallible> {
-    async fn incr(count: u32, _: ()) -> u32 {
+async fn counter(count: usize) -> Result<impl View, Infallible> {
+    async fn incr(count: usize, _: ()) -> usize {
         count + 1
     }
 
-    Ok(html::button(html::text!("👍 {}", count)).on_click(incr, ()))
+    Ok(html::button(html::text!("{}", count)).on_click(incr, ()))
 }
 
 #[tokio::main]

@@ -16,7 +16,6 @@ use twox_hash::XxHash32;
 
 use self::marker::Marker;
 pub use self::marker::ViewHashTree;
-use crate::component::id::NanoId;
 use crate::component::ComponentId;
 use crate::View;
 
@@ -26,7 +25,7 @@ pub struct Renderer {
     hasher: XxHash32,
     previous_tree: Option<Vec<Marker>>,
     previous_offset: isize,
-    previous_descendants: Option<HashMap<NanoId, PreviousComponent>>,
+    previous_descendants: Option<HashMap<u32, PreviousComponent>>,
 }
 
 pub(crate) struct Out {
@@ -61,10 +60,7 @@ impl Renderer {
         }
     }
 
-    pub(crate) fn with_descendants(
-        mut self,
-        descendants: HashMap<NanoId, PreviousComponent>,
-    ) -> Self {
+    pub(crate) fn with_descendants(mut self, descendants: HashMap<u32, PreviousComponent>) -> Self {
         self.previous_descendants = Some(descendants);
         self
     }
@@ -104,40 +100,28 @@ impl Renderer {
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(mut self, type_id: ComponentId) -> ComponentRenderer {
+    pub fn component(mut self, type_id: ComponentId, instance_id: u32) -> ComponentRenderer {
         type_id.hash(&mut self);
         let previous = self
             .previous_tree
             .as_ref()
             .and_then(|t| t.get(self.next_position()));
+        if previous.is_some() && !matches!(previous, Some(Marker::Component(_))) {
+            // component is new
+            self.previous_offset += 2;
+        }
 
-        let (instance_id, previous) = match previous {
-            // TODO: ensure same type_id
-            Some(Marker::Component(id)) => {
-                if let Some(previous) = self
-                    .previous_descendants
-                    .as_mut()
-                    .and_then(|d| d.remove(id))
-                {
-                    (*id, Some(previous))
-                } else {
-                    (NanoId::random(), None)
-                }
-            }
-            Some(_) => {
-                // component is new
-                self.previous_offset += 2;
-                (NanoId::random(), None)
-            }
-            _ => (NanoId::random(), None),
-        };
+        let previous_state = self
+            .previous_descendants
+            .as_mut()
+            .and_then(|d| d.remove(&instance_id));
 
         ComponentRenderer {
             hasher: XxHash32::default(),
             previous_len: self.out.len(),
             renderer: self,
             instance_id,
-            previous,
+            previous: previous_state,
         }
     }
 
@@ -283,12 +267,12 @@ pub struct ComponentRenderer {
     hasher: XxHash32,
     renderer: Renderer,
     previous_len: usize,
-    instance_id: NanoId,
+    instance_id: u32,
     previous: Option<PreviousComponent>,
 }
 
 impl ComponentRenderer {
-    pub fn id(&self) -> NanoId {
+    pub fn id(&self) -> u32 {
         self.instance_id
     }
 
@@ -314,6 +298,9 @@ impl ComponentRenderer {
             previous_descendants: mem::take(&mut self.renderer.previous_descendants),
         };
         let mut r = view.render(r).await?;
+
+        // Ensure component is detected as changed if its instance id changed
+        r.write_u32(self.instance_id);
 
         let hash = r.finish() as u32;
         r.hash_tree.push(Marker::End(hash));

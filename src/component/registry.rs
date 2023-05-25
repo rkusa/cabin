@@ -10,7 +10,6 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
-use super::id::NanoId;
 use super::ComponentId;
 use crate::render::{PreviousComponent, Renderer};
 use crate::{View, ViewHashTree};
@@ -43,7 +42,7 @@ struct Payload<S, M> {
     state: S,
     hash_tree: ViewHashTree,
     payload: M,
-    descendants: HashMap<NanoId, PreviousComponent>,
+    descendants: HashMap<u32, PreviousComponent>,
 }
 
 impl ComponentRegistry {

@@ -22,7 +22,7 @@ async fn root(count: u32) -> Result<impl View, Infallible> {
         html::button(html::text!("{}", count))
             .on_click(incr, ())
             .attr("style", "min-width:40px"),
-        dropdown(previous(move |s: DropdownState| s.with_items(
+        dropdown(previous((), move |s: DropdownState| s.with_items(
             (0..count).map(|i| format!("Item {i}").into()).collect()
         )))
     ])

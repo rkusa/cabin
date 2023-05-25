@@ -61,15 +61,8 @@ class ServerComponent extends HTMLElement {
             // Collect descendant components and update their hash in the current component's hash
             // tree
             const descendants = {};
-            for (let i = 0; i < this.hashTree.length; ++i) {
-              if (typeof this.hashTree[i] !== "string") {
-                continue;
-              }
-
-              const id = this.hashTree[i];
-              const el = document.getElementById(id);
-              descendants[id] = { state: el.state, hashTree: el.hashTree };
-              this.hashTree[i + 1] = el.hashTree[el.hashTree.length - 1];
+            for (const el of this.querySelectorAll("server-component")) {
+              descendants[el.id] = { state: el.state, hashTree: el.hashTree };
             }
 
             const res = await fetch(`/dispatch/${component}/${action}`, {
@@ -96,7 +89,7 @@ class ServerComponent extends HTMLElement {
             if (this.dataset.hash !== rootHash) {
               const template = document.createElement("template");
               template.innerHTML = html;
-              patchChildren(this, template.content);
+              patchChildren(this, template.content, {});
               this.hashTree = hashTree;
             }
           } catch (err) {
@@ -126,8 +119,9 @@ customElements.define("server-component", ServerComponent);
 /**
  * @param {Node} rootBefore
  * @param {Node} rootAfter
+ * @param {Record<string, Node>} orphanComponents
  */
-function patchChildren(rootBefore, rootAfter) {
+function patchChildren(rootBefore, rootAfter, orphanComponents) {
   console.log("apply", rootBefore, rootAfter);
 
   // Skip first script element for server components
@@ -169,6 +163,11 @@ function patchChildren(rootBefore, rootAfter) {
       console.log("removed", nodeBefore);
       nextBefore = nodeBefore.nextSibling;
       rootBefore.removeChild(nodeBefore);
+
+      if (nodeBefore.nodeName === "SERVER-COMPONENT") {
+        orphanComponents[nodeBefore.id] = nodeBefore;
+      }
+
       continue;
     }
 
@@ -187,13 +186,58 @@ function patchChildren(rootBefore, rootAfter) {
     // This node and all its next siblings are new nodes and can be directly added
     if (nodeBefore === null) {
       console.log("append new", nodeAfter, "and siblings");
+      const fragment = document.createDocumentFragment();
       let node = nodeAfter;
       while (node) {
         let next = node.nextSibling;
-        rootBefore.appendChild(node);
+        fragment.appendChild(node);
         node = next;
       }
+
+      // Patch all existing components
+      for (const c of fragment.querySelectorAll(
+        "server-component:not(server-component *)"
+      )) {
+        const existing =
+          document.getElementById(c.id) ?? orphanComponents[c.id];
+        if (existing) {
+          patchChildren(existing, c, orphanComponents);
+          c.parentNode.replaceChild(existing, c);
+        }
+      }
+
+      rootBefore.appendChild(fragment);
       return;
+    }
+
+    // component id changed, try to find existing one in DOM or replace completely
+    if (
+      nodeAfter.nodeName === "SERVER-COMPONENT" &&
+      (nodeBefore.nodeName !== "SERVER-COMPONENT" ||
+        (nodeBefore.dataset.id === nodeAfter.dataset.id &&
+          nodeBefore.id !== nodeAfter.id))
+    ) {
+      const existing =
+        document.getElementById(nodeAfter.id) ?? orphanComponents[nodeAfter.id];
+      if (existing) {
+        console.log("swap in existing component");
+        if (nodeBefore.nodeName === "SERVER-COMPONENT") {
+          existing.parentNode?.insertBefore(
+            document.createComment("placeholder"),
+            existing
+          );
+          rootBefore.replaceChild(existing, nodeBefore);
+          orphanComponents[nodeBefore.id] = nodeBefore;
+        } else if (
+          nodeBefore.nodeType === Node.COMMENT_NODE &&
+          nodeBefore.nodeValue === "placeholder"
+        ) {
+          rootBefore.replaceChild(existing, nodeBefore);
+        } else {
+          rootBefore.insertBefore(existing, nodeBefore);
+        }
+        nodeBefore = existing;
+      }
     }
 
     // type changed, replace completely
@@ -201,12 +245,17 @@ function patchChildren(rootBefore, rootAfter) {
       nodeBefore.nodeType !== nodeAfter.nodeType ||
       nodeBefore.nodeName !== nodeAfter.nodeName ||
       (nodeAfter.nodeName === "SERVER-COMPONENT" &&
-        nodeBefore.dataset.id !== nodeAfter.dataset.id)
+        nodeBefore.id !== nodeAfter.id)
     ) {
-      console.log("replace");
+      console.log("replace due to type change");
       nextBefore = nodeBefore.nextSibling;
       nextAfter = nodeAfter.nextSibling;
       rootBefore.replaceChild(nodeAfter, nodeBefore);
+
+      if (nodeBefore.nodeName === "SERVER-COMPONENT") {
+        orphanComponents[nodeBefore.id] = nodeBefore;
+      }
+
       continue;
     }
 
@@ -218,7 +267,7 @@ function patchChildren(rootBefore, rootAfter) {
         // TODO: tag changed
         console.log("patch attributes");
         patchAttributes(nodeBefore, nodeAfter);
-        patchChildren(nodeBefore, nodeAfter);
+        patchChildren(nodeBefore, nodeAfter, orphanComponents);
         break;
 
       case Node.TEXT_NODE:

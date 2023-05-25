@@ -1,15 +1,15 @@
-pub mod id;
 pub mod registry;
 
 use std::fmt::{self, Write};
 use std::future::Future;
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::pin::Pin;
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::value::RawValue;
+use twox_hash::XxHash32;
 
 use crate::previous::FromPrevious;
 use crate::render::Renderer;
@@ -60,7 +60,13 @@ where
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {
-            let mut component = r.component(self.id);
+            let instance_id = {
+                let mut hasher = XxHash32::default();
+                self.id.hash(&mut hasher);
+                self.state.id().hash(&mut hasher);
+                hasher.finish() as u32
+            };
+            let mut component = r.component(self.id, instance_id);
 
             // TODO: unwrap
             let previous_state = component.previous_state().unwrap();
