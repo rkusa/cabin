@@ -141,11 +141,6 @@ impl Renderer {
         }
     }
 
-    pub async fn iter_item(mut self, key: u32, view: impl View) -> Result<Renderer, crate::Error> {
-        self.hash_tree.push(Marker::Item(key));
-        view.render(self).await
-    }
-
     fn start(&mut self) {
         let previous = self
             .previous_tree

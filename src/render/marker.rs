@@ -1,5 +1,3 @@
-use std::ops::Neg;
-
 use serde::{Deserialize, Serialize};
 
 use crate::component::id::NanoId;
@@ -12,8 +10,6 @@ pub(crate) enum Marker {
     Start,
     End(u32),
     Component(NanoId),
-    /// An iterator item with the hash of its key.
-    Item(u32),
 }
 
 impl Serialize for Marker {
@@ -22,17 +18,15 @@ impl Serialize for Marker {
         S: serde::Serializer,
     {
         match self {
-            Marker::Start => s.serialize_i32(0),
+            Marker::Start => s.serialize_i32(-1),
             Marker::End(hash) => s.serialize_u32(*hash),
             Marker::Component(id) => id.serialize(s),
-            Marker::Item(hash) => s.serialize_i64(i64::from(*hash).neg()),
         }
     }
 }
 
 mod deserialize {
     use std::fmt;
-    use std::ops::Neg;
     use std::str::FromStr;
 
     use serde::de::{self, Visitor};
@@ -69,10 +63,7 @@ mod deserialize {
             E: de::Error,
         {
             match v {
-                0 => Ok(Marker::Start),
-                v if v < 0 => Ok(Marker::Item(
-                    u32::try_from(v.neg()).map_err(de::Error::custom)?,
-                )),
+                -1 => Ok(Marker::Start),
                 _ => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
             }
         }
@@ -82,10 +73,7 @@ mod deserialize {
             E: de::Error,
         {
             match v {
-                0 => Ok(Marker::Start),
-                v if v < 0 => Ok(Marker::Item(
-                    u32::try_from(v.neg()).map_err(de::Error::custom)?,
-                )),
+                -1 => Ok(Marker::Start),
                 _ => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
             }
         }
@@ -108,20 +96,14 @@ mod deserialize {
         where
             E: de::Error,
         {
-            match v {
-                0 => Ok(Marker::Start),
-                v => Ok(Marker::End(v)),
-            }
+            Ok(Marker::End(v))
         }
 
         fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
         where
             E: de::Error,
         {
-            match v {
-                0 => Ok(Marker::Start),
-                v => Ok(Marker::End(v.try_into().map_err(de::Error::custom)?)),
-            }
+            Ok(Marker::End(v.try_into().map_err(de::Error::custom)?))
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -162,17 +144,15 @@ fn test_serde() {
         Marker::Start,
         Marker::Component(NanoId::from_str("1234567890abcdefghijk").unwrap()),
         Marker::End(2),
-        Marker::Item(100),
         Marker::Start,
         Marker::End(3),
-        Marker::Item(100),
         Marker::End(4),
         Marker::End(5),
     ];
     let serialized = serde_json::to_string(&hash_tree).unwrap();
     assert_eq!(
         serialized,
-        r#"[0,1,0,0,"1234567890abcdefghijk",2,-100,0,3,-100,4,5]"#
+        r#"[-1,1,-1,-1,"1234567890abcdefghijk",2,-1,3,4,5]"#
     );
     let deserialized: Vec<Marker> = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, hash_tree);

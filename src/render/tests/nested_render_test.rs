@@ -24,7 +24,7 @@ async fn test_unchanged() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">0<script \
-        type=\"application/json\">{\"state\":0,\"hashTree\":[0,1212501170,4215132335]}</script>\
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,4215132335]}</script>\
         </server-component>text</div>"
     );
     assert_eq!(
@@ -102,7 +102,7 @@ async fn test_changed() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">1<script \
-        type=\"application/json\">{\"state\":1,\"hashTree\":[0,3068971186,3351463340]}</script>\
+        type=\"application/json\">{\"state\":1,\"hashTree\":[-1,3068971186,3351463340]}</script>\
         </server-component>text</div>"
     );
     assert_eq!(
@@ -128,7 +128,7 @@ async fn test_changed() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">2<script \
-        type=\"application/json\">{\"state\":2,\"hashTree\":[0,205742900,659930662]}</script>\
+        type=\"application/json\">{\"state\":2,\"hashTree\":[-1,205742900,659930662]}</script>\
         </server-component><!--unchanged--></div>"
     );
     assert_eq!(
@@ -175,7 +175,7 @@ async fn test_added_as_additional() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">0<script \
-        type=\"application/json\">{\"state\":0,\"hashTree\":[0,1212501170,4215132335]}</script>\
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,4215132335]}</script>\
         </server-component><!--unchanged--></div>"
     );
     assert_eq!(
@@ -245,7 +245,7 @@ async fn test_added_as_replacement() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">0<script \
-        type=\"application/json\">{\"state\":0,\"hashTree\":[0,1212501170,4215132335]}</script>\
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,4215132335]}</script>\
         </server-component><!--unchanged--></div>"
     );
     assert_eq!(
@@ -279,7 +279,7 @@ async fn test_removed_without_replacement() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">0<script \
-        type=\"application/json\">{\"state\":0,\"hashTree\":[0,1212501170,4215132335]}</script>\
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,4215132335]}</script>\
         </server-component>a</div>"
     );
     assert_eq!(
@@ -329,7 +329,7 @@ async fn test_removed_by_being_replaced() {
     assert_eq!(
         out.view,
         "<div><server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\">0<script \
-        type=\"application/json\">{\"state\":0,\"hashTree\":[0,1212501170,4215132335]}</script>\
+        type=\"application/json\">{\"state\":0,\"hashTree\":[-1,1212501170,4215132335]}</script>\
         </server-component>b</div>"
     );
     assert_eq!(
@@ -406,7 +406,7 @@ async fn test_inner_partial_update() {
     assert_eq!(
         out.view,
         "<server-component id=\"ZJGbMZEVVDBciW-4k8Ld0\" data-id=\"a::b\"><!--unchanged-->2<script \
-        type=\"application/json\">{\"state\":2,\"hashTree\":[0,3201766860,0,205742900,2470644698]\
+        type=\"application/json\">{\"state\":2,\"hashTree\":[-1,3201766860,-1,205742900,2470644698]\
         }</script></server-component>"
     );
     assert_eq!(

@@ -58,7 +58,7 @@ where
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
             for i in self.iter {
-                let fut = r.iter_item(i.key, i.view.into_view());
+                let fut = i.view.into_view().render(r);
                 r = fut.await?;
             }
             Ok(r)
