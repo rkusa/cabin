@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous_or;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -15,6 +15,7 @@ async fn app() -> impl View {
             Item { id: 1, count: 1 },
             Item { id: 2, count: 2 },
         ]))
+        .await
     ]
 }
 
@@ -58,13 +59,10 @@ async fn items(items: Items) -> Result<impl View, Infallible> {
 
     Ok(view![
         html::div(html::button("add above").on_click(add_above, ())),
-        html::ul(items.0.into_iter().map(|item| {
-            html::li![
-                counter(previous_or(item.count)),
-                html::button("x").on_click(delete, item.id)
-            ]
-            .with_key(item.id)
-        })),
+        html::ul(items.0.into_iter().map(|item| html::li![
+            counter(previous_or(item.count)),
+            html::button("x").on_click(delete, item.id)
+        ])),
         html::div(html::button("add below").on_click(add_below, ())),
     ])
 }

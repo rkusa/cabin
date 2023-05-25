@@ -6,13 +6,9 @@ pub(crate) mod text;
 use std::borrow::Cow;
 use std::fmt::Write;
 use std::future::Future;
-use std::hash::Hash;
-use std::marker::PhantomData;
-use std::panic::Location;
 use std::pin::Pin;
 
 use self::boxed::BoxedView;
-use self::iter::KeyedView;
 use crate::render::Renderer;
 
 // Implementation note: It is not possible to implement [View] for both tupels and iterators
@@ -33,15 +29,6 @@ where
         V::Future: 'static,
     {
         BoxedView::new(self.into_view())
-    }
-
-    #[track_caller]
-    fn with_key(self, key: impl Hash) -> KeyedView<Self>
-    where
-        Self: Sized,
-    {
-        // Track location caller to ensure a unique key per iteration
-        KeyedView::new((Location::caller(), key), self)
     }
 }
 
@@ -105,7 +92,6 @@ impl<'a> IntoView<Cow<'a, str>> for &'a Cow<'a, str> {
         Cow::Borrowed(&**self)
     }
 }
-
 impl<'a> View for Cow<'a, str> {
     type Future = std::future::Ready<Result<Renderer, crate::Error>>;
 
@@ -122,75 +108,21 @@ impl View for String {
     }
 }
 
-impl<I, V> IntoView<OptionView<I, V>> for Option<I>
-where
-    I: IntoView<V> + Send + 'static,
-    V: View + 'static,
-{
-    fn into_view(self) -> OptionView<I, V> {
-        OptionView {
-            option: self,
-            marker: PhantomData,
-        }
-    }
-}
-
-pub struct OptionView<I, V> {
-    option: Option<I>,
-    marker: PhantomData<V>,
-}
-
-impl<I, V> View for OptionView<I, V>
+impl<V> View for Option<V>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    I: IntoView<V> + Send + 'static,
-    V: View + 'static,
+    V: View + Send + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
     type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async {
-            match self.option {
-                Some(i) => i.into_view().render(r).await,
+            match self {
+                Some(i) => i.render(r).await,
                 None => Ok(r),
             }
         })
-    }
-}
-
-impl<I, V, E> IntoView<ResultView<I, V, E>> for Result<I, E>
-where
-    I: IntoView<V> + Send + 'static,
-    V: View + 'static,
-    crate::Error: From<E>,
-    E: Send + 'static,
-{
-    fn into_view(self) -> ResultView<I, V, E> {
-        ResultView {
-            result: self,
-            marker: PhantomData,
-        }
-    }
-}
-
-pub struct ResultView<I, V, E> {
-    result: Result<I, E>,
-    marker: PhantomData<V>,
-}
-
-impl<I, V, E> View for ResultView<I, V, E>
-where
-    I: IntoView<V> + Send + 'static,
-    V: View + 'static,
-    crate::Error: From<E>,
-    E: Send + 'static,
-{
-    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        Box::pin(async { self.result?.into_view().render(r).await })
     }
 }
 
@@ -219,8 +151,8 @@ where
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async {
-            let r = self.left.render(r).await?;
-            let r = self.right.render(r).await?;
+            let r = self.left.into_view().render(r).await?;
+            let r = self.right.into_view().render(r).await?;
             Ok(r)
         })
     }
