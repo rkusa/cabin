@@ -5,16 +5,16 @@ use crate::component::{ComponentId, ServerComponent};
 use crate::previous::{previous, FromPrevious};
 use crate::render::marker::Marker;
 use crate::render::PreviousComponent;
-use crate::{html, view, Renderer, View, ViewHashTree};
+use crate::view::fragment;
+use crate::{html, Renderer, View, ViewHashTree};
 
 #[tokio::test]
 async fn test_previous_state() {
     fn component(state: impl FromPrevious<u32> + 'static) -> impl View {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(Ok::<_, Infallible>(view![
-                html::div(()),
-                format!("{state}")
-            ]))
+            ready(Ok::<_, Infallible>(
+                fragment() >> html::div() >> format!("{state}"),
+            ))
         })
     }
 
@@ -53,10 +53,9 @@ async fn test_previous_state() {
 async fn test_previous_default() {
     fn component(state: impl FromPrevious<u32> + 'static) -> impl View {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(Ok::<_, Infallible>(view![
-                html::div(()),
-                format!("{state}")
-            ]))
+            ready(Ok::<_, Infallible>(
+                fragment() >> html::div() >> format!("{state}"),
+            ))
         })
     }
 

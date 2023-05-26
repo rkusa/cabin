@@ -5,15 +5,12 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use html::events::InputEvent;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::view::fragment;
+use rustend::{html, rustend_scripts, rustend_stylesheets, IntoView, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    view![
-        rustend_stylesheets(),
-        rustend_scripts(),
-        search(Search::new("Ge")).await
-    ]
+    fragment() >> rustend_stylesheets() >> rustend_scripts() >> search(Search::new("Ge")).await
 }
 
 #[derive(Default, Hash, Serialize, Deserialize)]
@@ -38,10 +35,13 @@ async fn search(state: Search) -> Result<impl View, Infallible> {
 
     let items = search_countries(&state.query).await;
 
-    Ok(html::div![
-        html::div(html::input().attr("value", state.query).on_input(set_query)),
-        html::div(html::ul(items.into_iter().map(html::li))),
-    ])
+    Ok(html::div()
+        >> { html::div().attr("value", state.query) >> html::input().on_input(set_query) }
+        >> {
+            html::div() >> {
+                html::ul() >> items.into_iter().map(|item| html::li() >> item).into_view()
+            }
+        })
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {

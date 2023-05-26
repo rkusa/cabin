@@ -6,15 +6,14 @@ use super::IntoView;
 pub use super::View;
 use crate::render::Renderer;
 
-impl<Iter, I, V> IntoView<IteratorView<Iter::IntoIter, I, V>> for Iter
+impl<Iter, V> IntoView<IteratorView<Iter::IntoIter, V>> for Iter
 where
-    Iter: IntoIterator<Item = I>,
+    Iter: IntoIterator<Item = V>,
     // TODO: remove `+ 'static` once removing away from boxed future
     Iter::IntoIter: Send + 'static,
-    I: IntoView<V> + Send,
     V: View + Send,
 {
-    fn into_view(self) -> IteratorView<Iter::IntoIter, I, V> {
+    fn into_view(self) -> IteratorView<Iter::IntoIter, V> {
         IteratorView {
             iter: self.into_iter(),
             marker: PhantomData,
@@ -22,16 +21,15 @@ where
     }
 }
 
-pub struct IteratorView<Iter, I, V> {
+pub struct IteratorView<Iter, V> {
     iter: Iter,
-    marker: PhantomData<(I, V)>,
+    marker: PhantomData<V>,
 }
 
-impl<Iter, I, V> View for IteratorView<Iter, I, V>
+impl<Iter, V> View for IteratorView<Iter, V>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    Iter: Iterator<Item = I> + Send + 'static,
-    I: IntoView<V> + Send,
+    Iter: Iterator<Item = V> + Send + 'static,
     V: View + Send,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
@@ -40,7 +38,7 @@ where
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
             for i in self.iter {
-                let fut = i.into_view().render(r);
+                let fut = i.render(r);
                 r = fut.await?;
             }
             Ok(r)

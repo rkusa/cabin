@@ -4,6 +4,7 @@ pub mod events;
 
 use std::borrow::Cow;
 use std::future::Future;
+use std::ops::Shr;
 use std::pin::Pin;
 
 pub use elements::*;
@@ -14,24 +15,14 @@ use self::attributes::{Attribute, Attributes};
 use crate::component::registry::ComponentRegistry;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
-use crate::view::{IntoView, View};
+use crate::view::{Pair, View};
 
-pub fn custom<V: View>(tag: &'static str, content: impl IntoView<V>) -> Html<V, (), ()> {
+pub fn custom<V: View>(tag: &'static str, content: V) -> Html<V, (), ()> {
     Html {
         tag,
         attrs: (),
         on_click: None,
         kind: (),
-        content: content.into_view(),
-    }
-}
-
-pub fn create<V: View, K: Default>(tag: &'static str, content: V) -> Html<V, (), K> {
-    Html {
-        tag,
-        attrs: (),
-        on_click: None,
-        kind: K::default(),
         content,
     }
 }
@@ -123,5 +114,19 @@ where
                 el.end()
             }
         })
+    }
+}
+
+impl<Lhs: View, Rhs: View, A, K> Shr<Rhs> for Html<Lhs, A, K> {
+    type Output = Html<Pair<Lhs, Rhs>, A, K>;
+
+    fn shr(self, rhs: Rhs) -> Self::Output {
+        Html {
+            tag: self.tag,
+            attrs: self.attrs,
+            on_click: self.on_click,
+            kind: self.kind,
+            content: Pair::new(self.content, rhs),
+        }
     }
 }

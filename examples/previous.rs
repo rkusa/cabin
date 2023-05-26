@@ -4,15 +4,15 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous_or;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::view::fragment;
+use rustend::{html, rustend_scripts, rustend_stylesheets, IntoView, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    view![
-        rustend_stylesheets(),
-        rustend_scripts(),
-        items(Items(vec![Item { id: 1 }, Item { id: 2 },])).await
-    ]
+    fragment()
+        >> rustend_stylesheets()
+        >> rustend_scripts()
+        >> items(Items(vec![Item { id: 1 }, Item { id: 2 }])).await
 }
 
 #[derive(Hash, Serialize, Deserialize)]
@@ -43,14 +43,22 @@ async fn items(items: Items) -> Result<impl View, Infallible> {
         items
     }
 
-    Ok(view![
-        html::div(html::button("add above").on_click(add_above, ())),
-        html::ul(items.0.into_iter().enumerate().map(|(i, item)| html::li![
-            counter(previous_or(item.id, i + 1)),
-            html::button("x").on_click(delete, item.id)
-        ])),
-        html::div(html::button("add below").on_click(add_below, ())),
-    ])
+    Ok(fragment()
+        >> { html::div() >> { html::button().on_click(add_above, ()) >> "add above" } }
+        >> {
+            html::ul()
+                >> items
+                    .0
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, item)| {
+                        html::li() >> { counter(previous_or(item.id, i + 1)).into_view() } >> {
+                            html::button().on_click(delete, item.id) >> "x"
+                        }
+                    })
+                    .into_view()
+        }
+        >> { html::div() >> { html::button().on_click(add_below, ()) >> "add below" } })
 }
 
 #[rustend::component]
@@ -59,7 +67,7 @@ async fn counter(count: usize) -> Result<impl View, Infallible> {
         count + 1
     }
 
-    Ok(html::button(html::text!("{}", count)).on_click(incr, ()))
+    Ok(html::button().on_click(incr, ()) >> html::text!("{}", count))
 }
 
 #[tokio::main]
