@@ -1,9 +1,9 @@
+use std::borrow::Cow;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::previous::previous_or;
 use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
@@ -11,13 +11,24 @@ async fn app() -> impl View {
     view![
         rustend_stylesheets(),
         rustend_scripts(),
-        items(Items(vec![Item { id: 1 }, Item { id: 2 },])).await
+        items(Items(vec![
+            Item {
+                id: 1,
+                name: "first".into(),
+            },
+            Item {
+                id: 2,
+                name: "second".into(),
+            },
+        ]))
+        .await
     ]
 }
 
 #[derive(Hash, Serialize, Deserialize)]
 struct Item {
     id: usize,
+    name: Cow<'static, str>,
 }
 
 #[derive(Default, Hash, Serialize, Deserialize)]
@@ -25,15 +36,16 @@ struct Items(Vec<Item>);
 
 #[rustend::component]
 async fn items(items: Items) -> Result<impl View, Infallible> {
-    async fn add_above(mut items: Items, _: ()) -> Items {
+    async fn add(mut items: Items, _: ()) -> Items {
         let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
-        items.0.insert(0, Item { id: max_id + 1 });
-        items
-    }
-
-    async fn add_below(mut items: Items, _: ()) -> Items {
-        let max_id = items.0.iter().map(|i| i.id).max().unwrap_or(0);
-        items.0.push(Item { id: max_id + 1 });
+        items.0.push(Item {
+            id: max_id + 1,
+            name: "new item 1".into(),
+        });
+        items.0.push(Item {
+            id: max_id + 2,
+            name: "new item 2".into(),
+        });
         items
     }
 
@@ -44,22 +56,14 @@ async fn items(items: Items) -> Result<impl View, Infallible> {
     }
 
     Ok(view![
-        html::div(html::button("add above").on_click(add_above, ())),
-        html::ul(items.0.into_iter().enumerate().map(|(i, item)| html::li![
-            counter(previous_or(item.id, i + 1)),
-            html::button("x").on_click(delete, item.id)
-        ])),
-        html::div(html::button("add below").on_click(add_below, ())),
+        html::ul(
+            items
+                .0
+                .into_iter()
+                .map(|item| html::li![item.name, html::button("x").on_click(delete, item.id)])
+        ),
+        html::div(html::button("add").on_click(add, ())),
     ])
-}
-
-#[rustend::component]
-async fn counter(count: usize) -> Result<impl View, Infallible> {
-    async fn incr(count: usize, _: ()) -> usize {
-        count + 1
-    }
-
-    Ok(html::button(html::text!("{}", count)).on_click(incr, ()))
 }
 
 #[tokio::main]

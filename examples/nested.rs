@@ -4,12 +4,15 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous;
-use rustend::view::fragment;
-use rustend::{html, rustend_scripts, rustend_stylesheets, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    fragment() >> rustend_stylesheets() >> rustend_scripts() >> level1(Entry::default()).await
+    view![
+        rustend_stylesheets(),
+        rustend_scripts(),
+        level1(Entry::default()).await
+    ]
 }
 
 #[derive(Debug, Default, Hash, Serialize, Deserialize)]
@@ -30,12 +33,11 @@ async fn level1(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset()
-        >> { html::button().on_click(incr, ()) >> html::text!("{}", state.count) }
-        >> { html::button().on_click(toggle_child, ()) >> "toggle child" }
-        >> state
-            .has_child
-            .then(|| level2(previous(2, |e| e)).into_view()))
+    Ok(html::fieldset![
+        html::button(html::text!("{}", state.count)).on_click(incr, ()),
+        html::button("toggle child").on_click(toggle_child, ()),
+        state.has_child.then(|| level2(previous(2, |e| e)))
+    ])
 }
 
 #[rustend::component]
@@ -50,12 +52,11 @@ async fn level2(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset()
-        >> { html::button().on_click(incr, ()) >> html::text!("{}", state.count) }
-        >> { html::button().on_click(toggle_child, ()) >> "toggle child" }
-        >> state
-            .has_child
-            .then(|| level3(previous(3, |e| e)).into_view()))
+    Ok(html::fieldset![
+        html::button(html::text!("{}", state.count)).on_click(incr, ()),
+        html::button("toggle child").on_click(toggle_child, ()),
+        state.has_child.then(|| level3(previous(3, |e| e)))
+    ])
 }
 
 #[rustend::component]
@@ -70,12 +71,11 @@ async fn level3(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset()
-        >> { html::button().on_click(incr, ()) >> html::text!("{}", state.count) }
-        >> { html::button().on_click(toggle_child, ()) >> "toggle child" }
-        >> state
-            .has_child
-            .then(|| level4(previous(4, |e| e)).into_view()))
+    Ok(html::fieldset![
+        html::button(html::text!("{}", state.count)).on_click(incr, ()),
+        html::button("toggle child").on_click(toggle_child, ()),
+        state.has_child.then(|| level4(previous(4, |e| e)))
+    ])
 }
 
 #[rustend::component]
@@ -85,7 +85,11 @@ async fn level4(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset() >> { html::button().on_click(incr, ()) >> html::text!("{}", state.count) })
+    Ok(html::fieldset![html::button(html::text!(
+        "{}",
+        state.count
+    ))
+    .on_click(incr, ())])
 }
 
 #[tokio::main]

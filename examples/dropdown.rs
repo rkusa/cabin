@@ -5,12 +5,11 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous;
-use rustend::view::fragment;
-use rustend::{html, rustend_scripts, rustend_stylesheets, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    fragment() >> rustend_stylesheets() >> rustend_scripts() >> root(2).await
+    view![rustend_stylesheets(), rustend_scripts(), root(2).await]
 }
 
 #[rustend::component]
@@ -19,17 +18,14 @@ async fn root(count: u32) -> Result<impl View, Infallible> {
         count + 1
     }
 
-    Ok(fragment()
-        >> {
-            html::button()
-                .on_click(incr, ())
-                .attr("style", "min-width:40px")
-                >> html::text!("{}", count)
-        }
-        >> dropdown(previous((), move |s: DropdownState| {
-            s.with_items((0..count).map(|i| format!("Item {i}").into()).collect())
-        }))
-        .await)
+    Ok(view![
+        html::button(html::text!("{}", count))
+            .on_click(incr, ())
+            .attr("style", "min-width:40px"),
+        dropdown(previous((), move |s: DropdownState| s.with_items(
+            (0..count).map(|i| format!("Item {i}").into()).collect()
+        )))
+    ])
 }
 
 #[derive(Debug, Default, Hash, Serialize, Deserialize)]
@@ -52,24 +48,20 @@ async fn dropdown(state: DropdownState) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(
-        html::div().attr("style", "display:inline;position:relative")
-            >> { html::button().on_click(toggle, ()) >> "open" }
-            >> if state.opened {
-                (html::ul().attr(
+    Ok(html::div![
+        html::button("open").on_click(toggle, ()),
+        if state.opened {
+            html::ul(state.items.into_iter().map(|item| html::li(item).attr("style", "white-space:nowrap;")))
+                .attr(
                     "style",
-                    "position:absolute;top:20px;right:0;\
-                    background:#ddd;list-style-type:none;padding:4px;",
-                ) >> state
-                    .items
-                    .into_iter()
-                    .map(|item| html::li().attr("style", "white-space:nowrap;") >> item)
-                    .into_view())
+                    "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;padding:4px;",
+                )
                 .boxed()
-            } else {
-                ().boxed()
-            },
-    )
+        } else {
+            ().boxed()
+        },
+    ]
+    .attr("style", "display:inline;position:relative"))
 }
 
 #[tokio::main]

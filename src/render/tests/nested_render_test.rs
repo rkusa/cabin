@@ -4,8 +4,7 @@ use std::future::ready;
 use crate::component::{ComponentId, ServerComponent};
 use crate::render::marker::Marker;
 use crate::render::PreviousComponent;
-use crate::view::fragment;
-use crate::{html, Renderer, View, ViewHashTree};
+use crate::{html, view, Renderer, View, ViewHashTree};
 
 #[tokio::test]
 async fn test_unchanged() {
@@ -15,7 +14,7 @@ async fn test_unchanged() {
         })
     };
 
-    let r = (html::div() >> component() >> "text")
+    let r = html::div(view![component(), "text"])
         .render(Renderer::new())
         .await
         .unwrap();
@@ -41,7 +40,7 @@ async fn test_unchanged() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> component() >> "text")
+    let r = html::div(view![component(), "text"])
         .render(r)
         .await
         .unwrap();
@@ -62,7 +61,7 @@ async fn test_unchanged() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> component() >> "asdf")
+    let r = html::div(view![component(), "asdf"])
         .render(r)
         .await
         .unwrap();
@@ -93,7 +92,7 @@ async fn test_changed() {
         )
     };
 
-    let r = (html::div() >> component(1) >> "text")
+    let r = html::div(view![component(1), "text"])
         .render(Renderer::new())
         .await
         .unwrap();
@@ -119,7 +118,7 @@ async fn test_changed() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> component(2) >> "text")
+    let r = html::div(view![component(2), "text"])
         .render(r)
         .await
         .unwrap();
@@ -153,7 +152,7 @@ async fn test_added_as_additional() {
         })
     };
 
-    let r = (html::div() >> "a").render(Renderer::new()).await.unwrap();
+    let r = html::div("a").render(Renderer::new()).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, "<div>a</div>");
     assert_eq!(
@@ -169,7 +168,7 @@ async fn test_added_as_additional() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> component() >> "a").render(r).await.unwrap();
+    let r = html::div(view![component(), "a"]).render(r).await.unwrap();
     let out = r.end();
     assert_eq!(
         out.view,
@@ -192,7 +191,7 @@ async fn test_added_as_additional() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> component() >> "a").render(r).await.unwrap();
+    let r = html::div(view![component(), "a"]).render(r).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, "<!--unchanged-->");
     assert_eq!(
@@ -218,7 +217,7 @@ async fn test_added_as_replacement() {
         })
     };
 
-    let r = (html::div() >> "a" >> "b")
+    let r = html::div(view!["a", "b"])
         .render(Renderer::new())
         .await
         .unwrap();
@@ -239,7 +238,7 @@ async fn test_added_as_replacement() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> component() >> "b").render(r).await.unwrap();
+    let r = html::div(view![component(), "b"]).render(r).await.unwrap();
     let out = r.end();
     assert_eq!(
         out.view,
@@ -270,7 +269,7 @@ async fn test_removed_without_replacement() {
         })
     };
 
-    let r = (html::div() >> component() >> "a")
+    let r = html::div(view![component(), "a"])
         .render(Renderer::new())
         .await
         .unwrap();
@@ -296,7 +295,7 @@ async fn test_removed_without_replacement() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> "a").render(r).await.unwrap();
+    let r = html::div("a").render(r).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, "<div>a</div>");
     assert_eq!(
@@ -320,7 +319,7 @@ async fn test_removed_by_being_replaced() {
         })
     };
 
-    let r = (html::div() >> component() >> "b")
+    let r = html::div(view![component(), "b"])
         .render(Renderer::new())
         .await
         .unwrap();
@@ -346,7 +345,7 @@ async fn test_removed_by_being_replaced() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = (html::div() >> "a" >> "b").render(r).await.unwrap();
+    let r = html::div(view!["a", "b"]).render(r).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, "<div>a<!--unchanged--></div>");
     assert_eq!(
@@ -368,9 +367,10 @@ async fn test_removed_by_being_replaced() {
 async fn test_inner_partial_update() {
     let component = |state: u32| {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
-            ready(Ok::<_, Infallible>(
-                fragment() >> html::div() >> format!("{state}"),
-            ))
+            ready(Ok::<_, Infallible>(view![
+                html::div(()),
+                format!("{state}")
+            ]))
         })
     };
 

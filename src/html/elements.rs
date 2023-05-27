@@ -1,4 +1,4 @@
-use super::Html;
+use super::{create, Html};
 
 pub mod anchor;
 pub mod input;
@@ -6,26 +6,42 @@ pub mod input;
 #[macro_export]
 macro_rules! element {
     ($dollar:tt, $mod:ident, $name:ident) => {
-        pub fn $name() -> $crate::html::Html<(), (), ()> {
-            Html {
-                tag: stringify!($name),
-                attrs: (),
-                on_click: None,
-                kind: (),
-                content: (),
-            }
+        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), ()> {
+            $crate::html::create(stringify!($name), content.into_view())
         }
+
+        mod $mod {
+            #[macro_export]
+            macro_rules! $name {
+                ($dollar($x:tt)*) => ($crate::html::create::<_, ()>(stringify!($name), $crate::view![$dollar($x)*]))
+            }
+
+            pub use $name;
+        }
+        pub use $mod::*;
     };
     ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
-        pub fn $name() -> $crate::html::Html<(), (), $crate::html::elements::$kind_mod::$kind_type>
-        {
-            Html {
-                tag: stringify!($name),
-                attrs: (),
-                on_click: None,
-                kind: $crate::html::elements::$kind_mod::$kind_type::default(),
-                content: (),
+        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
+            $crate::html::create(stringify!($name), content.into_view())
+        }
+
+        mod $mod {
+            #[macro_export]
+            macro_rules! $name {
+                ($dollar($x:tt)*) => ($crate::html::create::<_, $crate::html::elements::$kind_mod::$kind_type>(stringify!($name), $crate::view![$dollar($x)*]))
             }
+
+            pub use $name;
+        }
+        pub use $mod::*;
+    };
+}
+
+#[macro_export]
+macro_rules! void_element {
+    ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
+        pub fn $name() -> Html<(), (), $crate::html::elements::$kind_mod::$kind_type> {
+            create(stringify!($name), ())
         }
     };
 }
@@ -44,7 +60,7 @@ element!($, __h4, h4);
 element!($, __h5, h5);
 element!($, __h6, h6);
 element!($, __hgroup, hgroup);
-element!($, __input, input, input, Input); // TODO: prevent >> (add children)
+void_element!($, __input, input, input, Input);
 element!($, __li, li);
 element!($, __table, table);
 element!($, __tbody, tbody);

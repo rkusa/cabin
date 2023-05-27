@@ -3,12 +3,11 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::view::fragment;
-use rustend::{html, rustend_scripts, rustend_stylesheets, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use rustend_css::{self as css, css, Style};
 
 async fn app() -> impl View {
-    fragment() >> rustend_stylesheets() >> rustend_scripts() >> counter(0).await
+    view![rustend_stylesheets(), rustend_scripts(), counter(0).await]
 }
 
 #[rustend::component]
@@ -17,19 +16,21 @@ async fn counter(count: u32) -> Result<impl View, Infallible> {
         count + 1
     }
 
-    Ok(html::button().on_click(incr, ()).class(
-        // TODO: modifier groups?
-        // TODO: autocomplate after XZY. (for modifiers)
-        // TODO: autocomplete after text::
-        css!(
-            css::BLOCK,
-            css::text::BLACK,
-            css::text::SM,
-            css::bg::BLACK.hover(),
-            css::text::WHITE.hover(),
-            css::text::XS.hover().focus(),
-        ) + (count == 0).then_some(css!(css::text::color("red"))),
-    ) >> html::text!("{count}"))
+    Ok(html::button(html::text!("{count}"))
+        .on_click(incr, ())
+        .class(
+            // TODO: modifier groups?
+            // TODO: autocomplate after XZY. (for modifiers)
+            // TODO: autocomplete after text::
+            css!(
+                css::BLOCK,
+                css::text::BLACK,
+                css::text::SM,
+                css::bg::BLACK.hover(),
+                css::text::WHITE.hover(),
+                css::text::XS.hover().focus(),
+            ) + (count == 0).then_some(css!(css::text::color("red"))),
+        ))
 }
 
 #[tokio::main]

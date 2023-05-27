@@ -3,11 +3,10 @@ use std::{error, fmt};
 
 use axum::body::{Full, HttpBody};
 use http::Response;
-use rustend::view::fragment;
-use rustend::{rustend_scripts, rustend_stylesheets, View};
+use rustend::{rustend_scripts, rustend_stylesheets, view, View};
 
 async fn app() -> impl View {
-    fragment() >> rustend_stylesheets() >> rustend_scripts() >> health(()).await
+    view![rustend_stylesheets(), rustend_scripts(), health(()).await]
 }
 
 #[rustend::component]

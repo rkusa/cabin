@@ -3,11 +3,10 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::view::fragment;
-use rustend::{html, rustend_scripts, rustend_stylesheets, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 
 async fn app() -> impl View {
-    fragment() >> rustend_stylesheets() >> rustend_scripts() >> counter(0).await
+    view![rustend_stylesheets(), rustend_scripts(), counter(0).await]
 }
 
 #[rustend::component]
@@ -16,17 +15,16 @@ async fn counter(count: u32) -> Result<impl View, Infallible> {
         count + 1
     }
 
-    Ok(fragment()
-        // >> (count > 0).then(|| html::div() >> html::text!("Count: {}", count))
-        // >> (count == 0).then_some("Hit `incr` to start counting ...")
-        >> {
-            if count > 0 {
-                (html::div() >> html::text!("Count: {}", count)).boxed()
-            } else {
-                (html::div() >> "Hit `incr` to start counting ...").boxed()
-            }
-        }
-        >> { html::button().on_click(incr, ()) >> "incr" })
+    Ok(view![
+        //     (self.0 == 0).then(|| ),
+        //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
+        if count > 0 {
+            html::div(html::text!("Count: {}", count)).boxed()
+        } else {
+            html::div("Hit `incr` to start counting ...").boxed()
+        },
+        html::button("incr").on_click(incr, ()),
+    ])
 }
 
 #[tokio::main]
