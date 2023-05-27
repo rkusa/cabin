@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use html::events::InputEvent;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -63,7 +63,7 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                let res = rustend::render_to_response(app().await).await;
+                let res = rustend::render_to_response(app).await;
                 let (parts, body) = res.into_parts();
                 Response::from_parts(parts, Full::new(body).boxed())
             }),

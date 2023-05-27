@@ -10,7 +10,7 @@ impl<F, I, V> IntoView<FutureView<F::IntoFuture, I, V>> for F
 where
     F: IntoFuture<Output = I>,
     // TODO: remove `+ 'static` once removing away from boxed future
-    F::IntoFuture: Send + 'static,
+    F::IntoFuture: 'static,
     I: IntoView<V> + Send,
     V: View + Send,
 {
@@ -30,12 +30,12 @@ pub struct FutureView<F, I, V> {
 impl<F, I, V> View for FutureView<F, I, V>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    F: Future<Output = I> + Send + 'static,
+    F: Future<Output = I> + 'static,
     I: IntoView<V> + Send,
     V: View + Send,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {

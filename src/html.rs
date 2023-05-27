@@ -96,12 +96,12 @@ impl<V, A, K> Html<V, A, K> {
 impl<V, A, K> View for Html<V, A, K>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    V: View + Send + 'static,
-    A: Attributes + Send + 'static,
-    K: Attributes + Send + 'static,
+    V: View + 'static,
+    A: Attributes + 'static,
+    K: Attributes + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {

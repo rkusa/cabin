@@ -48,15 +48,14 @@ impl ComponentId {
 
 impl<F, V, P, S, E> View for ServerComponent<F, V, P, S, E>
 where
-    F: Future<Output = Result<V, E>> + Send + 'static,
-    V: View + Send + 'static,
-    E: Send + 'static,
+    F: Future<Output = Result<V, E>> + 'static,
+    V: View,
     crate::Error: From<E>,
     P: FromPrevious<S> + 'static,
-    S: Default + Hash + Serialize + DeserializeOwned + Send + 'static,
+    S: Default + Hash + Serialize + DeserializeOwned + 'static,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {

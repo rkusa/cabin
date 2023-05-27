@@ -19,9 +19,8 @@ pub static COMPONENT_FACTORIES: [fn(&mut ComponentRegistry)] = [..];
 
 static REGISTRY: OnceBox<ComponentRegistry> = OnceBox::new();
 
-type ComponentHandler = dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = Result<Update, crate::Error>> + Send>>
-    + Send
-    + Sync;
+type ComponentFuture = Pin<Box<dyn Future<Output = Result<Update, crate::Error>>>>;
+type ComponentHandler = dyn Fn(Bytes) -> ComponentFuture + Send + Sync;
 
 pub struct ComponentRegistry {
     handler: HashMap<(Cow<'static, str>, &'static str), Arc<ComponentHandler>>,
@@ -66,13 +65,12 @@ impl ComponentRegistry {
         update: fn(S, M) -> U,
         render: fn(S) -> R,
     ) where
-        S: Serialize + DeserializeOwned + Send + 'static,
-        M: DeserializeOwned + Send + 'static,
-        V: View + Send + 'static,
-        E: Send + 'static,
+        S: Serialize + DeserializeOwned + 'static,
+        M: DeserializeOwned + 'static,
+        V: View,
         crate::Error: From<E>,
-        U: Future<Output = S> + Send + 'static,
-        R: Future<Output = Result<V, E>> + Send + 'static,
+        U: Future<Output = S> + 'static,
+        R: Future<Output = Result<V, E>> + 'static,
     {
         self.action_names.insert(update as usize, action);
         self.handler.insert(
@@ -120,7 +118,8 @@ impl ComponentRegistry {
             return Ok(None)
         };
         let handler = Arc::clone(handler);
-        let fut = handler(body);
-        fut.await.map(Some)
+        crate::local_pool::spawn(move || handler(body))
+            .await
+            .map(Some)
     }
 }

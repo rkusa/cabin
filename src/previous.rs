@@ -4,14 +4,14 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use twox_hash::XxHash32;
 
-pub trait FromPrevious<T>: Send {
+pub trait FromPrevious<T> {
     fn id(&self) -> u32;
     fn next_from_previous(self, previous: Option<T>) -> T;
 }
 
 impl<T> FromPrevious<T> for T
 where
-    T: Serialize + DeserializeOwned + Send,
+    T: Serialize + DeserializeOwned,
 {
     fn id(&self) -> u32 {
         0
@@ -45,8 +45,8 @@ mod internal {
 
     impl<F, T> FromPrevious<T> for PreviousFn<F, T>
     where
-        T: Default + Serialize + DeserializeOwned + Send,
-        F: FnOnce(T) -> T + Send,
+        T: Default + Serialize + DeserializeOwned,
+        F: FnOnce(T) -> T,
     {
         fn id(&self) -> u32 {
             self.id
@@ -70,7 +70,7 @@ mod internal {
 
     impl<T> FromPrevious<T> for PreviousOr<T>
     where
-        T: Serialize + DeserializeOwned + Send,
+        T: Serialize + DeserializeOwned,
     {
         fn id(&self) -> u32 {
             self.id
@@ -82,9 +82,9 @@ mod internal {
     }
 }
 
-pub fn previous<T>(id: impl Hash, f: impl FnOnce(T) -> T + Send) -> impl FromPrevious<T>
+pub fn previous<T>(id: impl Hash, f: impl FnOnce(T) -> T) -> impl FromPrevious<T>
 where
-    T: Default + Serialize + DeserializeOwned + Send,
+    T: Default + Serialize + DeserializeOwned,
 {
     let mut hasher = XxHash32::default();
     id.hash(&mut hasher);
@@ -94,7 +94,7 @@ where
 
 pub fn previous_or<T>(id: impl Hash, initial: T) -> impl FromPrevious<T>
 where
-    T: Serialize + DeserializeOwned + Send,
+    T: Serialize + DeserializeOwned,
 {
     let mut hasher = XxHash32::default();
     id.hash(&mut hasher);

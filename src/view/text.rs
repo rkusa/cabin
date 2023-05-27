@@ -43,7 +43,7 @@ impl<F: Fn(Renderer) -> Result<Renderer, crate::Error>> Text<F> {
 
 impl<F> View for Text<F>
 where
-    F: Fn(Renderer) -> Result<Renderer, crate::Error> + Send,
+    F: Fn(Renderer) -> Result<Renderer, crate::Error>,
 {
     type Future = Ready<Result<Renderer, crate::Error>>;
 

@@ -16,8 +16,8 @@ async fn counter(count: u32) -> Result<impl View, Infallible> {
     }
 
     Ok(view![
-        //     (self.0 == 0).then(|| ),
-        //     (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
+        // (self.0 == 0).then(|| ),
+        // (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
         if count > 0 {
             html::div(html::text!("Count: {}", count)).boxed()
         } else {
@@ -33,7 +33,7 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                let res = rustend::render_to_response(app().await).await;
+                let res = rustend::render_to_response(app).await;
                 let (parts, body) = res.into_parts();
                 Response::from_parts(parts, Full::new(body).boxed())
             }),

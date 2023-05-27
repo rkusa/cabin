@@ -11,8 +11,8 @@ where
     Iter: IntoIterator<Item = I>,
     // TODO: remove `+ 'static` once removing away from boxed future
     Iter::IntoIter: Send + 'static,
-    I: IntoView<V> + Send,
-    V: View + Send,
+    I: IntoView<V>,
+    V: View,
 {
     fn into_view(self) -> IteratorView<Iter::IntoIter, I, V> {
         IteratorView {
@@ -29,13 +29,12 @@ pub struct IteratorView<Iter, I, V> {
 
 impl<Iter, I, V> View for IteratorView<Iter, I, V>
 where
-    // TODO: remove `+ 'static` once removing away from boxed future
-    Iter: Iterator<Item = I> + Send + 'static,
-    I: IntoView<V> + Send,
-    V: View + Send,
+    Iter: Iterator<Item = I> + 'static,
+    I: IntoView<V>,
+    V: View,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
 
     fn render(self, mut r: Renderer) -> Self::Future {
         Box::pin(async move {
