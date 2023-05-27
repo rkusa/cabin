@@ -1,10 +1,14 @@
+#![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
+#![allow(incomplete_features)]
+
 use std::borrow::Cow;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use html::events::InputEvent;
+use rustend::component::{Component, PublicComponent};
+use rustend::html::events::InputValue;
 use rustend::view::IteratorExt;
 use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 use serde::{Deserialize, Serialize};
@@ -13,11 +17,11 @@ async fn app() -> impl View {
     (
         rustend_stylesheets(),
         rustend_scripts(),
-        search(Search::new("Ge")).await,
+        Search::restore_or_else((), || Search::new("Ge")),
     )
 }
 
-#[derive(Default, Hash, Serialize, Deserialize)]
+#[derive(Default, Hash, Serialize, Deserialize, PublicComponent)]
 struct Search {
     query: Cow<'static, str>,
 }
@@ -30,19 +34,33 @@ impl Search {
     }
 }
 
-#[rustend::component]
-async fn search(state: Search) -> Result<impl View, Infallible> {
-    async fn set_query(mut state: Search, ev: InputEvent) -> Search {
-        state.query = ev.value.into();
-        state
+#[derive(Serialize, Deserialize)]
+enum SearchEvent {
+    Search(InputValue),
+}
+
+impl Component for Search {
+    type Event = SearchEvent;
+    type Error = Infallible;
+
+    async fn update(&mut self, event: Self::Event) {
+        match event {
+            SearchEvent::Search(query) => self.query = query.into(),
+        }
     }
 
-    let items = search_countries(&state.query).await;
+    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
+        let items = search_countries(&self.query).await;
 
-    Ok(html::div((
-        html::div(html::input().attr("value", state.query).on_input(set_query)),
-        html::div(html::ul(items.into_iter().map(html::li).into_view())),
-    )))
+        Ok(html::div((
+            html::div(
+                html::input()
+                    .attr("value", self.query)
+                    .on_input(|ev| SearchEvent::Search(ev.value)),
+            ),
+            html::div(html::ul(items.into_iter().map(html::li).into_view())),
+        )))
+    }
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {

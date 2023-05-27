@@ -1,29 +1,27 @@
-use std::borrow::Cow;
-
 use crate::html::attributes::Attributes;
 use crate::html::Html;
 use crate::render::ElementRenderer;
 use crate::View;
 
 #[derive(Default)]
-pub struct Anchor {
-    href: Option<Cow<'static, str>>,
+pub struct Dialog {
+    open: bool,
 }
 
-impl<V, Ev, A> Html<V, Ev, A, Anchor>
+impl<V, Ev, A> Html<V, Ev, A, Dialog>
 where
     V: View<Ev>,
 {
-    pub fn href(mut self, href: impl Into<Cow<'static, str>>) -> Self {
-        self.kind.href = Some(href.into());
+    pub fn open(mut self, open: bool) -> Self {
+        self.kind.open = open;
         self
     }
 }
 
-impl Attributes for Anchor {
+impl Attributes for Dialog {
     fn render(&self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
-        if let Some(href) = &self.href {
-            r.attribute("href", href)
+        if self.open {
+            r.attribute("open", "")
                 .map_err(crate::error::InternalError::from)?;
         }
 

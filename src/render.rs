@@ -3,13 +3,11 @@ mod marker;
 mod tests;
 
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::Neg;
 
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::value::RawValue;
 use twox_hash::XxHash32;
@@ -25,7 +23,6 @@ pub struct Renderer {
     hasher: XxHash32,
     previous_tree: Option<Vec<Marker>>,
     previous_offset: isize,
-    previous_descendants: Option<HashMap<u32, PreviousComponent>>,
 }
 
 pub(crate) struct Out {
@@ -49,7 +46,6 @@ impl Renderer {
             hasher: XxHash32::default(),
             previous_tree: None,
             previous_offset: 0,
-            previous_descendants: None,
         }
     }
 
@@ -58,11 +54,6 @@ impl Renderer {
             previous_tree: Some(previous_tree.0),
             ..Self::new()
         }
-    }
-
-    pub(crate) fn with_descendants(mut self, descendants: HashMap<u32, PreviousComponent>) -> Self {
-        self.previous_descendants = Some(descendants);
-        self
     }
 
     pub(crate) fn end(mut self) -> Out {
@@ -111,17 +102,11 @@ impl Renderer {
             self.previous_offset += 2;
         }
 
-        let previous_state = self
-            .previous_descendants
-            .as_mut()
-            .and_then(|d| d.remove(&instance_id));
-
         ComponentRenderer {
             hasher: XxHash32::default(),
             previous_len: self.out.len(),
             renderer: self,
             instance_id,
-            previous: previous_state,
         }
     }
 
@@ -140,7 +125,7 @@ impl Renderer {
     }
 
     fn changed(&mut self, hash: u32, offset: usize) -> Result<bool, crate::Error> {
-        let previous_position = self.next_position() - 1;
+        let previous_position = self.next_position().saturating_sub(1);
         let mut previous = self
             .previous_tree
             .as_mut()
@@ -207,7 +192,7 @@ impl ElementRenderer {
         )
     }
 
-    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
+    pub async fn content<Ev>(mut self, view: impl View<Ev>) -> Result<Renderer, crate::Error> {
         if is_void_element(self.tag) {
             todo!("throw error: void tags cannot have content");
         }
@@ -268,34 +253,20 @@ pub struct ComponentRenderer {
     renderer: Renderer,
     previous_len: usize,
     instance_id: u32,
-    previous: Option<PreviousComponent>,
 }
 
 impl ComponentRenderer {
-    pub fn id(&self) -> u32 {
-        self.instance_id
-    }
-
-    pub fn previous_state<S: DeserializeOwned>(&self) -> Result<Option<S>, serde_json::Error> {
-        // TODO: Box (of raw value)
-        if let Some(p) = &self.previous {
-            Ok(Some(serde_json::from_str(p.state.get())?))
-        } else {
-            Ok(None)
-        }
-    }
-
-    pub async fn content(
+    pub async fn content<Ev>(
         mut self,
-        view: impl View,
+        view: impl View<Ev>,
+        previous_tree: Option<ViewHashTree>,
     ) -> Result<(Renderer, ViewHashTree, bool), crate::Error> {
         let r = Renderer {
             out: mem::take(&mut self.renderer.out),
             hash_tree: Vec::with_capacity(32),
             hasher: self.hasher,
-            previous_tree: self.previous.take().map(|t| t.hash_tree.0),
+            previous_tree: previous_tree.map(|t| t.0),
             previous_offset: 0,
-            previous_descendants: mem::take(&mut self.renderer.previous_descendants),
         };
         let mut r = view.render(r).await?;
 
@@ -308,7 +279,6 @@ impl ComponentRenderer {
 
         // Restore parent renderer
         self.renderer.out = mem::take(&mut r.out);
-        self.renderer.previous_descendants = mem::take(&mut r.previous_descendants);
 
         // Add component to parent renderer
         self.renderer.write_u32(hash);

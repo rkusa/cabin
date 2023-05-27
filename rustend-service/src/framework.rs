@@ -91,10 +91,9 @@ where
                     ))
                     .unwrap()),
 
-                (&Method::POST, &["dispatch", component, action]) => {
+                (&Method::POST, &["dispatch", component]) => {
                     // TODO: get rid of to_string()
                     let id = component.to_string();
-                    let action = action.to_string();
 
                     let mime: Option<Mime> = req
                         .headers()
@@ -117,8 +116,7 @@ where
                                 .unwrap());
                         }
                     };
-                    let update = match ComponentRegistry::global().handle(&id, &action, data).await
-                    {
+                    let update = match ComponentRegistry::global().handle(&id, data).await {
                         Ok(update) => update,
                         Err(err) => {
                             let res = Response::<Bytes>::from(err);

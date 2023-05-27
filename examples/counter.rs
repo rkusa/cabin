@@ -1,30 +1,52 @@
+#![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
+#![allow(incomplete_features)]
+
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
+use rustend::component::{Component, PublicComponent};
 use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 
 async fn app() -> impl View {
-    (rustend_stylesheets(), rustend_scripts(), counter(0).await)
+    (
+        rustend_stylesheets(),
+        rustend_scripts(),
+        Counter::restore_or((), Counter(0)),
+    )
 }
 
-#[rustend::component]
-async fn counter(count: u32) -> Result<impl View, Infallible> {
-    async fn incr(count: u32, _: ()) -> u32 {
-        count + 1
+#[derive(Default, Hash, serde::Serialize, serde::Deserialize, PublicComponent)]
+struct Counter(pub u32);
+
+#[derive(serde::Serialize, serde::Deserialize)]
+enum CounterEvent {
+    Increment,
+}
+
+impl Component for Counter {
+    type Event = CounterEvent;
+    type Error = Infallible;
+
+    async fn update(&mut self, event: Self::Event) {
+        match event {
+            CounterEvent::Increment => self.0 += 1,
+        }
     }
 
-    Ok((
-        // (self.0 == 0).then(|| ),
-        // (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
-        if count > 0 {
-            html::div(html::text!("Count: {}", count)).boxed()
-        } else {
-            html::div("Hit `incr` to start counting ...").boxed()
-        },
-        html::button("incr").on_click(incr, ()),
-    ))
+    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
+        Ok((
+            // (self.0 == 0).then(|| ),
+            // (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
+            if self.0 > 0 {
+                html::div(html::text!("Count: {}", self.0)).boxed()
+            } else {
+                html::div("Hit `incr` to start counting ...").boxed()
+            },
+            html::button("incr").on_click(CounterEvent::Increment),
+        ))
+    }
 }
 
 #[tokio::main]

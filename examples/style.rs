@@ -1,24 +1,37 @@
+#![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
+#![allow(incomplete_features)]
+
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
+use rustend::component::{Component, PublicComponent};
 use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 use rustend_css::{self as css, css, Style};
+use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (rustend_stylesheets(), rustend_scripts(), counter(0).await)
+    (
+        rustend_stylesheets(),
+        rustend_scripts(),
+        Counter::restore(()),
+    )
 }
 
-#[rustend::component]
-async fn counter(count: u32) -> Result<impl View, Infallible> {
-    async fn incr(count: u32, _: ()) -> u32 {
-        count + 1
+#[derive(Debug, Default, Hash, Serialize, Deserialize, PublicComponent)]
+struct Counter(u32);
+
+impl Component for Counter {
+    type Event = ();
+    type Error = Infallible;
+
+    async fn update(&mut self, _: Self::Event) {
+        self.0 += 1;
     }
 
-    Ok(html::button(html::text!("{count}"))
-        .on_click(incr, ())
-        .class(
+    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
+        Ok(html::button(html::text!("{}", self.0)).on_click(()).class(
             // TODO: modifier groups?
             // TODO: autocomplate after XZY. (for modifiers)
             // TODO: autocomplete after text::
@@ -29,8 +42,9 @@ async fn counter(count: u32) -> Result<impl View, Infallible> {
                 css::bg::BLACK.hover(),
                 css::text::WHITE.hover(),
                 css::text::XS.hover().focus(),
-            ) + (count == 0).then_some(css!(css::text::color("red"))),
+            ) + (self.0 == 0).then_some(css!(css::text::color("red"))),
         ))
+    }
 }
 
 #[tokio::main]

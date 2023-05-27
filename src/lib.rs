@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![feature(async_fn_in_trait)]
+#![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
 #![allow(incomplete_features)]
 
 use std::future::Future;
@@ -8,30 +8,30 @@ use bytes::Bytes;
 pub use error::Error;
 use http::{HeaderValue, Response};
 pub use render::{Renderer, ViewHashTree};
-pub use rustend_macros::component;
+pub use restore::Restored;
 pub use view::View;
 
 pub mod component;
 pub mod error;
 pub mod html;
 mod local_pool;
-pub mod previous;
 pub mod private;
 mod render;
+mod restore;
 pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
 // TODO: move behind feature flag?
-pub fn rustend_stylesheets() -> impl View {
+pub fn rustend_stylesheets<EV>() -> impl View<EV> {
     r#"<link rel="stylesheet" href="/styles.css">"#
 }
 
-pub fn rustend_scripts() -> impl View {
+pub fn rustend_scripts<EV>() -> impl View<EV> {
     r#"<script src="/server-component.js" async></script>"#
 }
 
-pub async fn render_to_response<F: Future<Output = V>, V: View + 'static>(
+pub async fn render_to_response<F: Future<Output = V>, V: View<Ev> + 'static, Ev>(
     render_fn: impl Fn() -> F + Send + Sync + 'static,
 ) -> Response<Bytes> {
     let result = local_pool::spawn(move || async move {

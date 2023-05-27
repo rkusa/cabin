@@ -12,7 +12,7 @@ class ServerComponent extends HTMLElement {
 
     this.setUpEventListener("click", { preventDefault: true, disable: true });
     this.setUpEventListener("input", {
-      eventPayload: (e) => ({ value: e.target.value }),
+      eventPayload: (e) => ({ "_##InputValue": e.target.value }),
     });
 
     // If the browser restored previous form values, detect them and trigger an input event
@@ -53,10 +53,15 @@ class ServerComponent extends HTMLElement {
           }
           try {
             const component = this.dataset.id;
-            const action = node.dataset[eventName];
-            const payload =
-              opts?.eventPayload?.(e) ??
-              JSON.parse(node.dataset[`${eventName}Payload`]);
+            const event = JSON.parse(
+              opts?.eventPayload
+                ? Object.entries(opts.eventPayload(e)).reduce(
+                    (result, [placeholder, value]) =>
+                      result.replace(placeholder, value),
+                    node.dataset[eventName]
+                  )
+                : node.dataset[eventName]
+            );
 
             // Collect descendant components and update their hash in the current component's hash
             // tree
@@ -65,7 +70,7 @@ class ServerComponent extends HTMLElement {
               descendants[el.id] = { state: el.state, hashTree: el.hashTree };
             }
 
-            const res = await fetch(`/dispatch/${component}/${action}`, {
+            const res = await fetch(`/dispatch/${component}`, {
               signal,
               method: "POST",
               headers: {
@@ -74,7 +79,7 @@ class ServerComponent extends HTMLElement {
               body: JSON.stringify({
                 state: this.state,
                 hashTree: this.hashTree,
-                payload: payload,
+                event: event,
                 descendants,
               }),
             });
@@ -280,8 +285,10 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
         break;
     }
   } while (
-    ((nodeAfter = nextAfter ?? nodeAfter?.nextSibling),
-    (nodeBefore = nextBefore ?? nodeBefore?.nextSibling),
+    (nextAfter !== null || nextBefore !== null
+      ? ((nodeAfter = nextAfter), (nodeBefore = nextBefore))
+      : ((nodeAfter = nodeAfter?.nextSibling),
+        (nodeBefore = nodeBefore?.nextSibling)),
     nodeAfter || nodeBefore)
   );
 }

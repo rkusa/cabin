@@ -1,32 +1,43 @@
-use std::future::Future;
+use serde::Serialize;
 
-use crate::component::registry::ComponentRegistry;
 use crate::html::attributes::Attributes;
 use crate::html::events::InputEvent;
 use crate::html::Html;
 use crate::render::ElementRenderer;
+use crate::View;
 
-#[derive(Default)]
-pub struct Input {
-    on_input: Option<&'static str>,
+pub struct Input<Ev> {
+    on_input: Option<Ev>,
 }
 
-impl<V, A> Html<V, A, Input> {
-    pub fn on_input<M, F: Future<Output = M>>(mut self, action: fn(M, InputEvent) -> F) -> Self {
-        let name = ComponentRegistry::global().action_name(action as usize);
-        debug_assert!(name.is_some(), "action not registered");
-        self.kind.on_input = name;
+impl<V, Ev, A> Html<V, Ev, A, Input<Ev>>
+where
+    V: View<Ev>,
+{
+    pub fn on_input(mut self, event: impl FnOnce(InputEvent) -> Ev) -> Self {
+        self.kind.on_input = Some(event(InputEvent::default()));
         self
     }
 }
 
-impl Attributes for Input {
+impl<Ev> Attributes for Input<Ev>
+where
+    Ev: Serialize,
+{
     fn render(&self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
-        if let Some(on_input) = &self.on_input {
-            r.attribute("data-input", on_input)
+        if let Some(event) = &self.on_input {
+            // TODO: unwrap
+            let event = serde_json::to_string(&event).unwrap();
+            r.attribute("data-input", &event)
                 .map_err(crate::error::InternalError::from)?;
         }
 
         Ok(())
+    }
+}
+
+impl<Ev> Default for Input<Ev> {
+    fn default() -> Self {
+        Self { on_input: None }
     }
 }

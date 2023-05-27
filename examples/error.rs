@@ -1,19 +1,40 @@
+#![feature(
+    async_fn_in_trait,
+    return_position_impl_trait_in_trait,
+    arbitrary_self_types
+)]
+#![allow(incomplete_features)]
+
 use std::net::SocketAddr;
 use std::{error, fmt};
 
 use axum::body::{Full, HttpBody};
 use http::Response;
+use rustend::component::{Component, PublicComponent};
 use rustend::{rustend_scripts, rustend_stylesheets, View};
+use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (rustend_stylesheets(), rustend_scripts(), health(()).await)
+    (
+        rustend_stylesheets(),
+        rustend_scripts(),
+        Health::restore(()),
+    )
 }
 
-#[rustend::component]
-async fn health(_state: ()) -> Result<impl View, DbError> {
-    test_database_connection().await?;
+#[derive(Debug, Default, Hash, Serialize, Deserialize, PublicComponent)]
+struct Health;
 
-    Ok("Ok")
+impl Component for Health {
+    type Event = ();
+    type Error = DbError;
+
+    async fn update(&mut self, _: Self::Event) {}
+
+    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
+        test_database_connection().await?;
+        Ok("Ok")
+    }
 }
 
 #[derive(Debug)]

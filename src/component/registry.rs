@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -10,8 +10,9 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
-use super::ComponentId;
+use super::Component;
 use crate::render::{PreviousComponent, Renderer};
+use crate::restore::PREVIOUS;
 use crate::{View, ViewHashTree};
 
 #[linkme::distributed_slice]
@@ -23,8 +24,7 @@ type ComponentFuture = Pin<Box<dyn Future<Output = Result<Update, crate::Error>>
 type ComponentHandler = dyn Fn(Bytes) -> ComponentFuture + Send + Sync;
 
 pub struct ComponentRegistry {
-    handler: HashMap<(Cow<'static, str>, &'static str), Arc<ComponentHandler>>,
-    action_names: HashMap<usize, &'static str>,
+    handler: HashMap<String, Arc<ComponentHandler>>,
 }
 
 #[derive(Serialize)]
@@ -37,10 +37,14 @@ pub struct Update {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Payload<S, M> {
-    state: S,
+struct Payload<C>
+where
+    C: Component,
+{
+    #[serde(rename = "state")]
+    component: C,
     hash_tree: ViewHashTree,
-    payload: M,
+    event: C::Event,
     descendants: HashMap<u32, PreviousComponent>,
 }
 
@@ -49,7 +53,6 @@ impl ComponentRegistry {
         REGISTRY.get_or_init(|| {
             let mut registry = Self {
                 handler: Default::default(),
-                action_names: Default::default(),
             };
             for f in COMPONENT_FACTORIES {
                 (f)(&mut registry);
@@ -58,40 +61,31 @@ impl ComponentRegistry {
         })
     }
 
-    pub fn register<S, M, V, R, U, E>(
-        &mut self,
-        id: ComponentId,
-        action: &'static str,
-        update: fn(S, M) -> U,
-        render: fn(S) -> R,
-    ) where
-        S: Serialize + DeserializeOwned + 'static,
-        M: DeserializeOwned + 'static,
-        V: View,
-        crate::Error: From<E>,
-        U: Future<Output = S> + 'static,
-        R: Future<Output = Result<V, E>> + 'static,
+    pub fn register<C>(&mut self)
+    where
+        C: Component + Serialize + DeserializeOwned,
     {
-        self.action_names.insert(update as usize, action);
         self.handler.insert(
-            (id.to_string().into(), action),
+            C::id().to_string(),
             Arc::new(move |body: Bytes| {
                 Box::pin(async move {
                     // TODO: unwraps
-                    let Payload::<S, M> {
-                        state,
+                    let Payload::<C> {
+                        mut component,
                         hash_tree,
-                        payload,
+                        event,
                         descendants,
                     } = serde_json::from_slice(&body).unwrap();
-                    // TODO: async
-                    let state = update(state, payload).await;
-                    let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
+                    component.update(event).await;
+                    let state_serialized = serde_json::value::to_raw_value(&component).unwrap();
 
-                    let r = Renderer::from_previous_tree(hash_tree).with_descendants(descendants);
-                    let view = render(state).await?;
-                    let fut = view.render(r);
-                    let r = fut.await.unwrap();
+                    let r = Renderer::from_previous_tree(hash_tree);
+                    let r = PREVIOUS
+                        .scope(RefCell::new(Some(descendants)), async {
+                            let view = component.view().await.map_err(|err| err.into())?;
+                            view.render(r).await
+                        })
+                        .await?;
                     let out = r.end();
 
                     Ok(Update {
@@ -104,17 +98,8 @@ impl ComponentRegistry {
         );
     }
 
-    pub fn action_name(&self, addr: usize) -> Option<&'static str> {
-        self.action_names.get(&addr).copied()
-    }
-
-    pub async fn handle(
-        &self,
-        id: &str,
-        action: &str,
-        body: Bytes,
-    ) -> Result<Option<Update>, crate::Error> {
-        let Some(handler) = self.handler.get(&(id.into(), action)) else {
+    pub async fn handle(&self, id: &str, body: Bytes) -> Result<Option<Update>, crate::Error> {
+        let Some(handler) = self.handler.get(id) else {
             return Ok(None)
         };
         let handler = Arc::clone(handler);
