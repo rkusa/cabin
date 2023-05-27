@@ -5,15 +5,15 @@ use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous_or;
 use rustend::view::{FutureExt, IteratorExt};
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    view![
+    (
         rustend_stylesheets(),
         rustend_scripts(),
-        items(Items(vec![Item { id: 1 }, Item { id: 2 },])).await
-    ]
+        items(Items(vec![Item { id: 1 }, Item { id: 2 }])).await,
+    )
 }
 
 #[derive(Hash, Serialize, Deserialize)]
@@ -44,21 +44,23 @@ async fn items(items: Items) -> Result<impl View, Infallible> {
         items
     }
 
-    Ok(view![
+    Ok((
         html::div(html::button("add above").on_click(add_above, ())),
         html::ul(
             items
                 .0
                 .into_iter()
                 .enumerate()
-                .map(|(i, item)| html::li![
-                    counter(previous_or(item.id, i + 1)).into_view(),
-                    html::button("x").on_click(delete, item.id)
-                ])
-                .into_view()
+                .map(|(i, item)| {
+                    html::li((
+                        counter(previous_or(item.id, i + 1)).into_view(),
+                        html::button("x").on_click(delete, item.id),
+                    ))
+                })
+                .into_view(),
         ),
         html::div(html::button("add below").on_click(add_below, ())),
-    ])
+    ))
 }
 
 #[rustend::component]

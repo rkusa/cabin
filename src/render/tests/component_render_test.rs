@@ -3,7 +3,7 @@ use std::hash::Hasher;
 use twox_hash::XxHash32;
 
 use crate::render::marker::Marker;
-use crate::{html, view, Renderer, View};
+use crate::{html, Renderer, View};
 
 #[tokio::test]
 async fn test_server_render_basic() {
@@ -53,10 +53,10 @@ async fn test_server_render_empty() {
 
 #[tokio::test]
 async fn test_server_render_nested() {
-    let r = html::div(view![
+    let r = html::div((
         html::div("red").attr("class", "bg-red"),
         html::div("green").attr("class", "bg-green"),
-    ])
+    ))
     .render(Renderer::new())
     .await
     .unwrap();
@@ -124,7 +124,7 @@ async fn test_server_render_nested() {
 
 #[tokio::test]
 async fn test_unchanged() {
-    let r = html::div(view!["test", html::div(())])
+    let r = html::div(("test", html::div(())))
         .render(Renderer::new())
         .await
         .unwrap();
@@ -145,7 +145,7 @@ async fn test_unchanged() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = html::div(view!["test", html::div(())])
+    let r = html::div(("test", html::div(())))
         .attr("class", "bg-black")
         .render(r)
         .await
@@ -170,7 +170,7 @@ async fn test_unchanged() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = html::div(view!["test", html::div(())])
+    let r = html::div(("test", html::div(())))
         .attr("class", "bg-black")
         .render(r)
         .await
@@ -194,10 +194,7 @@ async fn test_unchanged() {
 
 #[tokio::test]
 async fn test_new_items() {
-    let r = view![html::div("1"), "E"]
-        .render(Renderer::new())
-        .await
-        .unwrap();
+    let r = (html::div("1"), "E").render(Renderer::new()).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div>1</div>E"#);
     assert_eq!(
@@ -215,10 +212,7 @@ async fn test_new_items() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = view![html::div(view!["1", "2"]), "E"]
-        .render(r)
-        .await
-        .unwrap();
+    let r = (html::div(("1", "2")), "E").render(r).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged-->2</div><!--unchanged-->"#);
     assert_eq!(
@@ -240,7 +234,7 @@ async fn test_new_items() {
 
 #[tokio::test]
 async fn test_removed_items() {
-    let r = view![html::div(view!["1", "2"]), "E"]
+    let r = (html::div(("1", "2")), "E")
         .render(Renderer::new())
         .await
         .unwrap();
@@ -263,7 +257,7 @@ async fn test_removed_items() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = view![html::div("1"), "E"].render(r).await.unwrap();
+    let r = (html::div("1"), "E").render(r).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged--></div><!--unchanged-->"#);
     assert_eq!(
@@ -283,10 +277,7 @@ async fn test_removed_items() {
 
 #[tokio::test]
 async fn test_new_item_same_value() {
-    let r = view![html::div("1"), "E"]
-        .render(Renderer::new())
-        .await
-        .unwrap();
+    let r = (html::div("1"), "E").render(Renderer::new()).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div>1</div>E"#);
     assert_eq!(
@@ -304,10 +295,7 @@ async fn test_new_item_same_value() {
     );
 
     let r = Renderer::from_previous_tree(out.hash_tree);
-    let r = view![html::div(view!["1", "1"]), "E"]
-        .render(r)
-        .await
-        .unwrap();
+    let r = (html::div(("1", "1")), "E").render(r).await.unwrap();
     let out = r.end();
     assert_eq!(out.view, r#"<div><!--unchanged-->1</div><!--unchanged-->"#);
     assert_eq!(

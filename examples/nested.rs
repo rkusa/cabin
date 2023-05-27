@@ -5,15 +5,15 @@ use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous;
 use rustend::view::FutureExt;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    view![
+    (
         rustend_stylesheets(),
         rustend_scripts(),
-        level1(Entry::default()).await
-    ]
+        level1(Entry::default()).await,
+    )
 }
 
 #[derive(Debug, Default, Hash, Serialize, Deserialize)]
@@ -34,13 +34,13 @@ async fn level1(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset![
+    Ok(html::fieldset((
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
         state
             .has_child
-            .then(|| level2(previous(2, |e| e)).into_view())
-    ])
+            .then(|| level2(previous(2, |e| e)).into_view()),
+    )))
 }
 
 #[rustend::component]
@@ -55,13 +55,13 @@ async fn level2(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset![
+    Ok(html::fieldset((
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
         state
             .has_child
-            .then(|| level3(previous(3, |e| e)).into_view())
-    ])
+            .then(|| level3(previous(3, |e| e)).into_view()),
+    )))
 }
 
 #[rustend::component]
@@ -76,13 +76,13 @@ async fn level3(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset![
+    Ok(html::fieldset((
         html::button(html::text!("{}", state.count)).on_click(incr, ()),
         html::button("toggle child").on_click(toggle_child, ()),
         state
             .has_child
-            .then(|| level4(previous(4, |e| e)).into_view())
-    ])
+            .then(|| level4(previous(4, |e| e)).into_view()),
+    )))
 }
 
 #[rustend::component]
@@ -92,11 +92,9 @@ async fn level4(state: Entry) -> Result<impl View, Infallible> {
         state
     }
 
-    Ok(html::fieldset![html::button(html::text!(
-        "{}",
-        state.count
+    Ok(html::fieldset(
+        html::button(html::text!("{}", state.count)).on_click(incr, ()),
     ))
-    .on_click(incr, ())])
 }
 
 #[tokio::main]

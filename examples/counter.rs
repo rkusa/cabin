@@ -3,10 +3,10 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 
 async fn app() -> impl View {
-    view![rustend_stylesheets(), rustend_scripts(), counter(0).await]
+    (rustend_stylesheets(), rustend_scripts(), counter(0).await)
 }
 
 #[rustend::component]
@@ -15,7 +15,7 @@ async fn counter(count: u32) -> Result<impl View, Infallible> {
         count + 1
     }
 
-    Ok(view![
+    Ok((
         // (self.0 == 0).then(|| ),
         // (self.0 > 0).then(move || html::div(html::text!("Count: {}", self.0))),
         if count > 0 {
@@ -24,7 +24,7 @@ async fn counter(count: u32) -> Result<impl View, Infallible> {
             html::div("Hit `incr` to start counting ...").boxed()
         },
         html::button("incr").on_click(incr, ()),
-    ])
+    ))
 }
 
 #[tokio::main]

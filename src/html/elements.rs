@@ -9,31 +9,13 @@ macro_rules! element {
         pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, (), ()> {
             $crate::html::create(stringify!($name), content)
         }
-
-        mod $mod {
-            #[macro_export]
-            macro_rules! $name {
-                ($dollar($x:tt)*) => ($crate::html::create::<_, ()>(stringify!($name), $crate::view![$dollar($x)*]))
-            }
-
-            pub use $name;
-        }
-        pub use $mod::*;
     };
     ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
-        pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
+        pub fn $name<V: $crate::view::View>(
+            content: V,
+        ) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
             $crate::html::create(stringify!($name), content)
         }
-
-        mod $mod {
-            #[macro_export]
-            macro_rules! $name {
-                ($dollar($x:tt)*) => ($crate::html::create::<_, $crate::html::elements::$kind_mod::$kind_type>(stringify!($name), $crate::view![$dollar($x)*]))
-            }
-
-            pub use $name;
-        }
-        pub use $mod::*;
     };
 }
 

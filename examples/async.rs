@@ -6,15 +6,15 @@ use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use html::events::InputEvent;
 use rustend::view::IteratorExt;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    view![
+    (
         rustend_stylesheets(),
         rustend_scripts(),
-        search(Search::new("Ge")).await
-    ]
+        search(Search::new("Ge")).await,
+    )
 }
 
 #[derive(Default, Hash, Serialize, Deserialize)]
@@ -39,10 +39,10 @@ async fn search(state: Search) -> Result<impl View, Infallible> {
 
     let items = search_countries(&state.query).await;
 
-    Ok(html::div![
+    Ok(html::div((
         html::div(html::input().attr("value", state.query).on_input(set_query)),
         html::div(html::ul(items.into_iter().map(html::li).into_view())),
-    ])
+    )))
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {

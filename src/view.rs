@@ -10,6 +10,7 @@ use std::pin::Pin;
 
 pub use future::FutureExt;
 pub use iter::IteratorExt;
+use paste::paste;
 
 use self::boxed::BoxedView;
 use crate::render::Renderer;
@@ -105,51 +106,33 @@ where
     }
 }
 
-pub struct Pair<L, R> {
-    left: L,
-    right: R,
+macro_rules! impl_tuple {
+    ( $count:tt; $( $ix:tt ),* ) => {
+        paste!{
+            impl<$( [<V$ix>]: View + 'static),*> View for ($([<V$ix>],)*) {
+                // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
+                type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
+
+                fn render(self, r: Renderer) -> Self::Future {
+                    Box::pin(async {
+                        $(
+                            let r = self.$ix.render(r).await?;
+                        )*
+                        Ok(r)
+                    })
+                }
+            }
+        }
+    };
 }
 
-impl<L, R> Pair<L, R> {
-    pub fn new(left: L, right: R) -> Self
-    where
-        L: View,
-        R: View,
-    {
-        Pair { left, right }
-    }
-}
-
-impl<L, R> View for Pair<L, R>
-where
-    L: View + 'static,
-    R: View + 'static,
-{
-    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        Box::pin(async {
-            let r = self.left.render(r).await?;
-            let r = self.right.render(r).await?;
-            Ok(r)
-        })
-    }
-}
-
-#[macro_export]
-macro_rules! view {
-    () => (
-        ()
-    );
-    ($left:expr) => (
-        $left
-    );
-    ($left:expr, $right:expr) => (
-        $crate::view::Pair::new($left, $right)
-    );
-    ($left:expr, $($tail:expr),*) => (
-        $crate::view::Pair::new($left, view![$($tail),*])
-    );
-    ($($x:expr,)*) => (view![$($x),*])
-}
+impl_tuple!( 1; 0);
+impl_tuple!( 2; 0, 1);
+impl_tuple!( 3; 0, 1, 2);
+impl_tuple!( 4; 0, 1, 2, 3);
+impl_tuple!( 5; 0, 1, 2, 3, 4);
+impl_tuple!( 6; 0, 1, 2, 3, 4, 5);
+impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6);
+impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7);
+impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8);
+impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
