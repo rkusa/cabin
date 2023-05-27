@@ -6,8 +6,8 @@ pub mod input;
 #[macro_export]
 macro_rules! element {
     ($dollar:tt, $mod:ident, $name:ident) => {
-        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), ()> {
-            $crate::html::create(stringify!($name), content.into_view())
+        pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, (), ()> {
+            $crate::html::create(stringify!($name), content)
         }
 
         mod $mod {
@@ -21,8 +21,8 @@ macro_rules! element {
         pub use $mod::*;
     };
     ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
-        pub fn $name<V: $crate::view::View>(content: impl $crate::view::IntoView<V>) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
-            $crate::html::create(stringify!($name), content.into_view())
+        pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
+            $crate::html::create(stringify!($name), content)
         }
 
         mod $mod {

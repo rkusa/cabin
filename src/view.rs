@@ -8,57 +8,24 @@ use std::fmt::Write;
 use std::future::Future;
 use std::pin::Pin;
 
+pub use future::FutureExt;
+pub use iter::IteratorExt;
+
 use self::boxed::BoxedView;
 use crate::render::Renderer;
-
-// Implementation note: It is not possible to implement [View] for both tupels and iterators
-// (fails due to conflicting implementation). As workaround, `IntoView` is introduced as an
-// additional indirection. By putting the resulting view into a generic (and not an associated),
-// and since both have a different resulting view (the tuple returns itself, and the iterator
-// is wrapped into [IteratorView]), it can be implemented for both.
-pub trait IntoView<V>
-where
-    V: View,
-{
-    fn into_view(self) -> V;
-
-    fn boxed(self) -> BoxedView
-    where
-        Self: Sized,
-        V: 'static,
-    {
-        BoxedView::new(self.into_view())
-    }
-}
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
 pub trait View {
     type Future: Future<Output = Result<Renderer, crate::Error>>;
+
     fn render(self, r: Renderer) -> Self::Future;
-}
 
-// This wrapper is necessary to allow the [IntoView] implementation for any [View].
-// TODO: better name
-pub struct ViewWrapper<V>(V);
-
-impl<V> IntoView<ViewWrapper<V>> for V
-where
-    V: View,
-{
-    fn into_view(self) -> ViewWrapper<V> {
-        ViewWrapper(self)
-    }
-}
-
-impl<V> View for ViewWrapper<V>
-where
-    V: View,
-{
-    type Future = V::Future;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        self.0.render(r)
+    fn boxed(self) -> BoxedView
+    where
+        Self: Sized + 'static,
+    {
+        BoxedView::new(self)
     }
 }
 
@@ -86,11 +53,6 @@ impl<'a> View for &'a str {
     }
 }
 
-impl<'a> IntoView<Cow<'a, str>> for &'a Cow<'a, str> {
-    fn into_view(self) -> Cow<'a, str> {
-        Cow::Borrowed(&**self)
-    }
-}
 impl<'a> View for Cow<'a, str> {
     type Future = std::future::Ready<Result<Renderer, crate::Error>>;
 
@@ -168,8 +130,8 @@ where
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async {
-            let r = self.left.into_view().render(r).await?;
-            let r = self.right.into_view().render(r).await?;
+            let r = self.left.render(r).await?;
+            let r = self.right.render(r).await?;
             Ok(r)
         })
     }
@@ -184,16 +146,10 @@ macro_rules! view {
         $left
     );
     ($left:expr, $right:expr) => (
-        $crate::view::Pair::new(
-            $crate::view::IntoView::into_view($left),
-            $crate::view::IntoView::into_view($right)
-        )
+        $crate::view::Pair::new($left, $right)
     );
     ($left:expr, $($tail:expr),*) => (
-        $crate::view::Pair::new(
-            $crate::view::IntoView::into_view($left),
-            view![$($tail),*]
-        )
+        $crate::view::Pair::new($left, view![$($tail),*])
     );
     ($($x:expr,)*) => (view![$($x),*])
 }

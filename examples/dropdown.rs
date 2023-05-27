@@ -5,7 +5,8 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use rustend::previous::previous;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
+use rustend::view::IteratorExt;
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -25,6 +26,7 @@ async fn root(count: u32) -> Result<impl View, Infallible> {
         dropdown(previous((), move |s: DropdownState| s.with_items(
             (0..count).map(|i| format!("Item {i}").into()).collect()
         )))
+        .await
     ])
 }
 
@@ -51,12 +53,19 @@ async fn dropdown(state: DropdownState) -> Result<impl View, Infallible> {
     Ok(html::div![
         html::button("open").on_click(toggle, ()),
         if state.opened {
-            html::ul(state.items.into_iter().map(|item| html::li(item).attr("style", "white-space:nowrap;")))
-                .attr(
-                    "style",
-                    "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;padding:4px;",
-                )
-                .boxed()
+            html::ul(
+                state
+                    .items
+                    .into_iter()
+                    .map(|item| html::li(item).attr("style", "white-space:nowrap;"))
+                    .into_view(),
+            )
+            .attr(
+                "style",
+                "position:absolute;top:20px;right:0;background:#ddd;\
+                    list-style-type:none;padding:4px;",
+            )
+            .boxed()
         } else {
             ().boxed()
         },

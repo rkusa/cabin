@@ -7,7 +7,7 @@ pub use error::Error;
 use http::{HeaderValue, Response};
 pub use render::{Renderer, ViewHashTree};
 pub use rustend_macros::component;
-pub use view::{IntoView, View};
+pub use view::View;
 
 pub mod component;
 pub mod error;

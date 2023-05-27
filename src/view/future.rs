@@ -2,19 +2,21 @@ use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-use super::IntoView;
 pub use super::View;
 use crate::render::Renderer;
 
-impl<F, I, V> IntoView<FutureView<F::IntoFuture, I, V>> for F
+pub trait FutureExt<F, V> {
+    fn into_view(self) -> FutureView<F, V>;
+}
+
+impl<F, V> FutureExt<F::IntoFuture, V> for F
 where
-    F: IntoFuture<Output = I>,
+    F: IntoFuture<Output = V>,
     // TODO: remove `+ 'static` once removing away from boxed future
     F::IntoFuture: 'static,
-    I: IntoView<V> + Send,
     V: View + Send,
 {
-    fn into_view(self) -> FutureView<F::IntoFuture, I, V> {
+    fn into_view(self) -> FutureView<F::IntoFuture, V> {
         FutureView {
             future: self.into_future(),
             marker: PhantomData,
@@ -22,16 +24,15 @@ where
     }
 }
 
-pub struct FutureView<F, I, V> {
+pub struct FutureView<F, V> {
     future: F,
-    marker: PhantomData<(I, V)>,
+    marker: PhantomData<V>,
 }
 
-impl<F, I, V> View for FutureView<F, I, V>
+impl<F, V> View for FutureView<F, V>
 where
     // TODO: remove `+ 'static` once removing away from boxed future
-    F: Future<Output = I> + 'static,
-    I: IntoView<V> + Send,
+    F: Future<Output = V> + 'static,
     V: View + Send,
 {
     // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
@@ -39,7 +40,7 @@ where
 
     fn render(self, r: Renderer) -> Self::Future {
         Box::pin(async move {
-            let view = self.future.await.into_view();
+            let view = self.future.await;
             view.render(r).await
         })
     }

@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 
 async fn app() -> impl View {
     view![rustend_stylesheets(), rustend_scripts(), counter(0).await]

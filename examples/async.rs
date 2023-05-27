@@ -5,7 +5,8 @@ use std::net::SocketAddr;
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use html::events::InputEvent;
-use rustend::{html, rustend_scripts, rustend_stylesheets, view, IntoView, View};
+use rustend::view::IteratorExt;
+use rustend::{html, rustend_scripts, rustend_stylesheets, view, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -40,7 +41,7 @@ async fn search(state: Search) -> Result<impl View, Infallible> {
 
     Ok(html::div![
         html::div(html::input().attr("value", state.query).on_input(set_query)),
-        html::div(html::ul(items.into_iter().map(html::li))),
+        html::div(html::ul(items.into_iter().map(html::li).into_view())),
     ])
 }
 
