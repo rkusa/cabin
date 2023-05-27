@@ -4,7 +4,6 @@ use std::fmt::{self, Write};
 use std::future::Future;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use std::pin::Pin;
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -48,68 +47,63 @@ impl ComponentId {
 
 impl<F, V, P, S, E> View for ServerComponent<F, V, P, S, E>
 where
-    F: Future<Output = Result<V, E>> + 'static,
+    F: Future<Output = Result<V, E>>,
     V: View,
     crate::Error: From<E>,
-    P: FromPrevious<S> + 'static,
-    S: Default + Hash + Serialize + DeserializeOwned + 'static,
+    P: FromPrevious<S>,
+    S: Default + Hash + Serialize + DeserializeOwned,
 {
-    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        let instance_id = {
+            let mut hasher = XxHash32::default();
+            self.id.hash(&mut hasher);
+            self.state.id().hash(&mut hasher);
+            hasher.finish() as u32
+        };
+        let mut component = r.component(self.id, instance_id);
 
-    fn render(self, r: Renderer) -> Self::Future {
-        Box::pin(async move {
-            let instance_id = {
-                let mut hasher = XxHash32::default();
-                self.id.hash(&mut hasher);
-                self.state.id().hash(&mut hasher);
-                hasher.finish() as u32
-            };
-            let mut component = r.component(self.id, instance_id);
+        // TODO: unwrap
+        let previous_state = component.previous_state().unwrap();
+        let state = self.state.next_from_previous(previous_state);
+        let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
 
-            // TODO: unwrap
-            let previous_state = component.previous_state().unwrap();
-            let state = self.state.next_from_previous(previous_state);
-            let state_serialized = serde_json::value::to_raw_value(&state).unwrap();
+        // Include state in hash to ensure state changes update the component (even if its view
+        // doesn't change)
+        state.hash(&mut component);
 
-            // Include state in hash to ensure state changes update the component (even if its view
-            // doesn't change)
-            state.hash(&mut component);
+        write!(
+            component,
+            r#"<server-component id="{}" data-id="{}">"#,
+            component.id(),
+            self.id,
+        )
+        .map_err(crate::error::InternalError::from)?;
+
+        let view = (self.component)(state).await?;
+        let (mut r, hash_tree, changed) = component.content(view).await?;
+
+        // If changed, add updated state and hash tree to output
+        if changed {
+            #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct Initial<'a> {
+                state: Box<RawValue>,
+                hash_tree: &'a ViewHashTree,
+            }
+            let initial = serde_json::to_string(&Initial {
+                state: state_serialized,
+                hash_tree: &hash_tree,
+            })
+            .unwrap();
 
             write!(
-                component,
-                r#"<server-component id="{}" data-id="{}">"#,
-                component.id(),
-                self.id,
+                r,
+                r#"<script type="application/json">{initial}</script></server-component>"#
             )
             .map_err(crate::error::InternalError::from)?;
+        }
 
-            let view = (self.component)(state).await?;
-            let (mut r, hash_tree, changed) = component.content(view).await?;
-
-            // If changed, add updated state and hash tree to output
-            if changed {
-                #[derive(Serialize)]
-                #[serde(rename_all = "camelCase")]
-                struct Initial<'a> {
-                    state: Box<RawValue>,
-                    hash_tree: &'a ViewHashTree,
-                }
-                let initial = serde_json::to_string(&Initial {
-                    state: state_serialized,
-                    hash_tree: &hash_tree,
-                })
-                .unwrap();
-
-                write!(
-                    r,
-                    r#"<script type="application/json">{initial}</script></server-component>"#
-                )
-                .map_err(crate::error::InternalError::from)?;
-            }
-
-            Ok(r)
-        })
+        Ok(r)
     }
 }
 

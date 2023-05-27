@@ -4,7 +4,6 @@ pub mod events;
 
 use std::borrow::Cow;
 use std::future::Future;
-use std::pin::Pin;
 
 pub use elements::*;
 use serde::de::DeserializeOwned;
@@ -95,33 +94,27 @@ impl<V, A, K> Html<V, A, K> {
 
 impl<V, A, K> View for Html<V, A, K>
 where
-    // TODO: remove `+ 'static` once removing away from boxed future
-    V: View + 'static,
-    A: Attributes + 'static,
-    K: Attributes + 'static,
+    V: View,
+    A: Attributes,
+    K: Attributes,
 {
-    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        let mut el = r.element(self.tag)?;
 
-    fn render(self, r: Renderer) -> Self::Future {
-        Box::pin(async move {
-            let mut el = r.element(self.tag)?;
+        if let Some((on_click, payload)) = &self.on_click {
+            el.attribute("data-click", on_click)
+                .map_err(crate::error::InternalError::from)?;
+            el.attribute("data-click-payload", payload)
+                .map_err(crate::error::InternalError::from)?;
+        }
 
-            if let Some((on_click, payload)) = &self.on_click {
-                el.attribute("data-click", on_click)
-                    .map_err(crate::error::InternalError::from)?;
-                el.attribute("data-click-payload", payload)
-                    .map_err(crate::error::InternalError::from)?;
-            }
+        self.attrs.render(&mut el)?;
+        self.kind.render(&mut el)?;
 
-            self.attrs.render(&mut el)?;
-            self.kind.render(&mut el)?;
-
-            if !is_void_element(self.tag) {
-                el.content(self.content).await
-            } else {
-                el.end()
-            }
-        })
+        if !is_void_element(self.tag) {
+            el.content(self.content).await
+        } else {
+            el.end()
+        }
     }
 }

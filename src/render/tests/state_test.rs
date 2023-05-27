@@ -9,7 +9,7 @@ use crate::{html, Renderer, View, ViewHashTree};
 
 #[tokio::test]
 async fn test_previous_state() {
-    fn component(state: impl FromPrevious<u32> + 'static) -> impl View {
+    fn component(state: impl FromPrevious<u32>) -> impl View {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
             ready(Ok::<_, Infallible>((html::div(()), format!("{state}"))))
         })
@@ -48,7 +48,7 @@ async fn test_previous_state() {
 
 #[tokio::test]
 async fn test_previous_default() {
-    fn component(state: impl FromPrevious<u32> + 'static) -> impl View {
+    fn component(state: impl FromPrevious<u32>) -> impl View {
         ServerComponent::new(ComponentId::new("a", "b"), state, |state: u32| {
             ready(Ok::<_, Infallible>((html::div(()), format!("{state}"))))
         })

@@ -1,5 +1,4 @@
 use std::fmt;
-use std::future::{ready, Ready};
 
 use super::View;
 use crate::render::Renderer;
@@ -45,10 +44,8 @@ impl<F> View for Text<F>
 where
     F: Fn(Renderer) -> Result<Renderer, crate::Error>,
 {
-    type Future = Ready<Result<Renderer, crate::Error>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        ready((self.0)(r))
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        (self.0)(r)
     }
 }
 

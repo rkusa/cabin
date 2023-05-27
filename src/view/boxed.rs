@@ -24,9 +24,7 @@ impl BoxedView {
 }
 
 impl View for BoxedView {
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        (self.view)(r)
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        (self.view)(r).await
     }
 }

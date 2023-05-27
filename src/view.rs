@@ -5,8 +5,6 @@ pub(crate) mod text;
 
 use std::borrow::Cow;
 use std::fmt::Write;
-use std::future::Future;
-use std::pin::Pin;
 
 pub use future::FutureExt;
 pub use iter::IteratorExt;
@@ -18,9 +16,7 @@ use crate::render::Renderer;
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
 pub trait View {
-    type Future: Future<Output = Result<Renderer, crate::Error>>;
-
-    fn render(self, r: Renderer) -> Self::Future;
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error>;
 
     fn boxed(self) -> BoxedView
     where
@@ -31,95 +27,69 @@ pub trait View {
 }
 
 impl View for () {
-    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        std::future::ready(Ok(r))
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        Ok(r)
     }
 }
 
 // TODO: escape html!
 impl<'a> View for &'a str {
-    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
         // TODO: safe escape HTML
         let mut txt = r.text();
-        std::future::ready(
-            txt.write_str(self)
-                .map_err(crate::error::InternalError::from)
-                .map_err(crate::error::Error::from)
-                .and_then(|_| txt.end()),
-        )
+        txt.write_str(self)
+            .map_err(crate::error::InternalError::from)
+            .map_err(crate::error::Error::from)
+            .and_then(|_| txt.end())
     }
 }
 
 impl<'a> View for Cow<'a, str> {
-    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        <&str as View>::render(self.as_ref(), r)
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        <&str as View>::render(self.as_ref(), r).await
     }
 }
 
 impl View for String {
-    type Future = std::future::Ready<Result<Renderer, crate::Error>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        <&str as View>::render(self.as_str(), r)
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        <&str as View>::render(self.as_str(), r).await
     }
 }
 
 impl<V> View for Option<V>
 where
-    V: View + 'static,
+    V: View,
 {
-    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        Box::pin(async {
-            match self {
-                Some(i) => i.render(r).await,
-                None => Ok(r),
-            }
-        })
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        match self {
+            Some(i) => i.render(r).await,
+            None => Ok(r),
+        }
     }
 }
 
 impl<V, E> View for Result<V, E>
 where
-    V: View + 'static,
-    E: 'static,
+    V: View,
     crate::Error: From<E>,
 {
-    // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-    type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
-
-    fn render(self, r: Renderer) -> Self::Future {
-        Box::pin(async {
-            match self {
-                Ok(v) => v.render(r).await,
-                Err(err) => Err(err.into()),
-            }
-        })
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        match self {
+            Ok(v) => v.render(r).await,
+            Err(err) => Err(err.into()),
+        }
     }
 }
 
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            impl<$( [<V$ix>]: View + 'static),*> View for ($([<V$ix>],)*) {
-                // TODO: move to `impl Future` once `type_alias_impl_trait` is stable
-                type Future = Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
-
-                fn render(self, r: Renderer) -> Self::Future {
-                    Box::pin(async {
-                        $(
-                            let r = self.$ix.render(r).await?;
-                        )*
-                        Ok(r)
-                    })
+            impl<$( [<V$ix>]: View),*> View for ($([<V$ix>],)*) {
+                async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+                    $(
+                        let r = self.$ix.render(r).await?;
+                    )*
+                    Ok(r)
                 }
             }
         }
