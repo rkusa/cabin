@@ -35,6 +35,14 @@ pub trait Style {
         pseudo::active::Active(self)
     }
 
+    /// Apply style only when the element is disabled (`:disabled`).
+    fn disabled(self) -> pseudo::disabled::Disabled<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::disabled::Disabled(self)
+    }
+
     /// Apply style only when the element has focus (`:foucs`).
     fn focus(self) -> pseudo::focus::Focus<Self>
     where
