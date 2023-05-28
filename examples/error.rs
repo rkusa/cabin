@@ -9,17 +9,13 @@ use std::net::SocketAddr;
 use std::{error, fmt};
 
 use axum::body::{Full, HttpBody};
+use cabin::component::{Component, PublicComponent};
+use cabin::{cabin_scripts, cabin_stylesheets, View};
 use http::Response;
-use rustend::component::{Component, PublicComponent};
-use rustend::{rustend_scripts, rustend_stylesheets, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (
-        rustend_stylesheets(),
-        rustend_scripts(),
-        Health::restore(()),
-    )
+    (cabin_stylesheets(), cabin_scripts(), Health::restore(()))
 }
 
 #[derive(Debug, Default, Hash, Serialize, Deserialize, PublicComponent)]
@@ -44,9 +40,9 @@ async fn test_database_connection() -> Result<(), DbError> {
     Err(DbError)
 }
 
-impl From<DbError> for rustend::Error {
+impl From<DbError> for cabin::Error {
     fn from(err: DbError) -> Self {
-        rustend::Error::from_err(err)
+        cabin::Error::from_err(err)
     }
 }
 
@@ -64,12 +60,12 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                let res = rustend::render_to_response(app).await;
+                let res = cabin::render_to_response(app).await;
                 let (parts, body) = res.into_parts();
                 Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
-        .layer(rustend_service::framework());
+        .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");

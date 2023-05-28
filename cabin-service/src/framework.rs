@@ -4,13 +4,13 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::{Buf, BufMut, Bytes};
+use cabin::component::registry::ComponentRegistry;
+use cabin::SERVER_COMPONENT_JS;
+use cabin_css::registry::StyleRegistry;
 use http::{header, Method, Request, Response, StatusCode};
 use http_body::combinators::UnsyncBoxBody;
 use http_body::{Body as HttpBody, Empty, Full};
 use mime::Mime;
-use rustend::component::registry::ComponentRegistry;
-use rustend::SERVER_COMPONENT_JS;
-use rustend_css::registry::StyleRegistry;
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -80,12 +80,12 @@ where
                     ))
                     .unwrap()),
 
-                #[cfg(feature = "rustend-css")]
+                #[cfg(feature = "cabin-css")]
                 (&Method::GET, &["styles.css"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/css")
                     .body(UnsyncBoxBody::new(
                         Full::new(Bytes::from(
-                            rustend_css::registry::StyleRegistry::global().style_sheet(),
+                            cabin_css::registry::StyleRegistry::global().style_sheet(),
                         ))
                         .map_err(|_| unreachable!()),
                     ))

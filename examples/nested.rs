@@ -5,14 +5,14 @@ use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
-use rustend::component::{Component, PublicComponent};
-use rustend::{html, rustend_scripts, rustend_stylesheets, View};
+use cabin::component::{Component, PublicComponent};
+use cabin::{cabin_scripts, cabin_stylesheets, html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
     (
-        rustend_stylesheets(),
-        rustend_scripts(),
+        cabin_stylesheets(),
+        cabin_scripts(),
         Level::restore_or_else(1, || Level::new(1)),
     )
 }
@@ -69,12 +69,12 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| async {
-                let res = rustend::render_to_response(app).await;
+                let res = cabin::render_to_response(app).await;
                 let (parts, body) = res.into_parts();
                 Response::from_parts(parts, Full::new(body).boxed())
             }),
         )
-        .layer(rustend_service::framework());
+        .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");

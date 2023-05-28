@@ -23,11 +23,11 @@ pub mod view;
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
 // TODO: move behind feature flag?
-pub fn rustend_stylesheets<EV>() -> impl View<EV> {
+pub fn cabin_stylesheets<EV>() -> impl View<EV> {
     r#"<link rel="stylesheet" href="/styles.css">"#
 }
 
-pub fn rustend_scripts<EV>() -> impl View<EV> {
+pub fn cabin_scripts<EV>() -> impl View<EV> {
     r#"<script src="/server-component.js" async></script>"#
 }
 

@@ -6,8 +6,8 @@ mod utilities;
 use std::fmt;
 use std::hash::Hasher;
 
+pub use cabin_macros::css;
 pub use class_name::ClassName;
-pub use rustend_macros::css;
 pub use utilities::*;
 
 pub trait Style {

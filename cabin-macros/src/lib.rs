@@ -20,14 +20,14 @@ pub fn derive_public_component(input: TokenStream) -> TokenStream {
     let name = ident.to_string();
 
     quote! {
-        impl #generics ::rustend::component::PublicComponent for #ident #generics {
-            fn id() -> ::rustend::component::ComponentId {
-                #[::rustend::private::linkme::distributed_slice(::rustend::component::registry::COMPONENT_FACTORIES)]
-                fn __register(r: &mut ::rustend::component::registry::ComponentRegistry) {
+        impl #generics ::cabin::component::PublicComponent for #ident #generics {
+            fn id() -> ::cabin::component::ComponentId {
+                #[::cabin::private::linkme::distributed_slice(::cabin::component::registry::COMPONENT_FACTORIES)]
+                fn __register(r: &mut ::cabin::component::registry::ComponentRegistry) {
                     r.register::<#ident>();
                 }
 
-                ::rustend::component::ComponentId::new(module_path!(), #name)
+                ::cabin::component::ComponentId::new(module_path!(), #name)
             }
         }
 
@@ -161,16 +161,16 @@ pub fn css(item: TokenStream) -> TokenStream {
 
     quote! {
         {
-            static NAME: ::rustend::private::OnceCell<String> = ::rustend::private::OnceCell::new();
+            static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-            #[::rustend::private::linkme::distributed_slice(::rustend_css::registry::STYLES)]
-            #[linkme(crate = ::rustend::private::linkme)]
-            fn __register(r: &mut ::rustend_css::registry::StyleRegistry) {
+            #[::cabin::private::linkme::distributed_slice(::cabin_css::registry::STYLES)]
+            #[linkme(crate = ::cabin::private::linkme)]
+            fn __register(r: &mut ::cabin_css::registry::StyleRegistry) {
                 let name = r.add(&[#(&#styles,)*]);
                 NAME.set(name).ok();
             }
 
-            ::rustend_css::ClassName(Some(::std::borrow::Cow::Borrowed(
+            ::cabin_css::ClassName(Some(::std::borrow::Cow::Borrowed(
                 NAME.get().map(|s| s.as_str()).unwrap_or_default()
             )))
         }

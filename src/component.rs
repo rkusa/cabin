@@ -3,7 +3,7 @@ pub mod registry;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
-pub use rustend_macros::PublicComponent;
+pub use cabin_macros::PublicComponent;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use twox_hash::XxHash32;
