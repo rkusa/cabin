@@ -54,11 +54,99 @@ fn main() {
         )
         .unwrap();
     }
+
+    // rounded
+    {
+        enum Properties {
+            One(&'static str, &'static str),
+            Two((&'static str, &'static str), (&'static str, &'static str)),
+        }
+        let variants = [
+            (
+                "rounded.rs",
+                Properties::One("BORDER_RADIUS", "border-radius"),
+            ),
+            (
+                "rounded-b.rs",
+                Properties::Two(
+                    ("BORDER_BOTTOM_RIGHT_RADIUS", "border-bottom-right-radius"),
+                    ("BORDER_BOTTOM_LEFT_RADIUS", "border-bottom-left-radius"),
+                ),
+            ),
+            (
+                "rounded-bl.rs",
+                Properties::One("BORDER_BOTTOM_LEFT_RADIUS", "border-bottom-left-radius"),
+            ),
+            (
+                "rounded-br.rs",
+                Properties::One("BORDER_BOTTOM_RIGHT_RADIUS", "border-bottom-right-radius"),
+            ),
+            (
+                "rounded-l.rs",
+                Properties::Two(
+                    ("BORDER_TOP_LEFT_RADIUS", "border-top-left-radius"),
+                    ("BORDER_BOTTOM_LEFT_RADIUS", "border-bottom-left-radius"),
+                ),
+            ),
+            (
+                "rounded-r.rs",
+                Properties::Two(
+                    ("BORDER_TOP_RIGHT_RADIUS", "border-top-right-radius"),
+                    ("BORDER_BOTTOM_RIGHT_RADIUS", "border-bottom-right-radius"),
+                ),
+            ),
+            (
+                "rounded-t.rs",
+                Properties::Two(
+                    ("BORDER_TOP_RIGHT_RADIUS", "border-top-right-radius"),
+                    ("BORDER_TOP_LEFT_RADIUS", "border-top-left-radius"),
+                ),
+            ),
+            (
+                "rounded-tl.rs",
+                Properties::One("BORDER_TOP_LEFT_RADIUS", "border-bottom-left-radius"),
+            ),
+            (
+                "rounded-tr.rs",
+                Properties::One("BORDER_TOP_RIGHT_RADIUS", "border-bottom-right-radius"),
+            ),
+        ];
+
+        for (file_name, properties) in variants {
+            let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join(file_name);
+            let out = &mut File::create(path).unwrap();
+
+            for (ident, size) in theme.rounded {
+                match properties {
+                    Properties::One(rust_name, css_name) => {
+                        writeln!(out, r#"/// `{css_name}: {size};`"#).unwrap();
+                        writeln!(
+                            out,
+                            "pub const {ident}: Property<Length> = \
+                            Property({rust_name}, {size:?});"
+                        )
+                        .unwrap();
+                    }
+                    Properties::Two((rust_name1, css_name1), (rust_name2, css_name2)) => {
+                        writeln!(out, r#"/// `{css_name1}: {size}; {css_name2}: {size};`"#)
+                            .unwrap();
+                        writeln!(
+                            out,
+                            "pub const {ident}: PropertyTwice<Length> = \
+                                PropertyTwice({rust_name1}, {rust_name2}, {size:?});"
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct Theme {
     colors: &'static [(&'static str, &'static str)],
     font_sizes: &'static [(&'static str, Length, LineHeight)],
+    rounded: &'static [(&'static str, Length)],
 }
 
 enum LineHeight {
@@ -335,6 +423,14 @@ impl Default for Theme {
                 ("XL7", Length::Rem(4.5), LineHeight::Multiple(1)),
                 ("XL8", Length::Rem(6.0), LineHeight::Multiple(1)),
                 ("XL9", Length::Rem(8.0), LineHeight::Multiple(1)),
+            ],
+            rounded: &[
+                ("SM", Length::Rem(0.125)),
+                ("MD", Length::Rem(0.375)),
+                ("LG", Length::Rem(0.5)),
+                ("XL", Length::Rem(0.75)),
+                ("XL2", Length::Rem(1.0)),
+                ("XL3", Length::Rem(1.5)),
             ],
         }
     }

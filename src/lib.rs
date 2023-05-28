@@ -32,7 +32,7 @@ pub fn cabin_scripts<EV>() -> impl View<EV> {
 }
 
 pub async fn render_to_response<F: Future<Output = V>, V: View<Ev> + 'static, Ev>(
-    render_fn: impl Fn() -> F + Send + Sync + 'static,
+    render_fn: impl FnOnce() -> F + Send + Sync + 'static,
 ) -> Response<Bytes> {
     let result = local_pool::spawn(move || async move {
         let r = Renderer::new();

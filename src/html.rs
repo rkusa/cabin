@@ -4,10 +4,11 @@ pub mod events;
 
 use std::borrow::Cow;
 
+pub use attributes::Attributes;
 pub use elements::*;
 use serde::Serialize;
 
-use self::attributes::{Attribute, Attributes};
+use self::attributes::Attribute;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
 use crate::view::View;

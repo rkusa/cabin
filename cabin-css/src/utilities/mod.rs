@@ -21,6 +21,7 @@ pub mod pr;
 pub mod pt;
 pub mod px;
 pub mod py;
+pub mod rounded;
 pub mod text;
 pub mod w;
 
