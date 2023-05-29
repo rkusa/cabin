@@ -104,4 +104,8 @@ where
             el.end()
         }
     }
+
+    fn prime(&mut self) {
+        self.content.prime();
+    }
 }

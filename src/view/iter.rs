@@ -37,4 +37,6 @@ where
         }
         Ok(r)
     }
+
+    // TODO: any way to prime without consuming the iterator?
 }

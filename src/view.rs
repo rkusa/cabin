@@ -94,6 +94,12 @@ where
             None => Ok(r),
         }
     }
+
+    fn prime(&mut self) {
+        if let Some(inner) = self {
+            inner.prime();
+        }
+    }
 }
 
 impl<V, E, Ev> View<Ev> for Result<V, E>
@@ -105,6 +111,12 @@ where
         match self {
             Ok(v) => v.render(r).await,
             Err(err) => Err(err.into()),
+        }
+    }
+
+    fn prime(&mut self) {
+        if let Ok(inner) = self {
+            inner.prime();
         }
     }
 }

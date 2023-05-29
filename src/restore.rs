@@ -95,7 +95,10 @@ where
                     component
                         .view()
                         .await
-                        .map(|view| view.coerce().boxed())
+                        .map(|mut view| {
+                            view.prime();
+                            view.coerce().boxed()
+                        })
                         .map_err(|err| err.into())
                 });
                 ComponentState::Primed {

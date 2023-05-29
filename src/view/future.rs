@@ -63,7 +63,11 @@ where
         let _ = std::mem::replace(
             &mut self.state,
             match s {
-                State::Stored(f) => State::Primed(tokio::task::spawn_local(f)),
+                State::Stored(f) => State::Primed(tokio::task::spawn_local(async {
+                    let mut view = f.await;
+                    view.prime();
+                    view
+                })),
                 State::Primed(f) => State::Primed(f),
                 State::Intermediate => unreachable!(),
             },
