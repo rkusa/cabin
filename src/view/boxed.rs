@@ -31,4 +31,6 @@ impl<Ev> View<Ev> for BoxedView<Ev> {
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
         (self.view)(r).await
     }
+
+    // TODO: prime
 }

@@ -42,7 +42,7 @@ impl<V> Dialog<V> {
 }
 
 impl Dialog<()> {
-    pub fn restore<V, Ev>(id: impl Hash, content: V) -> Restored<Dialog<V, Ev>> {
+    pub fn restore<V: View<Ev>, Ev>(id: impl Hash, content: V) -> Restored<Dialog<V, Ev>> {
         let dialog: Restored<Dialog<()>> = Component::restore(id);
         dialog.map(|dialog| Dialog {
             opened: dialog.opened,

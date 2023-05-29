@@ -1,20 +1,23 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Write;
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::value::RawValue;
+use tokio::task::JoinHandle;
+use twox_hash::XxHash32;
 
 use crate::component::Component;
 use crate::render::PreviousComponent;
+use crate::view::BoxedView;
 use crate::{Renderer, View, ViewHashTree};
 
 pub struct Restored<C> {
     id: u32,
-    component: C,
+    component: ComponentState<C>,
     previous_hash_tree: Option<ViewHashTree>,
 }
 
@@ -28,7 +31,7 @@ where
         let component = serde_json::from_str(previous.state.get()).unwrap();
         Some(Self {
             id,
-            component,
+            component: ComponentState::Stored(component),
             previous_hash_tree: Some(previous.hash_tree),
         })
     }
@@ -36,7 +39,7 @@ where
     pub(crate) fn new(id: u32, component: C) -> Self {
         Self {
             id,
-            component,
+            component: ComponentState::Stored(component),
             previous_hash_tree: None,
         }
     }
@@ -52,8 +55,56 @@ where
     pub fn map<T>(self, f: impl FnOnce(C) -> T) -> Restored<T> {
         Restored {
             id: self.id,
-            component: f(self.component),
+            component: match self.component {
+                ComponentState::Stored(component) => ComponentState::Stored(f(component)),
+                ComponentState::Primed { .. } | ComponentState::Intermediate => unreachable!(),
+            },
             previous_hash_tree: self.previous_hash_tree,
+        }
+    }
+}
+
+enum ComponentState<C> {
+    Stored(C),
+    Primed {
+        hash: u32,
+        state_serialized: Box<RawValue>,
+        view: JoinHandle<Result<BoxedView<()>, crate::Error>>,
+    },
+    Intermediate,
+}
+
+impl<C> ComponentState<C>
+where
+    C: Component + Hash + Serialize + 'static,
+{
+    fn prime(self) -> Self {
+        match self {
+            ComponentState::Primed { .. } => self,
+            ComponentState::Stored(component) => {
+                // TODO: unwrap
+                let state_serialized = serde_json::value::to_raw_value(&component).unwrap();
+
+                // Include state in hash to ensure state changes update the component (even if its view
+                // doesn't change)
+                let mut hasher = XxHash32::default();
+                component.hash(&mut hasher);
+                let hash = hasher.finish() as u32;
+
+                let view = tokio::task::spawn_local(async {
+                    component
+                        .view()
+                        .await
+                        .map(|view| view.coerce().boxed())
+                        .map_err(|err| err.into())
+                });
+                ComponentState::Primed {
+                    hash,
+                    state_serialized,
+                    view,
+                }
+            }
+            ComponentState::Intermediate => unreachable!(),
         }
     }
 }
@@ -72,29 +123,37 @@ impl<C> Deref for Restored<C> {
     type Target = C;
 
     fn deref(&self) -> &Self::Target {
-        &self.component
+        match &self.component {
+            ComponentState::Stored(component) => component,
+            ComponentState::Primed { .. } | ComponentState::Intermediate => unreachable!(),
+        }
     }
 }
 
 impl<C> DerefMut for Restored<C> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.component
+        match &mut self.component {
+            ComponentState::Stored(component) => component,
+            ComponentState::Primed { .. } | ComponentState::Intermediate => unreachable!(),
+        }
     }
 }
 
 impl<C, Ev> View<Ev> for Restored<C>
 where
-    C: Component + Serialize + Hash,
+    C: Component + Serialize + Hash + 'static,
 {
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
-        let mut component = r.component(C::id(), self.id);
+        let component = self.component.prime();
+        let ComponentState::Primed { hash, state_serialized, view } = component else {
+            unreachable!();
+        };
 
-        // TODO: unwrap
-        let state_serialized = serde_json::value::to_raw_value(&self.component).unwrap();
+        let mut component = r.component(C::id(), self.id);
 
         // Include state in hash to ensure state changes update the component (even if its view
         // doesn't change)
-        self.component.hash(&mut component);
+        component.write_u32(hash);
 
         write!(
             component,
@@ -104,7 +163,8 @@ where
         )
         .map_err(crate::error::InternalError::from)?;
 
-        let view = self.component.view().await.map_err(|err| err.into())?;
+        // TODO: handle JoinError?
+        let view = view.await.unwrap()?;
         let (mut r, hash_tree, changed) = component.content(view, self.previous_hash_tree).await?;
 
         // If changed, add updated state and hash tree to output
@@ -129,5 +189,10 @@ where
         }
 
         Ok(r)
+    }
+
+    fn prime(&mut self) {
+        let s = std::mem::replace(&mut self.component, ComponentState::Intermediate);
+        let _ = std::mem::replace(&mut self.component, s.prime());
     }
 }

@@ -11,13 +11,15 @@ pub use future::FutureExt;
 pub use iter::IteratorExt;
 use paste::paste;
 
-use self::boxed::BoxedView;
+pub use self::boxed::BoxedView;
 use crate::render::Renderer;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
 pub trait View<Ev = ()> {
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error>;
+
+    fn prime(&mut self) {}
 
     fn boxed(self) -> BoxedView<Ev>
     where
@@ -111,7 +113,10 @@ macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
             impl<Ev, $( [<V$ix>]: View<Ev>),*> View<Ev> for ($([<V$ix>],)*) {
-                async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+                async fn render(mut self, r: Renderer) -> Result<Renderer, crate::Error> {
+                    $(
+                        self.$ix.prime();
+                    )*
                     $(
                         let r = self.$ix.render(r).await?;
                     )*
