@@ -6,13 +6,13 @@ use crate::html::Html;
 use crate::render::ElementRenderer;
 use crate::View;
 
-pub struct Input<Ev> {
-    on_input: Option<Ev>,
+pub struct Input {
+    on_input: Option,
 }
 
-impl<V, Ev, A> Html<V, Ev, A, Input<Ev>>
+impl<V, A> Html<V, A, Input>
 where
-    V: View<Ev>,
+    V: View,
 {
     pub fn on_input(mut self, event: impl FnOnce(InputEvent) -> Ev) -> Self {
         self.kind.on_input = Some(event(InputEvent::default()));
@@ -20,10 +20,7 @@ where
     }
 }
 
-impl<Ev> Attributes for Input<Ev>
-where
-    Ev: Serialize,
-{
+impl Attributes for Input {
     fn render(&self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(event) = &self.on_input {
             // TODO: unwrap
@@ -36,7 +33,7 @@ where
     }
 }
 
-impl<Ev> Default for Input<Ev> {
+impl Default for Input {
     fn default() -> Self {
         Self { on_input: None }
     }

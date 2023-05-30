@@ -2,38 +2,147 @@ use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::token::{Comma, Dot, Paren};
-use syn::{parse_macro_input, DeriveInput, ExprLit, GenericParam, Ident, Path};
+use syn::{
+    parse_macro_input, Error, Expr, ExprClosure, ExprLit, FnArg, Ident, Item, ItemFn, Path,
+    Signature, Stmt,
+};
 
-#[proc_macro_derive(PublicComponent)]
-pub fn derive_public_component(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let mut generics = input.generics;
-    for generic in &mut generics.params {
-        if let GenericParam::Type(ref mut param) = generic {
-            param.eq_token = None;
-            param.default = None;
-        }
+#[proc_macro_attribute]
+pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(item as ItemFn);
+
+    let ItemFn {
+        attrs,
+        vis,
+        sig,
+        block,
+    } = item;
+    let Signature {
+        constness,
+        asyncness,
+        unsafety,
+        abi,
+        fn_token: _,
+        ident,
+        generics,
+        paren_token: _,
+        inputs,
+        variadic,
+        output,
+    } = sig;
+
+    if inputs.len() != 1 {
+        return Error::new(
+            inputs.span(),
+            "Exactly one function argument expected (the component state)",
+        )
+        .into_compile_error()
+        .into();
     }
 
-    let ident = input.ident;
+    let state_type = match &inputs[0] {
+        arg @ FnArg::Receiver(_) => {
+            return Error::new(arg.span(), "State cannot be a self argument")
+                .into_compile_error()
+                .into()
+        }
+        FnArg::Typed(pat_type) => &pat_type.ty,
+    };
+
+    // find actions (`fn`s inside of the components content)
+    // let mut action_registrations = Vec::new();
+    let stmts = block.stmts.into_iter().map(|stmt| {
+        if let Stmt::Item(Item::Fn(f)) = stmt {
+            // TODO: support multiple signals
+            if f.sig.inputs.len() != 1 {
+                return Err(Error::new(
+                    f.sig.inputs.span(),
+                    "Exactly two function arguments expected for actions \
+                            (the component state and the action payload)",
+                ));
+            }
+
+            let signal_ident = match &f.sig.inputs[0] {
+                FnArg::Receiver(arg) => {
+                    return Err(Error::new(arg.span(), "Payload cannot be a self argument"));
+                }
+                FnArg::Typed(pat_type) => &pat_type.pat,
+            };
+
+            let action_ident = &f.sig.ident;
+            let name = action_ident.to_string();
+            Ok(quote! {
+                {
+                    #[::cabin::private::linkme::distributed_slice(::cabin::actions::ACTION_FACTORIES)]
+                    #[linkme(crate = ::cabin::private::linkme)]
+                    fn __register(r: &mut ::cabin::actions::ActionsRegistry) {
+                        r.register(#name, #action_ident);
+                    }
+                }
+                #f
+            })
+        } else {
+            Ok(quote!{ #stmt })
+        }
+    }).collect::<Result<Vec<_>, _>>();
+    let stmts = match stmts {
+        Ok(stmts) => stmts,
+        Err(err) => return err.into_compile_error().into(),
+    };
+
     let name = ident.to_string();
 
-    quote! {
-        impl #generics ::cabin::component::PublicComponent for #ident #generics {
-            fn id() -> ::cabin::component::ComponentId {
-                #[::cabin::private::linkme::distributed_slice(::cabin::component::registry::COMPONENT_FACTORIES)]
-                fn __register(r: &mut ::cabin::component::registry::ComponentRegistry) {
-                    r.register::<#ident>();
-                }
+    let wrapped_fn = quote! {
+        #(#attrs)*
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
+            const SCOPE_ID: ::cabin::signal::ScopeId = concat!(module_path!(), "::", #name);
 
-                ::cabin::component::ComponentId::new(module_path!(), #name)
-            }
+            #(#stmts)*
+            // #(#actions)*
+
+            // #[::cabin::private::linkme::distributed_slice(::cabin::component::registry::COMPONENT_FACTORIES)]
+            // #[linkme(crate = ::cabin::private::linkme)]
+            // fn __register(r: &mut ::cabin::component::registry::ComponentRegistry) {
+            //     #(#action_registrations)*
+            // }
+
+            // #(#attrs)*
+            // #constness async #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
+            //     #(#other)*
+            // }
+
+            // Ok(::cabin::component::ServerComponent::new(ID, __state, #ident))
         }
+    };
 
+    wrapped_fn.into()
+}
 
+#[proc_macro]
+pub fn signal(item: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(item with Punctuated::<Expr, Comma>::parse_terminated);
+    let signal_id = "TODO";
+    quote! {
+        {
+            #[::cabin::private::linkme::distributed_slice(::cabin::actions::ACTION_FACTORIES)]
+            #[linkme(crate = ::cabin::private::linkme)]
+            fn __register(r: &mut ::cabin::actions::ActionsRegistry) {
+                r.register_dependency(SCOPE_ID, #signal_id);
+            }
+
+            Signal::new(SCOPE_ID, #signal_id, #item)
+        }
     }
     .into()
+}
+
+#[proc_macro]
+pub fn action(item: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(item with ExprClosure::parse);
+
+    quote! {}.into()
 }
 
 #[derive(Debug, Hash)]

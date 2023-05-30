@@ -2,21 +2,19 @@ use super::{create, Html};
 
 pub mod anchor;
 pub mod dialog;
-pub mod input;
+// pub mod input;
 
 #[macro_export]
 macro_rules! element {
     ($dollar:tt, $mod:ident, $name:ident) => {
-        pub fn $name<V: $crate::view::View<Ev>, Ev>(
-            content: V,
-        ) -> $crate::html::Html<V, Ev, (), ()> {
+        pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, (), ()> {
             $crate::html::create(stringify!($name), content)
         }
     };
     ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
-        pub fn $name<V: $crate::view::View<Ev>, Ev>(
+        pub fn $name<V: $crate::view::View>(
             content: V,
-        ) -> $crate::html::Html<V, Ev, (), $crate::html::elements::$kind_mod::$kind_type> {
+        ) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
             $crate::html::create(stringify!($name), content)
         }
     };
@@ -25,7 +23,7 @@ macro_rules! element {
 #[macro_export]
 macro_rules! void_element {
     ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
-        pub fn $name<Ev>() -> Html<(), Ev, (), $crate::html::elements::$kind_mod::$kind_type<Ev>> {
+        pub fn $name() -> Html<(), (), $crate::html::elements::$kind_mod::$kind_type> {
             create(stringify!($name), ())
         }
     };
@@ -46,7 +44,7 @@ element!($, __h4, h4);
 element!($, __h5, h5);
 element!($, __h6, h6);
 element!($, __hgroup, hgroup);
-void_element!($, __input, input, input, Input);
+// void_element!($, __input, input, input, Input);
 element!($, __li, li);
 element!($, __table, table);
 element!($, __tbody, tbody);

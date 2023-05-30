@@ -7,12 +7,12 @@
 
 use std::convert::Infallible;
 use std::hash::Hash;
-use std::marker::PhantomData;
 use std::net::SocketAddr;
 
 use axum::body::{Full, HttpBody};
 use axum::response::Response;
 use cabin::component::{Component, PublicComponent};
+use cabin::view::{IntoSlot, Slot};
 use cabin::{cabin_scripts, cabin_stylesheets, html, Restored, View};
 
 async fn app() -> impl View {
@@ -25,15 +25,13 @@ async fn root() -> Result<impl View, Infallible> {
 }
 
 #[derive(Default, Hash, serde::Serialize, serde::Deserialize, PublicComponent)]
-struct Dialog<V = (), Ev = ()> {
+struct Dialog {
     opened: bool,
-    #[serde(skip)]
-    content: V,
-    #[serde(skip)]
-    marker: PhantomData<Ev>,
+    // TODO: prevent on compile time the use of Views inside of a component
+    content: Slot,
 }
 
-impl<V> Dialog<V> {
+impl Dialog {
     // TODO: well, how bad is `self: Restored<Self>`?
     pub fn opened(mut self: Restored<Self>, opened: bool) -> Restored<Self> {
         self.opened = opened;
@@ -41,13 +39,12 @@ impl<V> Dialog<V> {
     }
 }
 
-impl Dialog<()> {
-    pub fn restore<V: View<Ev>, Ev>(id: impl Hash, content: V) -> Restored<Dialog<V, Ev>> {
-        let dialog: Restored<Dialog<()>> = Component::restore(id);
+impl Dialog {
+    pub fn restore(id: impl Hash, content: impl IntoSlot) -> Restored<Dialog> {
+        let dialog: Restored<Dialog> = Component::restore(id);
         dialog.map(|dialog| Dialog {
             opened: dialog.opened,
-            content,
-            marker: PhantomData,
+            content: content.into_slot(),
         })
     }
 }
@@ -58,7 +55,7 @@ enum DialogEvent {
     Close,
 }
 
-impl<V: View<Ev>, Ev> Component for Dialog<V, Ev> {
+impl Component for Dialog {
     type Event = DialogEvent;
     type Error = Infallible;
 
@@ -72,7 +69,7 @@ impl<V: View<Ev>, Ev> Component for Dialog<V, Ev> {
     async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
         Ok((
             html::dialog((
-                self.content.coerce(),
+                self.content,
                 html::button("close").on_click(DialogEvent::Close),
             ))
             .open(self.opened),

@@ -4,7 +4,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::{Buf, BufMut, Bytes};
-use cabin::component::registry::ComponentRegistry;
 use cabin::SERVER_COMPONENT_JS;
 use cabin_css::registry::StyleRegistry;
 use http::{header, Method, Request, Response, StatusCode};
@@ -52,7 +51,7 @@ where
     }
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
-        let _ = ComponentRegistry::global();
+        // let _ = ComponentRegistry::global();
         let _ = StyleRegistry::global();
 
         let mut service = self.service.clone();
@@ -91,69 +90,68 @@ where
                     ))
                     .unwrap()),
 
-                (&Method::POST, &["dispatch", component]) => {
-                    // TODO: get rid of to_string()
-                    let id = component.to_string();
+                // (&Method::POST, &["dispatch", component]) => {
+                //     // TODO: get rid of to_string()
+                //     let id = component.to_string();
 
-                    let mime: Option<Mime> = req
-                        .headers()
-                        .get(header::CONTENT_TYPE)
-                        .and_then(|v| v.to_str().ok()?.parse().ok());
-                    if mime != Some(mime::APPLICATION_JSON) {
-                        return Ok(Response::builder()
-                            .status(StatusCode::NOT_FOUND)
-                            .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                            .unwrap());
-                    }
+                //     let mime: Option<Mime> = req
+                //         .headers()
+                //         .get(header::CONTENT_TYPE)
+                //         .and_then(|v| v.to_str().ok()?.parse().ok());
+                //     if mime != Some(mime::APPLICATION_JSON) {
+                //         return Ok(Response::builder()
+                //             .status(StatusCode::NOT_FOUND)
+                //             .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
+                //             .unwrap());
+                //     }
 
-                    let data = match to_bytes(req.into_body()).await {
-                        Ok(data) => data,
-                        Err(err) => {
-                            tracing::error!(%err, "failed to read request body");
-                            return Ok(Response::builder()
-                                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                                .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                                .unwrap());
-                        }
-                    };
-                    let update = match ComponentRegistry::global().handle(&id, data).await {
-                        Ok(update) => update,
-                        Err(err) => {
-                            let res = Response::<Bytes>::from(err);
-                            let (parts, body) = res.into_parts();
+                //     let data = match to_bytes(req.into_body()).await {
+                //         Ok(data) => data,
+                //         Err(err) => {
+                //             tracing::error!(%err, "failed to read request body");
+                //             return Ok(Response::builder()
+                //                 .status(StatusCode::INTERNAL_SERVER_ERROR)
+                //                 .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
+                //                 .unwrap());
+                //         }
+                //     };
+                //     let update = match ComponentRegistry::global().handle(&id, data).await {
+                //         Ok(update) => update,
+                //         Err(err) => {
+                //             let res = Response::<Bytes>::from(err);
+                //             let (parts, body) = res.into_parts();
 
-                            return Ok(Response::from_parts(
-                                parts,
-                                UnsyncBoxBody::new(Full::new(body).map_err(|_| unreachable!())),
-                            ));
-                        }
-                    };
+                //             return Ok(Response::from_parts(
+                //                 parts,
+                //                 UnsyncBoxBody::new(Full::new(body).map_err(|_| unreachable!())),
+                //             ));
+                //         }
+                //     };
 
-                    match update {
-                        Some(update) => match serde_json::to_vec(&update) {
-                            Ok(json) => Ok(Response::builder()
-                                .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
-                                .body(UnsyncBoxBody::new(
-                                    Full::new(Bytes::from(json)).map_err(|_| unreachable!()),
-                                ))
-                                .unwrap()),
-                            Err(err) => {
-                                tracing::error!(%err, "failed to serialize action update");
-                                Ok(Response::builder()
-                                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                                    .body(UnsyncBoxBody::new(
-                                        Empty::new().map_err(|_| unreachable!()),
-                                    ))
-                                    .unwrap())
-                            }
-                        },
-                        None => Ok(Response::builder()
-                            .status(StatusCode::NOT_FOUND)
-                            .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                            .unwrap()),
-                    }
-                }
-
+                //     match update {
+                //         Some(update) => match serde_json::to_vec(&update) {
+                //             Ok(json) => Ok(Response::builder()
+                //                 .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+                //                 .body(UnsyncBoxBody::new(
+                //                     Full::new(Bytes::from(json)).map_err(|_| unreachable!()),
+                //                 ))
+                //                 .unwrap()),
+                //             Err(err) => {
+                //                 tracing::error!(%err, "failed to serialize action update");
+                //                 Ok(Response::builder()
+                //                     .status(StatusCode::INTERNAL_SERVER_ERROR)
+                //                     .body(UnsyncBoxBody::new(
+                //                         Empty::new().map_err(|_| unreachable!()),
+                //                     ))
+                //                     .unwrap())
+                //             }
+                //         },
+                //         None => Ok(Response::builder()
+                //             .status(StatusCode::NOT_FOUND)
+                //             .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
+                //             .unwrap()),
+                //     }
+                // }
                 _ => service.call(req).await.map_err(Into::into).map(|r| {
                     let (parts, body) = r.into_parts();
                     Response::from_parts(parts, body.boxed_unsync())

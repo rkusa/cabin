@@ -1,61 +1,84 @@
 #![forbid(unsafe_code)]
 #![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
 #![allow(incomplete_features)]
+#![allow(unused)]
 
 use std::future::Future;
 
 use bytes::Bytes;
+pub use cabin_macros::{action, component, signal};
 pub use error::Error;
 use http::{HeaderValue, Response};
-pub use render::{Renderer, ViewHashTree};
-pub use restore::Restored;
+use render::Renderer;
+use scope::Scope;
+// pub use render::{Renderer, ViewHashTree};
+// pub use restore::Restored;
 pub use view::View;
 
-pub mod component;
+// pub mod component;
+pub mod actions;
 pub mod error;
 pub mod html;
 mod local_pool;
 pub mod private;
-mod render;
-mod restore;
+pub mod render;
+mod scope;
+// mod restore;
+pub mod signal;
 pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
 // TODO: move behind feature flag?
-pub fn cabin_stylesheets<EV>() -> impl View<EV> {
+pub fn cabin_stylesheets() -> impl View {
     r#"<link rel="stylesheet" href="/styles.css">"#
 }
 
-pub fn cabin_scripts<EV>() -> impl View<EV> {
+pub fn cabin_scripts() -> impl View {
     r#"<script src="/server-component.js" async></script>"#
 }
 
-pub async fn render_to_response<F: Future<Output = V>, V: View<Ev> + 'static, Ev>(
+pub async fn render_to_response<F: Future<Output = V>, V: View + 'static>(
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
 ) -> Response<Bytes> {
-    let result = local_pool::spawn(move || async move {
-        let r = Renderer::new();
-        render_fn().await.render(r).await
+    let (scope, result) = local_pool::spawn(move || async move {
+        let scope = Scope::new();
+        let result = scope
+            .clone()
+            .run(async move {
+                let r = Renderer::new();
+                render_fn().await.render(r).await
+            })
+            .await;
+        (scope.into_view(), result)
     })
-    .await
-    .map(|r| r.end().view);
-    match result {
-        Ok(html) => Response::builder()
-            .header(
-                http::header::CONTENT_TYPE,
-                HeaderValue::from_static("text/html; charset=utf-8"),
-            )
-            .body(Bytes::from(html))
-            .unwrap(),
+    .await;
+    let result = match result {
+        Ok(result) => result,
         Err(err) => {
             eprintln!(
                 "{err}\n{}",
                 format_caused_by(std::error::Error::source(&err))
             );
-            err.into()
+            return err.into();
         }
-    }
+    };
+
+    let html = result.end().view;
+    Response::builder()
+        .header(
+            http::header::CONTENT_TYPE,
+            HeaderValue::from_static("text/html; charset=utf-8"),
+        )
+        .body(Bytes::from(format!(
+            "{html}\n\
+            <script type=\"application/json\" id=\"state\">{scope}</script>"
+        )))
+        .unwrap()
+}
+
+fn dispatch(action: &str, state: Bytes) {
+    //
 }
 
 fn format_caused_by(source: Option<&dyn std::error::Error>) -> String {

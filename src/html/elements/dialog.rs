@@ -8,9 +8,9 @@ pub struct Dialog {
     open: bool,
 }
 
-impl<V, Ev, A> Html<V, Ev, A, Dialog>
+impl<V, A> Html<V, A, Dialog>
 where
-    V: View<Ev>,
+    V: View,
 {
     pub fn open(mut self, open: bool) -> Self {
         self.kind.open = open;

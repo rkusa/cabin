@@ -3,16 +3,16 @@ use std::marker::PhantomData;
 pub use super::View;
 use crate::render::Renderer;
 
-pub trait IteratorExt<Iter, V, Ev> {
-    fn into_view(self) -> IteratorView<Iter, V, Ev>;
+pub trait IteratorExt<Iter, V> {
+    fn into_view(self) -> IteratorView<Iter, V>;
 }
 
-impl<Iter, V, Ev> IteratorExt<Iter::IntoIter, V, Ev> for Iter
+impl<Iter, V> IteratorExt<Iter::IntoIter, V> for Iter
 where
     Iter: IntoIterator<Item = V>,
-    V: View<Ev>,
+    V: View,
 {
-    fn into_view(self) -> IteratorView<Iter::IntoIter, V, Ev> {
+    fn into_view(self) -> IteratorView<Iter::IntoIter, V> {
         IteratorView {
             iter: self.into_iter(),
             marker: PhantomData,
@@ -20,15 +20,15 @@ where
     }
 }
 
-pub struct IteratorView<Iter, V, Ev> {
+pub struct IteratorView<Iter, V> {
     iter: Iter,
-    marker: PhantomData<(V, Ev)>,
+    marker: PhantomData<(V)>,
 }
 
-impl<Iter, V, Ev> View<Ev> for IteratorView<Iter, V, Ev>
+impl<Iter, V> View for IteratorView<Iter, V>
 where
     Iter: Iterator<Item = V>,
-    V: View<Ev>,
+    V: View,
 {
     async fn render(self, mut r: Renderer) -> Result<Renderer, crate::Error> {
         for i in self.iter {

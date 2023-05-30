@@ -14,59 +14,30 @@ use twox_hash::XxHash32;
 
 use self::marker::Marker;
 pub use self::marker::ViewHashTree;
-use crate::component::ComponentId;
 use crate::View;
 
 pub struct Renderer {
     out: String,
-    hash_tree: Vec<Marker>,
     hasher: XxHash32,
-    previous_tree: Option<Vec<Marker>>,
-    previous_offset: isize,
 }
 
 pub(crate) struct Out {
     pub view: String,
-    pub hash_tree: ViewHashTree,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PreviousComponent {
-    // TODO: avoid box?
-    pub state: Box<RawValue>,
-    pub hash_tree: ViewHashTree,
 }
 
 impl Renderer {
     pub(crate) fn new() -> Self {
         Renderer {
             out: String::with_capacity(256),
-            hash_tree: Vec::with_capacity(32),
             hasher: XxHash32::default(),
-            previous_tree: None,
-            previous_offset: 0,
-        }
-    }
-
-    pub(crate) fn from_previous_tree(previous_tree: ViewHashTree) -> Self {
-        Self {
-            previous_tree: Some(previous_tree.0),
-            ..Self::new()
         }
     }
 
     pub(crate) fn end(mut self) -> Out {
-        self.hash_tree.push(Marker::End(self.finish() as u32));
-        Out {
-            view: self.out,
-            hash_tree: ViewHashTree(self.hash_tree),
-        }
+        Out { view: self.out }
     }
 
     pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, crate::Error> {
-        self.start();
-
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
         let offset = self.out.len();
@@ -81,8 +52,6 @@ impl Renderer {
     }
 
     pub fn text(mut self) -> TextRenderer {
-        self.start();
-
         TextRenderer {
             hasher: Default::default(),
             previous_len: self.out.len(),
@@ -91,80 +60,12 @@ impl Renderer {
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(mut self, type_id: ComponentId, instance_id: u32) -> ComponentRenderer {
-        type_id.hash(&mut self);
-        let previous = self
-            .previous_tree
-            .as_ref()
-            .and_then(|t| t.get(self.next_position()));
-        if previous.is_some() && !matches!(previous, Some(Marker::Component(_))) {
-            // component is new
-            self.previous_offset += 2;
-        }
-
+    pub fn component(mut self, instance_id: u32) -> ComponentRenderer {
         ComponentRenderer {
             hasher: XxHash32::default(),
             previous_len: self.out.len(),
             renderer: self,
             instance_id,
-        }
-    }
-
-    fn start(&mut self) {
-        let previous = self
-            .previous_tree
-            .as_ref()
-            .and_then(|t| t.get(self.next_position()));
-        match previous {
-            Some(Marker::End(_)) => self.previous_offset += 2,
-            Some(Marker::Component(_)) => self.previous_offset += 2,
-            _ => {}
-        }
-
-        self.hash_tree.push(Marker::Start);
-    }
-
-    fn changed(&mut self, hash: u32, offset: usize) -> Result<bool, crate::Error> {
-        let previous_position = self.next_position().saturating_sub(1);
-        let mut previous = self
-            .previous_tree
-            .as_mut()
-            .and_then(|t| t.get_mut(previous_position));
-
-        match previous.as_mut() {
-            // Subtree did not change
-            Some(Marker::End(previous)) => {
-                let unchanged = *previous == hash;
-
-                // When the new tree has new items, it is compared to previous values in the old
-                // tree (due to the offset). To ensure that they never match, set the old tree
-                // hashes to 0 here.
-                *previous = 0;
-
-                if unchanged {
-                    // TODO: any way to not write the content until the changed detection happens?
-                    self.out.truncate(offset);
-                    self.out
-                        .write_str("<!--unchanged-->")
-                        .map_err(crate::error::InternalError::from)?;
-
-                    return Ok(false);
-                }
-            }
-            // Encountered start marker, which means that the new tree has new items. Update the
-            // offset accordingly.
-            Some(Marker::Start) => self.previous_offset -= 2,
-            _ => {}
-        }
-
-        Ok(true)
-    }
-
-    fn next_position(&self) -> usize {
-        if self.previous_offset > 0 {
-            self.hash_tree.len() - self.previous_offset as usize
-        } else {
-            self.hash_tree.len() + self.previous_offset.neg() as usize
         }
     }
 }
@@ -192,7 +93,7 @@ impl ElementRenderer {
         )
     }
 
-    pub async fn content<Ev>(mut self, view: impl View<Ev>) -> Result<Renderer, crate::Error> {
+    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
         if is_void_element(self.tag) {
             todo!("throw error: void tags cannot have content");
         }
@@ -211,19 +112,18 @@ impl ElementRenderer {
         }
 
         let hash = self.renderer.finish() as u32;
-        self.renderer.hash_tree.push(Marker::End(hash));
         self.parent_hasher.write_u32(hash);
         std::mem::swap(&mut self.renderer.hasher, &mut self.parent_hasher);
 
-        if self.renderer.changed(hash, self.offset)? {
-            // Handle void elements. Content is simply ignored.
-            if is_void_element(self.tag) {
-                write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
-            } else {
-                write!(&mut self.renderer.out, "</{}>", self.tag)
-                    .map_err(crate::error::InternalError::from)?;
-            }
+        // if self.renderer.changed(hash, self.offset)? {
+        // Handle void elements. Content is simply ignored.
+        if is_void_element(self.tag) {
+            write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
+        } else {
+            write!(&mut self.renderer.out, "</{}>", self.tag)
+                .map_err(crate::error::InternalError::from)?;
         }
+        // }
 
         Ok(self.renderer)
     }
@@ -239,10 +139,6 @@ impl TextRenderer {
     pub fn end(mut self) -> Result<Renderer, crate::Error> {
         let hash = self.hasher.finish() as u32;
         self.renderer.write_u32(hash);
-        self.renderer.hash_tree.push(Marker::End(hash));
-
-        // Already written, so no need to handle what unchanged returns.
-        self.renderer.changed(hash, self.previous_len)?;
 
         Ok(self.renderer)
     }
@@ -256,17 +152,14 @@ pub struct ComponentRenderer {
 }
 
 impl ComponentRenderer {
-    pub async fn content<Ev>(
+    pub async fn content(
         mut self,
-        view: impl View<Ev>,
+        view: impl View,
         previous_tree: Option<ViewHashTree>,
-    ) -> Result<(Renderer, ViewHashTree, bool), crate::Error> {
+    ) -> Result<Renderer, crate::Error> {
         let r = Renderer {
             out: mem::take(&mut self.renderer.out),
-            hash_tree: Vec::with_capacity(32),
             hasher: self.hasher,
-            previous_tree: previous_tree.map(|t| t.0),
-            previous_offset: 0,
         };
         let mut r = view.render(r).await?;
 
@@ -274,31 +167,22 @@ impl ComponentRenderer {
         r.write_u32(self.instance_id);
 
         let hash = r.finish() as u32;
-        r.hash_tree.push(Marker::End(hash));
-        let inner_hash_tree = ViewHashTree(r.hash_tree);
 
         // Restore parent renderer
         self.renderer.out = mem::take(&mut r.out);
 
         // Add component to parent renderer
         self.renderer.write_u32(hash);
-        self.renderer
-            .hash_tree
-            .push(Marker::Component(self.instance_id));
-        self.renderer.hash_tree.push(Marker::End(hash));
-
-        // Already written, so no need to handle what unchanged returns.
-        let changed = self.renderer.changed(hash, self.previous_len)?;
 
         // Write a random hash to ensure the ascendents of a changed compontent are always
         // invalidated
         // TODO: anyway around that?
-        #[cfg(not(test))]
-        if changed {
-            self.renderer.write_u32(rand::random());
-        }
+        // #[cfg(not(test))]
+        // if changed {
+        //     self.renderer.write_u32(rand::random());
+        // }
 
-        Ok((self.renderer, inner_hash_tree, changed))
+        Ok(self.renderer)
     }
 }
 

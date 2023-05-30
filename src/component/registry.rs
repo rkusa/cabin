@@ -12,7 +12,7 @@ use serde_json::value::RawValue;
 
 use super::Component;
 use crate::render::{PreviousComponent, Renderer};
-use crate::restore::PREVIOUS;
+// use crate::restore::PREVIOUS;
 use crate::{View, ViewHashTree};
 
 #[linkme::distributed_slice]
@@ -80,12 +80,15 @@ impl ComponentRegistry {
                     let state_serialized = serde_json::value::to_raw_value(&component).unwrap();
 
                     let r = Renderer::from_previous_tree(hash_tree);
-                    let r = PREVIOUS
-                        .scope(RefCell::new(Some(descendants)), async {
+                    let r =
+                        // PREVIOUS
+                        // .scope(RefCell::new(Some(descendants)), async
+                            {
                             let view = component.view().await.map_err(|err| err.into())?;
                             view.render(r).await
-                        })
-                        .await?;
+                        }
+                        // ).await
+                            ?;
                     let out = r.end();
 
                     Ok(Update {

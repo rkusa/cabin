@@ -6,20 +6,20 @@ use tokio::task::JoinHandle;
 pub use super::View;
 use crate::render::Renderer;
 
-pub trait FutureExt<F, V, Ev>
+pub trait FutureExt<F, V>
 where
     F: IntoFuture<Output = V>,
-    V: View<Ev>,
+    V: View,
 {
-    fn into_view(self) -> FutureView<F::IntoFuture, V, Ev>;
+    fn into_view(self) -> FutureView<F::IntoFuture, V>;
 }
 
-impl<F, V, Ev> FutureExt<F, V, Ev> for F
+impl<F, V> FutureExt<F, V> for F
 where
     F: IntoFuture<Output = V>,
-    V: View<Ev>,
+    V: View,
 {
-    fn into_view(self) -> FutureView<F::IntoFuture, V, Ev> {
+    fn into_view(self) -> FutureView<F::IntoFuture, V> {
         FutureView {
             state: State::Stored(self.into_future()),
             marker: PhantomData,
@@ -27,12 +27,12 @@ where
     }
 }
 
-pub struct FutureView<F, V, Ev>
+pub struct FutureView<F, V>
 where
     F: Future,
 {
     state: State<F>,
-    marker: PhantomData<(V, Ev)>,
+    marker: PhantomData<(V)>,
 }
 
 enum State<F>
@@ -44,10 +44,10 @@ where
     Intermediate,
 }
 
-impl<F, V, Ev> View<Ev> for FutureView<F, V, Ev>
+impl<F, V> View for FutureView<F, V>
 where
     F: Future<Output = V> + 'static,
-    V: View<Ev> + 'static,
+    V: View + 'static,
 {
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
         let view = match self.state {

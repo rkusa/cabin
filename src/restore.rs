@@ -142,7 +142,7 @@ impl<C> DerefMut for Restored<C> {
     }
 }
 
-impl<C, Ev> View<Ev> for Restored<C>
+impl<C> View for Restored<C>
 where
     C: Component + Serialize + Hash + 'static,
 {

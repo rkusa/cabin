@@ -10,9 +10,9 @@ pub struct Anchor {
     href: Option<Cow<'static, str>>,
 }
 
-impl<V, Ev, A> Html<V, Ev, A, Anchor>
+impl<V, A> Html<V, A, Anchor>
 where
-    V: View<Ev>,
+    V: View,
 {
     pub fn href(mut self, href: impl Into<Cow<'static, str>>) -> Self {
         self.kind.href = Some(href.into());

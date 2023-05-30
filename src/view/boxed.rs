@@ -9,15 +9,15 @@ use crate::View;
 type ViewBoxRenderer =
     dyn FnOnce(Renderer) -> Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
 
-pub struct BoxedView<Ev> {
+pub struct BoxedView {
     view: Box<ViewBoxRenderer>,
-    marker: PhantomData<Ev>,
+    marker: PhantomData,
 }
 
-impl<Ev> BoxedView<Ev> {
+impl BoxedView {
     pub fn new<V>(view: V) -> Self
     where
-        V: View<Ev> + 'static,
+        V: View + 'static,
         Ev: 'static,
     {
         BoxedView {
@@ -27,7 +27,7 @@ impl<Ev> BoxedView<Ev> {
     }
 }
 
-impl<Ev> View<Ev> for BoxedView<Ev> {
+impl View for BoxedView {
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
         (self.view)(r).await
     }

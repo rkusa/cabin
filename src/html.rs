@@ -9,11 +9,13 @@ pub use elements::*;
 use serde::Serialize;
 
 use self::attributes::Attribute;
+use crate::actions::ActionsRegistry;
 use crate::render::{is_void_element, Renderer};
+use crate::signal::SignalMut;
 pub use crate::view::text::{text, Text};
 use crate::view::View;
 
-pub fn custom<V: View<Ev>, Ev>(tag: &'static str, content: V) -> Html<V, Ev, (), ()> {
+pub fn custom<V: View>(tag: &'static str, content: V) -> Html<V, (), ()> {
     Html {
         tag,
         attrs: (),
@@ -23,7 +25,7 @@ pub fn custom<V: View<Ev>, Ev>(tag: &'static str, content: V) -> Html<V, Ev, (),
     }
 }
 
-pub fn create<V: View<Ev>, Ev, K: Default>(tag: &'static str, content: V) -> Html<V, Ev, (), K> {
+pub fn create<V: View, K: Default>(tag: &'static str, content: V) -> Html<V, (), K> {
     Html {
         tag,
         attrs: (),
@@ -33,20 +35,20 @@ pub fn create<V: View<Ev>, Ev, K: Default>(tag: &'static str, content: V) -> Htm
     }
 }
 
-pub struct Html<V, Ev, A, K> {
+pub struct Html<V, A, K> {
     tag: &'static str,
     attrs: A,
-    on_click: Option<Ev>,
+    on_click: Option<&'static str>,
     kind: K,
     content: V,
 }
 
-impl<V, Ev, A, K> Html<V, Ev, A, K> {
+impl<V, A, K> Html<V, A, K> {
     pub fn attr<'a>(
         self,
         name: &'static str,
         value: impl Into<Cow<'a, str>>,
-    ) -> Html<V, Ev, impl Attributes + 'a, K>
+    ) -> Html<V, impl Attributes + 'a, K>
     where
         A: Attributes + 'a,
     {
@@ -59,7 +61,7 @@ impl<V, Ev, A, K> Html<V, Ev, A, K> {
         }
     }
 
-    pub fn class<'a>(self, value: impl Into<Cow<'a, str>>) -> Html<V, Ev, impl Attributes + 'a, K>
+    pub fn class<'a>(self, value: impl Into<Cow<'a, str>>) -> Html<V, impl Attributes + 'a, K>
     where
         A: Attributes + 'a,
     {
@@ -72,26 +74,35 @@ impl<V, Ev, A, K> Html<V, Ev, A, K> {
         }
     }
 
-    pub fn on_click(mut self, event: Ev) -> Self {
-        self.on_click = Some(event);
+    // TODO: multiple arguments for action
+    pub fn on_click<T>(mut self, action: fn(SignalMut<T>)) -> Self
+    where
+        T: Serialize,
+    {
+        let name = ActionsRegistry::global().action_name(action as usize);
+        debug_assert!(name.is_some(), "action not registered");
+
+        if let Some(name) = name {
+            // TODO: unwrap
+            // TODO: delay serialization?
+            self.on_click = Some(name);
+        }
+
         self
     }
 }
 
-impl<V, Ev, A, K> View<Ev> for Html<V, Ev, A, K>
+impl<V, A, K> View for Html<V, A, K>
 where
-    V: View<Ev>,
-    Ev: Serialize,
+    V: View,
     A: Attributes,
     K: Attributes,
 {
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
         let mut el = r.element(self.tag)?;
 
-        if let Some(event) = self.on_click {
-            // TODO: unwrap
-            let event = serde_json::to_string(&event).unwrap();
-            el.attribute("data-click", &event)
+        if let Some(action_name) = self.on_click {
+            el.attribute("cabin-click", action_name)
                 .map_err(crate::error::InternalError::from)?;
         }
 

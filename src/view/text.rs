@@ -7,8 +7,8 @@ use crate::render::Renderer;
 macro_rules! text {
     ($fmt:expr) => {
         $crate::html::Text::new(
-            move |r: $crate::Renderer|
-                -> Result<$crate::Renderer, $crate::error::Error>
+            move |r: $crate::render::Renderer|
+                -> Result<$crate::render::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
                 ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt)).map_err($crate::error::InternalError::from)?;
@@ -18,8 +18,8 @@ macro_rules! text {
     };
     ($fmt:expr, $($args:tt)*) => {
         $crate::html::Text::new(
-            move |r: $crate::Renderer|
-                -> Result<$crate::Renderer, $crate::error::Error>
+            move |r: $crate::render::Renderer|
+                -> Result<$crate::render::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
                 ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt, $($args)*)).map_err($crate::error::InternalError::from)?;
@@ -40,7 +40,7 @@ impl<F: Fn(Renderer) -> Result<Renderer, crate::Error>> Text<F> {
     }
 }
 
-impl<F, Ev> View<Ev> for Text<F>
+impl<F> View for Text<F>
 where
     F: Fn(Renderer) -> Result<Renderer, crate::Error>,
 {
