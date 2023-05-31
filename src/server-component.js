@@ -63,9 +63,12 @@ function setUpEventListener(eventName, opts) {
           // TODO: handle status code
           const html = await res.text();
           // TODO: check if still mounted
+
+          console.time("patch");
           const template = document.createElement("template");
           template.innerHTML = html;
           patchChildren(document.body, template.content, {});
+          console.timeEnd("patch");
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") {
             // ignore
@@ -199,6 +202,16 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
         throw new Error("unexpected comment");
 
       case Node.ELEMENT_NODE:
+        // skip sub-tree if hash is unchanged
+        if (
+          nodeBefore.hasAttribute("hash") &&
+          nodeAfter.hasAttribute("hash") &&
+          nodeBefore.getAttribute("hash") == nodeAfter.getAttribute("hash")
+        ) {
+          console.log("skip due to unchanged hash");
+          break;
+        }
+
         // TODO: tag changed
         console.log("patch attributes");
         patchAttributes(nodeBefore, nodeAfter);

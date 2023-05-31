@@ -5,7 +5,6 @@ mod tests;
 use std::borrow::Cow;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
-use std::mem;
 
 use twox_hash::XxHash32;
 
@@ -36,12 +35,27 @@ impl Renderer {
     pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, crate::Error> {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
+
+        let should_write_id = !matches!(tag, "html" | "body");
+        // TODO: user custom id (probably provided to the r.element() call)
         write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
+
+        let hash_offset = if should_write_id {
+            write!(&mut self.out, " hash=\"").map_err(crate::error::InternalError::from)?;
+            let hash_offset = self.out.len();
+            // Write placeholder id which will be replaced later on
+            write!(&mut self.out, "00000000\"").map_err(crate::error::InternalError::from)?;
+            Some(hash_offset)
+        } else {
+            None
+        };
+
         Ok(ElementRenderer {
             tag,
             parent_hasher,
             renderer: self,
             content_started: false,
+            hash_offset,
         })
     }
 
@@ -51,15 +65,6 @@ impl Renderer {
             renderer: self,
         }
     }
-
-    /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(self, instance_id: u32) -> ComponentRenderer {
-        ComponentRenderer {
-            hasher: XxHash32::default(),
-            renderer: self,
-            instance_id,
-        }
-    }
 }
 
 pub struct ElementRenderer {
@@ -67,6 +72,7 @@ pub struct ElementRenderer {
     renderer: Renderer,
     parent_hasher: XxHash32,
     content_started: bool,
+    hash_offset: Option<usize>,
 }
 
 impl ElementRenderer {
@@ -103,6 +109,14 @@ impl ElementRenderer {
         }
 
         let hash = self.renderer.finish() as u32;
+        if let Some(offset) = self.hash_offset {
+            // TODO: would be better to directly write to the specified location instead of the
+            // additional string allocation
+            self.renderer
+                .out
+                .replace_range(offset..offset + 8, &format!("{:x}", hash));
+        }
+
         self.parent_hasher.write_u32(hash);
         std::mem::swap(&mut self.renderer.hasher, &mut self.parent_hasher);
 
@@ -129,43 +143,6 @@ impl TextRenderer {
     pub fn end(mut self) -> Result<Renderer, crate::Error> {
         let hash = self.hasher.finish() as u32;
         self.renderer.write_u32(hash);
-
-        Ok(self.renderer)
-    }
-}
-
-pub struct ComponentRenderer {
-    hasher: XxHash32,
-    renderer: Renderer,
-    instance_id: u32,
-}
-
-impl ComponentRenderer {
-    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
-        let r = Renderer {
-            out: mem::take(&mut self.renderer.out),
-            hasher: self.hasher,
-        };
-        let mut r = view.render(r).await?;
-
-        // Ensure component is detected as changed if its instance id changed
-        r.write_u32(self.instance_id);
-
-        let hash = r.finish() as u32;
-
-        // Restore parent renderer
-        self.renderer.out = mem::take(&mut r.out);
-
-        // Add component to parent renderer
-        self.renderer.write_u32(hash);
-
-        // Write a random hash to ensure the ascendents of a changed compontent are always
-        // invalidated
-        // TODO: anyway around that?
-        // #[cfg(not(test))]
-        // if changed {
-        //     self.renderer.write_u32(rand::random());
-        // }
 
         Ok(self.renderer)
     }
@@ -209,23 +186,6 @@ impl Hasher for Renderer {
 impl Write for TextRenderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.hasher.write(s.as_bytes());
-        self.renderer.out.write_str(s)
-    }
-}
-
-impl Hasher for ComponentRenderer {
-    fn finish(&self) -> u64 {
-        self.hasher.finish()
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        self.hasher.write(bytes);
-    }
-}
-
-impl Write for ComponentRenderer {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.renderer.write(s.as_bytes());
         self.renderer.out.write_str(s)
     }
 }
