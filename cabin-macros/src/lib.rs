@@ -4,10 +4,7 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::{Comma, Dot, Paren};
-use syn::{
-    parse_macro_input, Error, Expr, ExprClosure, ExprLit, FnArg, Ident, Item, ItemFn, Path,
-    Signature, Stmt,
-};
+use syn::{parse_macro_input, Error, Expr, ExprLit, Ident, Item, ItemFn, Path, Signature, Stmt};
 
 #[proc_macro_attribute]
 pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -42,14 +39,14 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         .into();
     }
 
-    let state_type = match &inputs[0] {
-        arg @ FnArg::Receiver(_) => {
-            return Error::new(arg.span(), "State cannot be a self argument")
-                .into_compile_error()
-                .into()
-        }
-        FnArg::Typed(pat_type) => &pat_type.ty,
-    };
+    // let state_type = match &inputs[0] {
+    //     arg @ FnArg::Receiver(_) => {
+    //         return Error::new(arg.span(), "State cannot be a self argument")
+    //             .into_compile_error()
+    //             .into()
+    //     }
+    //     FnArg::Typed(pat_type) => &pat_type.ty,
+    // };
 
     // find actions (`fn`s inside of the components content)
     // let mut action_registrations = Vec::new();
@@ -64,12 +61,12 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 ));
             }
 
-            let signal_ident = match &f.sig.inputs[0] {
-                FnArg::Receiver(arg) => {
-                    return Err(Error::new(arg.span(), "Payload cannot be a self argument"));
-                }
-                FnArg::Typed(pat_type) => &pat_type.pat,
-            };
+            // let signal_ident = match &f.sig.inputs[0] {
+            //     FnArg::Receiver(arg) => {
+            //         return Err(Error::new(arg.span(), "Payload cannot be a self argument"));
+            //     }
+            //     FnArg::Typed(pat_type) => &pat_type.pat,
+            // };
 
             let action_ident = &f.sig.ident;
             let name = action_ident.to_string();
@@ -122,27 +119,21 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn signal(item: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(item with Punctuated::<Expr, Comma>::parse_terminated);
+    // let item = parse_macro_input!(item with Punctuated::<Expr, Comma>::parse_terminated);
+    let item = parse_macro_input!(item with Expr::parse);
     let signal_id = "TODO";
     quote! {
         {
-            #[::cabin::private::linkme::distributed_slice(::cabin::actions::ACTION_FACTORIES)]
-            #[linkme(crate = ::cabin::private::linkme)]
-            fn __register(r: &mut ::cabin::actions::ActionsRegistry) {
-                r.register_dependency(SCOPE_ID, #signal_id);
-            }
+            // #[::cabin::private::linkme::distributed_slice(::cabin::actions::ACTION_FACTORIES)]
+            // #[linkme(crate = ::cabin::private::linkme)]
+            // fn __register(r: &mut ::cabin::actions::ActionsRegistry) {
+            //     r.register_dependency(SCOPE_ID, #signal_id);
+            // }
 
-            Signal::new(SCOPE_ID, #signal_id, #item)
+            Signal::new( #signal_id, #item)
         }
     }
     .into()
-}
-
-#[proc_macro]
-pub fn action(item: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(item with ExprClosure::parse);
-
-    quote! {}.into()
 }
 
 #[derive(Debug, Hash)]

@@ -1,11 +1,10 @@
 // mod boxed;
 // mod future;
 // mod iter;
-pub(crate) mod text;
+pub mod text;
 
 use std::borrow::Cow;
 use std::fmt::Write;
-use std::marker::PhantomData;
 
 // pub use boxed::BoxedView;
 // pub use future::FutureExt;

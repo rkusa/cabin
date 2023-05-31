@@ -2,16 +2,17 @@ mod attributes;
 pub mod elements;
 pub mod events;
 
+use std::any::TypeId;
 use std::borrow::Cow;
+use std::hash::{Hash, Hasher};
 
 pub use attributes::Attributes;
 pub use elements::*;
 use serde::Serialize;
+use twox_hash::XxHash32;
 
 use self::attributes::Attribute;
-use crate::actions::ActionsRegistry;
 use crate::render::{is_void_element, Renderer};
-use crate::signal::SignalMut;
 pub use crate::view::text::{text, Text};
 use crate::view::View;
 
@@ -38,7 +39,8 @@ pub fn create<V: View, K: Default>(tag: &'static str, content: V) -> Html<V, (),
 pub struct Html<V, A, K> {
     tag: &'static str,
     attrs: A,
-    on_click: Option<&'static str>,
+    // TODO: no box?
+    on_click: Option<Box<dyn FnOnce() -> (u32, String)>>,
     kind: K,
     content: V,
 }
@@ -75,18 +77,18 @@ impl<V, A, K> Html<V, A, K> {
     }
 
     // TODO: multiple arguments for action
-    pub fn on_click<T>(mut self, action: fn(SignalMut<T>)) -> Self
+    pub fn on_click<E>(mut self, event: E) -> Self
     where
-        T: Serialize,
+        E: Serialize + 'static,
     {
-        let name = ActionsRegistry::global().action_name(action as usize);
-        debug_assert!(name.is_some(), "action not registered");
+        self.on_click = Some(Box::new(move || {
+            let mut hasher = XxHash32::default();
+            TypeId::of::<E>().hash(&mut hasher);
+            let hash = hasher.finish() as u32;
 
-        if let Some(name) = name {
             // TODO: unwrap
-            // TODO: delay serialization?
-            self.on_click = Some(name);
-        }
+            (hash, serde_json::to_string(&event).unwrap())
+        }));
 
         self
     }
@@ -101,8 +103,12 @@ where
     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
         let mut el = r.element(self.tag)?;
 
-        if let Some(action_name) = self.on_click {
-            el.attribute("cabin-click", action_name)
+        if let Some(event) = self.on_click {
+            // TODO: directly write into el?
+            let (id, payload) = &(event)();
+            el.attribute("cabin-click", &id.to_string())
+                .map_err(crate::error::InternalError::from)?;
+            el.attribute("cabin-click-payload", payload)
                 .map_err(crate::error::InternalError::from)?;
         }
 

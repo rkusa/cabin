@@ -8,8 +8,8 @@ function setUpEventListener(eventName, opts) {
     /** @type {Element} */
     let node = e.target;
     do {
-      const actionName = node.getAttribute(attrName);
-      if (actionName && (!opts.disable || !node.disabled)) {
+      const eventId = node.getAttribute(attrName);
+      if (eventId && (!opts.disable || !node.disabled)) {
         // console.log("found", node);
         e.stopPropagation();
 
@@ -30,32 +30,43 @@ function setUpEventListener(eventName, opts) {
         }
         try {
           // const component = this.dataset.id;
-          // const event = JSON.parse(
-          //   opts?.eventPayload
-          //     ? Object.entries(opts.eventPayload(e)).reduce(
-          //         (result, [placeholder, value]) =>
-          //           result.replace(placeholder, value),
-          //         actionName
-          //       )
-          //     : actionName
-          // );
+          const payload = JSON.parse(
+            opts?.eventPayload
+              ? Object.entries(opts.eventPayload(e)).reduce(
+                  (result, [placeholder, value]) =>
+                    result.replace(placeholder, value),
+                  node.getAttribute(`${attrName}-payload`)
+                )
+              : node.getAttribute(`${attrName}-payload`)
+          );
 
           const state = document.getElementById("state").innerText;
 
-          const res = await fetch(`/dispatch/${actionName}`, {
+          const res = await fetch(location.pathname, {
             signal,
-            method: "POST",
+            method: "PUT",
             headers: {
               "Content-Type": "application/json",
             },
-            body: state,
+            body: JSON.stringify({
+              eventId: parseInt(eventId),
+              payload,
+              // TODO: avoid JSON.parse to stringify it again right away
+              state: JSON.parse(state),
+            }),
           });
           if (signal.aborted) {
             console.log("already aborted, ignoring");
             return;
           }
 
-          // TODO: handke response
+          // TODO: handle status code
+          const html = await res.text();
+          const parser = new DOMParser();
+          document.replaceChild(
+            parser.parseFromString(html, "text/html").documentElement,
+            document.documentElement
+          );
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") {
             // ignore

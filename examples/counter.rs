@@ -3,44 +3,34 @@
 
 use std::net::SocketAddr;
 
-use axum::body::{Full, HttpBody};
-use cabin::signal::{Signal, SignalMut};
-use cabin::{cabin_scripts, cabin_stylesheets, html, signal, View};
-use http::Response;
+use cabin::signal::Signal;
+use cabin::{cabin_scripts, cabin_stylesheets, event, html, signal, View};
+use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
     (cabin_stylesheets(), cabin_scripts(), counter(0).await)
 }
 
-// TODO: needs to be mapped to signal
-#[cabin::component]
-async fn counter(start_at: usize) -> impl View {
-    let count = signal!(start_at);
+#[derive(Clone, Copy, Serialize, Deserialize)]
+struct Increment;
 
-    // macro todos:
-    // TODO: check in-scope/type
-    fn increment(mut count: SignalMut<u32>) {
+// TODO: needs to be mapped to signal
+async fn counter(start_at: usize) -> impl View {
+    let mut count = signal!(start_at);
+    if let Some(Increment) = event() {
         *count += 1;
     }
 
     (
         html::div(html::text!("Count: {}", count)),
-        html::button("inc").on_click(increment),
-        // html::button("inc").on_click(action!(|count: SignalMut<u32>| *count = *count + 1)),
+        html::button("inc").on_click(Increment),
     )
 }
 
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
-        .route(
-            "/",
-            axum::routing::get(|| async {
-                let res = cabin::render_to_response(app).await;
-                let (parts, body) = res.into_parts();
-                Response::from_parts(parts, Full::new(body).boxed())
-            }),
-        )
+        .route("/", cabin::page(app))
         .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

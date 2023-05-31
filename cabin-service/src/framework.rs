@@ -3,13 +3,12 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use bytes::{Buf, BufMut, Bytes};
+use bytes::Bytes;
 use cabin::SERVER_COMPONENT_JS;
 use cabin_css::registry::StyleRegistry;
-use http::{header, Method, Request, Response, StatusCode};
+use http::{header, Method, Request, Response};
 use http_body::combinators::UnsyncBoxBody;
-use http_body::{Body as HttpBody, Empty, Full};
-use mime::Mime;
+use http_body::{Body as HttpBody, Full};
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -90,68 +89,6 @@ where
                     ))
                     .unwrap()),
 
-                // (&Method::POST, &["dispatch", component]) => {
-                //     // TODO: get rid of to_string()
-                //     let id = component.to_string();
-
-                //     let mime: Option<Mime> = req
-                //         .headers()
-                //         .get(header::CONTENT_TYPE)
-                //         .and_then(|v| v.to_str().ok()?.parse().ok());
-                //     if mime != Some(mime::APPLICATION_JSON) {
-                //         return Ok(Response::builder()
-                //             .status(StatusCode::NOT_FOUND)
-                //             .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                //             .unwrap());
-                //     }
-
-                //     let data = match to_bytes(req.into_body()).await {
-                //         Ok(data) => data,
-                //         Err(err) => {
-                //             tracing::error!(%err, "failed to read request body");
-                //             return Ok(Response::builder()
-                //                 .status(StatusCode::INTERNAL_SERVER_ERROR)
-                //                 .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                //                 .unwrap());
-                //         }
-                //     };
-                //     let update = match ComponentRegistry::global().handle(&id, data).await {
-                //         Ok(update) => update,
-                //         Err(err) => {
-                //             let res = Response::<Bytes>::from(err);
-                //             let (parts, body) = res.into_parts();
-
-                //             return Ok(Response::from_parts(
-                //                 parts,
-                //                 UnsyncBoxBody::new(Full::new(body).map_err(|_| unreachable!())),
-                //             ));
-                //         }
-                //     };
-
-                //     match update {
-                //         Some(update) => match serde_json::to_vec(&update) {
-                //             Ok(json) => Ok(Response::builder()
-                //                 .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
-                //                 .body(UnsyncBoxBody::new(
-                //                     Full::new(Bytes::from(json)).map_err(|_| unreachable!()),
-                //                 ))
-                //                 .unwrap()),
-                //             Err(err) => {
-                //                 tracing::error!(%err, "failed to serialize action update");
-                //                 Ok(Response::builder()
-                //                     .status(StatusCode::INTERNAL_SERVER_ERROR)
-                //                     .body(UnsyncBoxBody::new(
-                //                         Empty::new().map_err(|_| unreachable!()),
-                //                     ))
-                //                     .unwrap())
-                //             }
-                //         },
-                //         None => Ok(Response::builder()
-                //             .status(StatusCode::NOT_FOUND)
-                //             .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                //             .unwrap()),
-                //     }
-                // }
                 _ => service.call(req).await.map_err(Into::into).map(|r| {
                     let (parts, body) = r.into_parts();
                     Response::from_parts(parts, body.boxed_unsync())
@@ -168,37 +105,4 @@ fn cleanup_path(segment: &str) -> &str {
     let segment = segment.strip_suffix('/').unwrap_or(segment);
 
     segment
-}
-
-// Taken from hyper, to avoid the dependency
-async fn to_bytes<T>(body: T) -> Result<Bytes, T::Error>
-where
-    T: HttpBody,
-{
-    let mut body = Box::pin(body); // hyper impl uses futures_util::pin_mut
-
-    // If there's only 1 chunk, we can just return Buf::to_bytes()
-    let mut first = if let Some(buf) = body.data().await {
-        buf?
-    } else {
-        return Ok(Bytes::new());
-    };
-
-    let second = if let Some(buf) = body.data().await {
-        buf?
-    } else {
-        return Ok(first.copy_to_bytes(first.remaining()));
-    };
-
-    // With more than 1 buf, we gotta flatten into a Vec first.
-    let cap = first.remaining() + second.remaining() + body.size_hint().lower() as usize;
-    let mut vec = Vec::with_capacity(cap);
-    vec.put(first);
-    vec.put(second);
-
-    while let Some(buf) = body.data().await {
-        vec.put(buf?);
-    }
-
-    Ok(vec.into())
 }

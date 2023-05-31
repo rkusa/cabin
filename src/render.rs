@@ -4,15 +4,11 @@ mod tests;
 
 use std::borrow::Cow;
 use std::fmt::{self, Write};
-use std::hash::{Hash, Hasher};
+use std::hash::Hasher;
 use std::mem;
-use std::ops::Neg;
 
-use serde::Deserialize;
-use serde_json::value::RawValue;
 use twox_hash::XxHash32;
 
-use self::marker::Marker;
 pub use self::marker::ViewHashTree;
 use crate::View;
 
@@ -33,37 +29,33 @@ impl Renderer {
         }
     }
 
-    pub(crate) fn end(mut self) -> Out {
+    pub(crate) fn end(self) -> Out {
         Out { view: self.out }
     }
 
     pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, crate::Error> {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
-        let offset = self.out.len();
         write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
         Ok(ElementRenderer {
             tag,
-            offset,
             parent_hasher,
             renderer: self,
             content_started: false,
         })
     }
 
-    pub fn text(mut self) -> TextRenderer {
+    pub fn text(self) -> TextRenderer {
         TextRenderer {
             hasher: Default::default(),
-            previous_len: self.out.len(),
             renderer: self,
         }
     }
 
     /// Adds a component to the tree and returns whether it is a new component.
-    pub fn component(mut self, instance_id: u32) -> ComponentRenderer {
+    pub fn component(self, instance_id: u32) -> ComponentRenderer {
         ComponentRenderer {
             hasher: XxHash32::default(),
-            previous_len: self.out.len(),
             renderer: self,
             instance_id,
         }
@@ -72,7 +64,6 @@ impl Renderer {
 
 pub struct ElementRenderer {
     tag: &'static str,
-    offset: usize,
     renderer: Renderer,
     parent_hasher: XxHash32,
     content_started: bool,
@@ -132,7 +123,6 @@ impl ElementRenderer {
 pub struct TextRenderer {
     hasher: XxHash32,
     renderer: Renderer,
-    previous_len: usize,
 }
 
 impl TextRenderer {
@@ -147,16 +137,11 @@ impl TextRenderer {
 pub struct ComponentRenderer {
     hasher: XxHash32,
     renderer: Renderer,
-    previous_len: usize,
     instance_id: u32,
 }
 
 impl ComponentRenderer {
-    pub async fn content(
-        mut self,
-        view: impl View,
-        previous_tree: Option<ViewHashTree>,
-    ) -> Result<Renderer, crate::Error> {
+    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
         let r = Renderer {
             out: mem::take(&mut self.renderer.out),
             hasher: self.hasher,

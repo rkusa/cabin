@@ -9,7 +9,6 @@ cabin = { version = "0.1", path = "../" }
 cabin-css = { version = "0.1", path = "../cabin-css", default-features = false, optional = true }
 http = "0.2"
 http-body = "0.4"
-mime = "0.3"
 serde_json = "1.0"
 thiserror = "1.0"
 tower-service = "0.3"

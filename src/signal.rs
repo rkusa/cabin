@@ -1,38 +1,36 @@
-use core::fmt;
 use std::ops::{Deref, DerefMut};
 
+use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::scope::Scope;
 
-pub type ScopeId = &'static str;
 pub type SignalId = &'static str;
 
 pub struct Signal<T>
 where
     T: Serialize,
 {
-    scope_id: ScopeId,
     id: SignalId,
     value: T,
 }
 
-pub struct SignalMut<T>(Signal<T>)
+impl<T> Signal<T>
 where
-    T: Serialize;
+    T: Serialize + DeserializeOwned,
+{
+    pub fn new(id: SignalId, default: T) -> Self {
+        Self {
+            id,
+            value: Scope::restore(id).unwrap_or(default),
+        }
+    }
+}
 
 impl<T> Signal<T>
 where
     T: Serialize,
 {
-    pub fn new(scope_id: ScopeId, id: SignalId, inner: T) -> Self {
-        Self {
-            scope_id,
-            id,
-            value: inner,
-        }
-    }
-
     pub(crate) fn id(&self) -> SignalId {
         self.id
     }
@@ -49,37 +47,25 @@ where
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        Scope::add_signal(self);
+        // Scope::add_signal(self);
         &self.value
     }
 }
 
-impl<T> fmt::Display for Signal<T>
-where
-    T: Serialize + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Scope::add_signal(self);
-        self.value.fmt(f)
-    }
-}
-
-impl<T> Deref for SignalMut<T>
-where
-    T: Serialize,
-{
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0.value
-    }
-}
-
-impl<T> DerefMut for SignalMut<T>
+impl<T> DerefMut for Signal<T>
 where
     T: Serialize,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0.value
+        &mut self.value
+    }
+}
+
+impl<T> Drop for Signal<T>
+where
+    T: Serialize,
+{
+    fn drop(&mut self) {
+        Scope::serialize_signal(self);
     }
 }
