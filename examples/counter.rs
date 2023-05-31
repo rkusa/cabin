@@ -4,11 +4,11 @@
 use std::net::SocketAddr;
 
 use cabin::signal::Signal;
-use cabin::{cabin_scripts, cabin_stylesheets, event, html, signal, View};
+use cabin::{event, html, signal, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (cabin_stylesheets(), cabin_scripts(), counter(0).await)
+    counter(0).await
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
@@ -23,7 +23,7 @@ async fn counter(start_at: usize) -> impl View {
 
     (
         html::div(html::text!("Count: {}", count)),
-        html::button("inc").on_click(Increment),
+        html::button("inc").on_click(Increment), // TODO: how to tie Increment to this instance
     )
 }
 

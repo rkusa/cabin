@@ -52,7 +52,16 @@ where
     use axum::body::Full;
 
     axum::routing::get(move || async move {
-        let res = render_to_response(render_fn).await;
+        let res = render_to_response(move || async move {
+            html::custom(
+                "html",
+                (
+                    html::custom("head", (cabin_stylesheets(), cabin_scripts())),
+                    html::custom("body", render_fn().await),
+                ),
+            )
+        })
+        .await;
         let (parts, body) = res.into_parts();
         Response::from_parts(parts, Full::new(body))
     })
