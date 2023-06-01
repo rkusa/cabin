@@ -1,14 +1,14 @@
 // mod boxed;
-// mod future;
-// mod iter;
+mod future;
+mod iter;
 pub mod text;
 
 use std::borrow::Cow;
 use std::fmt::Write;
 
 // pub use boxed::BoxedView;
-// pub use future::FutureExt;
-// pub use iter::IteratorExt;
+pub use future::FutureExt;
+pub use iter::IteratorExt;
 use paste::paste;
 
 use crate::render::Renderer;

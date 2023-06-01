@@ -6,14 +6,16 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 use serde::de::DeserializeOwned;
-use serde::{Serialize, Serializer};
+use serde::Serialize;
 use serde_json::value::RawValue;
+use tokio::task::JoinHandle;
 use twox_hash::XxHash32;
 
 use crate::signal::{Signal, SignalId};
 
 tokio::task_local! {
     static SCOPE: Scope;
+    pub static KEY: u32;
 }
 
 #[derive(Clone)]
@@ -22,7 +24,7 @@ pub struct Scope {
 }
 
 struct State {
-    prev_state: Option<HashMap<String, Box<RawValue>>>,
+    prev_state: Option<HashMap<SignalId, Box<RawValue>>>,
     next_state: Vec<u8>,
     event: Option<Event>,
 }
@@ -74,7 +76,7 @@ impl Scope {
         }
     }
 
-    pub fn with_prev_state(self, prev_state: HashMap<String, Box<RawValue>>) -> Self {
+    pub fn with_prev_state(self, prev_state: HashMap<SignalId, Box<RawValue>>) -> Self {
         {
             let mut state = self.state.borrow_mut();
             state.prev_state = Some(prev_state);
@@ -101,7 +103,7 @@ impl Scope {
         SCOPE
             .try_with(|scope| {
                 let mut state = scope.state.borrow_mut();
-                let prev = state.prev_state.as_mut()?.remove(id)?;
+                let prev = state.prev_state.as_mut()?.remove(&id)?;
 
                 // TODO: unwrap
                 let payload: T = serde_json::from_str(prev.get()).unwrap();
@@ -115,6 +117,11 @@ impl Scope {
     where
         T: Serialize,
     {
+        if signal.value().is_none() {
+            // already serialized
+            return;
+        }
+
         SCOPE
             .try_with(|scope| {
                 let mut state = scope.state.borrow_mut();
@@ -125,7 +132,7 @@ impl Scope {
 
                 // TODO: unwrap
                 let mut ser = serde_json::Serializer::new(&mut state.next_state);
-                ser.serialize_str(signal.id()).unwrap();
+                signal.id().serialize(&mut ser).unwrap();
                 state.next_state.push(b':');
                 let mut ser = serde_json::Serializer::new(&mut state.next_state);
                 signal.value().serialize(&mut ser).unwrap();
@@ -142,5 +149,36 @@ impl Scope {
         let mut serialized_state = state.into_inner().next_state;
         serialized_state.push(b'}');
         String::from_utf8(serialized_state).unwrap()
+    }
+
+    pub fn keyed_sync<F, R>(key: u32, f: F) -> R
+    where
+        F: FnOnce() -> R,
+    {
+        // let key = hash(key);
+        KEY.sync_scope(key, f)
+    }
+
+    pub fn keyed<T, F>(key: u32, f: F) -> impl Future<Output = T>
+    where
+        F: Future<Output = T>,
+    {
+        // let key = hash(key);
+        KEY.scope(key, f)
+    }
+
+    pub fn key() -> Option<u32> {
+        KEY.try_with(|key| *key).ok()
+    }
+
+    pub fn spawn_local<F>(future: F) -> JoinHandle<F::Output>
+    where
+        F: Future + 'static,
+        F::Output: 'static,
+    {
+        let scope = SCOPE
+            .try_with(|scope| scope.clone())
+            .expect("not called within scope");
+        tokio::task::spawn_local(SCOPE.scope(scope, future))
     }
 }

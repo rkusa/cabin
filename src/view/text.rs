@@ -1,9 +1,7 @@
-use std::fmt::{self, Display};
-use std::ops::Deref;
+use std::fmt;
 
 use super::View;
 use crate::render::Renderer;
-use crate::signal::Signal;
 
 #[macro_export]
 macro_rules! text {
@@ -13,61 +11,25 @@ macro_rules! text {
                 -> Result<$crate::render::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
-                ::std::fmt::Write::write_fmt(
-                    &mut txt, format_args!($fmt)
-                ).map_err($crate::error::InternalError::from)?;
+                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt)).map_err($crate::error::InternalError::from)?;
                 txt.end()
             },
         )
     };
-    ($fmt:expr, $($args:expr),*) => {
+    ($fmt:expr, $($args:tt)*) => {
         $crate::html::Text::new(
             move |r: $crate::render::Renderer|
                 -> Result<$crate::render::Renderer, $crate::error::Error>
             {
-                use $crate::view::text::into_text_arg;
                 let mut txt = r.text();
-                ::std::fmt::Write::write_fmt(
-                    &mut txt, format_args!($fmt, $(into_text_arg(&$args),)*)
-                ).map_err($crate::error::InternalError::from)?;
+                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt, $($args)*)).map_err($crate::error::InternalError::from)?;
                 txt.end()
             },
         )
     };
 }
 
-use serde::Serialize;
 pub use text;
-
-pub trait IntoTextArg<T>
-where
-    T: Display,
-{
-    fn into_text_arg(self) -> T;
-}
-
-pub fn into_text_arg<T: Display>(arg: impl IntoTextArg<T>) -> T {
-    arg.into_text_arg()
-}
-
-impl<T> IntoTextArg<T> for T
-where
-    T: Display,
-{
-    fn into_text_arg(self) -> T {
-        self
-    }
-}
-
-impl<'a, T> IntoTextArg<&'a T> for &'a Signal<T>
-where
-    T: Display + Serialize,
-{
-    fn into_text_arg(self) -> &'a T {
-        println!("accessed from text!() macro");
-        self.deref()
-    }
-}
 
 // Note: Cannot directly implement View for std::fmt::Arguments due to resulting lifetime issues.
 pub struct Text<F>(F);

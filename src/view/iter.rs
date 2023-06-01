@@ -1,37 +1,91 @@
+use std::hash::{Hash, Hasher};
+use std::iter::Map;
 use std::marker::PhantomData;
+
+use twox_hash::XxHash32;
 
 pub use super::View;
 use crate::render::Renderer;
+use crate::scope::Scope;
 
-pub trait IteratorExt<Iter, V> {
-    fn into_view(self) -> IteratorView<Iter, V>;
+pub trait IteratorExt
+where
+    Self: Iterator,
+{
+    fn keyed<F, K>(self, f: F) -> Keyed<Self, F, K>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> K,
+        K: Hash;
 }
 
-impl<Iter, V> IteratorExt<Iter::IntoIter, V> for Iter
+impl<Iter> IteratorExt for Iter
 where
-    Iter: IntoIterator<Item = V>,
-    V: View,
+    Iter: Iterator,
 {
-    fn into_view(self) -> IteratorView<Iter::IntoIter, V> {
-        IteratorView {
-            iter: self.into_iter(),
-            marker: PhantomData,
-        }
+    fn keyed<F, K>(self, f: F) -> Keyed<Iter, F, K>
+    where
+        Iter: Iterator,
+        F: FnMut(&Iter::Item) -> K,
+        K: Hash,
+    {
+        Keyed::new(self, f)
     }
 }
 
-pub struct IteratorView<Iter, V> {
-    iter: Iter,
-    marker: PhantomData<(V)>,
+pub struct Keyed<I, F, K> {
+    iter: I,
+    f: F,
+    marker: PhantomData<K>,
+}
+impl<I, F, K> Keyed<I, F, K>
+where
+    I: Iterator,
+    F: FnMut(&I::Item) -> K,
+    K: Hash,
+{
+    pub fn new(iter: I, f: F) -> Self {
+        Self {
+            iter,
+            f,
+            marker: PhantomData,
+        }
+    }
+
+    pub fn map<B>(mut self, f: impl Fn(I::Item) -> B) -> Map<I, impl FnMut(I::Item) -> B> {
+        self.iter.map(move |item| {
+            let key = hash((self.f)(&item));
+            Scope::keyed_sync(key, || (f)(item))
+        })
+    }
 }
 
-impl<Iter, V> View for IteratorView<Iter, V>
+impl<I: Iterator, F, K> Iterator for Keyed<I, F, K>
 where
-    Iter: Iterator<Item = V>,
+    F: FnMut(&I::Item) -> K,
+    K: Hash,
+{
+    type Item = I::Item;
+
+    #[inline]
+    fn next(&mut self) -> Option<I::Item> {
+        self.iter.next()
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+impl<Iter, FV, V> View for Map<Iter, FV>
+where
+    Iter: Iterator,
+    FV: FnMut(Iter::Item) -> V,
     V: View,
 {
     async fn render(self, mut r: Renderer) -> Result<Renderer, crate::Error> {
-        for i in self.iter {
+        for i in self {
             let fut = i.render(r);
             r = fut.await?;
         }
@@ -39,4 +93,10 @@ where
     }
 
     // TODO: any way to prime without consuming the iterator?
+}
+
+fn hash(val: impl Hash) -> u32 {
+    let mut hasher = XxHash32::default();
+    val.hash(&mut hasher);
+    hasher.finish() as u32
 }

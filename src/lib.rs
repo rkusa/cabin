@@ -13,6 +13,7 @@ use render::Renderer;
 pub use scope::event;
 use scope::Scope;
 use serde_json::value::RawValue;
+use signal::SignalId;
 pub use view::View;
 
 pub mod error;
@@ -20,8 +21,7 @@ pub mod html;
 mod local_pool;
 pub mod private;
 pub mod render;
-mod scope;
-// mod restore;
+pub mod scope;
 pub mod signal;
 pub mod view;
 
@@ -40,7 +40,7 @@ pub fn cabin_scripts() -> impl View {
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     event_id: u32,
-    state: HashMap<String, Box<RawValue>>,
+    state: HashMap<SignalId, Box<RawValue>>,
     payload: Box<RawValue>,
 }
 
