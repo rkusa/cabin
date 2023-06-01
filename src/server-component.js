@@ -241,9 +241,24 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
  * @param {Element} childAfter
  */
 function patchAttributes(childBefore, childAfter) {
+  // special handling for certain elements
+  switch (childAfter.nodeName) {
+    case "DIALOG":
+      if (childAfter.hasAttribute("open")) {
+        childBefore.show();
+      } else {
+        childBefore.close();
+      }
+      childAfter.removeAttribute("open");
+  }
+
   const oldAttributeNames = new Set(childBefore.getAttributeNames());
   for (const name of childAfter.getAttributeNames()) {
     oldAttributeNames.delete(name);
+
+    if (ignoreAttribute(childAfter, name)) {
+      continue;
+    }
 
     // TODO: handle new attributes
 
@@ -263,7 +278,23 @@ function patchAttributes(childBefore, childAfter) {
 
   // delete attributes that are not set anymore
   for (const name in oldAttributeNames) {
+    if (ignoreAttribute(childBefore, name)) {
+      continue;
+    }
     console.log("remove attribute", name);
     childBefore.removeAttribute(name);
+  }
+}
+
+/**
+ * @param {Element} el
+ * @param {string} attr
+ */
+function ignoreAttribute(el, attr) {
+  switch (el.nodeName) {
+    case "DIALOG":
+      return attr === "open";
+    default:
+      return false;
   }
 }

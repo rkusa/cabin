@@ -51,23 +51,23 @@ impl View for String {
     }
 }
 
-// impl<V> View for Option<V>
-// where
-//     V: View,
-// {
-//     async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
-//         match self {
-//             Some(i) => i.render(r).await,
-//             None => Ok(r),
-//         }
-//     }
+impl<V> View for Option<V>
+where
+    V: View,
+{
+    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+        match self {
+            Some(i) => i.render(r).await,
+            None => Ok(r),
+        }
+    }
 
-//     fn prime(&mut self) {
-//         if let Some(inner) = self {
-//             inner.prime();
-//         }
-//     }
-// }
+    fn prime(&mut self) {
+        if let Some(inner) = self {
+            inner.prime();
+        }
+    }
+}
 
 impl<V, E> View for Result<V, E>
 where
