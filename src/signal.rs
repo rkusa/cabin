@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
@@ -131,5 +132,12 @@ impl<'de> Deserialize<'de> for SignalId {
         Ok(SignalId(u32::from_str_radix(s, 16).map_err(|_| {
             serde::de::Error::invalid_type(Unexpected::Str(s), &"a hex encoded unsigned integer")
         })?))
+    }
+}
+
+impl<'a> From<Signal<Cow<'a, str>>> for Cow<'a, str> {
+    fn from(mut value: Signal<Cow<'a, str>>) -> Self {
+        Scope::serialize_signal(&value);
+        value.value.take().unwrap()
     }
 }

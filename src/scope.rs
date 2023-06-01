@@ -65,6 +65,42 @@ where
         .flatten()
 }
 
+pub fn take_event<E>() -> Option<E>
+where
+    E: DeserializeOwned + 'static,
+{
+    SCOPE
+        .try_with(|scope| {
+            let mut state = scope.state.borrow_mut();
+            let event = state.event.take()?;
+            match event {
+                Event::Raw { id, payload } => {
+                    let mut hasher = XxHash32::default();
+                    TypeId::of::<E>().hash(&mut hasher);
+                    let type_id = hasher.finish() as u32;
+
+                    if id != type_id {
+                        state.event = Some(Event::Raw { id, payload });
+                        return None;
+                    }
+
+                    // TODO: unwrap
+                    let payload: E = serde_json::from_str(payload.get()).unwrap();
+                    Some(payload)
+                }
+                Event::Deserialized(payload) => match payload.downcast::<E>() {
+                    Ok(event) => Some(Box::into_inner(event)),
+                    Err(payload) => {
+                        state.event = Some(Event::Deserialized(payload));
+                        None
+                    }
+                },
+            }
+        })
+        .ok()
+        .flatten()
+}
+
 impl Scope {
     pub fn new() -> Self {
         Self {
@@ -180,5 +216,11 @@ impl Scope {
             .try_with(|scope| scope.clone())
             .expect("not called within scope");
         tokio::task::spawn_local(SCOPE.scope(scope, future))
+    }
+}
+
+impl Default for Scope {
+    fn default() -> Self {
+        Self::new()
     }
 }

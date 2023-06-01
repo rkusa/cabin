@@ -10,7 +10,7 @@ pub struct InputEvent {
     pub value: InputValue,
 }
 
-#[derive(Default)]
+#[derive(Default, Hash)]
 pub struct InputValue(Cow<'static, str>);
 
 impl Serialize for InputValue {

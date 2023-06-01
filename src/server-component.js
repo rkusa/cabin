@@ -86,7 +86,7 @@ function setUpEventListener(eventName, opts) {
 
         break;
       }
-    } while ((node = node.parentElement) !== this);
+    } while ((node = node.parentElement));
   }
 
   document.addEventListener(eventName, handleEvent);

@@ -19,7 +19,7 @@ where
 }
 
 impl Attributes for Dialog {
-    fn render(&self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
+    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if self.open {
             r.attribute("open", "")
                 .map_err(crate::error::InternalError::from)?;

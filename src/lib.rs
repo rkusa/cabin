@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
+#![feature(async_fn_in_trait, return_position_impl_trait_in_trait, box_into_inner)]
 #![allow(incomplete_features)]
 
 use std::collections::HashMap;

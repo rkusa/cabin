@@ -2,65 +2,37 @@
 #![allow(incomplete_features)]
 
 use std::borrow::Cow;
-use std::convert::Infallible;
 use std::net::SocketAddr;
 
-use axum::body::{Full, HttpBody};
-use axum::response::Response;
-use cabin::component::{Component, PublicComponent};
 use cabin::html::events::InputValue;
-use cabin::view::IteratorExt;
-use cabin::{cabin_scripts, cabin_stylesheets, html, View};
+use cabin::scope::take_event;
+use cabin::signal::Signal;
+use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (
-        cabin_stylesheets(),
-        cabin_scripts(),
-        Search::restore_or_else((), || Search::new("Ge")),
-    )
+    search().await
 }
 
-#[derive(Default, Hash, Serialize, Deserialize, PublicComponent)]
-struct Search {
-    query: Cow<'static, str>,
-}
+#[derive(Hash, Serialize, Deserialize)]
+struct Search(InputValue);
 
-impl Search {
-    fn new(query: &'static str) -> Self {
-        Self {
-            query: query.into(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-enum SearchEvent {
-    Search(InputValue),
-}
-
-impl Component for Search {
-    type Event = SearchEvent;
-    type Error = Infallible;
-
-    async fn update(&mut self, event: Self::Event) {
-        match event {
-            SearchEvent::Search(query) => self.query = query.into(),
-        }
+async fn search() -> impl View {
+    let mut query = Signal::restore_or("query", Cow::Borrowed("Ge"));
+    if let Some(Search(v)) = take_event() {
+        *query = v.into();
     }
 
-    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
-        let items = search_countries(&self.query).await;
+    let items = search_countries(&query).await;
 
-        Ok(html::div((
-            html::div(
-                html::input()
-                    .attr("value", self.query)
-                    .on_input(|ev| SearchEvent::Search(ev.value)),
-            ),
-            html::div(html::ul(items.into_iter().map(html::li).into_view())),
-        )))
-    }
+    html::div((
+        html::div(
+            html::input()
+                .attr("value", query)
+                .on_input(|ev| Search(ev.value)),
+        ),
+        html::div(html::ul(items.into_iter().map(html::li))),
+    ))
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
@@ -79,14 +51,7 @@ async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
-        .route(
-            "/",
-            axum::routing::get(|| async {
-                let res = cabin::render_to_response(app).await;
-                let (parts, body) = res.into_parts();
-                Response::from_parts(parts, Full::new(body).boxed())
-            }),
-        )
+        .route("/", cabin::page(app))
         .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
