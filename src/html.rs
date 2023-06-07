@@ -100,8 +100,8 @@ where
     A: Attributes,
     K: Attributes,
 {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
-        let mut el = r.element(self.tag)?;
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
+        let mut el = r.element(self.tag, include_hash)?;
 
         if let Some(event) = self.on_click {
             // TODO: directly write into el?

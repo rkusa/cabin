@@ -28,7 +28,7 @@ impl BoxedView {
 }
 
 impl View for BoxedView {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
         (self.view)(r).await
     }
 

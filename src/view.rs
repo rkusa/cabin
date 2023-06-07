@@ -16,20 +16,20 @@ use crate::render::Renderer;
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
 pub trait View {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error>;
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error>;
 
     fn prime(&mut self) {}
 }
 
 impl View for () {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
         Ok(r)
     }
 }
 
 // TODO: escape html!
 impl<'a> View for &'a str {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
         // TODO: safe escape HTML
         let mut txt = r.text();
         txt.write_str(self)
@@ -40,14 +40,14 @@ impl<'a> View for &'a str {
 }
 
 impl<'a> View for Cow<'a, str> {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
-        <&str as View>::render(self.as_ref(), r).await
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
+        <&str as View>::render(self.as_ref(), r, include_hash).await
     }
 }
 
 impl View for String {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
-        <&str as View>::render(self.as_str(), r).await
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
+        <&str as View>::render(self.as_str(), r, include_hash).await
     }
 }
 
@@ -55,9 +55,9 @@ impl<V> View for Option<V>
 where
     V: View,
 {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
         match self {
-            Some(i) => i.render(r).await,
+            Some(i) => i.render(r, include_hash).await,
             None => Ok(r),
         }
     }
@@ -74,9 +74,9 @@ where
     V: View,
     crate::Error: From<E>,
 {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
         match self {
-            Ok(v) => v.render(r).await,
+            Ok(v) => v.render(r, include_hash).await,
             Err(err) => Err(err.into()),
         }
     }
@@ -92,12 +92,12 @@ macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
             impl<$( [<V$ix>]: View),*> View for ($([<V$ix>],)*) {
-                async fn render(mut self, r: Renderer) -> Result<Renderer, crate::Error> {
+                async fn render(mut self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
                     $(
                         self.$ix.prime();
                     )*
                     $(
-                        let r = self.$ix.render(r).await?;
+                        let r = self.$ix.render(r, true).await?;
                     )*
                     Ok(r)
                 }

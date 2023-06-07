@@ -84,9 +84,9 @@ where
     FV: FnMut(Iter::Item) -> V,
     V: View,
 {
-    async fn render(self, mut r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, mut r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
         for i in self {
-            let fut = i.render(r);
+            let fut = i.render(r, true);
             r = fut.await?;
         }
         Ok(r)

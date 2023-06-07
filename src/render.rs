@@ -32,11 +32,15 @@ impl Renderer {
         Out { view: self.out }
     }
 
-    pub fn element(mut self, tag: &'static str) -> Result<ElementRenderer, crate::Error> {
+    pub fn element(
+        mut self,
+        tag: &'static str,
+        include_hash: bool,
+    ) -> Result<ElementRenderer, crate::Error> {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
 
-        let should_write_id = !matches!(tag, "html" | "body");
+        let should_write_id = include_hash && !matches!(tag, "html" | "body");
         // TODO: user custom id (probably provided to the r.element() call)
         write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
 
@@ -99,7 +103,7 @@ impl ElementRenderer {
             write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
         }
 
-        self.renderer = view.render(self.renderer).await?;
+        self.renderer = view.render(self.renderer, false).await?;
         self.end()
     }
 

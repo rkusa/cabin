@@ -52,7 +52,7 @@ where
     F: Future<Output = V> + 'static,
     V: View + 'static,
 {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
         let view = if let Some(key) = self.key {
             Scope::keyed(key, async {
                 match self.state {
@@ -69,7 +69,7 @@ where
                 State::Intermediate => unreachable!(),
             }
         };
-        view.render(r).await
+        view.render(r, include_hash).await
     }
 
     fn prime(&mut self) {

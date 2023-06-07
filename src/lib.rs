@@ -59,10 +59,10 @@ pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
                     "html",
                     (
                         html::custom("head", (cabin_stylesheets(), cabin_scripts())),
-                        html::custom("body", body),
+                        html::custom("body", body), // tuple to force `include_hash`
                     ),
                 )
-                .render(r)
+                .render(r, false)
                 .await
             })
             .await;
@@ -106,7 +106,7 @@ pub async fn put_page<F: Future<Output = V>, V: View + 'static>(
             .clone()
             .run(async move {
                 let r = Renderer::new();
-                render_fn().await.render(r).await
+                render_fn().await.render(r, true).await
             })
             .await;
         (scope.into_view(), result)

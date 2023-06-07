@@ -44,7 +44,7 @@ impl<F> View for Text<F>
 where
     F: Fn(Renderer) -> Result<Renderer, crate::Error>,
 {
-    async fn render(self, r: Renderer) -> Result<Renderer, crate::Error> {
+    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
         (self.0)(r)
     }
 }
