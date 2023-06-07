@@ -9,6 +9,7 @@ use bytes::Bytes;
 pub use cabin_macros::{component, signal};
 pub use error::Error;
 use http::{HeaderValue, Response};
+use http_body::Full;
 use render::Renderer;
 pub use scope::event;
 use scope::Scope;
@@ -44,44 +45,25 @@ pub struct Event {
     payload: Box<RawValue>,
 }
 
-pub fn page<F, V>(render_fn: fn() -> F) -> axum::routing::MethodRouter
-where
-    F: Future<Output = V> + 'static,
-    V: View + 'static,
-{
-    use axum::body::Full;
-
-    axum::routing::get(move || async move {
-        let res = render_to_response(move || async move {
-            html::custom(
-                "html",
-                (
-                    html::custom("head", (cabin_stylesheets(), cabin_scripts())),
-                    html::custom("body", render_fn().await),
-                ),
-            )
-        })
-        .await;
-        let (parts, body) = res.into_parts();
-        Response::from_parts(parts, Full::new(body))
-    })
-    .put(move |axum::Json(event): axum::Json<Event>| async move {
-        let res = dispatch(event, render_fn).await;
-        let (parts, body) = res.into_parts();
-        Response::from_parts(parts, Full::new(body))
-    })
-}
-
-async fn render_to_response<F: Future<Output = V>, V: View + 'static>(
+pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
-) -> Response<Bytes> {
+) -> Response<Full<Bytes>> {
     let (scope, result) = local_pool::spawn(move || async move {
         let scope = Scope::new();
         let result = scope
             .clone()
             .run(async move {
                 let r = Renderer::new();
-                render_fn().await.render(r).await
+                let body = render_fn().await;
+                html::custom(
+                    "html",
+                    (
+                        html::custom("head", (cabin_stylesheets(), cabin_scripts())),
+                        html::custom("body", body),
+                    ),
+                )
+                .render(r)
+                .await
             })
             .await;
         (scope.into_view(), result)
@@ -94,7 +76,8 @@ async fn render_to_response<F: Future<Output = V>, V: View + 'static>(
                 "{err}\n{}",
                 format_caused_by(std::error::Error::source(&err))
             );
-            return err.into();
+            let (parts, body) = Response::from(err).into_parts();
+            return Response::from_parts(parts, Full::new(body));
         }
     };
 
@@ -104,17 +87,17 @@ async fn render_to_response<F: Future<Output = V>, V: View + 'static>(
             http::header::CONTENT_TYPE,
             HeaderValue::from_static("text/html; charset=utf-8"),
         )
-        .body(Bytes::from(format!(
+        .body(Full::new(Bytes::from(format!(
             "{html}\n\
             <script type=\"application/json\" id=\"state\">{scope}</script>"
-        )))
+        ))))
         .unwrap()
 }
 
-pub async fn dispatch<F: Future<Output = V>, V: View + 'static>(
+pub async fn put_page<F: Future<Output = V>, V: View + 'static>(
     event: Event,
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
-) -> Response<Bytes> {
+) -> Response<Full<Bytes>> {
     let (scope, result) = local_pool::spawn(move || async move {
         let scope = Scope::new()
             .with_event(event.event_id, event.payload)
@@ -136,7 +119,8 @@ pub async fn dispatch<F: Future<Output = V>, V: View + 'static>(
                 "{err}\n{}",
                 format_caused_by(std::error::Error::source(&err))
             );
-            return err.into();
+            let (parts, body) = Response::from(err).into_parts();
+            return Response::from_parts(parts, Full::new(body));
         }
     };
 
@@ -146,10 +130,10 @@ pub async fn dispatch<F: Future<Output = V>, V: View + 'static>(
             http::header::CONTENT_TYPE,
             HeaderValue::from_static("text/html; charset=utf-8"),
         )
-        .body(Bytes::from(format!(
+        .body(Full::new(Bytes::from(format!(
             "{html}\n\
             <script type=\"application/json\" id=\"state\">{scope}</script>"
-        )))
+        ))))
         .unwrap()
 }
 

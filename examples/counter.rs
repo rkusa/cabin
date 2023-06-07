@@ -3,8 +3,9 @@
 
 use std::net::SocketAddr;
 
+use axum::Json;
 use cabin::signal::Signal;
-use cabin::{event, html, signal, View};
+use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -16,7 +17,7 @@ struct Increment;
 
 // TODO: needs to be mapped to signal
 async fn counter(start_at: usize) -> impl View {
-    let mut count = signal!(start_at);
+    let mut count = Signal::restore_or((), start_at);
     if let Some(Increment) = event() {
         *count += 1;
     }
@@ -30,7 +31,11 @@ async fn counter(start_at: usize) -> impl View {
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
-        .route("/", cabin::page(app))
+        .route(
+            "/",
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
+        )
         .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

@@ -3,6 +3,7 @@
 
 use std::net::SocketAddr;
 
+use axum::Json;
 use cabin::signal::Signal;
 use cabin::{event, html, View};
 
@@ -36,7 +37,11 @@ fn dialog(content: impl View) -> impl View {
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
-        .route("/", cabin::page(app))
+        .route(
+            "/",
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
+        )
         .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

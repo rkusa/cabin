@@ -4,6 +4,7 @@
 use std::borrow::Cow;
 use std::net::SocketAddr;
 
+use axum::Json;
 use cabin::html::events::InputValue;
 use cabin::scope::take_event;
 use cabin::signal::Signal;
@@ -51,7 +52,11 @@ async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
-        .route("/", cabin::page(app))
+        .route(
+            "/",
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
+        )
         .layer(cabin_service::framework());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
