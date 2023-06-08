@@ -1,66 +1,35 @@
-#![feature(async_fn_in_trait, return_position_impl_trait_in_trait)]
-#![allow(incomplete_features)]
-use std::convert::Infallible;
 use std::net::SocketAddr;
 
-use axum::body::{Full, HttpBody};
-use axum::response::Response;
-use cabin::component::{Component, PublicComponent};
-use cabin::{cabin_scripts, cabin_stylesheets, html, View};
+use axum::Json;
+use cabin::signal::Signal;
+use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (
-        cabin_stylesheets(),
-        cabin_scripts(),
-        Level::restore_or_else(1, || Level::new(1)),
-    )
+    level(1)
 }
 
-#[derive(Debug, Default, Hash, Serialize, Deserialize, PublicComponent)]
-struct Level {
-    level: u32,
-    count: u32,
-    has_child: bool,
-}
+fn level(n: usize) -> impl View {
+    let mut count = Signal::restore_or(("count", n), n);
+    let mut has_next_level = Signal::restore_or(("has_next_level", n), n < 3);
 
-impl Level {
-    fn new(level: u32) -> Self {
-        Self {
-            level,
-            count: level,
-            has_child: level < 4,
-        }
+    match event::<LevelEvent>() {
+        Some(LevelEvent::Increment(l)) if l == n => *count += 1,
+        Some(LevelEvent::ToggleChild(l)) if l == n => *has_next_level = !*has_next_level,
+        _ => {}
     }
+
+    html::fieldset((
+        html::button(html::text!("{}", count)).on_click(LevelEvent::Increment(n)),
+        html::button("toggle child").on_click(LevelEvent::ToggleChild(n)),
+        has_next_level.then(|| level(n + 1).boxed()),
+    ))
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 enum LevelEvent {
-    Increment,
-    ToggleChild,
-}
-
-impl Component for Level {
-    type Event = LevelEvent;
-    type Error = Infallible;
-
-    async fn update(&mut self, event: Self::Event) {
-        match event {
-            LevelEvent::Increment => self.count += 1,
-            LevelEvent::ToggleChild => self.has_child = !self.has_child,
-        }
-    }
-
-    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
-        Ok(html::fieldset((
-            html::button(html::text!("{}", self.count)).on_click(LevelEvent::Increment),
-            html::button("toggle child").on_click(LevelEvent::ToggleChild),
-            self.has_child.then(|| {
-                let next_level = self.level + 1;
-                Level::restore_or_else(next_level, || Level::new(next_level)).boxed()
-            }),
-        )))
-    }
+    Increment(usize),
+    ToggleChild(usize),
 }
 
 #[tokio::main]
@@ -68,11 +37,8 @@ async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| async {
-                let res = cabin::render_to_response(app).await;
-                let (parts, body) = res.into_parts();
-                Response::from_parts(parts, Full::new(body).boxed())
-            }),
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
         )
         .layer(cabin_service::framework());
 

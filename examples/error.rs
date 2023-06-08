@@ -1,36 +1,16 @@
-#![feature(
-    async_fn_in_trait,
-    return_position_impl_trait_in_trait,
-    arbitrary_self_types
-)]
-#![allow(incomplete_features)]
-
 use std::net::SocketAddr;
 use std::{error, fmt};
 
-use axum::body::{Full, HttpBody};
-use cabin::component::{Component, PublicComponent};
-use cabin::{cabin_scripts, cabin_stylesheets, View};
-use http::Response;
-use serde::{Deserialize, Serialize};
+use axum::Json;
+use cabin::View;
 
 async fn app() -> impl View {
-    (cabin_stylesheets(), cabin_scripts(), Health::restore(()))
+    health().await
 }
 
-#[derive(Debug, Default, Hash, Serialize, Deserialize, PublicComponent)]
-struct Health;
-
-impl Component for Health {
-    type Event = ();
-    type Error = DbError;
-
-    async fn update(&mut self, _: Self::Event) {}
-
-    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
-        test_database_connection().await?;
-        Ok("Ok")
-    }
+async fn health() -> Result<impl View, DbError> {
+    test_database_connection().await?;
+    Ok("Ok")
 }
 
 #[derive(Debug)]
@@ -59,11 +39,8 @@ async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| async {
-                let res = cabin::render_to_response(app).await;
-                let (parts, body) = res.into_parts();
-                Response::from_parts(parts, Full::new(body).boxed())
-            }),
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
         )
         .layer(cabin_service::framework());
 

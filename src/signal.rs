@@ -54,6 +54,18 @@ where
     }
 }
 
+impl<T> Clone for Signal<T>
+where
+    T: Serialize + Clone,
+{
+    fn clone(&self) -> Self {
+        Signal {
+            id: self.id,
+            value: self.value.clone(),
+        }
+    }
+}
+
 impl<T> Deref for Signal<T>
 where
     T: Serialize,
@@ -80,6 +92,7 @@ where
     T: Serialize,
 {
     fn drop(&mut self) {
+        // TODO: not going to work for static signals
         Scope::serialize_signal(self);
     }
 }

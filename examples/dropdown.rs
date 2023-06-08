@@ -1,112 +1,62 @@
-#![feature(
-    async_fn_in_trait,
-    return_position_impl_trait_in_trait,
-    arbitrary_self_types
-)]
-#![allow(incomplete_features)]
-
-use std::borrow::Cow;
-use std::convert::Infallible;
 use std::net::SocketAddr;
+use std::ops::Deref;
 
-use axum::body::{Full, HttpBody};
-use axum::response::Response;
-use cabin::component::{Component, PublicComponent};
+use axum::Json;
+use cabin::signal::Signal;
 use cabin::view::IteratorExt;
-use cabin::{cabin_scripts, cabin_stylesheets, html, Restored, View};
+use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (cabin_stylesheets(), cabin_scripts(), Root::restore(()))
-}
-
-#[derive(Debug, Hash, Serialize, Deserialize, PublicComponent)]
-struct Root {
-    count: u32,
-}
-
-impl Default for Root {
-    fn default() -> Self {
-        Self { count: 3 }
-    }
-}
-
-impl Component for Root {
-    type Event = ();
-    type Error = Infallible;
-
-    async fn update(&mut self, _: Self::Event) {
-        self.count += 1;
+    let mut count = Signal::restore_or("count", 3);
+    if let Some(Increment) = event() {
+        *count += 1;
     }
 
-    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
-        Ok((
-            html::button(html::text!("{}", self.count))
-                .on_click(())
-                .attr("style", "min-width:40px"),
-            Dropdown::restore(()).with_items(
-                (0..self.count)
-                    .map(|i| format!("Item {i}").into())
-                    .collect(),
-            ),
-        ))
-    }
+    let count = *count.deref(); // TODO: that's ugly
+    (
+        html::button(html::text!("{}", count))
+            .on_click(Increment)
+            .attr("style", "min-width:40px"),
+        dialog(count),
+    )
 }
 
-#[derive(Debug, Default, Hash, Serialize, Deserialize, PublicComponent)]
-struct Dropdown {
-    items: Vec<Cow<'static, str>>,
-    opened: bool,
-}
-
-impl Dropdown {
-    fn with_items(self: Restored<Self>, items: Vec<Cow<'static, str>>) -> Restored<Self> {
-        self.map(|dropdown| Dropdown { items, ..dropdown })
-    }
-}
-
-impl Component for Dropdown {
-    type Event = ();
-    type Error = Infallible;
-
-    async fn update(&mut self, _: Self::Event) {
-        self.opened = !self.opened;
+fn dialog(count: usize) -> impl View {
+    let mut opened = Signal::restore_or("dialog", false);
+    if let Some(ToggleDropdown) = event() {
+        *opened = !*opened;
     }
 
-    async fn view(self) -> Result<impl View<Self::Event>, Self::Error> {
-        Ok(html::div((
-            html::button("open").on_click(()),
-            if self.opened {
-                html::ul(
-                    self.items
-                        .into_iter()
-                        .map(|item| html::li(item).attr("style", "white-space:nowrap;"))
-                        .into_view(),
-                )
-                .attr(
-                    "style",
-                    "position:absolute;top:20px;right:0;background:#ddd;\
-                    list-style-type:none;padding:4px;",
-                )
-                .boxed()
-            } else {
-                ().boxed()
-            },
-        ))
-        .attr("style", "display:inline;position:relative"))
-    }
+    html::div((
+        html::button("open").on_click(ToggleDropdown),
+        opened.then(|| {
+            html::ul((0..count).keyed(|item| *item).map(|item| {
+                html::li(html::text!("Item {}", item)).attr("style", "white-space:nowrap;")
+            }))
+            .attr(
+                "style",
+                "position:absolute;top:20px;right:0;background:#ddd;\
+                list-style-type:none;padding:4px;",
+            )
+        }),
+    ))
+    .attr("style", "display:inline;position:relative")
 }
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+struct ToggleDropdown;
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+struct Increment;
 
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| async {
-                let res = cabin::render_to_response(app).await;
-                let (parts, body) = res.into_parts();
-                Response::from_parts(parts, Full::new(body).boxed())
-            }),
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
         )
         .layer(cabin_service::framework());
 

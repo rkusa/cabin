@@ -1,4 +1,4 @@
-// mod boxed;
+mod boxed;
 mod future;
 mod iter;
 pub mod text;
@@ -11,6 +11,7 @@ pub use future::FutureExt;
 pub use iter::IteratorExt;
 use paste::paste;
 
+use self::boxed::BoxedView;
 use crate::render::Renderer;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
@@ -19,6 +20,13 @@ pub trait View {
     async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error>;
 
     fn prime(&mut self) {}
+
+    fn boxed(self) -> BoxedView
+    where
+        Self: Sized + 'static,
+    {
+        BoxedView::new(self)
+    }
 }
 
 impl View for () {
