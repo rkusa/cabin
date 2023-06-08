@@ -43,7 +43,7 @@ impl Attributes for Input {
         if let Some(event) = self.on_input {
             // TODO: directly write into r?
             let (id, payload) = &(event)();
-            r.attribute("cabin-input", &id.to_string())
+            r.attribute("cabin-input", id)
                 .map_err(crate::error::InternalError::from)?;
             r.attribute("cabin-input-payload", payload)
                 .map_err(crate::error::InternalError::from)?;

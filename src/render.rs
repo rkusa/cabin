@@ -2,9 +2,8 @@ mod marker;
 #[cfg(test)]
 mod tests;
 
-use std::borrow::Cow;
-use std::fmt::{self, Write};
-use std::hash::Hasher;
+use std::fmt::{self, Display, Write};
+use std::hash::{Hash, Hasher};
 
 use twox_hash::XxHash32;
 
@@ -80,18 +79,22 @@ pub struct ElementRenderer {
 }
 
 impl ElementRenderer {
-    pub fn attribute(&mut self, name: &str, value: &str) -> Result<(), fmt::Error> {
+    pub fn attribute(&mut self, name: &str, value: impl Display + Hash) -> Result<(), fmt::Error> {
         if self.content_started {
             todo!("throw error: content started");
         }
         self.renderer.write(name.as_bytes());
-        self.renderer.write(value.as_bytes());
+        value.hash(&mut self.renderer);
+
         write!(
             &mut self.renderer.out,
-            r#" {}="{}""#,
+            r#" {}=""#,
             name, // TODO: validate/escape attr name
-            escape_attribute_value(value)
-        )
+        )?;
+        write!(EscapeAttribute(&mut self.renderer.out), "{}", value)?;
+        write!(&mut self.renderer.out, r#"""#)?;
+
+        Ok(())
     }
 
     pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
@@ -152,29 +155,35 @@ impl TextRenderer {
     }
 }
 
-pub fn escape_attribute_value(input: &str) -> Cow<str> {
-    let mut replacements = input
-        .char_indices()
-        .filter_map(|(i, ch)| escape_attribute_value_char(ch).map(|s| (i, s)))
-        .peekable();
-    if replacements.peek().is_none() {
-        return Cow::Borrowed(input);
-    }
+struct EscapeAttribute<W>(W);
 
-    let mut escaped = String::with_capacity(input.len());
-    let mut pos = 0;
-    for (i, sub) in replacements {
-        if i > pos {
-            escaped.push_str(&input[pos..i]);
+impl<W> fmt::Write for EscapeAttribute<W>
+where
+    W: fmt::Write,
+{
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        let mut replacements = s
+            .char_indices()
+            .filter_map(|(i, ch)| escape_attribute_value_char(ch).map(|s| (i, s)))
+            .peekable();
+        if replacements.peek().is_none() {
+            return self.0.write_str(s);
         }
-        escaped.push_str(sub);
-        pos = i + 1;
-    }
-    if pos < input.len() {
-        escaped.push_str(&input[pos..input.len()]);
-    }
 
-    Cow::Owned(escaped)
+        let mut pos = 0;
+        for (i, sub) in replacements {
+            if i > pos {
+                self.0.write_str(&s[pos..i])?;
+            }
+            self.0.write_str(sub)?;
+            pos = i + 1;
+        }
+        if pos < s.len() {
+            self.0.write_str(&s[pos..s.len()])?;
+        }
+
+        Ok(())
+    }
 }
 
 impl Hasher for Renderer {

@@ -106,7 +106,7 @@ where
         if let Some(event) = self.on_click {
             // TODO: directly write into el?
             let (id, payload) = &(event)();
-            el.attribute("cabin-click", &id.to_string())
+            el.attribute("cabin-click", id)
                 .map_err(crate::error::InternalError::from)?;
             el.attribute("cabin-click-payload", payload)
                 .map_err(crate::error::InternalError::from)?;
