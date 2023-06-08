@@ -52,10 +52,16 @@ where
         }
     }
 
-    pub fn map<B>(mut self, f: impl Fn(I::Item) -> B) -> Map<I, impl FnMut(I::Item) -> B> {
+    pub fn map<B>(
+        mut self,
+        f: impl Fn(I::Item) -> B,
+    ) -> Map<I, impl FnMut(I::Item) -> KeyedView<B>> {
         self.iter.map(move |item| {
             let key = hash((self.f)(&item));
-            Scope::keyed_sync(key, || (f)(item))
+            Scope::keyed_sync(key, || KeyedView {
+                key,
+                view: (f)(item),
+            })
         })
     }
 }
@@ -99,4 +105,21 @@ fn hash(val: impl Hash) -> u32 {
     let mut hasher = XxHash32::default();
     val.hash(&mut hasher);
     hasher.finish() as u32
+}
+
+pub struct KeyedView<V> {
+    key: u32,
+    view: V,
+}
+
+impl<V> View for KeyedView<V>
+where
+    V: View,
+{
+    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
+        let mut el = r.element("cabin-keyed", true)?;
+        el.attribute("id", self.key)
+            .map_err(crate::error::InternalError::from)?;
+        el.content(self.view).await
+    }
 }

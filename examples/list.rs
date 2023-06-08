@@ -32,12 +32,12 @@ async fn list(default: impl FnOnce() -> Vec<Item>) -> impl View {
     match event::<ItemsEvent>() {
         Some(ItemsEvent::AddAbove) => {
             let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
-            let count = items.len();
+            let count = items.len() + 1;
             items.insert(0, Item { id, count });
         }
         Some(ItemsEvent::AddBelow) => {
             let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
-            let count = items.len();
+            let count = items.len() + 1;
             items.push(Item { id, count });
         }
         Some(ItemsEvent::Delete(id)) => {

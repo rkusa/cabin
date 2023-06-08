@@ -100,9 +100,9 @@ setUpEventListener("input", {
 /**
  * @param {Node} rootBefore
  * @param {Node} rootAfter
- * @param {Record<string, Node>} orphanComponents
+ * @param {Record<string, Node>} orphanKeyed
  */
-function patchChildren(rootBefore, rootAfter, orphanComponents) {
+function patchChildren(rootBefore, rootAfter, orphanKeyed) {
   console.log("apply", rootBefore, rootAfter);
 
   let nodeBefore = rootBefore.firstChild;
@@ -127,11 +127,6 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
       console.log("removed", nodeBefore);
       nextBefore = nodeBefore.nextSibling;
       rootBefore.removeChild(nodeBefore);
-
-      // if (nodeBefore.nodeName === "SERVER-COMPONENT") {
-      //   orphanComponents[nodeBefore.id] = nodeBefore;
-      // }
-
       continue;
     }
 
@@ -142,6 +137,17 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
       let node = nodeAfter;
       while (node) {
         let next = node.nextSibling;
+        if (isKeyedElement(node)) {
+          const previous =
+            document.getElementById(node.id) ?? orphanKeyed[node.id];
+          if (previous) {
+            console.log(`found existing ${node.id} and moved it into place`);
+            fragment.appendChild(previous);
+            delete orphanKeyed[node.id];
+            node = next;
+            continue;
+          }
+        }
         fragment.appendChild(node);
         node = next;
       }
@@ -150,38 +156,28 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
       return;
     }
 
-    // // component id changed, try to find existing one in DOM or replace completely
-    // if (
-    //   nodeAfter.nodeName === "SERVER-COMPONENT" &&
-    //   (nodeBefore.nodeName !== "SERVER-COMPONENT" ||
-    //     (nodeBefore.dataset.id === nodeAfter.dataset.id &&
-    //       nodeBefore.id !== nodeAfter.id))
-    // ) {
-    //   const existing =
-    //     document.getElementById(nodeAfter.id) ?? orphanComponents[nodeAfter.id];
-    //   if (existing) {
-    //     console.log("swap in existing component");
-    //     if (nodeBefore.nodeName === "SERVER-COMPONENT") {
-    //       existing.parentNode?.insertBefore(
-    //         document.createComment("placeholder"),
-    //         existing
-    //       );
-    //       rootBefore.replaceChild(existing, nodeBefore);
-    //       orphanComponents[nodeBefore.id] = nodeBefore;
-    //     } else if (
-    //       nodeBefore.nodeType === Node.COMMENT_NODE &&
-    //       nodeBefore.nodeValue === "placeholder"
-    //     ) {
-    //       rootBefore.replaceChild(existing, nodeBefore);
-    //     } else {
-    //       rootBefore.insertBefore(existing, nodeBefore);
-    //     }
-    //     nodeBefore = existing;
-    //   }
-    // }
+    // re-use if found somewhere else in the three
+    if (
+      isKeyedElement(nodeAfter) &&
+      (!isKeyedElement(nodeBefore) || nodeBefore.id !== nodeAfter.id)
+    ) {
+      const previous =
+        document.getElementById(nodeAfter.id) ?? orphanKeyed[nodeAfter.id];
+      nextBefore = nodeBefore;
+      nextAfter = nodeAfter.nextSibling;
+      if (previous) {
+        console.log(`found existing ${nodeAfter.id} and moved it into place`);
+        rootBefore.insertBefore(previous, nodeBefore);
+        delete orphanKeyed[nodeAfter.id];
+      } else {
+        console.log("new iter item, move new into place");
+        rootBefore.insertBefore(nodeAfter, nodeBefore);
+        continue;
+      }
+    }
 
     // type changed, replace completely
-    if (
+    else if (
       nodeBefore.nodeType !== nodeAfter.nodeType ||
       nodeBefore.nodeName !== nodeAfter.nodeName
     ) {
@@ -190,9 +186,10 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
       nextAfter = nodeAfter.nextSibling;
       rootBefore.replaceChild(nodeAfter, nodeBefore);
 
-      // if (nodeBefore.nodeName === "SERVER-COMPONENT") {
-      //   orphanComponents[nodeBefore.id] = nodeBefore;
-      // }
+      // Keep it around in case it got moved
+      if (isKeyedElement(nodeBefore)) {
+        orphanKeyed[nodeBefore.id] = nodeBefore;
+      }
 
       continue;
     }
@@ -212,10 +209,9 @@ function patchChildren(rootBefore, rootAfter, orphanComponents) {
           break;
         }
 
-        // TODO: tag changed
         console.log("patch attributes");
         patchAttributes(nodeBefore, nodeAfter);
-        patchChildren(nodeBefore, nodeAfter, orphanComponents);
+        patchChildren(nodeBefore, nodeAfter, orphanKeyed);
         break;
 
       case Node.TEXT_NODE:
@@ -297,4 +293,12 @@ function ignoreAttribute(el, attr) {
     default:
       return false;
   }
+}
+
+/**
+ * @param {Node} node
+ * @return {boolean}
+ */
+function isKeyedElement(node) {
+  return node.nodeType === Node.ELEMENT_NODE && node.nodeName === "CABIN-KEYED";
 }
