@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::future::Future;
 
 use bytes::Bytes;
-pub use cabin_macros::{component, signal};
 pub use error::Error;
 use http::{HeaderValue, Response};
 use http_body::Full;
