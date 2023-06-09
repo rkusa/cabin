@@ -1,19 +1,16 @@
 use std::net::SocketAddr;
-use std::ops::Deref;
 
 use axum::Json;
 use cabin::state::State;
 use cabin::view::IteratorExt;
-use cabin::{event, html, View};
+use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    let mut count = State::restore_or("count", 3);
-    if let Some(Increment) = event() {
-        *count += 1;
-    }
+    let count = State::id("count")
+        .update(|count: &mut usize, _: Increment| *count += 1)
+        .restore_or(3);
 
-    let count = *count.deref(); // TODO: that's ugly
     (
         html::button(html::text!("{}", count))
             .on_click(Increment)
@@ -23,10 +20,9 @@ async fn app() -> impl View {
 }
 
 fn dialog(count: usize) -> impl View {
-    let mut opened = State::restore_or("dialog", false);
-    if let Some(ToggleDropdown) = event() {
-        *opened = !*opened;
-    }
+    let opened = State::<bool>::id("dialog")
+        .update(|opened, _: ToggleDropdown| *opened = !*opened)
+        .restore_or(false);
 
     html::div((
         html::button("open").on_click(ToggleDropdown),

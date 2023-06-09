@@ -6,7 +6,7 @@ use std::net::SocketAddr;
 use axum::Json;
 use cabin::state::State;
 use cabin::view::IteratorExt;
-use cabin::{event, html, View};
+use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -28,28 +28,28 @@ enum ItemsEvent {
 }
 
 async fn list(default: impl FnOnce() -> Vec<Item>) -> impl View {
-    let mut items = State::restore_or_else("list", default);
-    match event::<ItemsEvent>() {
-        Some(ItemsEvent::AddAbove) => {
-            let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
-            let count = items.len() + 1;
-            items.insert(0, Item { id, count });
-        }
-        Some(ItemsEvent::AddBelow) => {
-            let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
-            let count = items.len() + 1;
-            items.push(Item { id, count });
-        }
-        Some(ItemsEvent::Delete(id)) => {
-            items.retain(|i| i.id != id);
-        }
-        Some(ItemsEvent::Increment(id)) => {
-            if let Some(item) = items.iter_mut().find(|item| item.id == id) {
-                item.count += 1;
+    let items = State::<Vec<Item>>::id("list")
+        .update(|items, event: ItemsEvent| match event {
+            ItemsEvent::AddAbove => {
+                let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
+                let count = items.len() + 1;
+                items.insert(0, Item { id, count });
             }
-        }
-        None => {}
-    }
+            ItemsEvent::AddBelow => {
+                let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
+                let count = items.len() + 1;
+                items.push(Item { id, count });
+            }
+            ItemsEvent::Delete(id) => {
+                items.retain(|i| i.id != id);
+            }
+            ItemsEvent::Increment(id) => {
+                if let Some(item) = items.iter_mut().find(|item| item.id == id) {
+                    item.count += 1;
+                }
+            }
+        })
+        .restore_or_else(default);
 
     (
         html::div(html::button("add above").on_click(ItemsEvent::AddAbove)),

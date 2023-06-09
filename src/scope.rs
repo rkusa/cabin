@@ -11,7 +11,7 @@ use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
 use twox_hash::XxHash32;
 
-use crate::state::{State, StateId};
+use crate::state::StateId;
 
 tokio::task_local! {
     static SCOPE: Scope;
@@ -34,7 +34,7 @@ enum Event {
     Deserialized(Box<dyn Any>),
 }
 
-pub fn event<E>() -> Option<E>
+pub(crate) fn event<E>() -> Option<E>
 where
     E: DeserializeOwned + Copy + 'static,
 {
@@ -149,15 +149,10 @@ impl Scope {
             .flatten()
     }
 
-    pub(crate) fn serialize_state<T>(state: &State<T>)
+    pub(crate) fn serialize_state<T>(id: StateId, value: &T)
     where
         T: Serialize,
     {
-        if state.value().is_none() {
-            // already serialized
-            return;
-        }
-
         SCOPE
             .try_with(|scope| {
                 let mut inner = scope.inner.borrow_mut();
@@ -168,10 +163,10 @@ impl Scope {
 
                 // TODO: unwrap
                 let mut ser = serde_json::Serializer::new(&mut inner.next_state);
-                state.id().serialize(&mut ser).unwrap();
+                id.serialize(&mut ser).unwrap();
                 inner.next_state.push(b':');
                 let mut ser = serde_json::Serializer::new(&mut inner.next_state);
-                state.value().serialize(&mut ser).unwrap();
+                value.serialize(&mut ser).unwrap();
             })
             .ok();
     }

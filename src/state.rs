@@ -1,43 +1,51 @@
-use std::borrow::Cow;
-use std::fmt::Display;
 use std::hash::{Hash, Hasher};
-use std::ops::{Deref, DerefMut};
 
 use serde::de::{DeserializeOwned, Unexpected};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash32;
 
-use crate::scope::Scope;
+use crate::scope::{event, take_event, Scope};
 
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct StateId(u32);
 
-pub struct State<T>
-where
-    T: Serialize,
-{
+pub struct State<T> {
     id: StateId,
     value: Option<T>,
 }
 
 impl<T> State<T>
 where
-    T: Serialize + DeserializeOwned,
+    T: DeserializeOwned,
 {
-    pub fn restore_or(id: impl Hash, default: T) -> Self {
+    pub fn id(id: impl Hash) -> Self {
         let id = StateId(hash((id, Scope::key())));
         Self {
             id,
-            value: Some(Scope::restore(id).unwrap_or(default)),
+            value: Scope::restore(id),
         }
     }
+}
 
-    pub fn restore_or_else(id: impl Hash, default: impl FnOnce() -> T) -> Self {
-        let id = StateId(hash((id, Scope::key())));
-        Self {
-            id,
-            value: Some(Scope::restore(id).unwrap_or_else(default)),
+impl<T> State<T> {
+    pub fn update<E>(mut self, update_fn: impl FnOnce(&mut T, E)) -> Self
+    where
+        E: DeserializeOwned + Copy + 'static,
+    {
+        if let Some((value, event)) = self.value.as_mut().zip(event::<E>()) {
+            update_fn(value, event);
         }
+        self
+    }
+
+    pub fn update_take<E>(mut self, update_fn: impl FnOnce(&mut T, E)) -> Self
+    where
+        E: DeserializeOwned + 'static,
+    {
+        if let Some((value, event)) = self.value.as_mut().zip(take_event::<E>()) {
+            update_fn(value, event);
+        }
+        self
     }
 }
 
@@ -45,77 +53,16 @@ impl<T> State<T>
 where
     T: Serialize,
 {
-    pub(crate) fn id(&self) -> StateId {
-        self.id
+    pub fn restore_or(self, default: T) -> T {
+        let value = self.value.unwrap_or(default);
+        Scope::serialize_state(self.id, &value);
+        value
     }
 
-    pub(crate) fn value(&self) -> Option<&T> {
-        self.value.as_ref()
-    }
-}
-
-impl<T> Clone for State<T>
-where
-    T: Serialize + Clone,
-{
-    fn clone(&self) -> Self {
-        State {
-            id: self.id,
-            value: self.value.clone(),
-        }
-    }
-}
-
-impl<T> Deref for State<T>
-where
-    T: Serialize,
-{
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        // Scope::add_state(self);
-        self.value.as_ref().unwrap()
-    }
-}
-
-impl<T> DerefMut for State<T>
-where
-    T: Serialize,
-{
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.value.as_mut().unwrap()
-    }
-}
-
-impl<T> Drop for State<T>
-where
-    T: Serialize,
-{
-    fn drop(&mut self) {
-        // TODO: not going to work for static signals
-        Scope::serialize_state(self);
-    }
-}
-
-impl<T> Display for State<T>
-where
-    T: Serialize + Display,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.value.as_ref().unwrap().fmt(f)
-    }
-}
-
-impl<T> IntoIterator for State<T>
-where
-    T: Serialize + IntoIterator,
-{
-    type Item = T::Item;
-    type IntoIter = T::IntoIter;
-
-    fn into_iter(mut self) -> Self::IntoIter {
-        Scope::serialize_state(&self);
-        self.value.take().unwrap().into_iter()
+    pub fn restore_or_else(self, default_fn: impl FnOnce() -> T) -> T {
+        let value = self.value.unwrap_or_else(default_fn);
+        Scope::serialize_state(self.id, &value);
+        value
     }
 }
 
@@ -145,12 +92,5 @@ impl<'de> Deserialize<'de> for StateId {
         Ok(StateId(u32::from_str_radix(s, 16).map_err(|_| {
             serde::de::Error::invalid_type(Unexpected::Str(s), &"a hex encoded unsigned integer")
         })?))
-    }
-}
-
-impl<'a> From<State<Cow<'a, str>>> for Cow<'a, str> {
-    fn from(mut value: State<Cow<'a, str>>) -> Self {
-        Scope::serialize_state(&value);
-        value.value.take().unwrap()
     }
 }

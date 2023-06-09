@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use axum::Json;
 use cabin::state::State;
-use cabin::{event, html, View};
+use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -14,10 +14,9 @@ struct Increment;
 
 // TODO: needs to be mapped to state
 async fn counter(start_at: usize) -> impl View {
-    let mut count = State::restore_or((), start_at);
-    if let Some(Increment) = event() {
-        *count += 1;
-    }
+    let count = State::id(())
+        .update::<Increment>(|count: &mut usize, _| *count += 1)
+        .restore_or(start_at);
 
     (
         html::div(html::text!("Count: {}", count)),

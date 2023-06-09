@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use axum::Json;
 use cabin::state::State;
-use cabin::{event, html, View};
+use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -17,16 +17,16 @@ enum DialogEvent {
 }
 
 fn dialog(content: impl View) -> impl View {
-    let mut open = State::restore_or("dialog", false);
-    match event() {
-        Some(DialogEvent::Open) => *open = true,
-        Some(DialogEvent::Close) => *open = false,
-        None => {}
-    };
+    let open = State::id("dialog")
+        .update(|open, event: DialogEvent| match event {
+            DialogEvent::Open => *open = true,
+            DialogEvent::Close => *open = false,
+        })
+        .restore_or(false);
 
     (
         open.then_some(
-            html::dialog((content, html::button("close").on_click(DialogEvent::Close))).open(*open),
+            html::dialog((content, html::button("close").on_click(DialogEvent::Close))).open(open),
         ),
         html::button("open").on_click(DialogEvent::Open),
     )

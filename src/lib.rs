@@ -10,7 +10,6 @@ pub use error::Error;
 use http::{HeaderValue, Response};
 use http_body::Full;
 use render::Renderer;
-pub use scope::event;
 use scope::Scope;
 use serde_json::value::RawValue;
 use state::StateId;

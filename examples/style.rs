@@ -1,19 +1,15 @@
 use std::net::SocketAddr;
-use std::ops::Deref;
 
 use axum::Json;
 use cabin::state::State;
-use cabin::{event, html, View};
+use cabin::{html, View};
 use cabin_css::{self as css, css, Style};
 
 async fn app() -> impl View {
-    let mut count = State::restore_or((), 0);
+    let count = State::id(())
+        .update(|count, _: ()| *count += 1)
+        .restore_or(0);
 
-    if let Some(()) = event() {
-        *count += 1;
-    }
-
-    let count = *count.deref(); // TODO: that's ugly
     html::button(html::text!("{}", count)).on_click(()).class(
         // TODO: modifier groups?
         // TODO: autocomplate after XZY. (for modifiers)
