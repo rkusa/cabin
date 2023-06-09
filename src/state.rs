@@ -10,22 +10,22 @@ use twox_hash::XxHash32;
 use crate::scope::Scope;
 
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SignalId(u32);
+pub struct StateId(u32);
 
-pub struct Signal<T>
+pub struct State<T>
 where
     T: Serialize,
 {
-    id: SignalId,
+    id: StateId,
     value: Option<T>,
 }
 
-impl<T> Signal<T>
+impl<T> State<T>
 where
     T: Serialize + DeserializeOwned,
 {
     pub fn restore_or(id: impl Hash, default: T) -> Self {
-        let id = SignalId(hash((id, Scope::key())));
+        let id = StateId(hash((id, Scope::key())));
         Self {
             id,
             value: Some(Scope::restore(id).unwrap_or(default)),
@@ -33,7 +33,7 @@ where
     }
 
     pub fn restore_or_else(id: impl Hash, default: impl FnOnce() -> T) -> Self {
-        let id = SignalId(hash((id, Scope::key())));
+        let id = StateId(hash((id, Scope::key())));
         Self {
             id,
             value: Some(Scope::restore(id).unwrap_or_else(default)),
@@ -41,11 +41,11 @@ where
     }
 }
 
-impl<T> Signal<T>
+impl<T> State<T>
 where
     T: Serialize,
 {
-    pub(crate) fn id(&self) -> SignalId {
+    pub(crate) fn id(&self) -> StateId {
         self.id
     }
 
@@ -54,31 +54,31 @@ where
     }
 }
 
-impl<T> Clone for Signal<T>
+impl<T> Clone for State<T>
 where
     T: Serialize + Clone,
 {
     fn clone(&self) -> Self {
-        Signal {
+        State {
             id: self.id,
             value: self.value.clone(),
         }
     }
 }
 
-impl<T> Deref for Signal<T>
+impl<T> Deref for State<T>
 where
     T: Serialize,
 {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        // Scope::add_signal(self);
+        // Scope::add_state(self);
         self.value.as_ref().unwrap()
     }
 }
 
-impl<T> DerefMut for Signal<T>
+impl<T> DerefMut for State<T>
 where
     T: Serialize,
 {
@@ -87,17 +87,17 @@ where
     }
 }
 
-impl<T> Drop for Signal<T>
+impl<T> Drop for State<T>
 where
     T: Serialize,
 {
     fn drop(&mut self) {
         // TODO: not going to work for static signals
-        Scope::serialize_signal(self);
+        Scope::serialize_state(self);
     }
 }
 
-impl<T> Display for Signal<T>
+impl<T> Display for State<T>
 where
     T: Serialize + Display,
 {
@@ -106,7 +106,7 @@ where
     }
 }
 
-impl<T> IntoIterator for Signal<T>
+impl<T> IntoIterator for State<T>
 where
     T: Serialize + IntoIterator,
 {
@@ -114,7 +114,7 @@ where
     type IntoIter = T::IntoIter;
 
     fn into_iter(mut self) -> Self::IntoIter {
-        Scope::serialize_signal(&self);
+        Scope::serialize_state(&self);
         self.value.take().unwrap().into_iter()
     }
 }
@@ -125,7 +125,7 @@ fn hash(val: impl Hash) -> u32 {
     hasher.finish() as u32
 }
 
-impl Serialize for SignalId {
+impl Serialize for StateId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -135,22 +135,22 @@ impl Serialize for SignalId {
     }
 }
 
-impl<'de> Deserialize<'de> for SignalId {
-    fn deserialize<D>(deserializer: D) -> Result<SignalId, D::Error>
+impl<'de> Deserialize<'de> for StateId {
+    fn deserialize<D>(deserializer: D) -> Result<StateId, D::Error>
     where
         D: Deserializer<'de>,
         D::Error: serde::de::Error,
     {
         let s = <&str>::deserialize(deserializer)?;
-        Ok(SignalId(u32::from_str_radix(s, 16).map_err(|_| {
+        Ok(StateId(u32::from_str_radix(s, 16).map_err(|_| {
             serde::de::Error::invalid_type(Unexpected::Str(s), &"a hex encoded unsigned integer")
         })?))
     }
 }
 
-impl<'a> From<Signal<Cow<'a, str>>> for Cow<'a, str> {
-    fn from(mut value: Signal<Cow<'a, str>>) -> Self {
-        Scope::serialize_signal(&value);
+impl<'a> From<State<Cow<'a, str>>> for Cow<'a, str> {
+    fn from(mut value: State<Cow<'a, str>>) -> Self {
+        Scope::serialize_state(&value);
         value.value.take().unwrap()
     }
 }

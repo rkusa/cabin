@@ -34,7 +34,10 @@ pub use text;
 // Note: Cannot directly implement View for std::fmt::Arguments due to resulting lifetime issues.
 pub struct Text<F>(F);
 
-impl<F: Fn(Renderer) -> Result<Renderer, crate::Error>> Text<F> {
+impl<F> Text<F>
+where
+    F: FnOnce(Renderer) -> Result<Renderer, crate::Error>,
+{
     pub fn new(write: F) -> Self {
         Text(write)
     }
@@ -42,7 +45,7 @@ impl<F: Fn(Renderer) -> Result<Renderer, crate::Error>> Text<F> {
 
 impl<F> View for Text<F>
 where
-    F: Fn(Renderer) -> Result<Renderer, crate::Error>,
+    F: FnOnce(Renderer) -> Result<Renderer, crate::Error>,
 {
     async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
         (self.0)(r)

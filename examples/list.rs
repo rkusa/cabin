@@ -4,7 +4,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::view::IteratorExt;
 use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
@@ -28,7 +28,7 @@ enum ItemsEvent {
 }
 
 async fn list(default: impl FnOnce() -> Vec<Item>) -> impl View {
-    let mut items = Signal::restore_or_else("list", default);
+    let mut items = State::restore_or_else("list", default);
     match event::<ItemsEvent>() {
         Some(ItemsEvent::AddAbove) => {
             let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;

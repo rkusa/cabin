@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
@@ -10,8 +10,8 @@ async fn app() -> impl View {
 }
 
 fn level(n: usize) -> impl View {
-    let mut count = Signal::restore_or(("count", n), n);
-    let mut has_next_level = Signal::restore_or(("has_next_level", n), n < 3);
+    let mut count = State::restore_or(("count", n), n);
+    let mut has_next_level = State::restore_or(("has_next_level", n), n < 3);
 
     match event::<LevelEvent>() {
         Some(LevelEvent::Increment(l)) if l == n => *count += 1,

@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use axum::Json;
 use cabin::html::events::InputValue;
 use cabin::scope::take_event;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ async fn app() -> impl View {
 struct Search(InputValue);
 
 async fn search() -> impl View {
-    let mut query = Signal::restore_or("query", Cow::Borrowed("Ge"));
+    let mut query = State::restore_or("query", Cow::Borrowed("Ge"));
     if let Some(Search(v)) = take_event() {
         *query = v.into();
     }

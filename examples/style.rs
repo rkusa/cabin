@@ -2,12 +2,12 @@ use std::net::SocketAddr;
 use std::ops::Deref;
 
 use axum::Json;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::{event, html, View};
 use cabin_css::{self as css, css, Style};
 
 async fn app() -> impl View {
-    let mut count = Signal::restore_or((), 0);
+    let mut count = State::restore_or((), 0);
 
     if let Some(()) = event() {
         *count += 1;

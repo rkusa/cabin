@@ -11,7 +11,7 @@ use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
 use twox_hash::XxHash32;
 
-use crate::signal::{Signal, SignalId};
+use crate::state::{State, StateId};
 
 tokio::task_local! {
     static SCOPE: Scope;
@@ -20,11 +20,11 @@ tokio::task_local! {
 
 #[derive(Clone)]
 pub struct Scope {
-    state: Rc<RefCell<State>>,
+    inner: Rc<RefCell<Inner>>,
 }
 
-struct State {
-    prev_state: Option<HashMap<SignalId, Box<RawValue>>>,
+struct Inner {
+    prev_state: Option<HashMap<StateId, Box<RawValue>>>,
     next_state: Vec<u8>,
     event: Option<Event>,
 }
@@ -40,7 +40,7 @@ where
 {
     SCOPE
         .try_with(|scope| {
-            let mut state = scope.state.borrow_mut();
+            let mut state = scope.inner.borrow_mut();
             let event = state.event.as_mut()?;
             match event {
                 Event::Raw { id, payload } => {
@@ -71,7 +71,7 @@ where
 {
     SCOPE
         .try_with(|scope| {
-            let mut state = scope.state.borrow_mut();
+            let mut state = scope.inner.borrow_mut();
             let event = state.event.take()?;
             match event {
                 Event::Raw { id, payload } => {
@@ -104,7 +104,7 @@ where
 impl Scope {
     pub fn new() -> Self {
         Self {
-            state: Rc::new(RefCell::new(State {
+            inner: Rc::new(RefCell::new(Inner {
                 prev_state: None,
                 next_state: vec![b'{'],
                 event: None,
@@ -112,9 +112,9 @@ impl Scope {
         }
     }
 
-    pub fn with_prev_state(self, prev_state: HashMap<SignalId, Box<RawValue>>) -> Self {
+    pub fn with_prev_state(self, prev_state: HashMap<StateId, Box<RawValue>>) -> Self {
         {
-            let mut state = self.state.borrow_mut();
+            let mut state = self.inner.borrow_mut();
             state.prev_state = Some(prev_state);
         }
         self
@@ -122,7 +122,7 @@ impl Scope {
 
     pub fn with_event(self, id: u32, payload: Box<RawValue>) -> Self {
         {
-            let mut state = self.state.borrow_mut();
+            let mut state = self.inner.borrow_mut();
             state.event = Some(Event::Raw { id, payload });
         }
         self
@@ -132,13 +132,13 @@ impl Scope {
         SCOPE.scope(self, f).await
     }
 
-    pub(crate) fn restore<T>(id: SignalId) -> Option<T>
+    pub(crate) fn restore<T>(id: StateId) -> Option<T>
     where
         T: DeserializeOwned,
     {
         SCOPE
             .try_with(|scope| {
-                let mut state = scope.state.borrow_mut();
+                let mut state = scope.inner.borrow_mut();
                 let prev = state.prev_state.as_mut()?.remove(&id)?;
 
                 // TODO: unwrap
@@ -149,35 +149,35 @@ impl Scope {
             .flatten()
     }
 
-    pub(crate) fn serialize_signal<T>(signal: &Signal<T>)
+    pub(crate) fn serialize_state<T>(state: &State<T>)
     where
         T: Serialize,
     {
-        if signal.value().is_none() {
+        if state.value().is_none() {
             // already serialized
             return;
         }
 
         SCOPE
             .try_with(|scope| {
-                let mut state = scope.state.borrow_mut();
+                let mut inner = scope.inner.borrow_mut();
 
-                if state.next_state.len() > 1 {
-                    state.next_state.push(b',');
+                if inner.next_state.len() > 1 {
+                    inner.next_state.push(b',');
                 }
 
                 // TODO: unwrap
-                let mut ser = serde_json::Serializer::new(&mut state.next_state);
-                signal.id().serialize(&mut ser).unwrap();
-                state.next_state.push(b':');
-                let mut ser = serde_json::Serializer::new(&mut state.next_state);
-                signal.value().serialize(&mut ser).unwrap();
+                let mut ser = serde_json::Serializer::new(&mut inner.next_state);
+                state.id().serialize(&mut ser).unwrap();
+                inner.next_state.push(b':');
+                let mut ser = serde_json::Serializer::new(&mut inner.next_state);
+                state.value().serialize(&mut ser).unwrap();
             })
             .ok();
     }
 
     pub fn into_view(self) -> String {
-        let Ok(state) = Rc::try_unwrap(self.state) else {
+        let Ok(state) = Rc::try_unwrap(self.inner) else {
             // TODO: error?
             return String::new();
         };

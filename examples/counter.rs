@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
@@ -12,9 +12,9 @@ async fn app() -> impl View {
 #[derive(Clone, Copy, Serialize, Deserialize)]
 struct Increment;
 
-// TODO: needs to be mapped to signal
+// TODO: needs to be mapped to state
 async fn counter(start_at: usize) -> impl View {
-    let mut count = Signal::restore_or((), start_at);
+    let mut count = State::restore_or((), start_at);
     if let Some(Increment) = event() {
         *count += 1;
     }

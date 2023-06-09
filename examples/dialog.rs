@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ enum DialogEvent {
 }
 
 fn dialog(content: impl View) -> impl View {
-    let mut open = Signal::restore_or("dialog", false);
+    let mut open = State::restore_or("dialog", false);
     match event() {
         Some(DialogEvent::Open) => *open = true,
         Some(DialogEvent::Close) => *open = false,

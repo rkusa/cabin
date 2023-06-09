@@ -2,13 +2,13 @@ use std::net::SocketAddr;
 use std::ops::Deref;
 
 use axum::Json;
-use cabin::signal::Signal;
+use cabin::state::State;
 use cabin::view::IteratorExt;
 use cabin::{event, html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    let mut count = Signal::restore_or("count", 3);
+    let mut count = State::restore_or("count", 3);
     if let Some(Increment) = event() {
         *count += 1;
     }
@@ -23,7 +23,7 @@ async fn app() -> impl View {
 }
 
 fn dialog(count: usize) -> impl View {
-    let mut opened = Signal::restore_or("dialog", false);
+    let mut opened = State::restore_or("dialog", false);
     if let Some(ToggleDropdown) = event() {
         *opened = !*opened;
     }
