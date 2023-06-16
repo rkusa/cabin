@@ -2,6 +2,8 @@
 #![feature(async_fn_in_trait, return_position_impl_trait_in_trait, box_into_inner)]
 #![allow(incomplete_features)]
 
+extern crate self as cabin;
+
 use std::collections::HashMap;
 use std::future::Future;
 

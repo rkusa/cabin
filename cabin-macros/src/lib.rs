@@ -1,9 +1,20 @@
+mod derive_element;
+
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::{Comma, Dot, Paren};
-use syn::{parse_macro_input, ExprLit, Ident, Path};
+use syn::{parse_macro_input, DeriveInput, ExprLit, Ident, Path};
+
+#[proc_macro_derive(Element, attributes(element))]
+pub fn derive_element(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    match derive_element::derive_element(input) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
 
 #[derive(Debug, Hash)]
 enum StyleExpr {

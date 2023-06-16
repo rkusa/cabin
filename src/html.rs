@@ -7,7 +7,10 @@ use std::borrow::Cow;
 use std::hash::{Hash, Hasher};
 
 pub use attributes::Attributes;
-pub use elements::*;
+#[doc(inline)]
+pub use elements::anchor::a;
+#[doc(inline)]
+pub use elements::old::*;
 use serde::Serialize;
 use twox_hash::XxHash32;
 
