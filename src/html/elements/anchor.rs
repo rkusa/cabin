@@ -71,7 +71,7 @@ pub enum ReferrerPolicy {
     UnsafeUrl,
 }
 
-impl<V, A> AnchorElement<V, A> {
+impl<V> AnchorElement<V> {
     /// Try to open the link in a new tab.
     pub fn target_blank(mut self) -> Self {
         self.kind.target = Some(Cow::Borrowed("_blank"));

@@ -1,5 +1,4 @@
-use crate::html::attributes::Attributes;
-use crate::html::Html;
+use crate::html::{ElementExt, Html};
 use crate::render::ElementRenderer;
 use crate::View;
 
@@ -8,7 +7,7 @@ pub struct Dialog {
     open: bool,
 }
 
-impl<V, A> Html<V, A, Dialog>
+impl<V> Html<V, Dialog>
 where
     V: View,
 {
@@ -18,7 +17,7 @@ where
     }
 }
 
-impl Attributes for Dialog {
+impl ElementExt for Dialog {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if self.open {
             r.attribute("open", "")

@@ -86,20 +86,20 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
     Ok(quote! {
         #(#attrs)*
-        pub type #alias_ident<V, A> = ::cabin::html::Html<V, A, #ident>;
+        pub type #alias_ident<V> = ::cabin::html::Html<V, #ident>;
 
         #(#attrs)*
-        pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V, ()> {
-            ::cabin::html::create(#tag_name, content)
+        pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V> {
+            ::cabin::html::Html::new(#tag_name, content)
         }
 
         #[automatically_derived]
-        impl<V, A> #alias_ident<V, A> {
+        impl<V> #alias_ident<V> {
             #(#builder_methods)*
         }
 
         #[automatically_derived]
-        impl ::cabin::html::attributes::Attributes for #ident {
+        impl ::cabin::html::ElementExt for #ident {
             fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error>
             {
                 #(#render_statements)*

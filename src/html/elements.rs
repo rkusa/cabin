@@ -6,15 +6,15 @@ pub mod old {
     #[macro_export]
     macro_rules! element {
         ($dollar:tt, $mod:ident, $name:ident) => {
-            pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, (), ()> {
-                $crate::html::create(stringify!($name), content)
+            pub fn $name<V: $crate::view::View>(content: V) -> $crate::html::Html<V, ()> {
+                $crate::html::Html::new(stringify!($name), content)
             }
         };
         ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
             pub fn $name<V: $crate::view::View>(
                 content: V,
-            ) -> $crate::html::Html<V, (), $crate::html::elements::$kind_mod::$kind_type> {
-                $crate::html::create(stringify!($name), content)
+            ) -> $crate::html::Html<V, $crate::html::elements::$kind_mod::$kind_type> {
+                $crate::html::Html::new(stringify!($name), content)
             }
         };
     }
@@ -22,9 +22,9 @@ pub mod old {
     #[macro_export]
     macro_rules! void_element {
         ($dollar:tt, $mod:ident, $name:ident, $kind_mod:ident, $kind_type:ident) => {
-            pub fn $name(
-            ) -> $crate::html::Html<(), (), $crate::html::elements::$kind_mod::$kind_type> {
-                $crate::html::create(stringify!($name), ())
+            pub fn $name() -> $crate::html::Html<(), $crate::html::elements::$kind_mod::$kind_type>
+            {
+                $crate::html::Html::new(stringify!($name), ())
             }
         };
     }

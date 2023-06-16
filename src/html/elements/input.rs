@@ -4,9 +4,8 @@ use std::hash::{Hash, Hasher};
 use serde::Serialize;
 use twox_hash::XxHash32;
 
-use crate::html::attributes::Attributes;
 use crate::html::events::InputEvent;
-use crate::html::Html;
+use crate::html::{ElementExt, Html};
 use crate::render::ElementRenderer;
 use crate::View;
 
@@ -16,7 +15,7 @@ pub struct Input {
     on_input: Option<Box<dyn FnOnce() -> (u32, String)>>,
 }
 
-impl<V, A> Html<V, A, Input>
+impl<V> Html<V, Input>
 where
     V: View,
 {
@@ -38,7 +37,7 @@ where
     }
 }
 
-impl Attributes for Input {
+impl ElementExt for Input {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(event) = self.on_input {
             // TODO: directly write into r?

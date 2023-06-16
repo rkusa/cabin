@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
-#![feature(async_fn_in_trait, return_position_impl_trait_in_trait, box_into_inner)]
+#![feature(
+    async_fn_in_trait,
+    return_position_impl_trait_in_trait,
+    box_into_inner,
+    option_get_or_insert_default
+)]
 #![allow(incomplete_features)]
 
 extern crate self as cabin;
