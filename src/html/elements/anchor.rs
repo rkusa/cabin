@@ -34,11 +34,11 @@ pub struct Anchor {
 
     /// How much referrer information to send.
     #[element(attribute_name = "referrerpolicy")]
-    referrer_policy: Option<ReferrerPolicy>,
+    referrer_policy: ReferrerPolicy,
 }
 
 /// The referrer information send when following a hyperlink.
-#[derive(Hash)]
+#[derive(Default, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum ReferrerPolicy {
     /// No referrer information always.
     NoReferrer,
@@ -65,6 +65,7 @@ pub enum ReferrerPolicy {
     /// No referrer information from HTTPS to HTTP.
     /// Origin only for HTTPS to HTTPS and HTTP to HTTP.
     /// Full URL for same-origin requests.
+    #[default]
     StrictOriginWhenCrossOrigin,
 
     /// Full URL always.

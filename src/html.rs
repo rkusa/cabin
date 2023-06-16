@@ -15,16 +15,18 @@ pub use elements::old::*;
 use serde::Serialize;
 use twox_hash::XxHash32;
 
+use self::elements::global::Global;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
 use crate::view::View;
 
 pub struct Html<V, K> {
     tag: &'static str,
-    attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
     class: Option<Cow<'static, str>>,
+    attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
     // TODO: no box?
     on_click: Option<Box<dyn FnOnce() -> (u32, String)>>,
+    global: Global,
     kind: K,
     content: V,
 }
@@ -44,6 +46,7 @@ impl<V, K> Html<V, K> {
             attrs: None,
             class: None,
             on_click: None,
+            global: Default::default(),
             kind: K::default(),
             content,
         }
@@ -89,6 +92,7 @@ where
             attrs,
             on_click,
             class,
+            global,
             kind,
             content,
         } = self;
@@ -116,6 +120,7 @@ where
             }
         }
 
+        global.render(&mut el)?;
         kind.render(&mut el)?;
 
         if !is_void_element(tag) {

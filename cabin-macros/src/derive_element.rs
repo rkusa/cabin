@@ -2,7 +2,6 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
 use syn::{
     token, Attribute, Data, DataStruct, DeriveInput, Error, Fields, Ident, Lit, PathArguments, Type,
 };
@@ -47,7 +46,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
     for f in fields.named.iter() {
         let ident = f.ident.as_ref().unwrap();
-        let ty = extract_inner_type(&f.ty)?;
+        let (ty, kind) = extract_inner_type(&f.ty)?;
 
         // Forward only certain args
         let attrs = f
@@ -56,26 +55,68 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
             .filter(|a| a.path().is_ident("doc") || a.path().is_ident("cfg"))
             .collect::<Vec<_>>();
 
-        let opts = extract_field_options(&f.attrs)?;
+        let opts = extract_field_options("element", &f.attrs)?;
         let method_name = opts
             .method_name
             .map(|name| format_ident!("{name}"))
             .unwrap_or_else(|| ident.clone());
 
-        builder_methods.push(quote! {
-            #(#attrs)*
-            pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                self.kind.#ident = Some(#ident.into());
-                self
-            }
-        });
+        match kind {
+            Kind::Option => {
+                if !opts.skip {
+                    builder_methods.push(quote! {
+                        #(#attrs)*
+                        pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
+                            self.kind.#ident = Some(#ident.into());
+                            self
+                        }
+                    });
+                }
 
-        let attr_name = opts.attribute_name.unwrap_or_else(|| ident.to_string());
-        render_statements.push(quote! {
-            if let Some(#ident) = &self.#ident {
-                r.attribute(#attr_name, #ident).map_err(::cabin::error::InternalError::from)?;
+                let attr_name = opts.attribute_name.unwrap_or_else(|| ident.to_string());
+                render_statements.push(quote! {
+                    if let Some(#ident) = &self.#ident {
+                        r.attribute(#attr_name, #ident).map_err(::cabin::error::InternalError::from)?;
+                    }
+                });
             }
-        });
+            Kind::Bool => {
+                if !opts.skip {
+                    builder_methods.push(quote! {
+                        #(#attrs)*
+                        pub fn #method_name(mut self, #ident: #ty) -> Self {
+                            self.kind.#ident = #ident;
+                            self
+                        }
+                    });
+                }
+
+                let attr_name = opts.attribute_name.unwrap_or_else(|| ident.to_string());
+                render_statements.push(quote! {
+                    if self.#ident {
+                        r.empty_attribute(#attr_name).map_err(::cabin::error::InternalError::from)?;
+                    }
+                });
+            }
+            Kind::Other => {
+                if !opts.skip {
+                    builder_methods.push(quote! {
+                        #(#attrs)*
+                        pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
+                            self.kind.#ident = #ident.into();
+                            self
+                        }
+                    });
+                }
+
+                let attr_name = opts.attribute_name.unwrap_or_else(|| ident.to_string());
+                render_statements.push(quote! {
+                    if self.#ident != Default::default() {
+                        r.attribute(#attr_name, self.#ident).map_err(::cabin::error::InternalError::from)?;
+                    }
+                });
+            }
+        }
     }
 
     let alias_ident = format_ident!("{}Element", ident);
@@ -110,34 +151,35 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
     })
 }
 
-fn extract_inner_type(ty: &Type) -> syn::Result<&Type> {
+pub(crate) enum Kind {
+    Option,
+    Bool,
+    Other,
+}
+
+pub(crate) fn extract_inner_type(ty: &Type) -> syn::Result<(&Type, Kind)> {
     if let Type::Path(p) = ty {
         if p.path.segments.len() != 1 {
-            return Err(Error::new(
-                ty.span(),
-                "expected struct field to be an Option<T>",
-            ));
+            return Ok((ty, Kind::Other));
         }
 
         let segment = &p.path.segments[0];
+        if segment.ident == "bool" {
+            return Ok((ty, Kind::Bool));
+        }
+
         if segment.ident != "Option" {
-            return Err(Error::new(
-                ty.span(),
-                "expected struct field to be an Option<T>",
-            ));
+            return Ok((ty, Kind::Other));
         }
 
         if let PathArguments::AngleBracketed(args) = &segment.arguments {
             if let Some(syn::GenericArgument::Type(t)) = args.args.first() {
-                return Ok(t);
+                return Ok((t, Kind::Option));
             }
         }
     }
 
-    Err(Error::new(
-        ty.span(),
-        "expected struct field to be an Option<T>",
-    ))
+    Ok((ty, Kind::Other))
 }
 
 #[derive(Debug, Default)]
@@ -155,10 +197,10 @@ fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
 
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
         if opt.key == format_ident!("tag_name") {
-            let Lit::Str(s) = opt.value
+            let Some(Lit::Str(s)) = opt.value
             else {
                 return Err(Error::new(
-                    opt.value.span(),
+                    opt.value.map(|v| v.span()).unwrap_or_else(|| opt.key.span()),
                     "tag_name must be a str"
                 ));
             };
@@ -173,40 +215,47 @@ fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
 }
 
 #[derive(Debug, Default)]
-struct FieldOpts {
-    method_name: Option<String>,
-    attribute_name: Option<String>,
+pub(crate) struct FieldOpts {
+    pub(crate) method_name: Option<String>,
+    pub(crate) attribute_name: Option<String>,
+    pub(crate) skip: bool,
 }
 
-fn extract_field_options(attrs: &[Attribute]) -> syn::Result<FieldOpts> {
+pub(crate) fn extract_field_options(tag: &str, attrs: &[Attribute]) -> syn::Result<FieldOpts> {
     let mut opts = FieldOpts::default();
 
-    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("element"))
+    let Some(attr) = attrs.iter().find(|a| a.path().is_ident(tag))
     else {
         return Ok(opts);
     };
 
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
-        if opt.key == format_ident!("method_name") {
-            let Lit::Str(s) = opt.value
-            else {
-                return Err(Error::new(
-                    opt.value.span(),
-                    "method_name must be a str"
-                ));
-            };
+        if let Some(value) = opt.value {
+            if opt.key == format_ident!("method_name") {
+                let Lit::Str(s) = value
+                else {
+                    return Err(Error::new(
+                        value.span(),
+                        "method_name must be a str"
+                    ));
+                };
 
-            opts.method_name = Some(s.value());
-        } else if opt.key == format_ident!("attribute_name") {
-            let Lit::Str(s) = opt.value
-            else {
-                return Err(Error::new(
-                    opt.value.span(),
-                    "attribute_name must be a str"
-                ));
-            };
+                opts.method_name = Some(s.value());
+            } else if opt.key == format_ident!("attribute_name") {
+                let Lit::Str(s) = value
+                else {
+                    return Err(Error::new(
+                        value.span(),
+                        "attribute_name must be a str"
+                    ));
+                };
 
-            opts.attribute_name = Some(s.value());
+                opts.attribute_name = Some(s.value());
+            } else {
+                return Err(Error::new(opt.key.span(), "unknown element option"));
+            }
+        } else if opt.key == format_ident!("skip") {
+            opts.skip = true;
         } else {
             return Err(Error::new(opt.key.span(), "unknown element option"));
         }
@@ -218,16 +267,17 @@ fn extract_field_options(attrs: &[Attribute]) -> syn::Result<FieldOpts> {
 #[derive(Debug, Hash)]
 struct OptionExpr {
     key: Ident,
-    eq_token: token::Eq,
-    value: Lit,
+    value: Option<Lit>,
 }
 
 impl Parse for OptionExpr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(OptionExpr {
-            key: Ident::parse(input)?,
-            eq_token: token::Eq::parse(input)?,
-            value: Lit::parse(input)?,
-        })
+        let key = Ident::parse(input)?;
+        let value = if Option::<token::Eq>::parse(input)?.is_some() {
+            Some(Lit::parse(input)?)
+        } else {
+            None
+        };
+        Ok(OptionExpr { key, value })
     }
 }

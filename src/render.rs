@@ -97,6 +97,21 @@ impl ElementRenderer {
         Ok(())
     }
 
+    pub fn empty_attribute(&mut self, name: &str) -> Result<(), fmt::Error> {
+        if self.content_started {
+            todo!("throw error: content started");
+        }
+        self.renderer.write(name.as_bytes());
+
+        write!(
+            &mut self.renderer.out,
+            r#" {}"#,
+            name, // TODO: validate/escape attr name
+        )?;
+
+        Ok(())
+    }
+
     pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
         if is_void_element(self.tag) {
             todo!("throw error: void tags cannot have content");
