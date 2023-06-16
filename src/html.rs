@@ -11,6 +11,8 @@ pub use element_ext::ElementExt;
 #[doc(inline)]
 pub use elements::anchor::a;
 #[doc(inline)]
+pub use elements::form::form;
+#[doc(inline)]
 pub use elements::old::*;
 use serde::Serialize;
 use twox_hash::XxHash32;

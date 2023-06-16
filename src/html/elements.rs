@@ -1,5 +1,6 @@
 pub mod anchor;
 pub mod dialog;
+pub mod form;
 pub mod global;
 pub mod input;
 

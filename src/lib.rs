@@ -50,7 +50,7 @@ pub struct Event {
     payload: Box<RawValue>,
 }
 
-pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
+pub async fn get_page<F: Future<Output = V>, V: View>(
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
 ) -> Response<Full<Bytes>> {
     let (scope, result) = local_pool::spawn(move || async move {
@@ -99,7 +99,7 @@ pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
         .unwrap()
 }
 
-pub async fn put_page<F: Future<Output = V>, V: View + 'static>(
+pub async fn put_page<F: Future<Output = V>, V: View>(
     event: Event,
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
 ) -> Response<Full<Bytes>> {
