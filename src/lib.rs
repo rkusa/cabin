@@ -14,6 +14,7 @@ use std::future::Future;
 
 use bytes::Bytes;
 pub use error::Error;
+pub use http::StatusCode;
 use http::{HeaderValue, Response};
 use http_body::Full;
 use render::Renderer;
