@@ -14,6 +14,8 @@ pub use elements::anchor::a;
 pub use elements::form::form;
 #[doc(inline)]
 pub use elements::old::*;
+#[doc(inline)]
+pub use elements::time::time;
 use serde::Serialize;
 use twox_hash::XxHash32;
 
