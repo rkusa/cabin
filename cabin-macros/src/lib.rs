@@ -28,18 +28,25 @@ pub fn derive_attributes(item: TokenStream) -> TokenStream {
 
 #[derive(Debug, Hash)]
 enum StyleExpr {
+    // e.g.: css::bg::BLACK
     Path {
         path: Path,
+        // e.g.:css::bg::BLACK.hover()
+        method_calls: StyleMethodCalls,
     },
+    // e.g.: css::w::px(46)
     Call {
         func: Path,
         paren_token: Paren,
         args: Punctuated<ExprLit, Comma>,
+        // e.g.: css::w::px(46).hover()
+        method_calls: StyleMethodCalls,
     },
-    MethodCalls {
-        path: Path,
-        method_calls: Vec<StyleMethodCall>,
-    },
+}
+
+#[derive(Debug, Hash)]
+struct StyleMethodCalls {
+    method_calls: Option<Vec<StyleMethodCall>>,
 }
 
 #[derive(Debug, Hash)]
@@ -59,55 +66,66 @@ impl Parse for StyleExpr {
                 func: path,
                 paren_token: syn::parenthesized!(content in input),
                 args: content.parse_terminated(ExprLit::parse, Comma)?,
+                method_calls: input.parse()?,
             })
-        } else if input.peek(Dot) {
-            let mut method_calls = Vec::with_capacity(1);
-            while input.peek(Dot) {
-                method_calls.push(StyleMethodCall {
-                    dot_token: input.parse()?,
-                    method: if input.peek(Ident) {
-                        Some(input.parse()?)
-                    } else {
-                        None
-                    },
-                    paren_token: if input.peek(Paren) {
-                        #[allow(unused)]
-                        let content;
-                        Some(syn::parenthesized!(content in input))
-                    } else {
-                        None
-                    },
-                });
-            }
-
-            Ok(StyleExpr::MethodCalls { path, method_calls })
         } else {
-            Ok(StyleExpr::Path { path })
+            Ok(StyleExpr::Path {
+                path,
+                method_calls: input.parse()?,
+            })
         }
+    }
+}
+
+impl Parse for StyleMethodCalls {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut method_calls = Vec::with_capacity(1);
+        while input.peek(Dot) {
+            method_calls.push(StyleMethodCall {
+                dot_token: input.parse()?,
+                method: if input.peek(Ident) {
+                    Some(input.parse()?)
+                } else {
+                    None
+                },
+                paren_token: if input.peek(Paren) {
+                    #[allow(unused)]
+                    let content;
+                    Some(syn::parenthesized!(content in input))
+                } else {
+                    None
+                },
+            });
+        }
+
+        Ok(Self {
+            method_calls: if method_calls.is_empty() {
+                None
+            } else {
+                Some(method_calls)
+            },
+        })
     }
 }
 
 impl ToTokens for StyleExpr {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         match self {
-            StyleExpr::Path { path } => {
+            StyleExpr::Path { path, method_calls } => {
                 path.to_tokens(tokens);
+                method_calls.to_tokens(tokens);
             }
             StyleExpr::Call {
                 func,
                 paren_token,
                 args,
+                method_calls,
             } => {
                 func.to_tokens(tokens);
                 paren_token.surround(tokens, |tokens| {
                     args.to_tokens(tokens);
                 });
-            }
-            StyleExpr::MethodCalls { path, method_calls } => {
-                path.to_tokens(tokens);
-                for method_call in method_calls {
-                    method_call.to_tokens(tokens);
-                }
+                method_calls.to_tokens(tokens);
             }
         }
     }
@@ -124,6 +142,16 @@ impl ToTokens for StyleMethodCall {
         method.to_tokens(tokens);
         if let Some(paren_token) = paren_token {
             paren_token.surround(tokens, |_| {});
+        }
+    }
+}
+
+impl ToTokens for StyleMethodCalls {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        if let Some(method_calls) = &self.method_calls {
+            for method_call in method_calls {
+                method_call.to_tokens(tokens);
+            }
         }
     }
 }

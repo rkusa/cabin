@@ -35,6 +35,14 @@ pub trait Style {
         pseudo::active::Active(self)
     }
 
+    /// Apply style to all direct children (`> *`).
+    fn apply_to_children(self) -> pseudo::apply_to_children::ApplyToChildren<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::apply_to_children::ApplyToChildren(self)
+    }
+
     /// Apply style only when the element is disabled (`:disabled`).
     fn disabled(self) -> pseudo::disabled::Disabled<Self>
     where
