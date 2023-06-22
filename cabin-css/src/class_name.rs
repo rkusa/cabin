@@ -2,7 +2,14 @@ use std::borrow::Cow;
 use std::fmt;
 use std::ops::Add;
 
+#[derive(Default)]
 pub struct ClassName<'a>(pub Option<Cow<'a, str>>);
+
+impl<'a> ClassName<'a> {
+    pub fn append(self, other: ClassName<'a>) -> ClassName<'a> {
+        ClassName(Some(Cow::Owned(format!("{self} {other}"))))
+    }
+}
 
 impl<'a> From<ClassName<'a>> for Cow<'a, str> {
     fn from(value: ClassName<'a>) -> Self {
@@ -13,6 +20,14 @@ impl<'a> From<ClassName<'a>> for Cow<'a, str> {
 impl<'a> From<Option<&'a str>> for ClassName<'a> {
     fn from(value: Option<&'a str>) -> Self {
         ClassName(value.map(Cow::Borrowed))
+    }
+}
+
+impl<'a> Add<ClassName<'a>> for ClassName<'a> {
+    type Output = ClassName<'a>;
+
+    fn add(self, rhs: ClassName<'a>) -> Self::Output {
+        ClassName(Some(Cow::Owned(format!("{self} {rhs}"))))
     }
 }
 
