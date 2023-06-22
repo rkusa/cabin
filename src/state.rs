@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::hash::{Hash, Hasher};
 
 use serde::de::{DeserializeOwned, Unexpected};
@@ -88,9 +89,9 @@ impl<'de> Deserialize<'de> for StateId {
         D: Deserializer<'de>,
         D::Error: serde::de::Error,
     {
-        let s = <&str>::deserialize(deserializer)?;
-        Ok(StateId(u32::from_str_radix(s, 16).map_err(|_| {
-            serde::de::Error::invalid_type(Unexpected::Str(s), &"a hex encoded unsigned integer")
+        let s = <Cow<'static, str>>::deserialize(deserializer)?;
+        Ok(StateId(u32::from_str_radix(&s, 16).map_err(|_| {
+            serde::de::Error::invalid_type(Unexpected::Str(&s), &"a hex encoded unsigned integer")
         })?))
     }
 }
