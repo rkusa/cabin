@@ -13,6 +13,8 @@ pub use elements::anchor::a;
 #[doc(inline)]
 pub use elements::form::form;
 #[doc(inline)]
+pub use elements::nav::nav;
+#[doc(inline)]
 pub use elements::old::*;
 #[doc(inline)]
 pub use elements::time::time;
