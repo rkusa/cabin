@@ -3,7 +3,9 @@ pub mod dialog;
 pub mod form;
 pub mod global;
 pub mod input;
+pub mod label;
 pub mod nav;
+pub mod span;
 pub mod time;
 
 pub mod old {
