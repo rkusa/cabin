@@ -34,6 +34,8 @@ pub mod rounded;
 pub mod text;
 pub mod w;
 
+use std::fmt;
+
 pub use basis::unit as basis;
 pub use display::*;
 pub use gap::unit as gap;
@@ -61,6 +63,44 @@ pub use px::unit as px;
 pub use py::unit as py;
 pub use w::unit as w;
 
-use crate::StaticClass;
+use crate::{StaticClass, Style};
 
 pub const GROUP: StaticClass = StaticClass("group");
+
+pub struct SrOnly(());
+pub struct NotSrOnly(());
+
+/// Hide an element visually without hiding it from screen readers.
+pub const SR_ONLY: SrOnly = SrOnly(());
+
+/// Undo [SR_ONLY].
+pub const NOT_SR_ONLY: NotSrOnly = NotSrOnly(());
+
+impl Style for SrOnly {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        writeln!(f, "position: absolute;")?;
+        writeln!(f, "width: 1px;")?;
+        writeln!(f, "height: 1px;")?;
+        writeln!(f, "padding: 0;")?;
+        writeln!(f, "margin: -1px;")?;
+        writeln!(f, "overflow: hidden;")?;
+        writeln!(f, "clip: rect(0, 0, 0, 0);")?;
+        writeln!(f, "white-space: nowrap;")?;
+        writeln!(f, "border-width: 0;")?;
+        Ok(())
+    }
+}
+
+impl Style for NotSrOnly {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        writeln!(f, "position: static;")?;
+        writeln!(f, "width: auto;")?;
+        writeln!(f, "height: auto;")?;
+        writeln!(f, "padding: 0;")?;
+        writeln!(f, "margin: 0;")?;
+        writeln!(f, "overflow: visible;")?;
+        writeln!(f, "clip: auto;")?;
+        writeln!(f, "white-space: normal;")?;
+        Ok(())
+    }
+}
