@@ -10,6 +10,10 @@ pub use cabin_macros::css;
 pub use class_name::ClassName;
 pub use utilities::*;
 
+pub mod prelude {
+    pub use crate::{self as css, css, Responsive, Style};
+}
+
 pub trait Style {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result;
 
@@ -18,6 +22,10 @@ pub trait Style {
     }
 
     fn selector_suffix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
+        Ok(())
+    }
+
+    fn suffix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
         Ok(())
     }
 
@@ -97,7 +105,27 @@ pub trait Style {
     {
         pseudo::visited::Visited(self)
     }
+
+    /// Apply style only when browser width is at least `min_width_px`.
+    /// `@media (min-width: {min_width_px}px)`
+    fn min_width_px(self, min_width_px: u32) -> pseudo::min_width::MinWidth<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::min_width::MinWidth::new(min_width_px, self)
+    }
+
+    /// Apply style only when browser width does not exceed `max_width_px`.
+    /// `@media (max-width: {max_width_px}px)`
+    fn max_width_px(self, max_width_px: u32) -> pseudo::max_width::MaxWidth<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::max_width::MaxWidth::new(max_width_px, self)
+    }
 }
+
+include!(concat!(env!("OUT_DIR"), "/responsive.rs"));
 
 pub struct Property<V = &'static str>(pub(crate) &'static str, pub(crate) V);
 pub struct PropertyTwice<V = &'static str>(

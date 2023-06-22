@@ -79,7 +79,11 @@ impl StyleRegistry {
             for style in &styles {
                 style.declarations(&mut self.out).unwrap();
             }
-            writeln!(&mut self.out, "}}").unwrap();
+            write!(&mut self.out, "}}").unwrap();
+            if let Some(style) = styles.get(0) {
+                style.suffix(&mut self.out).unwrap();
+            }
+            writeln!(&mut self.out).unwrap();
 
             let mut hasher = XxHash32::default();
             hasher.write(self.out[pos..].as_bytes());

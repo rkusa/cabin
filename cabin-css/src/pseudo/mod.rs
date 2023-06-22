@@ -6,4 +6,6 @@ pub mod focus_visible;
 pub mod focus_within;
 pub mod group_hover;
 pub mod hover;
+pub mod max_width;
+pub mod min_width;
 pub mod visited;

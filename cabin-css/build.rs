@@ -7,6 +7,56 @@ fn main() {
     // TODO: customize based on env variable?
     let theme = Theme::default();
 
+    // breakpoints
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("responsive.rs");
+    let out = &mut File::create(path).unwrap();
+    writeln!(out, r#"pub trait Responsive {{"#).unwrap();
+    for (ident, min_width_px) in theme.breakpoints {
+        writeln!(out, r#"/// `@media (min-width: {min_width_px}px)`"#).unwrap();
+        writeln!(
+            out,
+            r#"fn {ident}(self) -> pseudo::min_width::MinWidth<Self> where Self: Sized;"#
+        )
+        .unwrap();
+    }
+    for window in theme.breakpoints.windows(2) {
+        let &[(ident, _), (_, min_width_next_px)] = window else { unreachable!() };
+        let max_width_px = min_width_next_px.saturating_sub(1);
+        writeln!(out, r#"/// `@media (max-width: {max_width_px}px)`"#).unwrap();
+        writeln!(
+            out,
+            r#"fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> where Self: Sized;"#
+        )
+        .unwrap();
+    }
+    writeln!(out, r#"}}"#).unwrap();
+    writeln!(out, r#"impl<S: Style> Responsive for S {{"#).unwrap();
+    for (ident, min_width_px) in theme.breakpoints {
+        writeln!(
+            out,
+            r#"
+                fn {ident}(self) -> pseudo::min_width::MinWidth<Self> {{
+                    pseudo::min_width::MinWidth::new({min_width_px}, self)
+                }}
+            "#
+        )
+        .unwrap();
+    }
+    for window in theme.breakpoints.windows(2) {
+        let &[(ident, _), (_, min_width_next_px)] = window else { unreachable!() };
+        let max_width_px = min_width_next_px.saturating_sub(1);
+        writeln!(
+            out,
+            r#"
+                fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> {{
+                    pseudo::max_width::MaxWidth::new({max_width_px}, self)
+                }}
+            "#
+        )
+        .unwrap();
+    }
+    writeln!(out, r#"}}"#).unwrap();
+
     // color
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("text-color.rs");
     let out = &mut File::create(path).unwrap();
@@ -144,6 +194,7 @@ fn main() {
 }
 
 struct Theme {
+    breakpoints: &'static [(&'static str, u32)],
     colors: &'static [(&'static str, &'static str)],
     font_sizes: &'static [(&'static str, Length, LineHeight)],
     rounded: &'static [(&'static str, Length)],
@@ -164,6 +215,13 @@ pub enum Length {
 impl Default for Theme {
     fn default() -> Self {
         Self {
+            breakpoints: &[
+                ("sm", 640),
+                ("md", 768),
+                ("lg", 1024),
+                ("xl", 1280),
+                ("xl2", 1536),
+            ],
             colors: &[
                 ("INHERIT", "inherit"),
                 ("CURRENT", "currentColor"),
