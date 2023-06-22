@@ -11,7 +11,10 @@ macro_rules! text {
                 -> Result<$crate::render::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
-                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt)).map_err($crate::error::InternalError::from)?;
+                ::std::fmt::Write::write_fmt(
+                    &mut $crate::render::Escape::content(&mut txt),
+                    format_args!($fmt)
+                ).map_err($crate::error::InternalError::from)?;
                 txt.end()
             },
         )
@@ -22,7 +25,10 @@ macro_rules! text {
                 -> Result<$crate::render::Renderer, $crate::error::Error>
             {
                 let mut txt = r.text();
-                ::std::fmt::Write::write_fmt(&mut txt, format_args!($fmt, $($args)*)).map_err($crate::error::InternalError::from)?;
+                ::std::fmt::Write::write_fmt(
+                    &mut $crate::render::Escape::content(&mut txt),
+                    format_args!($fmt, $($args)*)
+                ).map_err($crate::error::InternalError::from)?;
                 txt.end()
             },
         )

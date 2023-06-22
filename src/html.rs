@@ -1,6 +1,7 @@
 mod element_ext;
 pub mod elements;
 pub mod events;
+mod raw;
 
 use std::any::TypeId;
 use std::borrow::Cow;
@@ -22,6 +23,7 @@ pub use elements::old::*;
 pub use elements::span::span;
 #[doc(inline)]
 pub use elements::time::time;
+pub use raw::{raw, Raw};
 use serde::Serialize;
 use twox_hash::XxHash32;
 

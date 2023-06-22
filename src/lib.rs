@@ -7,6 +7,7 @@ use std::future::Future;
 
 use bytes::Bytes;
 pub use error::Error;
+use html::raw;
 pub use http::StatusCode;
 use http::{HeaderValue, Response};
 use http_body::Full;
@@ -29,11 +30,11 @@ pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 
 // TODO: move behind feature flag?
 pub fn cabin_stylesheets() -> impl View {
-    r#"<link rel="stylesheet" href="/styles.css">"#
+    raw(r#"<link rel="stylesheet" href="/styles.css">"#)
 }
 
 pub fn cabin_scripts() -> impl View {
-    r#"<script src="/server-component.js" async></script>"#
+    raw(r#"<script src="/server-component.js" async></script>"#)
 }
 
 #[derive(serde::Deserialize)]

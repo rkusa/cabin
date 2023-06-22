@@ -15,7 +15,7 @@ pub use iter::IteratorExt;
 use paste::paste;
 
 use self::boxed::BoxedView;
-use crate::render::Renderer;
+use crate::render::{Escape, Renderer};
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
@@ -60,10 +60,10 @@ impl View for &'static str {
 
 impl View for Cow<'static, str> {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
-        // TODO: safe escape HTML
         let mut txt = r.text();
         RenderFuture::ready(
-            txt.write_str(&self)
+            Escape::content(&mut txt)
+                .write_str(&self)
                 .map_err(crate::error::InternalError::from)
                 .map_err(crate::error::Error::from)
                 .and_then(|_| txt.end()),
