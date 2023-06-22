@@ -2,6 +2,7 @@ pub mod aspect;
 pub mod basis;
 pub mod bg;
 pub mod display;
+pub mod flex;
 pub mod font;
 pub mod gap;
 pub mod gap_x;
