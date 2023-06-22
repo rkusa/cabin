@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 
 use tokio::task::JoinHandle;
 
+use super::RenderFuture;
 pub use super::View;
 use crate::render::Renderer;
 use crate::scope::Scope;
@@ -52,24 +53,26 @@ where
     F: Future<Output = V> + 'static,
     V: View + 'static,
 {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
-        let view = if let Some(key) = self.key {
-            Scope::keyed(key, async {
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        RenderFuture::Future(Box::pin(async move {
+            let view = if let Some(key) = self.key {
+                Scope::keyed(key, async {
+                    match self.state {
+                        State::Stored(f) => f.await,
+                        State::Primed(f) => f.await.unwrap(), // TODO: handle JoinError?
+                        State::Intermediate => unreachable!(),
+                    }
+                })
+                .await
+            } else {
                 match self.state {
                     State::Stored(f) => f.await,
                     State::Primed(f) => f.await.unwrap(), // TODO: handle JoinError?
                     State::Intermediate => unreachable!(),
                 }
-            })
-            .await
-        } else {
-            match self.state {
-                State::Stored(f) => f.await,
-                State::Primed(f) => f.await.unwrap(), // TODO: handle JoinError?
-                State::Intermediate => unreachable!(),
-            }
-        };
-        view.render(r, include_hash).await
+            };
+            view.render(r, include_hash).await
+        }))
     }
 
     fn prime(&mut self) {

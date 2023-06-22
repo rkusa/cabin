@@ -1,12 +1,9 @@
-use std::future::Future;
-use std::pin::Pin;
-
+use super::RenderFuture;
 use crate::render::Renderer;
 use crate::View;
 
 // TODO: any way to reduce this type to one single Box instead of two
-type ViewBoxRenderer =
-    dyn FnOnce(Renderer, bool) -> Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>;
+type ViewBoxRenderer = dyn FnOnce(Renderer, bool) -> RenderFuture;
 
 pub struct BoxedView {
     view: Box<ViewBoxRenderer>,
@@ -18,16 +15,14 @@ impl BoxedView {
         V: View + 'static,
     {
         BoxedView {
-            view: Box::new(|r: Renderer, include_hash: bool| {
-                Box::pin(view.render(r, include_hash))
-            }),
+            view: Box::new(|r: Renderer, include_hash: bool| view.render(r, include_hash)),
         }
     }
 }
 
 impl View for BoxedView {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
-        (self.view)(r, include_hash).await
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        (self.view)(r, include_hash)
     }
 
     // TODO: prime

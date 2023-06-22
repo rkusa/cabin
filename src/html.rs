@@ -28,7 +28,7 @@ use twox_hash::XxHash32;
 use self::elements::global::Global;
 use crate::render::{is_void_element, Renderer};
 pub use crate::view::text::{text, Text};
-use crate::view::View;
+use crate::view::{RenderFuture, View};
 
 pub struct Html<V, K> {
     tag: &'static str,
@@ -63,7 +63,14 @@ impl<V, K> Html<V, K> {
     }
 
     pub fn attr(mut self, name: &'static str, value: impl Into<Cow<'static, str>>) -> Html<V, K> {
-        let attrs = self.attrs.get_or_insert_default();
+        // TODO: replace with `get_or_insert_default();` once stable
+        let attrs = match self.attrs.as_mut() {
+            Some(attrs) => attrs,
+            None => {
+                self.attrs = Some(Default::default());
+                self.attrs.as_mut().unwrap()
+            }
+        };
         attrs.insert(name, value.into());
         self
     }
@@ -93,51 +100,53 @@ impl<V, K> Html<V, K> {
 
 impl<V, K> View for Html<V, K>
 where
-    V: View,
-    K: ElementExt,
+    V: View + 'static,
+    K: ElementExt + 'static,
 {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
-        let Html {
-            tag,
-            attrs,
-            on_click,
-            class,
-            global,
-            kind,
-            content,
-        } = self;
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        RenderFuture::Future(Box::pin(async move {
+            let Html {
+                tag,
+                attrs,
+                on_click,
+                class,
+                global,
+                kind,
+                content,
+            } = self;
 
-        let mut el = r.element(tag, include_hash)?;
+            let mut el = r.element(tag, include_hash)?;
 
-        if let Some(event) = on_click {
-            // TODO: directly write into el?
-            let (id, payload) = &(event)();
-            el.attribute("cabin-click", id)
-                .map_err(crate::error::InternalError::from)?;
-            el.attribute("cabin-click-payload", payload)
-                .map_err(crate::error::InternalError::from)?;
-        }
-
-        if let Some(class) = class {
-            el.attribute("class", class)
-                .map_err(crate::error::InternalError::from)?;
-        }
-
-        if let Some(attrs) = attrs {
-            for (name, value) in attrs {
-                el.attribute(name, value)
+            if let Some(event) = on_click {
+                // TODO: directly write into el?
+                let (id, payload) = &(event)();
+                el.attribute("cabin-click", id)
+                    .map_err(crate::error::InternalError::from)?;
+                el.attribute("cabin-click-payload", payload)
                     .map_err(crate::error::InternalError::from)?;
             }
-        }
 
-        global.render(&mut el)?;
-        kind.render(&mut el)?;
+            if let Some(class) = class {
+                el.attribute("class", class)
+                    .map_err(crate::error::InternalError::from)?;
+            }
 
-        if !is_void_element(tag) {
-            el.content(content).await
-        } else {
-            el.end()
-        }
+            if let Some(attrs) = attrs {
+                for (name, value) in attrs {
+                    el.attribute(name, value)
+                        .map_err(crate::error::InternalError::from)?;
+                }
+            }
+
+            global.render(&mut el)?;
+            kind.render(&mut el)?;
+
+            if !is_void_element(tag) {
+                el.content(content).await
+            } else {
+                el.end()
+            }
+        }))
     }
 
     fn prime(&mut self) {

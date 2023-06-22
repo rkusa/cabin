@@ -1,11 +1,4 @@
 #![forbid(unsafe_code)]
-#![feature(
-    async_fn_in_trait,
-    return_position_impl_trait_in_trait,
-    box_into_inner,
-    option_get_or_insert_default
-)]
-#![allow(incomplete_features)]
 
 extern crate self as cabin;
 
@@ -51,7 +44,7 @@ pub struct Event {
     payload: Box<RawValue>,
 }
 
-pub async fn get_page<F: Future<Output = V>, V: View>(
+pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
 ) -> Response<Full<Bytes>> {
     let (scope, result) = local_pool::spawn(move || async move {

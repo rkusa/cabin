@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 
 use twox_hash::XxHash32;
 
+use super::RenderFuture;
 pub use super::View;
 use crate::render::Renderer;
 use crate::scope::Scope;
@@ -86,16 +87,18 @@ where
 
 impl<Iter, FV, V> View for Map<Iter, FV>
 where
-    Iter: Iterator,
-    FV: FnMut(Iter::Item) -> V,
+    Iter: Iterator + 'static,
+    FV: FnMut(Iter::Item) -> V + 'static,
     V: View,
 {
-    async fn render(self, mut r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
-        for i in self {
-            let fut = i.render(r, true);
-            r = fut.await?;
-        }
-        Ok(r)
+    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
+        RenderFuture::Future(Box::pin(async move {
+            for i in self {
+                let fut = i.render(r, true);
+                r = fut.await?;
+            }
+            Ok(r)
+        }))
     }
 
     // TODO: any way to prime without consuming the iterator?
@@ -114,12 +117,14 @@ pub struct KeyedView<V> {
 
 impl<V> View for KeyedView<V>
 where
-    V: View,
+    V: View + 'static,
 {
-    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
-        let mut el = r.element("cabin-keyed", true)?;
-        el.attribute("id", self.key)
-            .map_err(crate::error::InternalError::from)?;
-        el.content(self.view).await
+    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+        RenderFuture::Future(Box::pin(async move {
+            let mut el = r.element("cabin-keyed", true)?;
+            el.attribute("id", self.key)
+                .map_err(crate::error::InternalError::from)?;
+            el.content(self.view).await
+        }))
     }
 }

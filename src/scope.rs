@@ -89,7 +89,7 @@ where
                     Some(payload)
                 }
                 Event::Deserialized(payload) => match payload.downcast::<E>() {
-                    Ok(event) => Some(Box::into_inner(event)),
+                    Ok(event) => Some(*event),
                     Err(payload) => {
                         state.event = Some(Event::Deserialized(payload));
                         None

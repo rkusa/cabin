@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::View;
+use super::{RenderFuture, View};
 use crate::render::Renderer;
 
 #[macro_export]
@@ -45,10 +45,10 @@ where
 
 impl<F> View for Text<F>
 where
-    F: FnOnce(Renderer) -> Result<Renderer, crate::Error>,
+    F: FnOnce(Renderer) -> Result<Renderer, crate::Error> + 'static,
 {
-    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
-        (self.0)(r)
+    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+        RenderFuture::ready((self.0)(r))
     }
 }
 

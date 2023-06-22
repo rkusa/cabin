@@ -5,6 +5,9 @@ pub mod text;
 
 use std::borrow::Cow;
 use std::fmt::Write;
+use std::future::Future;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
 // pub use boxed::BoxedView;
 pub use future::FutureExt;
@@ -16,8 +19,11 @@ use crate::render::Renderer;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
-pub trait View {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error>;
+pub trait View
+where
+    Self: 'static,
+{
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture;
 
     fn prime(&mut self) {}
 
@@ -29,33 +35,45 @@ pub trait View {
     }
 }
 
-impl View for () {
-    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
-        Ok(r)
+pub enum RenderFuture {
+    Ready(Option<Result<Renderer, crate::Error>>),
+    Future(Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>),
+}
+
+impl RenderFuture {
+    pub fn ready(result: Result<Renderer, crate::Error>) -> RenderFuture {
+        RenderFuture::Ready(Some(result))
     }
 }
 
-// TODO: escape html!
-impl<'a> View for &'a str {
-    async fn render(self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
+impl View for () {
+    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+        RenderFuture::ready(Ok(r))
+    }
+}
+
+impl View for &'static str {
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        Cow::Borrowed(self).render(r, include_hash)
+    }
+}
+
+impl View for Cow<'static, str> {
+    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
         // TODO: safe escape HTML
         let mut txt = r.text();
-        txt.write_str(self)
-            .map_err(crate::error::InternalError::from)
-            .map_err(crate::error::Error::from)
-            .and_then(|_| txt.end())
-    }
-}
-
-impl<'a> View for Cow<'a, str> {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
-        <&str as View>::render(self.as_ref(), r, include_hash).await
+        RenderFuture::ready(
+            txt.write_str(&self)
+                .map_err(crate::error::InternalError::from)
+                .map_err(crate::error::Error::from)
+                .and_then(|_| txt.end()),
+        )
     }
 }
 
 impl View for String {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
-        <&str as View>::render(self.as_str(), r, include_hash).await
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        Cow::<'static, str>::Owned(self).render(r, include_hash)
     }
 }
 
@@ -63,10 +81,10 @@ impl<V> View for Option<V>
 where
     V: View,
 {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
-            Some(i) => i.render(r, include_hash).await,
-            None => Ok(r),
+            Some(i) => i.render(r, include_hash),
+            None => RenderFuture::ready(Ok(r)),
         }
     }
 
@@ -80,12 +98,13 @@ where
 impl<V, E> View for Result<V, E>
 where
     V: View,
+    E: 'static,
     crate::Error: From<E>,
 {
-    async fn render(self, r: Renderer, include_hash: bool) -> Result<Renderer, crate::Error> {
+    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
-            Ok(v) => v.render(r, include_hash).await,
-            Err(err) => Err(err.into()),
+            Ok(v) => v.render(r, include_hash),
+            Err(err) => RenderFuture::ready(Err(err.into())),
         }
     }
 
@@ -96,18 +115,33 @@ where
     }
 }
 
+impl Future for RenderFuture {
+    type Output = Result<Renderer, crate::Error>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match *self.get_mut() {
+            RenderFuture::Ready(ref mut result) => {
+                result.take().map(Poll::Ready).unwrap_or(Poll::Pending)
+            }
+            RenderFuture::Future(ref mut future) => future.as_mut().poll(cx),
+        }
+    }
+}
+
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),* ) => {
         paste!{
-            impl<$( [<V$ix>]: View),*> View for ($([<V$ix>],)*) {
-                async fn render(mut self, r: Renderer, _include_hash: bool) -> Result<Renderer, crate::Error> {
-                    $(
-                        self.$ix.prime();
-                    )*
-                    $(
-                        let r = self.$ix.render(r, true).await?;
-                    )*
-                    Ok(r)
+            impl<$( [<V$ix>]: View + 'static),*> View for ($([<V$ix>],)*) {
+                fn render(mut self, r: Renderer, _include_hash: bool) -> RenderFuture {
+                    RenderFuture::Future(Box::pin(async move {
+                        $(
+                            self.$ix.prime();
+                        )*
+                        $(
+                            let r = self.$ix.render(r, true).await?;
+                        )*
+                        Ok(r)
+                    }))
                 }
             }
         }
