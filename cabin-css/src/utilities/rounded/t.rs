@@ -33,7 +33,7 @@ pub const FULL: PropertyTwice<Length> = PropertyTwice(
 );
 
 /// Multiple of `0.25rem` (`4px` by default):
-/// ```
+/// ```css
 /// border-top-right-radius: {x * 0.25}rem;
 /// border-top-left-radius: {x * 0.25}rem;
 /// ```
@@ -46,7 +46,7 @@ pub fn unit(x: i16) -> PropertyTwice<Length> {
 }
 
 /// Multiple of `0.25rem` (`4px` by default):
-/// ```
+/// ```css
 /// border-top-right-radius: {x * 0.25}rem;
 /// border-top-left-radius: {x * 0.25}rem;
 /// ```

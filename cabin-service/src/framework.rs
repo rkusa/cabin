@@ -4,8 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
-use cabin::{LIVERELOAD_JS, SERVER_COMPONENT_JS};
-use cabin_css::registry::StyleRegistry;
+use cabin::SERVER_COMPONENT_JS;
 use http::{header, Method, Request, Response};
 use http_body::combinators::UnsyncBoxBody;
 use http_body::{Body as HttpBody, Full};
@@ -50,8 +49,8 @@ where
     }
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
-        // let _ = ComponentRegistry::global();
-        let _ = StyleRegistry::global();
+        #[cfg(feature = "cabin-css")]
+        let _ = cabin_css::registry::StyleRegistry::global();
 
         let mut service = self.service.clone();
         Box::pin(async move {
@@ -93,7 +92,7 @@ where
                 (&Method::GET, &["livereload.js"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/javascript")
                     .body(UnsyncBoxBody::new(
-                        Full::new(Bytes::from(LIVERELOAD_JS)).map_err(|_| unreachable!()),
+                        Full::new(Bytes::from(cabin::LIVERELOAD_JS)).map_err(|_| unreachable!()),
                     ))
                     .unwrap()),
 
