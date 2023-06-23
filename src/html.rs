@@ -53,6 +53,7 @@ mod exports {
 
 pub struct Html<V, K> {
     tag: &'static str,
+    id: Option<Cow<'static, str>>,
     class: Option<Cow<'static, str>>,
     attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
     // TODO: no box?
@@ -76,6 +77,7 @@ impl<V, K> Html<V, K> {
     {
         Html {
             tag,
+            id: None,
             attrs: None,
             class: None,
             on_click: None,
@@ -99,6 +101,13 @@ impl<V, K> Html<V, K> {
         self
     }
 
+    /// Unique identifier across the document.
+    pub fn id(mut self, class: impl Into<Cow<'static, str>>) -> Html<V, K> {
+        self.class = Some(class.into());
+        self
+    }
+
+    /// The various classes that the element belongs to.
     pub fn class(mut self, class: impl Into<Cow<'static, str>>) -> Html<V, K> {
         self.class = Some(class.into());
         self
@@ -133,6 +142,7 @@ where
                 tag,
                 attrs,
                 on_click,
+                id,
                 class,
                 global,
                 aria,
@@ -148,6 +158,11 @@ where
                 el.attribute("cabin-click", id)
                     .map_err(crate::error::InternalError::from)?;
                 el.attribute("cabin-click-payload", payload)
+                    .map_err(crate::error::InternalError::from)?;
+            }
+
+            if let Some(id) = id {
+                el.attribute("id", id)
                     .map_err(crate::error::InternalError::from)?;
             }
 

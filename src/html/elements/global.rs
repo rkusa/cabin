@@ -81,6 +81,9 @@ pub struct Global {
     /// of other page content.
     popover: bool,
 
+    /// The slot name this element is assigned to.
+    slot: Option<Cow<'static, str>>,
+
     /// Explicitly enable or disable spelling and grammar checking for the element's contents.
     spellcheck: Option<bool>,
 
