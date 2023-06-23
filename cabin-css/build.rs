@@ -105,6 +105,43 @@ fn main() {
         .unwrap();
     }
 
+    // ring-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("ring-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(
+            out,
+            r#"/// `--tw-ring-color: {color};` <b style="color:{color}">⏺</b>"#
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: RingColor = RingColor("{color}");"#
+        )
+        .unwrap();
+    }
+
+    // ring-offset-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("ring-offset-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(
+            out,
+            r#"/// `--tw-ring-offset-color: {color};` <b style="color:{color}">⏺</b>"#
+        )
+        .unwrap();
+        writeln!(
+                out,
+                r#"/// `box-shadow: 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color), var(--tw-ring-shadow);`"#
+            )
+            .unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: RingOffsetColor = RingOffsetColor("{color}");"#
+        )
+        .unwrap();
+    }
+
     // font-size
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("font-size.rs");
     let out = &mut File::create(path).unwrap();

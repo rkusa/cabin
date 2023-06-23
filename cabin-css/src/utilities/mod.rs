@@ -31,6 +31,7 @@ pub mod pr;
 pub mod pt;
 pub mod px;
 pub mod py;
+pub mod ring;
 pub mod rounded;
 pub mod text;
 pub mod w;
@@ -63,6 +64,7 @@ pub use pr::unit as pr;
 pub use pt::unit as pt;
 pub use px::unit as px;
 pub use py::unit as py;
+pub use ring::DEFAULT as RING;
 pub use w::unit as w;
 
 use crate::{StaticClass, Style};
