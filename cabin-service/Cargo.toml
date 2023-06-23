@@ -11,9 +11,11 @@ http = "0.2"
 http-body = "0.4"
 serde_json = "1.0"
 thiserror = "1.0"
+tokio = { version = "1.28", optional = true, default-features = false, features = ["time"] }
 tower-service = "0.3"
 tower-layer = "0.3"
 tracing = "0.1"
 
 [features]
-default = ["cabin-css"]
+default = ["livereload", "cabin-css"]
+livereload = ["tokio"]

@@ -10,6 +10,10 @@ members = [
     "cabin-service",
 ]
 
+[features]
+default = ["livereload"]
+livereload = []
+
 [dependencies]
 bytes = "1.2"
 cabin-macros = { path = "./cabin-macros", version = "0.1" }

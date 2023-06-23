@@ -4,7 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
-use cabin::SERVER_COMPONENT_JS;
+use cabin::{LIVERELOAD_JS, SERVER_COMPONENT_JS};
 use cabin_css::registry::StyleRegistry;
 use http::{header, Method, Request, Response};
 use http_body::combinators::UnsyncBoxBody;
@@ -88,6 +88,27 @@ where
                         .map_err(|_| unreachable!()),
                     ))
                     .unwrap()),
+
+                #[cfg(feature = "livereload")]
+                (&Method::GET, &["livereload.js"]) => Ok(Response::builder()
+                    .header(header::CONTENT_TYPE, "text/javascript")
+                    .body(UnsyncBoxBody::new(
+                        Full::new(Bytes::from(LIVERELOAD_JS)).map_err(|_| unreachable!()),
+                    ))
+                    .unwrap()),
+
+                #[cfg(feature = "livereload")]
+                (&Method::GET, &["livereload"]) => {
+                    // Return an event-stream that is only meant to keep a connection open
+                    // (periodically sends a heartbeat).
+                    Ok(Response::builder()
+                        .header(header::CACHE_CONTROL, "no-store")
+                        .header(header::CONTENT_TYPE, "text/event-stream")
+                        .body(UnsyncBoxBody::new(
+                            crate::livereload::Heartbeat::default().map_err(|_| unreachable!()),
+                        ))
+                        .unwrap())
+                }
 
                 _ => service.call(req).await.map_err(Into::into).map(|r| {
                     let (parts, body) = r.into_parts();

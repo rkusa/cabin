@@ -1,3 +1,63 @@
+/**
+ * @param {number} eventId
+ * @param {object} payload
+ */
+async function update(eventId, payload) {
+  // TODO: abort on unmount
+  if (this.abortController) {
+    console.log("abort");
+    this.abortController.abort();
+  }
+  const abortController = (this.abortController = new AbortController());
+  const signal = this.abortController.signal;
+
+  try {
+    const state = document.getElementById("state").innerText;
+
+    const res = await fetch(location.pathname, {
+      signal,
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventId,
+        payload,
+        // TODO: avoid JSON.parse to stringify it again right away
+        state: JSON.parse(state),
+      }),
+    });
+    if (signal.aborted) {
+      console.log("already aborted, ignoring");
+      return;
+    }
+
+    // TODO: handle status code
+    const html = await res.text();
+    // TODO: check if still mounted
+
+    console.time("patch");
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    patchChildren(document.body, template.content, {});
+    console.timeEnd("patch");
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      // ignore
+    } else {
+      throw err;
+    }
+  } finally {
+    if (this.abortController === abortController) {
+      this.abortController = undefined;
+    }
+  }
+}
+
+document.addEventListener("cabinRefresh", async function () {
+  await update(0, {});
+});
+
 function setUpEventListener(eventName, opts) {
   const attrName = `cabin-${eventName}`;
 
@@ -17,19 +77,11 @@ function setUpEventListener(eventName, opts) {
           e.preventDefault();
         }
 
-        // TODO: abort on unmount
-        if (this.abortController) {
-          console.log("abort");
-          this.abortController.abort();
-        }
-        const abortController = (this.abortController = new AbortController());
-        const signal = this.abortController.signal;
-
         if (opts.disable) {
           node.disabled = true;
         }
+
         try {
-          // const component = this.dataset.id;
           const payload = JSON.parse(
             opts?.eventPayload
               ? Object.entries(opts.eventPayload(e)).reduce(
@@ -39,48 +91,10 @@ function setUpEventListener(eventName, opts) {
                 )
               : node.getAttribute(`${attrName}-payload`)
           );
-
-          const state = document.getElementById("state").innerText;
-
-          const res = await fetch(location.pathname, {
-            signal,
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              eventId: parseInt(eventId),
-              payload,
-              // TODO: avoid JSON.parse to stringify it again right away
-              state: JSON.parse(state),
-            }),
-          });
-          if (signal.aborted) {
-            console.log("already aborted, ignoring");
-            return;
-          }
-
-          // TODO: handle status code
-          const html = await res.text();
-          // TODO: check if still mounted
-
-          console.time("patch");
-          const template = document.createElement("template");
-          template.innerHTML = html;
-          patchChildren(document.body, template.content, {});
-          console.timeEnd("patch");
-        } catch (err) {
-          if (err instanceof DOMException && err.name === "AbortError") {
-            // ignore
-          } else {
-            throw err;
-          }
+          await update(parseInt(eventId), payload);
         } finally {
           if (opts.disable) {
             node.disabled = false;
-          }
-          if (this.abortController === abortController) {
-            this.abortController = undefined;
           }
         }
 
