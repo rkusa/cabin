@@ -113,20 +113,17 @@ impl ElementRenderer {
     }
 
     pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
-        if is_void_element(self.tag) {
-            todo!("throw error: void tags cannot have content");
-        }
         if !self.content_started {
             self.content_started = true;
             write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
         }
 
         self.renderer = view.render(self.renderer, false).await?;
-        self.end()
+        self.end(false)
     }
 
-    pub fn end(mut self) -> Result<Renderer, crate::Error> {
-        if !self.content_started && !is_void_element(self.tag) {
+    pub fn end(mut self, is_void_element: bool) -> Result<Renderer, crate::Error> {
+        if !self.content_started && !is_void_element {
             write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
         }
 
@@ -144,7 +141,7 @@ impl ElementRenderer {
 
         // if self.renderer.changed(hash, self.offset)? {
         // Handle void elements. Content is simply ignored.
-        if is_void_element(self.tag) {
+        if is_void_element {
             write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
         } else {
             write!(&mut self.renderer.out, "</{}>", self.tag)
@@ -258,24 +255,4 @@ fn escape_content_char(ch: char) -> Option<&'static str> {
         '&' => Some("&amp;"),
         _ => None,
     }
-}
-
-pub fn is_void_element(tag: &str) -> bool {
-    // https://html.spec.whatwg.org/multipage/syntax.html#elements-2
-    matches!(
-        tag,
-        "area"
-            | "base"
-            | "br"
-            | "col"
-            | "embed"
-            | "hr"
-            | "img"
-            | "input"
-            | "link"
-            | "meta"
-            | "source"
-            | "track"
-            | "wbr"
-    )
 }

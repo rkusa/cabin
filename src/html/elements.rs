@@ -7,7 +7,9 @@ pub mod head;
 pub mod html;
 pub mod input;
 pub mod label;
+pub mod link;
 pub mod nav;
+pub mod script;
 pub mod span;
 pub mod time;
 

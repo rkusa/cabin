@@ -1,6 +1,7 @@
 mod element_ext;
 pub mod elements;
 pub mod events;
+pub mod list;
 mod raw;
 
 use std::any::TypeId;
@@ -14,7 +15,7 @@ use serde::Serialize;
 use twox_hash::XxHash32;
 
 use self::elements::global::Global;
-use crate::render::{is_void_element, Renderer};
+use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
 #[doc(inline)]
 pub use exports::*;
@@ -36,9 +37,13 @@ mod exports {
     #[doc(inline)]
     pub use super::elements::label::label;
     #[doc(inline)]
+    pub use super::elements::link::link;
+    #[doc(inline)]
     pub use super::elements::nav::nav;
     #[doc(inline)]
     pub use super::elements::old::*;
+    #[doc(inline)]
+    pub use super::elements::script::script;
     #[doc(inline)]
     pub use super::elements::span::span;
     #[doc(inline)]
@@ -156,10 +161,10 @@ where
             global.render(&mut el)?;
             kind.render(&mut el)?;
 
-            if !is_void_element(tag) {
+            if !K::is_void_element() {
                 el.content(content).await
             } else {
-                el.end()
+                el.end(true)
             }
         }))
     }

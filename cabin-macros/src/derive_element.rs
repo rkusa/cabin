@@ -124,21 +124,9 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
         .tag_name
         .unwrap_or_else(|| ident.to_string().to_lowercase());
     let fn_ident = format_ident!("{tag_name}");
+    let is_void = opts.is_void;
 
-    Ok(quote! {
-        #(#attrs)*
-        pub type #alias_ident<V> = ::cabin::html::Html<V, #ident>;
-
-        #(#attrs)*
-        pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V> {
-            ::cabin::html::Html::new(#tag_name, content)
-        }
-
-        #[automatically_derived]
-        impl<V> #alias_ident<V> {
-            #(#builder_methods)*
-        }
-
+    let element_ext = quote! {
         #[automatically_derived]
         impl ::cabin::html::ElementExt for #ident {
             fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error>
@@ -147,8 +135,48 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
                 Ok(())
             }
+
+            fn is_void_element() -> bool {
+                #is_void
+            }
         }
-    })
+    };
+
+    if is_void {
+        Ok(quote! {
+            #(#attrs)*
+            pub type #alias_ident = ::cabin::html::Html<(), #ident>;
+
+            #(#attrs)*
+            pub fn #fn_ident() -> #alias_ident {
+                ::cabin::html::Html::new(#tag_name, ())
+            }
+
+            #[automatically_derived]
+            impl #alias_ident {
+                #(#builder_methods)*
+            }
+
+            #element_ext
+        })
+    } else {
+        Ok(quote! {
+            #(#attrs)*
+            pub type #alias_ident<V> = ::cabin::html::Html<V, #ident>;
+
+            #(#attrs)*
+            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V> {
+                ::cabin::html::Html::new(#tag_name, content)
+            }
+
+            #[automatically_derived]
+            impl<V> #alias_ident<V> {
+                #(#builder_methods)*
+            }
+
+            #element_ext
+        })
+    }
 }
 
 pub(crate) enum Kind {
@@ -185,6 +213,7 @@ pub(crate) fn extract_inner_type(ty: &Type) -> syn::Result<(&Type, Kind)> {
 #[derive(Debug, Default)]
 struct Opts {
     tag_name: Option<String>,
+    is_void: bool,
 }
 
 fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
@@ -196,16 +225,19 @@ fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
     };
 
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
-        if opt.key == format_ident!("tag_name") {
-            let Some(Lit::Str(s)) = opt.value
-            else {
-                return Err(Error::new(
-                    opt.value.map(|v| v.span()).unwrap_or_else(|| opt.key.span()),
-                    "tag_name must be a str"
-                ));
-            };
+        if let Some(value) = opt.value {
+            if opt.key == format_ident!("tag_name") {
+                let Lit::Str(s) = value
+                else {
+                    return Err(Error::new(value.span(), "tag_name must be a str"));
+                };
 
-            opts.tag_name = Some(s.value());
+                opts.tag_name = Some(s.value());
+            } else {
+                return Err(Error::new(opt.key.span(), "unknown element option"));
+            }
+        } else if opt.key == format_ident!("void") {
+            opts.is_void = true;
         } else {
             return Err(Error::new(opt.key.span(), "unknown element option"));
         }

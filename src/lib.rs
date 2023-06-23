@@ -7,7 +7,7 @@ use std::future::Future;
 
 use bytes::Bytes;
 pub use error::Error;
-use html::raw;
+use html::elements::link::Rel;
 pub use http::StatusCode;
 use http::{HeaderValue, Response};
 use http_body::Full;
@@ -31,14 +31,14 @@ pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 // TODO: move behind feature flag?
 pub fn cabin_stylesheets() -> impl View {
-    raw(r#"<link rel="stylesheet" href="/styles.css">"#)
+    html::link().rel(Rel::StyleSheet).href("/styles.css")
 }
 
 pub fn cabin_scripts() -> impl View {
     (
-        raw(r#"<script src="/server-component.js" async></script>"#),
+        html::script(()).src("/server-component.js").r#async(),
         #[cfg(feature = "livereload")]
-        raw(r#"<script src="/livereload.js" async></script>"#),
+        html::script(()).src("/livereload.js").r#async(),
     )
 }
 
