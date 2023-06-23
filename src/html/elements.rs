@@ -1,7 +1,10 @@
 pub mod anchor;
+pub mod body;
 pub mod dialog;
 pub mod form;
 pub mod global;
+pub mod head;
+pub mod html;
 pub mod input;
 pub mod label;
 pub mod nav;

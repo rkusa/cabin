@@ -50,9 +50,22 @@ pub struct Event {
     payload: Box<RawValue>,
 }
 
-pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
+fn default_document(content: impl View) -> impl View {
+    html::html((
+        html::head((cabin_stylesheets(), cabin_scripts())),
+        html::body(content),
+    ))
+}
+
+pub async fn get_page_with<F, V, D>(
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
-) -> Response<Full<Bytes>> {
+    document: impl FnOnce((V,)) -> D + Send + Sync + 'static,
+) -> Response<Full<Bytes>>
+where
+    F: Future<Output = V>,
+    V: View + 'static,
+    D: View,
+{
     let (scope, result) = local_pool::spawn(move || async move {
         let scope = Scope::new();
         let result = scope
@@ -60,15 +73,11 @@ pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
             .run(async move {
                 let r = Renderer::new();
                 let body = render_fn().await;
-                html::custom(
-                    "html",
-                    (
-                        html::custom("head", (cabin_stylesheets(), cabin_scripts())),
-                        html::custom("body", body), // tuple to force `include_hash`
-                    ),
-                )
-                .render(r, false)
-                .await
+                let doc = (document)((
+                    body,
+                    // tuple to force `include_hash`
+                ));
+                doc.render(r, false).await
             })
             .await;
         (scope.into_view(), result)
@@ -97,6 +106,12 @@ pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
             <script type=\"application/json\" id=\"state\">{scope}</script>"
         ))))
         .unwrap()
+}
+
+pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
+    render_fn: impl FnOnce() -> F + Send + Sync + 'static,
+) -> Response<Full<Bytes>> {
+    get_page_with(render_fn, default_document).await
 }
 
 pub async fn put_page<F: Future<Output = V>, V: View>(

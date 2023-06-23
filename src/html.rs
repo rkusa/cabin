@@ -9,28 +9,41 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 pub use element_ext::ElementExt;
-#[doc(inline)]
-pub use elements::anchor::a;
-#[doc(inline)]
-pub use elements::form::form;
-#[doc(inline)]
-pub use elements::label::label;
-#[doc(inline)]
-pub use elements::nav::nav;
-#[doc(inline)]
-pub use elements::old::*;
-#[doc(inline)]
-pub use elements::span::span;
-#[doc(inline)]
-pub use elements::time::time;
 pub use raw::{raw, Raw};
 use serde::Serialize;
 use twox_hash::XxHash32;
 
 use self::elements::global::Global;
 use crate::render::{is_void_element, Renderer};
-pub use crate::view::text::{text, Text};
 use crate::view::{RenderFuture, View};
+#[doc(inline)]
+pub use exports::*;
+
+mod exports {
+    #[doc(inline)]
+    pub use crate::view::text::{text, Text};
+
+    #[doc(inline)]
+    pub use super::elements::anchor::a;
+    #[doc(inline)]
+    pub use super::elements::body::body;
+    #[doc(inline)]
+    pub use super::elements::form::form;
+    #[doc(inline)]
+    pub use super::elements::head::head;
+    #[doc(inline)]
+    pub use super::elements::html::html;
+    #[doc(inline)]
+    pub use super::elements::label::label;
+    #[doc(inline)]
+    pub use super::elements::nav::nav;
+    #[doc(inline)]
+    pub use super::elements::old::*;
+    #[doc(inline)]
+    pub use super::elements::span::span;
+    #[doc(inline)]
+    pub use super::elements::time::time;
+}
 
 pub struct Html<V, K> {
     tag: &'static str,
