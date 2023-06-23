@@ -89,6 +89,22 @@ fn main() {
         .unwrap();
     }
 
+    // outline-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("outline-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(
+            out,
+            r#"/// `outline-color: {color};` <b style="color:{color}">⏺</b>"#
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: Property = Property(OUTLINE_COLOR, "{color}");"#
+        )
+        .unwrap();
+    }
+
     // font-size
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("font-size.rs");
     let out = &mut File::create(path).unwrap();
