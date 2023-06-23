@@ -8,7 +8,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
     let DeriveInput {
         attrs: _,
         vis: _,
-        ident,
+        ident: struct_ident,
         generics,
         data,
     } = input;
@@ -18,13 +18,14 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
         ..
     }) = data
     else {
-        return Err(Error::new(ident.span(), "Attributes can only be derived from a named struct"));
+        return Err(Error::new(struct_ident.span(), "Attributes can only be derived from a named struct"));
     };
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let mut builder_methods = Vec::with_capacity(fields.named.len());
     let mut render_statements = Vec::with_capacity(fields.named.len());
+    let parent_ident = format_ident!("{}", struct_ident.to_string().to_lowercase());
 
     for f in fields.named.iter() {
         let ident = f.ident.as_ref().unwrap();
@@ -49,7 +50,18 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            self.global.#ident = Some(#ident.into());
+                            // TODO: use get_or_insert_default() once stabel
+                            self.#parent_ident = match self.#parent_ident.take() {
+                                Some(mut o) => {
+                                    o.#ident = Some(#ident.into());
+                                    Some(o)
+                                },
+                                None => {
+                                    let mut o = Box::<#struct_ident>::default();
+                                    o.#ident = Some(#ident.into());
+                                    Some(o)
+                                }
+                            };
                             self
                         }
                     });
@@ -67,7 +79,18 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: #ty) -> Self {
-                            self.global.#ident = #ident;
+                            // TODO: use get_or_insert_default() once stabel
+                            self.#parent_ident = match self.#parent_ident.take() {
+                                Some(mut o) => {
+                                    o.#ident = #ident;
+                                    Some(o)
+                                },
+                                None => {
+                                    let mut o = Box::<#struct_ident>::default();
+                                    o.#ident = #ident;
+                                    Some(o)
+                                }
+                            };
                             self
                         }
                     });
@@ -85,7 +108,18 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            self.global.#ident = #ident.into();
+                            // TODO: use get_or_insert_default() once stabel
+                            self.#parent_ident = match self.#parent_ident.take() {
+                                Some(mut o) => {
+                                    o.#ident = #ident.into();
+                                    Some(o)
+                                },
+                                None => {
+                                    let mut o = Box::<#struct_ident>::default();
+                                    o.#ident = #ident.into();
+                                    Some(o)
+                                }
+                            };
                             self
                         }
                     });
@@ -108,7 +142,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
         }
 
         #[automatically_derived]
-        impl #impl_generics ::cabin::html::ElementExt for #ident #ty_generics #where_clause {
+        impl #impl_generics ::cabin::html::ElementExt for #struct_ident #ty_generics #where_clause {
             fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error>
             {
                 #(#render_statements)*

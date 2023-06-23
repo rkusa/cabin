@@ -5,8 +5,6 @@ use cabin_macros::Attributes;
 
 use crate::html::Html;
 
-/// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
-/// address.
 #[derive(Default, Attributes)]
 pub struct Global {
     /// Used by the user agent as a guide for creating a keyboard shortcut that activates or
@@ -104,7 +102,17 @@ impl<V, K> Html<V, K> {
     /// Indicate that the contents of this element should not be translated when the page is
     /// localized.
     pub fn no_translate(mut self) -> Self {
-        self.global.translate = Some(DontTranslate);
+        self.global = match self.global.take() {
+            Some(mut o) => {
+                o.translate = Some(DontTranslate);
+                Some(o)
+            }
+            None => {
+                let mut o = Box::<Global>::default();
+                o.translate = Some(DontTranslate);
+                Some(o)
+            }
+        };
         self
     }
 }

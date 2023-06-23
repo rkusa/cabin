@@ -14,6 +14,7 @@ pub use raw::{raw, Raw};
 use serde::Serialize;
 use twox_hash::XxHash32;
 
+use self::elements::aria::Aria;
 use self::elements::global::Global;
 use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
@@ -56,7 +57,9 @@ pub struct Html<V, K> {
     attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
     // TODO: no box?
     on_click: Option<Box<dyn FnOnce() -> (u32, String)>>,
-    global: Global,
+    // Boxed to not blow up struct size.
+    global: Option<Box<Global>>,
+    aria: Option<Box<Aria>>,
     kind: K,
     content: V,
 }
@@ -77,6 +80,7 @@ impl<V, K> Html<V, K> {
             class: None,
             on_click: None,
             global: Default::default(),
+            aria: Default::default(),
             kind: K::default(),
             content,
         }
@@ -131,6 +135,7 @@ where
                 on_click,
                 class,
                 global,
+                aria,
                 kind,
                 content,
             } = self;
@@ -158,7 +163,12 @@ where
                 }
             }
 
-            global.render(&mut el)?;
+            if let Some(global) = global {
+                global.render(&mut el)?;
+            }
+            if let Some(aria) = aria {
+                aria.render(&mut el)?;
+            }
             kind.render(&mut el)?;
 
             if !K::is_void_element() {

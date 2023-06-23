@@ -1,4 +1,5 @@
 pub mod anchor;
+pub mod aria;
 pub mod body;
 pub mod dialog;
 pub mod form;
