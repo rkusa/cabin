@@ -31,7 +31,10 @@ pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 // TODO: move behind feature flag?
 pub fn cabin_stylesheets() -> impl View {
-    html::link().rel(Rel::StyleSheet).href("/styles.css")
+    html::link()
+        .id("cabin-styles")
+        .rel(Rel::StyleSheet)
+        .href("/styles.css")
 }
 
 pub fn cabin_scripts() -> impl View {

@@ -102,8 +102,8 @@ impl<V, K> Html<V, K> {
     }
 
     /// Unique identifier across the document.
-    pub fn id(mut self, class: impl Into<Cow<'static, str>>) -> Html<V, K> {
-        self.class = Some(class.into());
+    pub fn id(mut self, id: impl Into<Cow<'static, str>>) -> Html<V, K> {
+        self.id = Some(id.into());
         self
     }
 
