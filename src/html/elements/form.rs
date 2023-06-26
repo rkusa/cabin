@@ -13,7 +13,7 @@ pub struct Form {
     // autocomplete — Default setting for autofill feature for controls in the form
     // enctype — Entry list encoding type to use for form submission
     /// Variant used for form submission.
-    method: Method,
+    method: Option<Method>,
     // name — Name of form to use in the document.forms API
     // novalidate — Bypass form control validation for form submission
     // target — Navigable for form submission
@@ -23,13 +23,13 @@ pub struct Form {
 impl<V> FormElement<V> {
     /// Set the form's method to `get`.
     pub fn method_get(mut self) -> Self {
-        self.kind.method = Method::Get;
+        self.kind.method = Some(Method::Get);
         self
     }
 
     /// Set the form's method to `post`.
     pub fn method_post(mut self) -> Self {
-        self.kind.method = Method::Post;
+        self.kind.method = Some(Method::Post);
         self
     }
 }

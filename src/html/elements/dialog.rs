@@ -1,29 +1,8 @@
-use crate::html::{ElementExt, Html};
-use crate::render::ElementRenderer;
-use crate::View;
+use cabin_macros::Element;
 
-#[derive(Default)]
+/// A `dialog` element represents a transitory part of an application (e.g. dialog box).
+#[derive(Default, Element)]
 pub struct Dialog {
+    /// Whether the dialog is showing.
     open: bool,
-}
-
-impl<V> Html<V, Dialog>
-where
-    V: View,
-{
-    pub fn open(mut self, open: bool) -> Self {
-        self.kind.open = open;
-        self
-    }
-}
-
-impl ElementExt for Dialog {
-    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
-        if self.open {
-            r.attribute("open", "")
-                .map_err(crate::error::InternalError::from)?;
-        }
-
-        Ok(())
-    }
 }

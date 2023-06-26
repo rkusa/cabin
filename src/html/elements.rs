@@ -1,6 +1,7 @@
 pub mod anchor;
 pub mod aria;
 pub mod body;
+pub mod button;
 pub mod dialog;
 pub mod form;
 pub mod global;
@@ -41,11 +42,9 @@ pub mod old {
         };
     }
 
-    element!($, __button, button);
     element!($, __caption, caption);
     element!($, __col, col);
     element!($, __colgroup, colgroup);
-    element!($, __dialog, dialog, dialog, Dialog);
     element!($, __div, div);
     element!($, __fieldset, fieldset);
     element!($, __h1, h1);
