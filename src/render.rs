@@ -1,4 +1,3 @@
-mod marker;
 #[cfg(test)]
 mod tests;
 
@@ -7,7 +6,6 @@ use std::hash::{Hash, Hasher};
 
 use twox_hash::XxHash32;
 
-pub use self::marker::ViewHashTree;
 use crate::View;
 
 pub struct Renderer {
