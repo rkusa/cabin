@@ -59,7 +59,7 @@ where
                 Scope::keyed(key, async {
                     match self.state {
                         State::Stored(f) => f.await,
-                        State::Primed(f) => f.await.unwrap(), // TODO: handle JoinError?
+                        State::Primed(f) => f.await.unwrap(), // FIXME: handle JoinError?
                         State::Intermediate => unreachable!(),
                     }
                 })
@@ -67,7 +67,7 @@ where
             } else {
                 match self.state {
                     State::Stored(f) => f.await,
-                    State::Primed(f) => f.await.unwrap(), // TODO: handle JoinError?
+                    State::Primed(f) => f.await.unwrap(), // FIXME: handle JoinError?
                     State::Intermediate => unreachable!(),
                 }
             };

@@ -50,7 +50,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            // TODO: use get_or_insert_default() once stabel
+                            // TODO: use get_or_insert_default() once stable
                             self.#parent_ident = match self.#parent_ident.take() {
                                 Some(mut o) => {
                                     o.#ident = Some(#ident.into());
@@ -79,7 +79,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: #ty) -> Self {
-                            // TODO: use get_or_insert_default() once stabel
+                            // TODO: use get_or_insert_default() once stable
                             self.#parent_ident = match self.#parent_ident.take() {
                                 Some(mut o) => {
                                     o.#ident = #ident;
@@ -108,7 +108,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            // TODO: use get_or_insert_default() once stabel
+                            // TODO: use get_or_insert_default() once stable
                             self.#parent_ident = match self.#parent_ident.take() {
                                 Some(mut o) => {
                                     o.#ident = #ident.into();

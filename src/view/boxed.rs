@@ -2,7 +2,7 @@ use super::RenderFuture;
 use crate::render::Renderer;
 use crate::View;
 
-// TODO: any way to reduce this type to one single Box instead of two
+// FIXME: any way to reduce this type to one single Box instead of two
 type ViewBoxRenderer = dyn FnOnce(Renderer, bool) -> RenderFuture;
 
 pub struct BoxedView {
@@ -25,5 +25,5 @@ impl View for BoxedView {
         (self.view)(r, include_hash)
     }
 
-    // TODO: prime
+    // FIXME: prime
 }

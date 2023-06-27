@@ -11,7 +11,7 @@ use crate::View;
 
 #[derive(Default)]
 pub struct Input {
-    // TODO: no box?
+    // FIXME: no box?
     on_input: Option<Box<dyn FnOnce() -> (u32, String)>>,
 }
 
@@ -29,7 +29,7 @@ where
             TypeId::of::<E>().hash(&mut hasher);
             let hash = hasher.finish() as u32;
 
-            // TODO: unwrap
+            // FIXME: unwrap
             (hash, serde_json::to_string(&event).unwrap())
         }));
 
@@ -40,7 +40,7 @@ where
 impl ElementExt for Input {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(event) = self.on_input {
-            // TODO: directly write into r?
+            // FIXME: directly write into r?
             let (id, payload) = &(event)();
             r.attribute("cabin-input", id)
                 .map_err(crate::error::InternalError::from)?;

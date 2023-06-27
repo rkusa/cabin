@@ -61,7 +61,7 @@ pub struct Html<V, K> {
     id: Option<Cow<'static, str>>,
     class: Option<Cow<'static, str>>,
     attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
-    // TODO: no box?
+    // FIXME: no box?
     on_click: Option<Box<dyn FnOnce() -> (u32, String)>>,
     // Boxed to not blow up struct size.
     global: Option<Box<Global>>,
@@ -118,7 +118,7 @@ impl<V, K> Html<V, K> {
         self
     }
 
-    // TODO: multiple arguments for action
+    // FIXME: multiple arguments for action
     pub fn on_click<E>(mut self, event: E) -> Self
     where
         E: Serialize + 'static,
@@ -128,7 +128,7 @@ impl<V, K> Html<V, K> {
             TypeId::of::<E>().hash(&mut hasher);
             let hash = hasher.finish() as u32;
 
-            // TODO: unwrap
+            // FIXME: unwrap
             (hash, serde_json::to_string(&event).unwrap())
         }));
 
@@ -158,7 +158,7 @@ where
             let mut el = r.element(tag, include_hash)?;
 
             if let Some(event) = on_click {
-                // TODO: directly write into el?
+                // FIXME: directly write into el?
                 let (id, payload) = &(event)();
                 el.attribute("cabin-click", id)
                     .map_err(crate::error::InternalError::from)?;
@@ -179,7 +179,7 @@ where
             if let Some(attrs) = attrs {
                 for (name, value) in attrs {
                     if !valid_attribute_name(name) {
-                        // TODO: meaningful error
+                        // FIXME: meaningful error
                         return Err(InternalError::Render.into());
                     }
                     el.attribute(name, value)

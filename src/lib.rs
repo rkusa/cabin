@@ -29,7 +29,7 @@ pub mod view;
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
-// TODO: move behind feature flag?
+// FIXME: move behind feature flag?
 pub fn cabin_stylesheets() -> impl View {
     html::link()
         .id("cabin-styles")

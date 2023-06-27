@@ -12,7 +12,6 @@ async fn app() -> impl View {
 #[derive(Clone, Copy, Serialize, Deserialize)]
 struct Increment;
 
-// TODO: needs to be mapped to state
 async fn counter(start_at: usize) -> impl View {
     let count = State::id(())
         .update::<Increment>(|count: &mut usize, _| *count += 1)
@@ -20,7 +19,7 @@ async fn counter(start_at: usize) -> impl View {
 
     (
         html::div(html::text!("Count: {}", count)),
-        html::button("inc").on_click(Increment), // TODO: how to tie Increment to this instance
+        html::button("inc").on_click(Increment),
     )
 }
 

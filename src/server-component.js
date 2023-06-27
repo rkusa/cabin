@@ -3,7 +3,7 @@
  * @param {object} payload
  */
 async function update(eventId, payload) {
-  // TODO: abort on unmount
+  // FIXME: abort on unmount
   if (this.abortController) {
     console.log("abort");
     this.abortController.abort();
@@ -23,7 +23,7 @@ async function update(eventId, payload) {
       body: JSON.stringify({
         eventId,
         payload,
-        // TODO: avoid JSON.parse to stringify it again right away
+        // FIXME: avoid JSON.parse to stringify it again right away
         state: JSON.parse(state),
       }),
     });
@@ -32,9 +32,9 @@ async function update(eventId, payload) {
       return;
     }
 
-    // TODO: handle status code
+    // FIXME: handle status code
     const html = await res.text();
-    // TODO: check if still mounted
+    // FIXME: check if still mounted
 
     console.time("patch");
     const template = document.createElement("template");
@@ -269,8 +269,6 @@ function patchAttributes(childBefore, childAfter) {
     if (ignoreAttribute(childAfter, name)) {
       continue;
     }
-
-    // TODO: handle new attributes
 
     const newValue = childAfter.getAttribute(name);
     if (childBefore.getAttribute(name) !== newValue) {

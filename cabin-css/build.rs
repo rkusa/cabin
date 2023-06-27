@@ -4,7 +4,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
-    // TODO: customize based on env variable?
+    // TODO: customize based on env variable or custom config?
     let theme = Theme::default();
 
     // breakpoints

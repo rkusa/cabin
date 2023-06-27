@@ -78,7 +78,7 @@ impl Serialize for StateId {
     where
         S: Serializer,
     {
-        // TODO: any way around String allocation?
+        // FIXME: any way around String allocation?
         serializer.serialize_str(&format!("{:x}", self.0))
     }
 }

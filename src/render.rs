@@ -46,7 +46,6 @@ impl Renderer {
             self.skip_hash = true;
         }
 
-        // TODO: user custom id (probably provided to the r.element() call)
         write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
 
         let hash_offset = if should_write_id {
@@ -94,11 +93,7 @@ impl ElementRenderer {
         self.renderer.write(name.as_bytes());
         value.hash(&mut self.renderer);
 
-        write!(
-            &mut self.renderer.out,
-            r#" {}=""#,
-            name, // TODO: validate/escape attr name
-        )?;
+        write!(&mut self.renderer.out, r#" {}=""#, name,)?;
         write!(Escape::attribute_value(&mut self.renderer.out), "{}", value)?;
         write!(&mut self.renderer.out, r#"""#)?;
 
@@ -111,11 +106,7 @@ impl ElementRenderer {
         }
         self.renderer.write(name.as_bytes());
 
-        write!(
-            &mut self.renderer.out,
-            r#" {}"#,
-            name, // TODO: validate/escape attr name
-        )?;
+        write!(&mut self.renderer.out, r#" {}"#, name,)?;
 
         Ok(())
     }
@@ -137,7 +128,7 @@ impl ElementRenderer {
 
         let hash = self.renderer.finish() as u32;
         if let Some(offset) = self.hash_offset {
-            // TODO: would be better to directly write to the specified location instead of the
+            // FIXME: would be better to directly write to the specified location instead of the
             // additional string allocation
             self.renderer
                 .out

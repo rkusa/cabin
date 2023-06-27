@@ -52,7 +52,7 @@ where
                         return None;
                     }
 
-                    // TODO: unwrap
+                    // FIXME: unwrap
                     let payload: E = serde_json::from_str(payload.get()).unwrap();
                     *event = Event::Deserialized(Box::new(payload));
 
@@ -84,7 +84,7 @@ where
                         return None;
                     }
 
-                    // TODO: unwrap
+                    // FIXME: unwrap
                     let payload: E = serde_json::from_str(payload.get()).unwrap();
                     Some(payload)
                 }
@@ -141,7 +141,7 @@ impl Scope {
                 let mut state = scope.inner.borrow_mut();
                 let prev = state.prev_state.as_mut()?.remove(&id)?;
 
-                // TODO: unwrap
+                // FIXME: unwrap
                 let payload: T = serde_json::from_str(prev.get()).unwrap();
                 Some(payload)
             })
@@ -161,7 +161,7 @@ impl Scope {
                     inner.next_state.push(b',');
                 }
 
-                // TODO: unwrap
+                // FIXME: unwrap
                 let mut ser = serde_json::Serializer::new(&mut inner.next_state);
                 id.serialize(&mut ser).unwrap();
                 inner.next_state.push(b':');
@@ -173,7 +173,7 @@ impl Scope {
 
     pub fn into_view(self) -> String {
         let Ok(state) = Rc::try_unwrap(self.inner) else {
-            // TODO: error?
+            // FIXME: error?
             return String::new();
         };
 
