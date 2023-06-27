@@ -48,12 +48,28 @@ pub trait Style {
         pseudo::active::Active(self)
     }
 
+    /// Apply style to `::after` pseude element.
+    fn after(self) -> pseudo::after::After<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::after::After(self)
+    }
+
     /// Apply style to all direct children (`> *`).
     fn apply_to_children(self) -> pseudo::apply_to_children::ApplyToChildren<Self>
     where
         Self: Sized,
     {
         pseudo::apply_to_children::ApplyToChildren(self)
+    }
+
+    /// Apply style to `::before` pseude element.
+    fn before(self) -> pseudo::before::Before<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::before::Before(self)
     }
 
     /// Apply style only when the element is disabled (`:disabled`).
