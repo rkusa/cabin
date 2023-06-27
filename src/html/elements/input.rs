@@ -43,7 +43,7 @@ where
 impl ElementExt for Input {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(event) = self.on_input {
-            // FIXME: directly write into r?
+            // TODO: directly write into r?
             let (id, payload) = &(event)()?;
             r.attribute("cabin-input", id)
                 .map_err(crate::error::InternalError::from)?;

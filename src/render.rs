@@ -128,11 +128,7 @@ impl ElementRenderer {
 
         let hash = self.renderer.finish() as u32;
         if let Some(offset) = self.hash_offset {
-            // FIXME: would be better to directly write to the specified location instead of the
-            // additional string allocation
-            self.renderer
-                .out
-                .replace_range(offset..offset + 8, &format!("{:x}", hash));
+            write!(WriteInto::new(&mut self.renderer.out, offset), "{:x}", hash).unwrap();
         }
 
         self.parent_hasher.write_u32(hash);
@@ -212,6 +208,27 @@ where
         if pos < s.len() {
             self.wr.write_str(&s[pos..s.len()])?;
         }
+
+        Ok(())
+    }
+}
+
+pub struct WriteInto<'a> {
+    out: &'a mut String,
+    offset: usize,
+}
+
+impl<'a> WriteInto<'a> {
+    pub fn new(out: &'a mut String, offset: usize) -> Self {
+        Self { out, offset }
+    }
+}
+
+impl<'a> fmt::Write for WriteInto<'a> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.out
+            .replace_range(self.offset..self.offset + s.len(), s);
+        self.offset += s.len();
 
         Ok(())
     }

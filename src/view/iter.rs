@@ -101,7 +101,7 @@ where
         }))
     }
 
-    // FIXME: any way to prime without consuming the iterator?
+    // TODO: any way to prime without consuming the iterator?
 }
 
 fn hash(val: impl Hash) -> u32 {
