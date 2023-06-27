@@ -11,6 +11,7 @@ use crate::View;
 pub struct Renderer {
     out: String,
     hasher: XxHash32,
+    skip_hash: bool,
 }
 
 pub(crate) struct Out {
@@ -22,6 +23,7 @@ impl Renderer {
         Renderer {
             out: String::with_capacity(256),
             hasher: XxHash32::default(),
+            skip_hash: false,
         }
     }
 
@@ -37,7 +39,13 @@ impl Renderer {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
 
-        let should_write_id = include_hash && !matches!(tag, "html" | "body");
+        let should_write_id =
+            include_hash && !matches!(tag, "html" | "body" | "head") && !self.skip_hash;
+        let parent_skip_hash = self.skip_hash;
+        if matches!(tag, "head") {
+            self.skip_hash = true;
+        }
+
         // TODO: user custom id (probably provided to the r.element() call)
         write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
 
@@ -54,6 +62,7 @@ impl Renderer {
         Ok(ElementRenderer {
             tag,
             parent_hasher,
+            parent_skip_hash,
             renderer: self,
             content_started: false,
             hash_offset,
@@ -72,6 +81,7 @@ pub struct ElementRenderer {
     tag: &'static str,
     renderer: Renderer,
     parent_hasher: XxHash32,
+    parent_skip_hash: bool,
     content_started: bool,
     hash_offset: Option<usize>,
 }
@@ -147,6 +157,7 @@ impl ElementRenderer {
         }
         // }
 
+        self.renderer.skip_hash = self.parent_skip_hash;
         Ok(self.renderer)
     }
 }
