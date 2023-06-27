@@ -3,9 +3,8 @@ use std::fmt;
 
 use cabin_macros::Element;
 
-use crate::html::list::SpaceSeparated;
-
 use super::anchor::ReferrerPolicy;
+use crate::html::list::SpaceSeparated;
 
 /// A `link` element allows to link to other resources.
 #[derive(Default, Element)]

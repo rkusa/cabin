@@ -16,6 +16,7 @@ use twox_hash::XxHash32;
 
 use self::elements::aria::Aria;
 use self::elements::global::Global;
+use crate::error::InternalError;
 use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
 #[doc(inline)]
@@ -177,6 +178,10 @@ where
 
             if let Some(attrs) = attrs {
                 for (name, value) in attrs {
+                    if !valid_attribute_name(name) {
+                        // TODO: meaningful error
+                        return Err(InternalError::Render.into());
+                    }
                     el.attribute(name, value)
                         .map_err(crate::error::InternalError::from)?;
                 }
@@ -201,4 +206,22 @@ where
     fn prime(&mut self) {
         self.content.prime();
     }
+}
+
+fn valid_attribute_name(name: &str) -> bool {
+    // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
+    !name.chars().any(|ch| {
+        matches!(ch,
+            ' ' | '"' | '\'' | '>' | '/' | '=' |
+            /* controls */
+            '\u{7F}'..='\u{9F}' |
+            /* non character */
+            '\u{FDD0}'..='\u{FDEF}' |  '\u{FFFE}' | '\u{FFFF}' | '\u{1FFFE}' | '\u{1FFFF}' |
+            '\u{2FFFE}' | '\u{2FFFF}' | '\u{3FFFE}' | '\u{3FFFF}' | '\u{4FFFE}' | '\u{4FFFF}' |
+            '\u{5FFFE}' | '\u{5FFFF}' | '\u{6FFFE}' | '\u{6FFFF}' | '\u{7FFFE}' | '\u{7FFFF}' |
+            '\u{8FFFE}' | '\u{8FFFF}' | '\u{9FFFE}' | '\u{9FFFF}' | '\u{AFFFE}' | '\u{AFFFF}' |
+            '\u{BFFFE}' | '\u{BFFFF}' | '\u{CFFFE}' | '\u{CFFFF}' | '\u{DFFFE}' | '\u{DFFFF}' |
+            '\u{EFFFE}' | '\u{EFFFF}' | '\u{FFFFE}' | '\u{FFFFF}' | '\u{10FFFE}' |  '\u{10FFFF}'
+        )
+    })
 }
