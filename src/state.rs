@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::fmt::{self, Write};
 use std::hash::{Hash, Hasher};
 
 use serde::de::{DeserializeOwned, Unexpected};
@@ -78,8 +79,33 @@ impl Serialize for StateId {
     where
         S: Serializer,
     {
-        // FIXME: any way around String allocation?
-        serializer.serialize_str(&format!("{:x}", self.0))
+        // This wrapper is used to avoid a String allocation.
+        struct ForceWrite<'a> {
+            out: &'a mut [u8],
+            offset: usize,
+        }
+
+        impl<'a> fmt::Write for ForceWrite<'a> {
+            fn write_str(&mut self, s: &str) -> fmt::Result {
+                self.out[self.offset..self.offset + s.len()].copy_from_slice(s.as_bytes());
+                self.offset += s.len();
+
+                Ok(())
+            }
+        }
+
+        let mut s = [0u8; 8];
+        write!(
+            ForceWrite {
+                out: &mut s[..],
+                offset: 0
+            },
+            "{:08x}",
+            self.0
+        )
+        .unwrap();
+        let id = std::str::from_utf8(&s).unwrap();
+        serializer.serialize_str(id)
     }
 }
 

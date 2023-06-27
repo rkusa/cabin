@@ -10,6 +10,8 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 pub use element_ext::ElementExt;
+#[doc(inline)]
+pub use exports::*;
 pub use raw::{raw, Raw};
 use serde::Serialize;
 use twox_hash::XxHash32;
@@ -19,13 +21,8 @@ use self::elements::global::Global;
 use crate::error::InternalError;
 use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
-#[doc(inline)]
-pub use exports::*;
 
 mod exports {
-    #[doc(inline)]
-    pub use crate::view::text::{text, Text};
-
     #[doc(inline)]
     pub use super::elements::anchor::a;
     #[doc(inline)]
@@ -54,6 +51,8 @@ mod exports {
     pub use super::elements::span::span;
     #[doc(inline)]
     pub use super::elements::time::time;
+    #[doc(inline)]
+    pub use crate::view::text::{text, Text};
 }
 
 pub struct Html<V, K> {
@@ -161,7 +160,7 @@ where
             let mut el = r.element(tag, include_hash)?;
 
             if let Some(event) = on_click {
-                // FIXME: directly write into el?
+                // TODO: directly write into el?
                 let (id, payload) = &(event)()?;
                 el.attribute("cabin-click", id)
                     .map_err(crate::error::InternalError::from)?;
