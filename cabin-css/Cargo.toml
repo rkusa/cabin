@@ -3,6 +3,11 @@ name = "cabin-css"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["preflight"]
+preflight = []
+forms = []
+
 [dependencies]
 linkme = "0.3"
 once_cell = "1.15"
@@ -10,7 +15,5 @@ cabin = { version = "0.1", path = "../" }
 cabin-macros = { path = "../cabin-macros", version = "0.1" }
 twox-hash = "1.6"
 
-[features]
-default = ["preflight"]
-preflight = []
-forms = []
+[dev-dependencies]
+insta = "1.30"

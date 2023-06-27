@@ -18,4 +18,8 @@ impl<S: Style> Style for Active<S> {
         hasher.write(b"focus");
         self.0.hash_modifier(hasher);
     }
+
+    fn order(&self) -> usize {
+        self.0.order()
+    }
 }

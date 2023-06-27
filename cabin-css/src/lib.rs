@@ -35,6 +35,11 @@ pub trait Style {
         None
     }
 
+    /// The higher the returned number the later the style is positioned in the stylesheet.
+    fn order(&self) -> usize {
+        0
+    }
+
     /// Apply style only when the element is being pressed (`:active`).
     fn active(self) -> pseudo::active::Active<Self>
     where

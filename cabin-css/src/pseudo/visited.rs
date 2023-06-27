@@ -18,4 +18,8 @@ impl<S: Style> Style for Visited<S> {
         hasher.write(b"hover");
         self.0.hash_modifier(hasher);
     }
+
+    fn order(&self) -> usize {
+        self.0.order()
+    }
 }

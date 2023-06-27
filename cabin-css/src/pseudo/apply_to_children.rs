@@ -18,4 +18,8 @@ impl<S: Style> Style for ApplyToChildren<S> {
         hasher.write(b">*");
         self.0.hash_modifier(hasher);
     }
+
+    fn order(&self) -> usize {
+        self.0.order()
+    }
 }

@@ -18,4 +18,8 @@ impl<S: Style> Style for Disabled<S> {
         hasher.write(b"disabled");
         self.0.hash_modifier(hasher);
     }
+
+    fn order(&self) -> usize {
+        self.0.order()
+    }
 }

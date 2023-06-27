@@ -63,10 +63,15 @@ impl StyleRegistry {
                 grouped
             },
         );
+        let mut grouped = grouped
+            .into_values()
+            .map(|styles| (styles.iter().map(|s| s.order()).max().unwrap_or(0), styles))
+            .collect::<Vec<_>>();
+        grouped.sort_by_key(|(order, _)| *order);
 
         // As everything is written to a string, all unwraps below are fine.
         let mut all_names = String::with_capacity(8);
-        for styles in grouped.into_values() {
+        for (_, styles) in grouped {
             let pos = self.out.len();
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.get(0) {
@@ -149,5 +154,25 @@ fn test_deduplication() {
     let a = r.add(&[&super::BLOCK, &super::p(4)]);
     let b = r.add(&[&super::p(4), &super::BLOCK]);
     assert_eq!(a, b);
-    assert_eq!(r.out, "._fa8ecfbb {\ndisplay: block;\npadding: 1rem;\n}\n");
+    insta::assert_snapshot!(r.out);
+}
+
+#[test]
+fn test_order() {
+    // Test order of @media statements
+
+    use super::Responsive;
+
+    let mut r = StyleRegistry {
+        out: Default::default(),
+        hashes: Default::default(),
+    };
+    r.add(&[
+        &super::BLOCK.sm().max_md(),
+        &super::BLOCK.md(),
+        &super::BLOCK.max_sm(),
+        &super::BLOCK.max_md(),
+        &super::BLOCK.sm(),
+    ]);
+    insta::assert_snapshot!(r.out);
 }
