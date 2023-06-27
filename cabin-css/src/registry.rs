@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Write;
+use std::fmt::{self, Write};
 use std::hash::Hasher;
 
 use once_cell::race::OnceBox;
@@ -27,19 +27,17 @@ impl StyleRegistry {
                 hashes: Default::default(),
             };
 
-            registry.out.write_str(include_str!("./base.css")).unwrap();
+            registry.out.push_str(include_str!("./base.css"));
 
             #[cfg(feature = "preflight")]
             registry
                 .out
-                .write_str(include_str!("./preflight/preflight-v3.2.4.css"))
-                .unwrap();
+                .push_str(include_str!("./preflight/preflight-v3.2.4.css"));
 
             #[cfg(feature = "forms")]
             registry
                 .out
-                .write_str(include_str!("./forms/forms-v0.5.3.css"))
-                .unwrap();
+                .push_str(include_str!("./forms/forms-v0.5.3.css"));
 
             for f in STYLES {
                 (f)(&mut registry);
@@ -49,20 +47,25 @@ impl StyleRegistry {
     }
 
     pub fn add(&mut self, styles: &[&dyn Style]) -> String {
-        // TODO: sort before creating hash?
-        let mut all_names = String::with_capacity(8);
-
-        let grouped = styles
+        let mut sorted = styles
             .iter()
-            .fold(HashMap::<_, Vec<_>>::new(), |mut grouped, style| {
+            .map(|s| (hash_style(*s), *s))
+            .collect::<Vec<_>>();
+        sorted.sort_by_key(|(hash, _)| *hash);
+
+        let grouped = sorted.into_iter().map(|(_, s)| s).fold(
+            HashMap::<_, Vec<_>>::new(),
+            |mut grouped, style| {
                 let mut hasher = DefaultHasher::new();
                 style.hash_modifier(&mut hasher);
                 let hash = hasher.finish();
                 grouped.entry(hash).or_default().push(style);
                 grouped
-            });
+            },
+        );
 
-        // TODO: unwraps?
+        // As everything is written to a string, all unwraps below are fine.
+        let mut all_names = String::with_capacity(8);
         for styles in grouped.into_values() {
             let pos = self.out.len();
             // already grouped by variants, so just writing it once (from the first), is enough
@@ -117,4 +120,34 @@ impl StyleRegistry {
     pub fn style_sheet(&self) -> &str {
         &self.out
     }
+}
+
+fn hash_style(style: &dyn Style) -> u64 {
+    struct HashWriter(DefaultHasher);
+
+    impl fmt::Write for HashWriter {
+        fn write_str(&mut self, s: &str) -> fmt::Result {
+            self.0.write(s.as_bytes());
+            Ok(())
+        }
+    }
+
+    let mut writer = HashWriter(DefaultHasher::default());
+    style.declarations(&mut writer).ok();
+    style.hash_modifier(&mut writer.0);
+    writer.0.finish()
+}
+
+#[test]
+fn test_deduplication() {
+    // Generate same class name if styles are the same just in a different order.
+
+    let mut r = StyleRegistry {
+        out: Default::default(),
+        hashes: Default::default(),
+    };
+    let a = r.add(&[&super::BLOCK, &super::p(4)]);
+    let b = r.add(&[&super::p(4), &super::BLOCK]);
+    assert_eq!(a, b);
+    assert_eq!(r.out, "._fa8ecfbb {\ndisplay: block;\npadding: 1rem;\n}\n");
 }
