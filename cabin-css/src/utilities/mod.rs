@@ -60,6 +60,7 @@ pub use mt::unit as mt;
 pub use mx::unit as mx;
 pub use my::unit as my;
 pub use order::order;
+pub use outline::offset as outline;
 pub use outline::SOLID as OUTLINE;
 pub use p::unit as p;
 pub use pb::unit as pb;

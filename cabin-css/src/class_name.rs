@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::fmt;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 #[derive(Default)]
 pub struct ClassName<'a>(pub Option<Cow<'a, str>>);
@@ -27,6 +27,7 @@ impl<'a> Add<ClassName<'a>> for ClassName<'a> {
     type Output = ClassName<'a>;
 
     fn add(self, rhs: ClassName<'a>) -> Self::Output {
+        // FIXME: avoid allocation
         ClassName(Some(Cow::Owned(format!("{self} {rhs}"))))
     }
 }
@@ -36,6 +37,7 @@ impl<'a> Add<Option<ClassName<'a>>> for ClassName<'a> {
 
     fn add(self, rhs: Option<ClassName<'a>>) -> Self::Output {
         if let Some(rhs) = rhs {
+            // FIXME: avoid allocation
             ClassName(Some(Cow::Owned(format!("{self} {rhs}"))))
         } else {
             self
@@ -48,10 +50,18 @@ impl<'a> Add<ClassName<'a>> for Option<ClassName<'a>> {
 
     fn add(self, rhs: ClassName<'a>) -> Self::Output {
         if let Some(lhs) = self {
+            // FIXME: avoid allocation
             ClassName(Some(Cow::Owned(format!("{lhs} {rhs}"))))
         } else {
             rhs
         }
+    }
+}
+
+impl<'a> AddAssign for ClassName<'a> {
+    fn add_assign(&mut self, rhs: Self) {
+        // FIXME: avoid allocation
+        *self = ClassName(Some(Cow::Owned(format!("{self} {rhs}"))))
     }
 }
 
