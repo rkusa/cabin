@@ -1,9 +1,10 @@
 /**
  * @param {number} eventId
  * @param {object} payload
+ * @param {Node} target
  */
-async function update(eventId, payload) {
-  // FIXME: abort on unmount
+// TODO: remove `console.log`s or add option to disable them
+async function update(eventId, payload, target) {
   if (this.abortController) {
     console.log("abort");
     this.abortController.abort();
@@ -20,26 +21,30 @@ async function update(eventId, payload) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        eventId,
-        payload,
-        // FIXME: avoid JSON.parse to stringify it again right away
-        state: JSON.parse(state),
-      }),
+      body: `{"eventId":${eventId},"payload":${JSON.stringify(
+        payload
+      )},"state":${state}}`,
     });
     if (signal.aborted) {
       console.log("already aborted, ignoring");
       return;
     }
 
-    // FIXME: handle status code
+    if (!target.parentNode) {
+      console.log("update target not mounted anymore, ignoring");
+      return;
+    }
+
+    if (res.status !== 200) {
+      throw new Error(`received unexpected status code: ${res.status}`);
+    }
+
     const html = await res.text();
-    // FIXME: check if still mounted
 
     console.time("patch");
     const template = document.createElement("template");
     template.innerHTML = html;
-    patchChildren(document.body, template.content, {});
+    patchChildren(target, template.content, {});
     console.timeEnd("patch");
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
@@ -55,7 +60,7 @@ async function update(eventId, payload) {
 }
 
 document.addEventListener("cabinRefresh", async function () {
-  await update(0, {});
+  await update(0, {}, document.body);
 });
 
 function setUpEventListener(eventName, opts) {
@@ -70,7 +75,6 @@ function setUpEventListener(eventName, opts) {
     do {
       const eventId = node.getAttribute(attrName);
       if (eventId && (!opts.disable || !node.disabled)) {
-        // console.log("found", node);
         e.stopPropagation();
 
         if (opts.preventDefault) {
@@ -91,7 +95,7 @@ function setUpEventListener(eventName, opts) {
                 )
               : node.getAttribute(`${attrName}-payload`)
           );
-          await update(parseInt(eventId), payload);
+          await update(parseInt(eventId), payload, document.body);
         } finally {
           if (opts.disable) {
             node.disabled = false;
