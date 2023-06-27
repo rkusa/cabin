@@ -19,7 +19,7 @@ pub mod offset {
 
     include!(concat!(env!("OUT_DIR"), "/ring-offset-color.rs"));
 
-    /// ```
+    /// ```css
     /// --tw-ring-offset-width: {x}px;
     /// box-shadow: 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color), var(--tw-ring-shadow);
     /// ```
@@ -27,7 +27,7 @@ pub mod offset {
         RingOffsetWidth(Length::Px(f32::from(x)))
     }
 
-    /// ```
+    /// ```css
     /// --tw-ring-offset-width: {x}px;
     /// box-shadow: 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color), var(--tw-ring-shadow);
     /// ```
