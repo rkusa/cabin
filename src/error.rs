@@ -34,6 +34,18 @@ impl Error {
 #[derive(Debug)]
 pub enum InternalError {
     Render,
+    Serialize {
+        what: &'static str,
+        err: serde_json::Error,
+    },
+    Deserialize {
+        what: &'static str,
+        err: serde_json::Error,
+    },
+    InvalidAttributeName {
+        name: String,
+    },
+    Join(tokio::task::JoinError),
 }
 
 impl error::Error for Error {
@@ -52,14 +64,27 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for InternalError {}
+impl error::Error for InternalError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Self::Render | Self::InvalidAttributeName { .. } => None,
+            Self::Serialize { err, .. } => Some(err),
+            Self::Deserialize { err, .. } => Some(err),
+            Self::Join(err) => Some(err),
+        }
+    }
+}
 
 impl fmt::Display for InternalError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            InternalError::Render => {
-                f.write_str("internal error while rendering component to string")
+            Self::Render => f.write_str("internal error while rendering view to string"),
+            Self::Serialize { what, .. } => write!(f, "failed to serialize {what}"),
+            Self::Deserialize { what, .. } => write!(f, "failed to deserialize {what}"),
+            Self::InvalidAttributeName { name } => {
+                write!(f, "invalid attribute name `{name}`")
             }
+            Self::Join(_) => f.write_str("failed to run internal future to completion"),
         }
     }
 }
@@ -82,6 +107,12 @@ impl From<InternalError> for Error {
 impl From<fmt::Error> for InternalError {
     fn from(_: fmt::Error) -> Self {
         InternalError::Render
+    }
+}
+
+impl From<tokio::task::JoinError> for InternalError {
+    fn from(err: tokio::task::JoinError) -> Self {
+        InternalError::Join(err)
     }
 }
 

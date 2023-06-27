@@ -5,6 +5,7 @@ use tokio::task::JoinHandle;
 
 use super::RenderFuture;
 pub use super::View;
+use crate::error::InternalError;
 use crate::render::Renderer;
 use crate::scope::Scope;
 
@@ -58,16 +59,19 @@ where
             let view = if let Some(key) = self.key {
                 Scope::keyed(key, async {
                     match self.state {
-                        State::Stored(f) => f.await,
-                        State::Primed(f) => f.await.unwrap(), // FIXME: handle JoinError?
+                        State::Stored(f) => Ok(f.await),
+                        State::Primed(f) => f
+                            .await
+                            .map_err(InternalError::Join)
+                            .map_err(crate::Error::from),
                         State::Intermediate => unreachable!(),
                     }
                 })
-                .await
+                .await?
             } else {
                 match self.state {
                     State::Stored(f) => f.await,
-                    State::Primed(f) => f.await.unwrap(), // FIXME: handle JoinError?
+                    State::Primed(f) => f.await.map_err(InternalError::Join)?,
                     State::Intermediate => unreachable!(),
                 }
             };

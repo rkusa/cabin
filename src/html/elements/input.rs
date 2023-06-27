@@ -4,15 +4,15 @@ use std::hash::{Hash, Hasher};
 use serde::Serialize;
 use twox_hash::XxHash32;
 
+use crate::error::InternalError;
 use crate::html::events::InputEvent;
-use crate::html::{ElementExt, Html};
+use crate::html::{ElementExt, Html, SerializeEventFn};
 use crate::render::ElementRenderer;
 use crate::View;
 
 #[derive(Default)]
 pub struct Input {
-    // FIXME: no box?
-    on_input: Option<Box<dyn FnOnce() -> (u32, String)>>,
+    on_input: Option<Box<SerializeEventFn>>,
 }
 
 impl<V> Html<V, Input>
@@ -28,9 +28,12 @@ where
             let mut hasher = XxHash32::default();
             TypeId::of::<E>().hash(&mut hasher);
             let hash = hasher.finish() as u32;
-
-            // FIXME: unwrap
-            (hash, serde_json::to_string(&event).unwrap())
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "on_input event",
+                    err,
+                })
+                .map(|json| (hash, json))
         }));
 
         self
@@ -41,7 +44,7 @@ impl ElementExt for Input {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         if let Some(event) = self.on_input {
             // FIXME: directly write into r?
-            let (id, payload) = &(event)();
+            let (id, payload) = &(event)()?;
             r.attribute("cabin-input", id)
                 .map_err(crate::error::InternalError::from)?;
             r.attribute("cabin-input-payload", payload)

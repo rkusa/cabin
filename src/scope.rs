@@ -11,6 +11,7 @@ use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
 use twox_hash::XxHash32;
 
+use crate::error::InternalError;
 use crate::state::StateId;
 
 tokio::task_local! {
@@ -27,6 +28,7 @@ struct Inner {
     prev_state: Option<HashMap<StateId, Box<RawValue>>>,
     next_state: Vec<u8>,
     event: Option<Event>,
+    error: Option<InternalError>,
 }
 
 enum Event {
@@ -52,11 +54,19 @@ where
                         return None;
                     }
 
-                    // FIXME: unwrap
-                    let payload: E = serde_json::from_str(payload.get()).unwrap();
-                    *event = Event::Deserialized(Box::new(payload));
-
-                    Some(payload)
+                    match serde_json::from_str(payload.get()) {
+                        Ok(payload) => {
+                            *event = Event::Deserialized(Box::new(payload));
+                            Some(payload)
+                        }
+                        Err(err) => {
+                            state.error = Some(InternalError::Deserialize {
+                                what: "event payload",
+                                err,
+                            });
+                            None
+                        }
+                    }
                 }
                 Event::Deserialized(payload) => payload.downcast_ref::<E>().copied(),
             }
@@ -84,9 +94,16 @@ where
                         return None;
                     }
 
-                    // FIXME: unwrap
-                    let payload: E = serde_json::from_str(payload.get()).unwrap();
-                    Some(payload)
+                    match serde_json::from_str(payload.get()) {
+                        Ok(payload) => Some(payload),
+                        Err(err) => {
+                            state.error = Some(InternalError::Deserialize {
+                                what: "event payload",
+                                err,
+                            });
+                            None
+                        }
+                    }
                 }
                 Event::Deserialized(payload) => match payload.downcast::<E>() {
                     Ok(event) => Some(*event),
@@ -108,6 +125,7 @@ impl Scope {
                 prev_state: None,
                 next_state: vec![b'{'],
                 event: None,
+                error: None,
             })),
         }
     }
@@ -128,8 +146,16 @@ impl Scope {
         self
     }
 
-    pub async fn run<T>(self, f: impl Future<Output = T>) -> T {
-        SCOPE.scope(self, f).await
+    pub async fn run<T>(
+        self,
+        f: impl Future<Output = Result<T, crate::Error>>,
+    ) -> Result<T, crate::Error> {
+        let result = SCOPE.scope(self.clone(), f).await;
+        let mut inner = self.inner.borrow_mut();
+        if let Some(err) = inner.error.take() {
+            return Err(err.into());
+        }
+        result
     }
 
     pub(crate) fn restore<T>(id: StateId) -> Option<T>
@@ -138,12 +164,19 @@ impl Scope {
     {
         SCOPE
             .try_with(|scope| {
-                let mut state = scope.inner.borrow_mut();
-                let prev = state.prev_state.as_mut()?.remove(&id)?;
+                let mut inner = scope.inner.borrow_mut();
+                let prev = inner.prev_state.as_mut()?.remove(&id)?;
 
-                // FIXME: unwrap
-                let payload: T = serde_json::from_str(prev.get()).unwrap();
-                Some(payload)
+                match serde_json::from_str(prev.get()) {
+                    Ok(payload) => Some(payload),
+                    Err(err) => {
+                        inner.error = Some(InternalError::Deserialize {
+                            what: "previous state",
+                            err,
+                        });
+                        None
+                    }
+                }
             })
             .ok()
             .flatten()
@@ -161,23 +194,30 @@ impl Scope {
                     inner.next_state.push(b',');
                 }
 
-                // FIXME: unwrap
                 let mut ser = serde_json::Serializer::new(&mut inner.next_state);
-                id.serialize(&mut ser).unwrap();
+                if let Err(err) = id.serialize(&mut ser) {
+                    inner.error = Some(InternalError::Serialize {
+                        what: "state id",
+                        err,
+                    });
+                };
                 inner.next_state.push(b':');
                 let mut ser = serde_json::Serializer::new(&mut inner.next_state);
-                value.serialize(&mut ser).unwrap();
+                if let Err(err) = value.serialize(&mut ser) {
+                    inner.error = Some(InternalError::Serialize { what: "state", err });
+                };
             })
             .ok();
     }
 
     pub fn into_view(self) -> String {
-        let Ok(state) = Rc::try_unwrap(self.inner) else {
-            // FIXME: error?
-            return String::new();
+        let mut serialized_state = match Rc::try_unwrap(self.inner) {
+            Ok(inner) => inner.into_inner().next_state,
+            Err(scope) => {
+                let mut inner = scope.borrow_mut();
+                std::mem::replace(&mut inner.next_state, vec![b'{'])
+            }
         };
-
-        let mut serialized_state = state.into_inner().next_state;
         serialized_state.push(b'}');
         String::from_utf8(serialized_state).unwrap()
     }

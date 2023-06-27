@@ -61,14 +61,15 @@ pub struct Html<V, K> {
     id: Option<Cow<'static, str>>,
     class: Option<Cow<'static, str>>,
     attrs: Option<HashMap<&'static str, Cow<'static, str>>>,
-    // FIXME: no box?
-    on_click: Option<Box<dyn FnOnce() -> (u32, String)>>,
+    on_click: Option<Box<SerializeEventFn>>,
     // Boxed to not blow up struct size.
     global: Option<Box<Global>>,
     aria: Option<Box<Aria>>,
     kind: K,
     content: V,
 }
+
+pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
 
 pub fn custom<V: View>(tag: &'static str, content: V) -> Html<V, ()> {
     Html::new(tag, content)
@@ -118,7 +119,6 @@ impl<V, K> Html<V, K> {
         self
     }
 
-    // FIXME: multiple arguments for action
     pub fn on_click<E>(mut self, event: E) -> Self
     where
         E: Serialize + 'static,
@@ -127,9 +127,12 @@ impl<V, K> Html<V, K> {
             let mut hasher = XxHash32::default();
             TypeId::of::<E>().hash(&mut hasher);
             let hash = hasher.finish() as u32;
-
-            // FIXME: unwrap
-            (hash, serde_json::to_string(&event).unwrap())
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "on_click event",
+                    err,
+                })
+                .map(|json| (hash, json))
         }));
 
         self
@@ -159,7 +162,7 @@ where
 
             if let Some(event) = on_click {
                 // FIXME: directly write into el?
-                let (id, payload) = &(event)();
+                let (id, payload) = &(event)()?;
                 el.attribute("cabin-click", id)
                     .map_err(crate::error::InternalError::from)?;
                 el.attribute("cabin-click-payload", payload)
@@ -179,8 +182,10 @@ where
             if let Some(attrs) = attrs {
                 for (name, value) in attrs {
                     if !valid_attribute_name(name) {
-                        // FIXME: meaningful error
-                        return Err(InternalError::Render.into());
+                        return Err(InternalError::InvalidAttributeName {
+                            name: name.to_string(),
+                        }
+                        .into());
                     }
                     el.attribute(name, value)
                         .map_err(crate::error::InternalError::from)?;
