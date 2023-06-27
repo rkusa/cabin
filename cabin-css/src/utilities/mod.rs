@@ -1,6 +1,7 @@
 pub mod aspect;
 pub mod basis;
 pub mod bg;
+pub mod border;
 pub mod display;
 pub mod flex;
 pub mod font;
@@ -40,6 +41,8 @@ pub mod w;
 use std::fmt;
 
 pub use basis::unit as basis;
+pub use border::px as border;
+pub use border::PX as BORDER;
 pub use display::*;
 pub use gap::unit as gap;
 pub use gap_x::unit as gap_x;

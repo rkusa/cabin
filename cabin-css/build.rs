@@ -89,6 +89,90 @@ fn main() {
         .unwrap();
     }
 
+    // border-color
+    {
+        enum Properties {
+            One(&'static str, &'static str),
+            Two((&'static str, &'static str), (&'static str, &'static str)),
+        }
+        let variants = [
+            (
+                "border-color.rs",
+                Properties::One("BORDER_COLOR", "border-color"),
+            ),
+            (
+                "border-x-color.rs",
+                Properties::Two(
+                    ("BORDER_LEFT_COLOR", "border-left-color"),
+                    ("BORDER_RIGHT_COLOR", "border-right-color"),
+                ),
+            ),
+            (
+                "border-y-color.rs",
+                Properties::Two(
+                    ("BORDER_TOP_COLOR", "border-top-color"),
+                    ("BORDER_BOTTOM_COLOR", "border-bottom-color"),
+                ),
+            ),
+            (
+                "border-s-color.rs",
+                Properties::One("BORDER_INLINE_START_COLOR", "border-inline-start-color"),
+            ),
+            (
+                "border-e-color.rs",
+                Properties::One("BORDER_INLINE_END_COLOR", "border-inline-end-color"),
+            ),
+            (
+                "border-t-color.rs",
+                Properties::One("BORDER_TOP_COLOR", "border-top-color"),
+            ),
+            (
+                "border-b-color.rs",
+                Properties::One("BORDER_BOTTOM_COLOR", "border-bottom-color"),
+            ),
+            (
+                "border-l-color.rs",
+                Properties::One("BORDER_LEFT_COLOR", "border-left-color"),
+            ),
+            (
+                "border-r-color.rs",
+                Properties::One("BORDER_RIGHT_COLOR", "border-right-color"),
+            ),
+        ];
+
+        for (file_name, properties) in variants {
+            let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join(file_name);
+            let out = &mut File::create(path).unwrap();
+
+            for (ident, color) in theme.colors {
+                match properties {
+                    Properties::One(rust_name, css_name) => {
+                        writeln!(out, r#"/// `{css_name}: {color};`"#).unwrap();
+                        writeln!(
+                            out,
+                            "pub const {ident}: Property = \
+                            Property({rust_name}, {color:?});"
+                        )
+                        .unwrap();
+                    }
+                    Properties::Two((rust_name1, css_name1), (rust_name2, css_name2)) => {
+                        writeln!(out, r#"/// <b style="color:{color}">⏺</b>"#).unwrap();
+                        writeln!(out, r#"/// ```css"#).unwrap();
+                        writeln!(out, r#"/// {css_name1}: {color};"#).unwrap();
+                        writeln!(out, r#"/// {css_name2}: {color};"#).unwrap();
+                        writeln!(out, r#"/// ```"#).unwrap();
+                        writeln!(
+                            out,
+                            "pub const {ident}: PropertyTwice = \
+                                PropertyTwice({rust_name1}, {rust_name2}, {color:?});"
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+        }
+    }
+
     // outline-color
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("outline-color.rs");
     let out = &mut File::create(path).unwrap();
