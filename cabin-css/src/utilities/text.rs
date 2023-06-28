@@ -58,20 +58,32 @@ impl fmt::Display for LineHeight {
 
 const TEXT_ALIGN: &str = "text-align";
 
-/// `text-align: left;`
+/// ```css
+/// text-align: left;
+/// ```
 pub const LEFT: Property = Property(TEXT_ALIGN, "left");
 
-/// `text-align: center;`
+/// ```css
+/// text-align: center;
+/// ```
 pub const CENTER: Property = Property(TEXT_ALIGN, "center");
 
-/// `text-align: right;`
+/// ```css
+/// text-align: right;
+/// ```
 pub const RIGHT: Property = Property(TEXT_ALIGN, "right");
 
-/// `text-align: justify;`
+/// ```css
+/// text-align: justify;
+/// ```
 pub const JUSTIFY: Property = Property(TEXT_ALIGN, "justify");
 
-/// `text-align: start;`
+/// ```css
+/// text-align: start;
+/// ```
 pub const START: Property = Property(TEXT_ALIGN, "start");
 
-/// `text-align: end;`
+/// ```css
+/// text-align: end;
+/// ```
 pub const END: Property = Property(TEXT_ALIGN, "end");

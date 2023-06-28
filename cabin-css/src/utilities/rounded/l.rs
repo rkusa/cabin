@@ -11,21 +11,27 @@ const BORDER_BOTTOM_LEFT_RADIUS: &str = "border-bottom-left-radius";
 
 include!(concat!(env!("OUT_DIR"), "/rounded-l.rs"));
 
-/// `border-top-left-radius: 0; border-bottom-left-radius: 0;`
+/// ```css
+/// border-top-left-radius: 0; border-bottom-left-radius: 0;
+/// ```
 pub const NONE: PropertyTwice<Length> = PropertyTwice(
     BORDER_TOP_LEFT_RADIUS,
     BORDER_BOTTOM_LEFT_RADIUS,
     Length::Px(0.0),
 );
 
-/// `border-top-left-radius: 0.25rem; border-bottom-left-radius: 0.25rem;`
+/// ```css
+/// border-top-left-radius: 0.25rem; border-bottom-left-radius: 0.25rem;
+/// ```
 pub const DEFAULT: PropertyTwice<Length> = PropertyTwice(
     BORDER_TOP_LEFT_RADIUS,
     BORDER_BOTTOM_LEFT_RADIUS,
     Length::Rem(0.25),
 );
 
-/// `border-top-left-radius: 9999px; border-bottom-left-radius: 9999px;`
+/// ```css
+/// border-top-left-radius: 9999px; border-bottom-left-radius: 9999px;
+/// ```
 pub const FULL: PropertyTwice<Length> = PropertyTwice(
     BORDER_TOP_LEFT_RADIUS,
     BORDER_BOTTOM_LEFT_RADIUS,
@@ -58,7 +64,9 @@ pub fn unitf(x: f32) -> PropertyTwice<Length> {
     )
 }
 
-/// `border-top-left-radius: {x}rem; border-bottom-left-radius: {x}rem;`
+/// ```css
+/// border-top-left-radius: {x}rem; border-bottom-left-radius: {x}rem;
+/// ```
 pub fn rem(x: i16) -> PropertyTwice<Length> {
     PropertyTwice(
         BORDER_TOP_LEFT_RADIUS,
@@ -67,7 +75,9 @@ pub fn rem(x: i16) -> PropertyTwice<Length> {
     )
 }
 
-/// `border-top-left-radius: {x}rem; border-bottom-left-radius: {x}rem;`
+/// ```css
+/// border-top-left-radius: {x}rem; border-bottom-left-radius: {x}rem;
+/// ```
 pub fn remf(x: f32) -> PropertyTwice<Length> {
     PropertyTwice(
         BORDER_TOP_LEFT_RADIUS,
@@ -76,7 +86,9 @@ pub fn remf(x: f32) -> PropertyTwice<Length> {
     )
 }
 
-/// `border-top-left-radius: {x}px; border-bottom-left-radius: {x}px;`
+/// ```css
+/// border-top-left-radius: {x}px; border-bottom-left-radius: {x}px;
+/// ```
 pub fn px(x: i16) -> PropertyTwice<Length> {
     PropertyTwice(
         BORDER_TOP_LEFT_RADIUS,
@@ -85,7 +97,9 @@ pub fn px(x: i16) -> PropertyTwice<Length> {
     )
 }
 
-/// `border-top-left-radius: {x}px; border-bottom-left-radius: {x}px;`
+/// ```css
+/// border-top-left-radius: {x}px; border-bottom-left-radius: {x}px;
+/// ```
 pub fn pxf(x: f32) -> PropertyTwice<Length> {
     PropertyTwice(
         BORDER_TOP_LEFT_RADIUS,
@@ -94,7 +108,9 @@ pub fn pxf(x: f32) -> PropertyTwice<Length> {
     )
 }
 
-/// `border-top-left-radius: {x}%; border-bottom-left-radius: {x}%;`
+/// ```css
+/// border-top-left-radius: {x}%; border-bottom-left-radius: {x}%;
+/// ```
 pub fn percent(x: i16) -> PropertyTwice<Length> {
     PropertyTwice(
         BORDER_TOP_LEFT_RADIUS,
@@ -103,7 +119,9 @@ pub fn percent(x: i16) -> PropertyTwice<Length> {
     )
 }
 
-/// `border-top-left-radius: {x}%; border-bottom-left-radius: {x}%;`
+/// ```css
+/// border-top-left-radius: {x}%; border-bottom-left-radius: {x}%;
+/// ```
 pub fn percentf(x: f32) -> PropertyTwice<Length> {
     PropertyTwice(
         BORDER_TOP_LEFT_RADIUS,

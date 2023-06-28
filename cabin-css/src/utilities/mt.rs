@@ -6,56 +6,82 @@ use crate::{Length, Property};
 
 const MARGIN_TOP: &str = "margin-top";
 
-/// `margin-top: 0;`
+/// ```css
+/// margin-top: 0;
+/// ```
 pub const ZERO: Property<Length> = Property(MARGIN_TOP, Length::Px(0.0));
 
-/// `margin-top: auto;`
+/// ```css
+/// margin-top: auto;
+/// ```
 pub const AUTO: Property<Length> = Property(MARGIN_TOP, Length::Auto);
 
-/// `margin-top: 1px;`
+/// ```css
+/// margin-top: 1px;
+/// ```
 pub const PX: Property<Length> = Property(MARGIN_TOP, Length::Px(1.0));
 
-/// Multiple of `0.25rem` (`4px` by default): `margin-top: {x * 0.25}rem;`
+/// Multiple of `0.25rem` (`4px` by default):
+/// ```css
+/// margin-top: {x * 0.25}rem;
+/// ```
 pub fn unit(x: i16) -> Property<Length> {
     Property(MARGIN_TOP, Length::Rem(f32::from(x) * 0.25))
 }
 
-/// Multiple of `0.25rem` (`4px` by default): `margin-top: {x * 0.25}rem;`
+/// Multiple of `0.25rem` (`4px` by default):
+/// ```css
+/// margin-top: {x * 0.25}rem;
+/// ```
 pub fn unitf(x: f32) -> Property<Length> {
     Property(MARGIN_TOP, Length::Rem(x * 0.25))
 }
 
-/// `margin-top: {x}rem;`
+/// ```css
+/// margin-top: {x}rem;
+/// ```
 pub fn rem(x: i16) -> Property<Length> {
     Property(MARGIN_TOP, Length::Rem(f32::from(x)))
 }
 
-/// `margin-top: {x}rem;`
+/// ```css
+/// margin-top: {x}rem;
+/// ```
 pub fn remf(x: f32) -> Property<Length> {
     Property(MARGIN_TOP, Length::Rem(x))
 }
 
-/// `margin-top: {x}px;`
+/// ```css
+/// margin-top: {x}px;
+/// ```
 pub fn px(x: i16) -> Property<Length> {
     Property(MARGIN_TOP, Length::Px(f32::from(x)))
 }
 
-/// `margin-top: {x}px;`
+/// ```css
+/// margin-top: {x}px;
+/// ```
 pub fn pxf(x: f32) -> Property<Length> {
     Property(MARGIN_TOP, Length::Px(x))
 }
 
-/// `margin-top: {x}%;`
+/// ```css
+/// margin-top: {x}%;
+/// ```
 pub fn percent(x: i16) -> Property<Length> {
     Property(MARGIN_TOP, Length::Percent(f32::from(x)))
 }
 
-/// `margin-top: {x}%;`
+/// ```css
+/// margin-top: {x}%;
+/// ```
 pub fn percentf(x: f32) -> Property<Length> {
     Property(MARGIN_TOP, Length::Percent(x))
 }
 
-/// `margin-top: {x}vh;`
+/// ```css
+/// margin-top: {x}vh;
+/// ```
 pub fn vh(x: u16) -> Property<Length> {
     Property(MARGIN_TOP, Length::Vh(x))
 }

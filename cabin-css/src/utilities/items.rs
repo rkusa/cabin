@@ -7,17 +7,27 @@ use crate::Property;
 
 const ALIGN_ITEMS: &str = "align-items";
 
-/// `align-items: flex-start;`
+/// ```css
+/// align-items: flex-start;
+/// ```
 pub const START: Property = Property(ALIGN_ITEMS, "flex-start");
 
-/// `align-items: flex-end;`
+/// ```css
+/// align-items: flex-end;
+/// ```
 pub const END: Property = Property(ALIGN_ITEMS, "flex-end");
 
-/// `align-items: center`
+/// ```css
+/// align-items: center
+/// ```
 pub const CENTER: Property = Property(ALIGN_ITEMS, "center");
 
-/// `align-items: baseline;`
+/// ```css
+/// align-items: baseline;
+/// ```
 pub const BASELINE: Property = Property(ALIGN_ITEMS, "baseline");
 
-/// `align-items: stretch;`
+/// ```css
+/// align-items: stretch;
+/// ```
 pub const STRETCH: Property = Property(ALIGN_ITEMS, "stretch");

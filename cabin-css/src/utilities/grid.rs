@@ -8,7 +8,9 @@ use crate::Property;
 
 const GRID_TEMPLATE_COLUMNS: &str = "grid-template-columns";
 
-/// `grid-template-columns: repeat({n}, minmax(0, 1fr));`
+/// ```css
+/// grid-template-columns: repeat({n}, minmax(0, 1fr));
+/// ```
 pub fn cols(n: u16) -> Property<GridTemplateColumns> {
     Property(GRID_TEMPLATE_COLUMNS, GridTemplateColumns::Count(n))
 }
@@ -17,10 +19,14 @@ pub mod cols {
     use super::{GridTemplateColumns, GRID_TEMPLATE_COLUMNS};
     use crate::Property;
 
-    /// `grid-template-columns: none;`
+    /// ```css
+/// grid-template-columns: none;
+/// ```
     pub const NONE: Property = Property(GRID_TEMPLATE_COLUMNS, "none");
 
-    /// `grid-template-columns: repeat({n}, minmax(0, 1fr));`
+    /// ```css
+/// grid-template-columns: repeat({n}, minmax(0, 1fr));
+/// ```
     pub fn custom(template: &'static str) -> Property<GridTemplateColumns> {
         Property(GRID_TEMPLATE_COLUMNS, GridTemplateColumns::Custom(template))
     }

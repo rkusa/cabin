@@ -7,65 +7,107 @@ use crate::Property;
 
 const DISPLAY: &str = "display";
 
-/// `display: block;`
+/// ```css
+/// display: block;
+/// ```
 pub const BLOCK: Property = Property(DISPLAY, "block");
 
-/// `display: inline-block;`
+/// ```css
+/// display: inline-block;
+/// ```
 pub const INLINE_BLOCK: Property = Property(DISPLAY, "inline-block");
 
-/// `display: inline;`
+/// ```css
+/// display: inline;
+/// ```
 pub const INLINE: Property = Property(DISPLAY, "inline");
 
-/// `display: flex;`
+/// ```css
+/// display: flex;
+/// ```
 pub const FLEX: Property = Property(DISPLAY, "flex");
 
-/// `display: inline-flex;`
+/// ```css
+/// display: inline-flex;
+/// ```
 pub const INLINE_FLEX: Property = Property(DISPLAY, "inline-flex");
 
-/// `display: table;`
+/// ```css
+/// display: table;
+/// ```
 pub const TABLE: Property = Property(DISPLAY, "table");
 
-/// `display: inline-table;`
+/// ```css
+/// display: inline-table;
+/// ```
 pub const INLINE_TABLE: Property = Property(DISPLAY, "inline-table");
 
-/// `display: table-caption;`
+/// ```css
+/// display: table-caption;
+/// ```
 pub const TABLE_CAPTION: Property = Property(DISPLAY, "table-caption");
 
-/// `display: table-cell;`
+/// ```css
+/// display: table-cell;
+/// ```
 pub const TABLE_CELL: Property = Property(DISPLAY, "table-cell");
 
-/// `display: table-column;`
+/// ```css
+/// display: table-column;
+/// ```
 pub const TABLE_COLUMN: Property = Property(DISPLAY, "table-column");
 
-/// `display: table-column-group;`
+/// ```css
+/// display: table-column-group;
+/// ```
 pub const TABLE_COLUMN_GROUP: Property = Property(DISPLAY, "table-column-group");
 
-/// `display: table-footer-group;`
+/// ```css
+/// display: table-footer-group;
+/// ```
 pub const TABLE_FOOTER_GROUP: Property = Property(DISPLAY, "table-footer-group");
 
-/// `display: table-header-group;`
+/// ```css
+/// display: table-header-group;
+/// ```
 pub const TABLE_HEADER_GROUP: Property = Property(DISPLAY, "table-header-group");
 
-/// `display: table-row-group;`
+/// ```css
+/// display: table-row-group;
+/// ```
 pub const TABLE_ROW_GROUP: Property = Property(DISPLAY, "table-row-group");
 
-/// `display: table-row;`
+/// ```css
+/// display: table-row;
+/// ```
 pub const TABLE_ROW: Property = Property(DISPLAY, "table-row");
 
-/// `display: flow-root;`
+/// ```css
+/// display: flow-root;
+/// ```
 pub const FLOW_ROOT: Property = Property(DISPLAY, "flow-root");
 
-/// `display: grid;`
+/// ```css
+/// display: grid;
+/// ```
 pub const GRID: Property = Property(DISPLAY, "grid");
 
-/// `display: inline-grid;`
+/// ```css
+/// display: inline-grid;
+/// ```
 pub const INLINE_GRID: Property = Property(DISPLAY, "inline-grid");
 
-/// `display: contents;`
+/// ```css
+/// display: contents;
+/// ```
 pub const CONTENTS: Property = Property(DISPLAY, "contents");
 
-/// `display: list-item;`
+/// ```css
+/// display: list-item;
+/// ```
 pub const LIST_ITEM: Property = Property(DISPLAY, "list-item");
 
-/// `display: none;`
+/// ```css
+/// display: none;
+/// ```
 pub const HIDDEN: Property = Property(DISPLAY, "none");

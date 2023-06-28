@@ -6,13 +6,19 @@ use crate::Property;
 
 const ASPECT_RATIO: &str = "aspect-ratio";
 
-/// `aspect-ratio: auto;`
+/// ```css
+/// aspect-ratio: auto;
+/// ```
 pub const AUTO: Property = Property(ASPECT_RATIO, "auto");
 
-/// `aspect-ratio: 1 / 1;`
+/// ```css
+/// aspect-ratio: 1 / 1;
+/// ```
 pub const SQUARE: Property = Property(ASPECT_RATIO, "1 / 1");
 
-/// `aspect-ratio: 19 / 9;`
+/// ```css
+/// aspect-ratio: 19 / 9;
+/// ```
 pub const VIDEO: Property = Property(ASPECT_RATIO, "16 / 9");
 
 // Custom preferred aspect ratio. Examples: "4 / 3", "0.5".

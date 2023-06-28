@@ -20,34 +20,50 @@ include!(concat!(env!("OUT_DIR"), "/outline-color.rs"));
 /// ```
 pub const NONE: OutlineNone = OutlineNone;
 
-/// `outline-style: solid;`
+/// ```css
+/// outline-style: solid;
+/// ```
 pub const SOLID: Property = Property(OUTLINE_STYLE, "solid");
 
-/// `outline-style: dashed;`
+/// ```css
+/// outline-style: dashed;
+/// ```
 pub const DASHED: Property = Property(OUTLINE_STYLE, "dashed");
 
-/// `outline-style: dotted;`
+/// ```css
+/// outline-style: dotted;
+/// ```
 pub const DOTTED: Property = Property(OUTLINE_STYLE, "dotted");
 
-/// `outline-style: double;`
+/// ```css
+/// outline-style: double;
+/// ```
 pub const DOUBLE: Property = Property(OUTLINE_STYLE, "double");
 
-/// `outline-offset: {x}px;`
+/// ```css
+/// outline-offset: {x}px;
+/// ```
 pub fn offset(x: i16) -> Property<Length> {
     Property(OUTLINE_OFFSET, Length::Px(f32::from(x)))
 }
 
-/// `outline-offset: {x}px;`
+/// ```css
+/// outline-offset: {x}px;
+/// ```
 pub fn offsetf(x: f32) -> Property<Length> {
     Property(OUTLINE_OFFSET, Length::Px(x))
 }
 
-/// `outline-width: {x}px;`
+/// ```css
+/// outline-width: {x}px;
+/// ```
 pub fn width(x: i16) -> Property<Length> {
     Property(OUTLINE_WIDTH, Length::Px(f32::from(x)))
 }
 
-/// `outline-width: {x}px;`
+/// ```css
+/// outline-width: {x}px;
+/// ```
 pub fn widthf(x: f32) -> Property<Length> {
     Property(OUTLINE_WIDTH, Length::Px(x))
 }

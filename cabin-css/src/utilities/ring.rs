@@ -63,7 +63,9 @@ pub mod offset {
 }
 
 /// Force a ring to render on the inside of an element instead of the outside.
-/// `--tw-ring-inset: inset;`
+/// ```css
+/// --tw-ring-inset: inset;
+/// ```
 pub const INSET: Property = Property("--tw-ring-inset", "inset");
 
 pub const DEFAULT: Property<RingWidth> = Property(BOX_SHADOW, RingWidth(Length::Px(3.0)));
