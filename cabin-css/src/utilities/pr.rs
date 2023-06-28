@@ -59,8 +59,3 @@ pub fn percentf(x: f32) -> Property<Length> {
 pub fn vw(x: u16) -> Property<Length> {
     Property(PADDING_RIGHT, Length::Vw(x))
 }
-
-/// `padding-right: {x}vh;`
-pub fn vh(x: u16) -> Property<Length> {
-    Property(PADDING_RIGHT, Length::Vh(x))
-}

@@ -70,11 +70,6 @@ pub fn percentf(x: f32) -> Property<Length> {
     Property(HEIGHT, Length::Percent(x))
 }
 
-/// `height: {x}vw;`
-pub fn vw(x: u16) -> Property<Length> {
-    Property(HEIGHT, Length::Vw(x))
-}
-
 /// `height: {x}vh;`
 pub fn vh(x: u16) -> Property<Length> {
     Property(HEIGHT, Length::Vh(x))

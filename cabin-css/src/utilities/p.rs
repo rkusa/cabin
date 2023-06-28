@@ -54,13 +54,3 @@ pub fn percent(x: i16) -> Property<Length> {
 pub fn percentf(x: f32) -> Property<Length> {
     Property(PADDING, Length::Percent(x))
 }
-
-/// `padding: {x}vw;`
-pub fn vw(x: u16) -> Property<Length> {
-    Property(PADDING, Length::Vw(x))
-}
-
-/// `padding: {x}vh;`
-pub fn vh(x: u16) -> Property<Length> {
-    Property(PADDING, Length::Vh(x))
-}

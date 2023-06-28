@@ -57,11 +57,6 @@ pub fn percentf(x: f32) -> PropertyTwice<Length> {
     PropertyTwice(MARGIN_TOP, MARGIN_BOTTOM, Length::Percent(x))
 }
 
-/// `margin-top: {x}vw; margin-bottom: {x}vw;`
-pub fn vw(x: u16) -> PropertyTwice<Length> {
-    PropertyTwice(MARGIN_TOP, MARGIN_BOTTOM, Length::Vw(x))
-}
-
 /// `margin-top: {x}vh; margin-bottom: {x}vh;`
 pub fn vh(x: u16) -> PropertyTwice<Length> {
     PropertyTwice(MARGIN_TOP, MARGIN_BOTTOM, Length::Vh(x))

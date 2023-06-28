@@ -61,8 +61,3 @@ pub fn percentf(x: f32) -> PropertyTwice<Length> {
 pub fn vw(x: u16) -> PropertyTwice<Length> {
     PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Vw(x))
 }
-
-/// `margin-left: {x}vh; margin-right: {x}vh;`
-pub fn vh(x: u16) -> PropertyTwice<Length> {
-    PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Vh(x))
-}

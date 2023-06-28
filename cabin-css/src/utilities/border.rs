@@ -51,7 +51,7 @@ pub const DOUBLE: Property = Property(BORDER_STYLE, "double");
 /// ```
 pub const HIDDEN: Property = Property(BORDER_STYLE, "hidden");
 
-/// ```
+/// ```css
 /// border-width: 1px;
 /// ```
 pub const PX: Property<Length> = Property(BORDER_WIDTH, Length::Px(1.0));

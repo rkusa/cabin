@@ -61,11 +61,6 @@ pub fn percentf(x: f32) -> PropertyTwice<Length> {
     PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Percent(x))
 }
 
-/// `padding-top: {x}vw; padding-bottom: {x}vw;`
-pub fn vw(x: u16) -> PropertyTwice<Length> {
-    PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Vw(x))
-}
-
 /// `padding-top: {x}vh; padding-bottom: {x}vh;`
 pub fn vh(x: u16) -> PropertyTwice<Length> {
     PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Vh(x))

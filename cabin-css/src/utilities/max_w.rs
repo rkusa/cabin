@@ -74,8 +74,3 @@ pub fn percentf(x: f32) -> Property<Length> {
 pub fn vw(x: u16) -> Property<Length> {
     Property(MAX_WIDTH, Length::Vw(x))
 }
-
-/// `max-width: {x}vh;`
-pub fn vh(x: u16) -> Property<Length> {
-    Property(MAX_WIDTH, Length::Vh(x))
-}

@@ -14,9 +14,8 @@ pub fn cols(n: u16) -> Property<GridTemplateColumns> {
 }
 
 pub mod cols {
-    use crate::Property;
-
     use super::{GridTemplateColumns, GRID_TEMPLATE_COLUMNS};
+    use crate::Property;
 
     /// `grid-template-columns: none;`
     pub const NONE: Property = Property(GRID_TEMPLATE_COLUMNS, "none");

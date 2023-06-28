@@ -55,11 +55,6 @@ pub fn percentf(x: f32) -> Property<Length> {
     Property(MARGIN_TOP, Length::Percent(x))
 }
 
-/// `margin-top: {x}vw;`
-pub fn vw(x: u16) -> Property<Length> {
-    Property(MARGIN_TOP, Length::Vw(x))
-}
-
 /// `margin-top: {x}vh;`
 pub fn vh(x: u16) -> Property<Length> {
     Property(MARGIN_TOP, Length::Vh(x))

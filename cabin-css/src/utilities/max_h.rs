@@ -70,11 +70,6 @@ pub fn percentf(x: f32) -> Property<Length> {
     Property(MAX_HEIGHT, Length::Percent(x))
 }
 
-/// `max-height: {x}vw;`
-pub fn vw(x: u16) -> Property<Length> {
-    Property(MAX_HEIGHT, Length::Vw(x))
-}
-
 /// `max-height: {x}vh;`
 pub fn vh(x: u16) -> Property<Length> {
     Property(MAX_HEIGHT, Length::Vh(x))
