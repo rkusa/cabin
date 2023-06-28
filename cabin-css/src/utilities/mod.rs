@@ -46,6 +46,7 @@ pub mod start;
 pub mod text;
 pub mod top;
 pub mod w;
+pub mod z;
 
 use std::fmt;
 
@@ -88,6 +89,7 @@ pub use ring::DEFAULT as RING;
 pub use start::unit as start;
 pub use top::unit as top;
 pub use w::unit as w;
+pub use z::index as z;
 
 use crate::{StaticClass, Style};
 
