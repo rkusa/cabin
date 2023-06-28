@@ -4,7 +4,10 @@
 
 use crate::Property;
 
+const FONT_FAMILY: &str = "font-family";
 const FONT_WEIGHT: &str = "font-weight";
+
+include!(concat!(env!("OUT_DIR"), "/font-family.rs"));
 
 /// `font-weight: 100;`
 pub const THIN: Property<u16> = Property(FONT_WEIGHT, 100);

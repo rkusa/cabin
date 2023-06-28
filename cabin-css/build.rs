@@ -242,6 +242,18 @@ fn main() {
         .unwrap();
     }
 
+    // font-family
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("font-family.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, font_family) in theme.font_families {
+        writeln!(out, r#"/// `font-family: {font_family};`"#).unwrap();
+        writeln!(
+            out,
+            r##"pub const {ident}: Property = Property(FONT_FAMILY, r#"{font_family}"#);"##
+        )
+        .unwrap();
+    }
+
     // rounded
     {
         enum Properties {
@@ -333,6 +345,7 @@ fn main() {
 struct Theme {
     breakpoints: &'static [(&'static str, u32)],
     colors: &'static [(&'static str, &'static str)],
+    font_families: &'static [(&'static str, &'static str)],
     font_sizes: &'static [(&'static str, Length, LineHeight)],
     rounded: &'static [(&'static str, Length)],
 }
@@ -571,6 +584,20 @@ impl Default for Theme {
                 ("PINK_300", "#f9a8d4"),
                 ("PINK_400", "#f472b6"),
                 ("PINK_500", "#ec4899"),
+            ],
+            font_families: &[
+                (
+                    "SANS",
+                    r#"ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji""#,
+                ),
+                (
+                    "SERIF",
+                    r#"ui-serif, Georgia, Cambria, "Times New Roman", Times, serif"#,
+                ),
+                (
+                    "MONO",
+                    r#"ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace"#,
+                ),
             ],
             font_sizes: &[
                 (
