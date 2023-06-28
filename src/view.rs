@@ -1,4 +1,5 @@
 mod boxed;
+mod deferred;
 mod future;
 mod iter;
 pub mod text;
@@ -14,8 +15,9 @@ pub use future::FutureExt;
 pub use iter::IteratorExt;
 use paste::paste;
 
-use self::boxed::BoxedView;
 use crate::render::{Escape, Renderer};
+pub use boxed::BoxedView;
+pub use deferred::DeferredView;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
