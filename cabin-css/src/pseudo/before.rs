@@ -6,6 +6,8 @@ pub struct Before<S>(pub S);
 
 impl<S: Style> Style for Before<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        // TODO: only once for multiple after/before styles
+        writeln!(f, "content: var(--tw-content);")?;
         self.0.declarations(f)
     }
 
