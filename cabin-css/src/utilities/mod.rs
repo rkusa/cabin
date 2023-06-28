@@ -55,6 +55,7 @@ pub use border::{px as border, PX as BORDER};
 pub use bottom::unit as bottom;
 pub use display::*;
 pub use end::unit as end;
+pub use flex::{NO_SHRINK, SHRINK};
 pub use gap::unit as gap;
 pub use gap_x::unit as gap_x;
 pub use gap_y::unit as gap_y;

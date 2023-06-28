@@ -5,6 +5,7 @@
 use crate::Property;
 
 const FLEX_DIRECTION: &str = "flex-direction";
+const FLEX_SHRINK: &str = "flex-shrink";
 
 /// ```css
 /// flex-direction: row;
@@ -25,3 +26,13 @@ pub const COL: Property = Property(FLEX_DIRECTION, "column");
 /// flex-direction: column-reverse;
 /// ```
 pub const COL_REVERSE: Property = Property(FLEX_DIRECTION, "column-reverse");
+
+/// ```css
+/// flex-shrink: 1;
+/// ```
+pub const SHRINK: Property = Property(FLEX_SHRINK, "1");
+
+/// ```css
+/// flex-shrink: 0;
+/// ```
+pub const NO_SHRINK: Property = Property(FLEX_SHRINK, "0");
