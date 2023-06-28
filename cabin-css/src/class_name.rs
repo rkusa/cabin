@@ -7,7 +7,15 @@ pub struct ClassName<'a>(pub Option<Cow<'a, str>>);
 
 impl<'a> ClassName<'a> {
     pub fn append(self, other: ClassName<'a>) -> ClassName<'a> {
-        ClassName(Some(Cow::Owned(format!("{self} {other}"))))
+        self + other
+    }
+
+    pub fn append_when(self, condition: bool, other: ClassName<'a>) -> ClassName<'a> {
+        if !condition {
+            self
+        } else {
+            self + other
+        }
     }
 }
 
