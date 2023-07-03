@@ -164,6 +164,13 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
             #(#attrs)*
             pub type #alias_ident<V> = ::cabin::html::Html<V, #ident>;
 
+            #[cfg(debug_assertions)]
+            #(#attrs)*
+            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<::cabin::view::BoxedView> {
+                ::cabin::html::Html::new(#tag_name, content.boxed())
+            }
+
+            #[cfg(not(debug_assertions))]
             #(#attrs)*
             pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V> {
                 ::cabin::html::Html::new(#tag_name, content)

@@ -32,6 +32,8 @@ mod exports {
     #[doc(inline)]
     pub use super::elements::dialog::dialog;
     #[doc(inline)]
+    pub use super::elements::div::div;
+    #[doc(inline)]
     pub use super::elements::form::form;
     #[doc(inline)]
     pub use super::elements::head::head;

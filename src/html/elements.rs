@@ -3,6 +3,7 @@ pub mod aria;
 pub mod body;
 pub mod button;
 pub mod dialog;
+pub mod div;
 pub mod form;
 pub mod global;
 pub mod head;
@@ -45,7 +46,6 @@ pub mod old {
     element!($, __caption, caption);
     element!($, __col, col);
     element!($, __colgroup, colgroup);
-    element!($, __div, div);
     element!($, __fieldset, fieldset);
     element!($, __h1, h1);
     element!($, __h2, h2);
