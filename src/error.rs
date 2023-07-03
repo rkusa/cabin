@@ -7,7 +7,7 @@ use http::{Response, StatusCode};
 #[derive(Debug)]
 pub struct Error {
     status: StatusCode,
-    source: Option<Box<dyn error::Error + Send + Sync + 'static>>,
+    source: Option<Box<dyn error::Error + Send + 'static>>,
 }
 
 impl Error {
@@ -18,7 +18,7 @@ impl Error {
         }
     }
 
-    pub fn from_err<E: error::Error + Send + Sync + 'static>(err: E) -> Self {
+    pub fn from_err<E: error::Error + Send + 'static>(err: E) -> Self {
         Self {
             status: StatusCode::INTERNAL_SERVER_ERROR,
             source: Some(Box::new(err)),

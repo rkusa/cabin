@@ -12,6 +12,7 @@ use std::task::{Context, Poll};
 
 // pub use boxed::BoxedView;
 pub use future::FutureExt;
+use http_error::HttpError;
 pub use iter::IteratorExt;
 use paste::paste;
 
@@ -100,13 +101,15 @@ where
 impl<V, E> View for Result<V, E>
 where
     V: View,
-    E: 'static,
-    crate::Error: From<E>,
+    E: HttpError + Send + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
             Ok(v) => v.render(r, include_hash),
-            Err(err) => RenderFuture::ready(Err(err.into())),
+            Err(err) => {
+                let status = err.status_code();
+                RenderFuture::ready(Err(crate::Error::from_err(err).with_status(status)))
+            }
         }
     }
 
