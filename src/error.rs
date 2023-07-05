@@ -3,30 +3,61 @@ use std::{error, fmt};
 
 use bytes::Bytes;
 use http::{Response, StatusCode};
+use http_error::HttpError;
 
 #[derive(Debug)]
 pub struct Error {
-    status: StatusCode,
-    source: Option<Box<dyn error::Error + Send + 'static>>,
+    inner: Inner,
+}
+
+#[derive(Debug)]
+enum Inner {
+    Http {
+        status: Option<StatusCode>,
+        source: Box<dyn HttpError + Send + 'static>,
+    },
+    Other {
+        status: StatusCode,
+        source: Option<Box<dyn error::Error + Send + 'static>>,
+    },
 }
 
 impl Error {
     pub fn from_status_code(status: StatusCode) -> Self {
         Self {
-            status,
-            source: None,
+            inner: Inner::Other {
+                status,
+                source: None,
+            },
         }
     }
 
     pub fn from_err<E: error::Error + Send + 'static>(err: E) -> Self {
         Self {
-            status: StatusCode::INTERNAL_SERVER_ERROR,
-            source: Some(Box::new(err)),
+            inner: Inner::Other {
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+                source: Some(Box::new(err)),
+            },
+        }
+    }
+
+    pub fn from_http_err<E: HttpError + Send + 'static>(err: E) -> Self {
+        Self {
+            inner: Inner::Http {
+                status: None,
+                source: Box::new(err),
+            },
         }
     }
 
     pub fn with_status(mut self, status: StatusCode) -> Self {
-        self.status = status;
+        self.inner = match self.inner {
+            Inner::Http { source, .. } => Inner::Http {
+                status: Some(status),
+                source,
+            },
+            Inner::Other { source, .. } => Inner::Other { status, source },
+        };
         self
     }
 }
@@ -50,16 +81,24 @@ pub enum InternalError {
 
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        self.source.as_ref().map(|err| err.as_ref() as _)
+        match &self.inner {
+            Inner::Http { source, .. } => source.source(),
+            Inner::Other { source, .. } => source.as_ref().map(|err| err.as_ref() as _),
+        }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(err) = &self.source {
-            err.fmt(f)
-        } else {
-            write!(f, "failed with status code {}", self.status)
+        match &self.inner {
+            Inner::Http { source, .. } => source.fmt(f),
+            Inner::Other { status, source } => {
+                if let Some(err) = source {
+                    err.fmt(f)
+                } else {
+                    write!(f, "failed with status code {}", status)
+                }
+            }
         }
     }
 }
@@ -98,8 +137,10 @@ impl From<Infallible> for Error {
 impl From<InternalError> for Error {
     fn from(err: InternalError) -> Self {
         Self {
-            status: StatusCode::INTERNAL_SERVER_ERROR,
-            source: Some(Box::new(err)),
+            inner: Inner::Other {
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+                source: Some(Box::new(err)),
+            },
         }
     }
 }
@@ -116,11 +157,33 @@ impl From<tokio::task::JoinError> for InternalError {
     }
 }
 
+impl HttpError for Error {
+    fn status_code(&self) -> StatusCode {
+        match &self.inner {
+            Inner::Http { status, source } => status.unwrap_or_else(|| source.status_code()),
+            Inner::Other { status, .. } => *status,
+        }
+    }
+}
+
 impl From<Error> for Response<Bytes> {
     fn from(err: Error) -> Self {
-        Response::builder()
-            .status(err.status)
-            .body(Bytes::default())
-            .unwrap()
+        match err.inner {
+            Inner::Http { status, source } => {
+                let mut res = Response::new(Bytes::default());
+                *res.status_mut() = status.unwrap_or_else(|| source.status_code());
+                if let Some(headers) = source.headers() {
+                    let h = res.headers_mut();
+                    for (name, value) in headers {
+                        h.insert(name, value);
+                    }
+                }
+                res
+            }
+            Inner::Other { status, .. } => Response::builder()
+                .status(status)
+                .body(Bytes::default())
+                .unwrap(),
+        }
     }
 }

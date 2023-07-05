@@ -106,10 +106,7 @@ where
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
             Ok(v) => v.render(r, include_hash),
-            Err(err) => {
-                let status = err.status_code();
-                RenderFuture::ready(Err(crate::Error::from_err(err).with_status(status)))
-            }
+            Err(err) => RenderFuture::ready(Err(crate::Error::from_http_err(err))),
         }
     }
 

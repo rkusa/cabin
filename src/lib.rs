@@ -11,6 +11,7 @@ use html::elements::link::Rel;
 pub use http::StatusCode;
 use http::{HeaderValue, Response};
 use http_body::Full;
+use http_error::HttpError;
 use render::Renderer;
 use scope::Scope;
 use serde_json::value::RawValue;
@@ -89,10 +90,13 @@ where
     let result = match result {
         Ok(result) => result,
         Err(err) => {
-            eprintln!(
-                "{err}\n{}",
-                format_caused_by(std::error::Error::source(&err))
-            );
+            if err.status_code().is_success() {
+                tracing::error!(
+                    %err,
+                    caused_by = format_caused_by(std::error::Error::source(&err)),
+                    "server error",
+                );
+            }
             let (parts, body) = Response::from(err).into_parts();
             return Response::from_parts(parts, Full::new(body));
         }
