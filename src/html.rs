@@ -120,6 +120,15 @@ impl<V, K> Html<V, K> {
         self
     }
 
+    /// Append classes that the element belongs to.
+    pub fn add_class(mut self, class: impl Into<Cow<'static, str>>) -> Html<V, K> {
+        self.class = match self.class {
+            Some(before) => Some(format!("{} {}", before, class.into()).into()),
+            None => Some(class.into()),
+        };
+        self
+    }
+
     pub fn on_click<E>(mut self, event: E) -> Self
     where
         E: Serialize + 'static,
