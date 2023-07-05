@@ -6,6 +6,7 @@ use crate::Property;
 
 const FLEX_DIRECTION: &str = "flex-direction";
 const FLEX_SHRINK: &str = "flex-shrink";
+const FLEX_GROW: &str = "flex-grow";
 
 /// ```css
 /// flex-direction: row;
@@ -36,3 +37,13 @@ pub const SHRINK: Property = Property(FLEX_SHRINK, "1");
 /// flex-shrink: 0;
 /// ```
 pub const NO_SHRINK: Property = Property(FLEX_SHRINK, "0");
+
+/// ```css
+/// flex-grow: 1;
+/// ```
+pub const GROW: Property = Property(FLEX_GROW, "1");
+
+/// ```css
+/// flex-grow: 0;
+/// ```
+pub const NO_GROW: Property = Property(FLEX_GROW, "0");
