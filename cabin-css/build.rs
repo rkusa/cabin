@@ -230,6 +230,34 @@ fn main() {
         .unwrap();
     }
 
+    // from-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("from-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(out, r#"/// <b style="color:{color}">⏺</b>"#).unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: FromColor = FromColor("{color}");"#
+        )
+        .unwrap();
+    }
+
+    // via-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("via-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(out, r#"/// <b style="color:{color}">⏺</b>"#).unwrap();
+        writeln!(out, r#"pub const {ident}: ViaColor = ViaColor("{color}");"#).unwrap();
+    }
+
+    // to-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("to-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(out, r#"/// <b style="color:{color}">⏺</b>"#).unwrap();
+        writeln!(out, r#"pub const {ident}: ToColor = ToColor("{color}");"#).unwrap();
+    }
+
     // font-size
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("font-size.rs");
     let out = &mut File::create(path).unwrap();
@@ -380,8 +408,8 @@ impl Default for Theme {
                 ("INHERIT", "inherit"),
                 ("CURRENT", "currentColor"),
                 ("TRANSPARENT", "transparent"),
-                ("BLACK", "#000"),
-                ("WHITE", "#fff"),
+                ("BLACK", "#000000"),
+                ("WHITE", "#ffffff"),
                 ("SLATE_50", "#f8fafc"),
                 ("SLATE_100", "#f1f5f9"),
                 ("SLATE_200", "#e2e8f0"),
