@@ -24,7 +24,10 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
         ..
     }) = data
     else {
-        return Err(Error::new(ident.span(), "Element can only be derived from a named struct"));
+        return Err(Error::new(
+            ident.span(),
+            "Element can only be derived from a named struct",
+        ));
     };
 
     let opts = extract_options(&attrs)?;
@@ -226,16 +229,14 @@ struct Opts {
 fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
     let mut opts = Opts::default();
 
-    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("element"))
-    else {
+    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("element")) else {
         return Ok(opts);
     };
 
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
         if let Some(value) = opt.value {
             if opt.key == format_ident!("tag_name") {
-                let Lit::Str(s) = value
-                else {
+                let Lit::Str(s) = value else {
                     return Err(Error::new(value.span(), "tag_name must be a str"));
                 };
 
@@ -263,30 +264,21 @@ pub(crate) struct FieldOpts {
 pub(crate) fn extract_field_options(tag: &str, attrs: &[Attribute]) -> syn::Result<FieldOpts> {
     let mut opts = FieldOpts::default();
 
-    let Some(attr) = attrs.iter().find(|a| a.path().is_ident(tag))
-    else {
+    let Some(attr) = attrs.iter().find(|a| a.path().is_ident(tag)) else {
         return Ok(opts);
     };
 
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
         if let Some(value) = opt.value {
             if opt.key == format_ident!("method_name") {
-                let Lit::Str(s) = value
-                else {
-                    return Err(Error::new(
-                        value.span(),
-                        "method_name must be a str"
-                    ));
+                let Lit::Str(s) = value else {
+                    return Err(Error::new(value.span(), "method_name must be a str"));
                 };
 
                 opts.method_name = Some(s.value());
             } else if opt.key == format_ident!("attribute_name") {
-                let Lit::Str(s) = value
-                else {
-                    return Err(Error::new(
-                        value.span(),
-                        "attribute_name must be a str"
-                    ));
+                let Lit::Str(s) = value else {
+                    return Err(Error::new(value.span(), "attribute_name must be a str"));
                 };
 
                 opts.attribute_name = Some(s.value());

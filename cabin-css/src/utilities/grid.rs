@@ -2,6 +2,8 @@
 //!
 //! <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 
+pub mod flow;
+
 use std::fmt;
 
 use crate::Property;
@@ -20,13 +22,13 @@ pub mod cols {
     use crate::Property;
 
     /// ```css
-/// grid-template-columns: none;
-/// ```
+    /// grid-template-columns: none;
+    /// ```
     pub const NONE: Property = Property(GRID_TEMPLATE_COLUMNS, "none");
 
     /// ```css
-/// grid-template-columns: repeat({n}, minmax(0, 1fr));
-/// ```
+    /// grid-template-columns: repeat({n}, minmax(0, 1fr));
+    /// ```
     pub fn custom(template: &'static str) -> Property<GridTemplateColumns> {
         Property(GRID_TEMPLATE_COLUMNS, GridTemplateColumns::Custom(template))
     }

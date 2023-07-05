@@ -1,4 +1,6 @@
 pub mod aspect;
+pub mod auto_cols;
+pub mod auto_rows;
 pub mod basis;
 pub mod bg;
 pub mod border;
@@ -88,8 +90,7 @@ pub use pt::unit as pt;
 pub use px::unit as px;
 pub use py::unit as py;
 pub use right::unit as right;
-pub use ring::width as ring;
-pub use ring::DEFAULT as RING;
+pub use ring::{width as ring, DEFAULT as RING};
 pub use rounded::DEFAULT as ROUNDED;
 pub use shadow::DEFAULT as SHADOW;
 pub use start::unit as start;

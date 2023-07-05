@@ -10,6 +10,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+pub use boxed::BoxedView;
+pub use deferred::DeferredView;
 // pub use boxed::BoxedView;
 pub use future::FutureExt;
 use http_error::HttpError;
@@ -17,8 +19,6 @@ pub use iter::IteratorExt;
 use paste::paste;
 
 use crate::render::{Escape, Renderer};
-pub use boxed::BoxedView;
-pub use deferred::DeferredView;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).

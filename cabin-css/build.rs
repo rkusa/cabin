@@ -20,7 +20,9 @@ fn main() {
         .unwrap();
     }
     for window in theme.breakpoints.windows(2) {
-        let &[(ident, _), (_, min_width_next_px)] = window else { unreachable!() };
+        let &[(ident, _), (_, min_width_next_px)] = window else {
+            unreachable!()
+        };
         let max_width_px = min_width_next_px.saturating_sub(1);
         writeln!(out, r#"/// `@media (max-width: {max_width_px}px)`"#).unwrap();
         writeln!(
@@ -43,7 +45,9 @@ fn main() {
         .unwrap();
     }
     for window in theme.breakpoints.windows(2) {
-        let &[(ident, _), (_, min_width_next_px)] = window else { unreachable!() };
+        let &[(ident, _), (_, min_width_next_px)] = window else {
+            unreachable!()
+        };
         let max_width_px = min_width_next_px.saturating_sub(1);
         writeln!(
             out,

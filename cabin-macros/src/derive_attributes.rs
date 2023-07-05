@@ -18,7 +18,10 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
         ..
     }) = data
     else {
-        return Err(Error::new(struct_ident.span(), "Attributes can only be derived from a named struct"));
+        return Err(Error::new(
+            struct_ident.span(),
+            "Attributes can only be derived from a named struct",
+        ));
     };
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();

@@ -1,6 +1,5 @@
-use crate::View;
-
 use super::boxed::BoxedView;
+use crate::View;
 
 pub trait DeferredView {
     fn view(self) -> BoxedView;
