@@ -15,7 +15,7 @@ async function update(eventId, payload, target) {
   try {
     const state = document.getElementById("state").innerText;
 
-    const res = await fetch(location.pathname, {
+    const res = await fetch(location.href, {
       signal,
       method: "PUT",
       headers: {
