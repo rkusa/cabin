@@ -5,6 +5,7 @@ pub mod basis;
 pub mod bg;
 pub mod border;
 pub mod bottom;
+pub mod cursor;
 pub mod display;
 pub mod end;
 pub mod flex;
@@ -104,7 +105,7 @@ pub use via::percent as via;
 pub use w::unit as w;
 pub use z::index as z;
 
-use crate::{StaticClass, Style};
+use crate::{Length, Property, StaticClass, Style};
 
 pub const GROUP: StaticClass = StaticClass("group");
 
@@ -116,6 +117,20 @@ pub const SR_ONLY: SrOnly = SrOnly(());
 
 /// Undo [SR_ONLY].
 pub const NOT_SR_ONLY: NotSrOnly = NotSrOnly(());
+
+/// ```css
+/// opacity: {x}%;
+/// ```
+pub fn opacity(x: i16) -> Property<Length> {
+    Property("opacity", Length::Percent(f32::from(x)))
+}
+
+/// ```css
+/// opacity: {x}%;
+/// ```
+pub fn opacityf(x: f32) -> Property<Length> {
+    Property("opacity", Length::Percent(x))
+}
 
 impl Style for SrOnly {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
