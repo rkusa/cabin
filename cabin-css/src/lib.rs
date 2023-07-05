@@ -80,6 +80,14 @@ pub trait Style {
         pseudo::disabled::Disabled(self)
     }
 
+    /// Apply style only when the element is not disabled (`:enabled`).
+    fn enabled(self) -> pseudo::enabled::Enabled<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::enabled::Enabled(self)
+    }
+
     /// Apply style only when the element has focus (`:foucs`).
     fn focus(self) -> pseudo::focus::Focus<Self>
     where
