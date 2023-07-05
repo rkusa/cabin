@@ -47,6 +47,7 @@ pub mod start;
 pub mod text;
 pub mod top;
 pub mod w;
+pub mod whitespace;
 pub mod z;
 
 use std::fmt;
@@ -87,7 +88,9 @@ pub use pt::unit as pt;
 pub use px::unit as px;
 pub use py::unit as py;
 pub use right::unit as right;
+pub use ring::width as ring;
 pub use ring::DEFAULT as RING;
+pub use rounded::DEFAULT as ROUNDED;
 pub use shadow::DEFAULT as SHADOW;
 pub use start::unit as start;
 pub use top::unit as top;

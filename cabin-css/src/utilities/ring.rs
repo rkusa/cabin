@@ -5,6 +5,7 @@
 use std::fmt;
 
 use crate::{Length, Property, Style};
+pub use offset::width as offset;
 
 const BOX_SHADOW: &str = "box-shadow";
 
