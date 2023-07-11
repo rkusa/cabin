@@ -29,6 +29,18 @@ mod exports {
     #[doc(inline)]
     pub use super::elements::form::form;
     #[doc(inline)]
+    pub use super::elements::h1::h1;
+    #[doc(inline)]
+    pub use super::elements::h2::h2;
+    #[doc(inline)]
+    pub use super::elements::h3::h3;
+    #[doc(inline)]
+    pub use super::elements::h4::h4;
+    #[doc(inline)]
+    pub use super::elements::h5::h5;
+    #[doc(inline)]
+    pub use super::elements::h6::h6;
+    #[doc(inline)]
     pub use super::elements::head::head;
     #[doc(inline)]
     pub use super::elements::html::html;
