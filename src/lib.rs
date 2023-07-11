@@ -55,10 +55,13 @@ pub struct Event {
 }
 
 fn default_document(content: impl View) -> impl View {
-    html::html((
-        html::head((cabin_stylesheets(), cabin_scripts())),
-        html::body(content),
-    ))
+    (
+        html::doctype(),
+        html::html((
+            html::head((cabin_stylesheets(), cabin_scripts())),
+            html::body(content),
+        )),
+    )
 }
 
 pub async fn get_page_with<F, V, D>(

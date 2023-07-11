@@ -55,6 +55,10 @@ mod exports {
     pub use super::elements::time::time;
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
+
+    pub fn doctype() -> impl crate::View {
+        super::raw("<!DOCTYPE html>")
+    }
 }
 
 pub struct Html<V, K> {
