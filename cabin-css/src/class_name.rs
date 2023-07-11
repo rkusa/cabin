@@ -2,6 +2,8 @@ use std::borrow::Cow;
 use std::fmt;
 use std::ops::{Add, AddAssign};
 
+use cabin::html::attributes::Attributes;
+
 #[derive(Default)]
 pub struct ClassName<'a>(pub Option<Cow<'a, str>>);
 
@@ -76,5 +78,11 @@ impl<'a> AddAssign for ClassName<'a> {
 impl<'a> fmt::Display for ClassName<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.as_deref().unwrap_or_default().fmt(f)
+    }
+}
+
+impl<El: Default, Ext: Default> From<ClassName<'static>> for Attributes<El, Ext> {
+    fn from(value: ClassName<'static>) -> Self {
+        Attributes::default().class(value)
     }
 }
