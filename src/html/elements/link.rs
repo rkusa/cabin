@@ -9,65 +9,63 @@ use crate::html::list::SpaceSeparated;
 /// A `link` element allows to link to other resources.
 #[derive(Default, Element)]
 #[element(void)]
-pub struct Link<Ext = ()> {
-    pub extension: Ext,
-
+pub struct Link {
     /// Address of the hyperlink.
-    pub href: Option<Cow<'static, str>>,
+    href: Option<Cow<'static, str>>,
 
     /// Handling of crossorigin requests.
     #[element(attribute_name = "crossorigin")]
-    pub cross_origin: Option<CrossOrigin>,
+    cross_origin: Option<CrossOrigin>,
 
     /// Relationship between the document and the linked resource.
-    pub rel: Option<SpaceSeparated<Rel>>,
+    rel: Option<SpaceSeparated<Rel>>,
 
     // Potential destination for a preload request ([Rel::Preload], [Rel::Modulepreload]).
-    pub r#as: Option<As>,
+    r#as: Option<As>,
 
     /// The media the resource applies to.
-    pub media: Option<Cow<'static, str>>,
+    media: Option<Cow<'static, str>>,
 
     /// Integrity metadata used in _Subresource Integrity_ checks.
     /// Must only be specified on links with [Rel::StyleSheet], [Rel::Preload], or
     /// [Rel::Modulepreload].
-    pub integrity: Option<Cow<'static, str>>,
+    integrity: Option<Cow<'static, str>>,
 
     /// Hint the language of the linked resource.
-    pub hreflang: Option<Cow<'static, str>>,
+    hreflang: Option<Cow<'static, str>>,
 
     /// Hint for the type of the referenced resource.
-    pub r#type: Option<Cow<'static, str>>,
+    r#type: Option<Cow<'static, str>>,
 
     /// Sizes of the icons ([Rel::Icon]).
-    pub sizes: Option<Cow<'static, str>>,
+    sizes: Option<Cow<'static, str>>,
 
     /// Images to use in different situations.
     /// For [Rel::Preload] and [As::Image] only.
     #[element(attribute_name = "imageSrcset")]
-    pub image_srcset: Option<Cow<'static, str>>,
+    image_srcset: Option<Cow<'static, str>>,
 
     /// Image sizes for different page layouts.
     /// For [Rel::Preload] and [As::Image] only.
     #[element(attribute_name = "imageSizes")]
-    pub image_sizes: Option<Cow<'static, str>>,
+    image_sizes: Option<Cow<'static, str>>,
 
     /// How much referrer information to send.
     #[element(attribute_name = "referrerpolicy")]
-    pub referrer_policy: ReferrerPolicy,
+    referrer_policy: ReferrerPolicy,
 
     #[element(skip)]
-    pub blocking: Option<RenderBlocking>,
+    blocking: Option<RenderBlocking>,
 
     /// Whether the link is disabled.
-    pub disabled: bool,
+    disabled: bool,
 
     /// Sets the priority for fetches initiated by the element.
     #[element(attribute_name = "fetchpriority")]
-    pub fetch_priority: FetchPriority,
+    fetch_priority: FetchPriority,
 }
 
-impl<Ext> LinkElement<Ext> {
+impl LinkElement {
     /// Appends a [Rel] to the link.
     pub fn append_rel(mut self, rel: Rel) -> Self {
         self.kind.rel = match self.kind.rel.take() {
@@ -257,7 +255,7 @@ impl fmt::Display for As {
 
 /// The element is potentially render-blocking.
 #[derive(Hash)]
-pub struct RenderBlocking;
+pub(super) struct RenderBlocking;
 
 impl fmt::Display for RenderBlocking {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -5,7 +5,7 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
     parse_quote, token, Attribute, Data, DataStruct, DeriveInput, Error, Expr, ExprLit, ExprPath,
-    Fields, GenericParam, Ident, Lit, Path, PathArguments, Type,
+    Fields, Ident, Lit, Path, PathArguments, Type,
 };
 
 pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
@@ -17,13 +17,9 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
         data,
     } = input;
 
-    let Some(GenericParam::Type(generic)) = generics.params.first() else {
-        return Err(Error::new(
-            ident.span(),
-            "Element must have exactly one type generic (for extensions)",
-        ));
-    };
-    let generic_ident = &generic.ident;
+    if !generics.params.is_empty() {
+        return Err(Error::new(ident.span(), "Element can not have generics"));
+    }
 
     let Data::Struct(DataStruct {
         fields: Fields::Named(fields),
@@ -55,10 +51,6 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
     for f in fields.named.iter() {
         let ident = f.ident.as_ref().unwrap();
-        if ident == &format_ident!("extension") {
-            continue;
-        }
-
         let (ty, kind) = extract_inner_type(&f.ty)?;
 
         // Forward only certain args
@@ -195,12 +187,9 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
     let element_ext = quote! {
         #[automatically_derived]
-        impl<#generic_ident> ::cabin::html::ElementExt for #ident<#generic_ident>
-            where #generic_ident: ::cabin::html::ElementExt
-        {
+        impl ::cabin::html::ElementExt for #ident {
             fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error>
             {
-                self.extension.render(r)?;
                 #(#render_statements)*
 
                 Ok(())
@@ -215,15 +204,15 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
     if is_void {
         Ok(quote! {
             #(#attrs)*
-            pub type #alias_ident<#generic_ident> = ::cabin::html::Html<(), #ident<#generic_ident>>;
+            pub type #alias_ident = ::cabin::html::Html<(), #ident>;
 
             #(#attrs)*
-            pub fn #fn_ident() -> #alias_ident<()> {
+            pub fn #fn_ident() -> #alias_ident {
                 ::cabin::html::Html::new(#tag_name, ())
             }
 
             #[automatically_derived]
-            impl<#generic_ident> #alias_ident<#generic_ident> {
+            impl #alias_ident {
                 #(#builder_methods)*
             }
 
@@ -232,22 +221,22 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
     } else {
         Ok(quote! {
             #(#attrs)*
-            pub type #alias_ident<V, #generic_ident> = ::cabin::html::Html<V, #ident<#generic_ident>>;
+            pub type #alias_ident<V> = ::cabin::html::Html<V, #ident>;
 
             #[cfg(debug_assertions)]
             #(#attrs)*
-            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<::cabin::view::BoxedView, ()> {
+            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<::cabin::view::BoxedView> {
                 ::cabin::html::Html::new(#tag_name, content.boxed())
             }
 
             #[cfg(not(debug_assertions))]
             #(#attrs)*
-            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V, ()> {
+            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V> {
                 ::cabin::html::Html::new(#tag_name, content)
             }
 
             #[automatically_derived]
-            impl<V, #generic_ident> #alias_ident<V, #generic_ident> {
+            impl<V> #alias_ident<V> {
                 #(#builder_methods)*
             }
 

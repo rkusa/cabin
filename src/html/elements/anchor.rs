@@ -9,39 +9,37 @@ use crate::html::list::SpaceSeparated;
 /// address.
 #[derive(Default, Element)]
 #[element(tag_name = "a")]
-pub struct Anchor<Ext = ()> {
-    pub extension: Ext,
-
+pub struct Anchor {
     /// Address of the hyperlink.
-    pub href: Option<Cow<'static, str>>,
+    href: Option<Cow<'static, str>>,
 
     /// The _browsing context_ the link should be opened in.
-    pub target: Option<Cow<'static, str>>,
+    target: Option<Cow<'static, str>>,
 
     /// Treat the linked URL as a download with the specified filename.
     #[element(method_name = "download_filename")]
-    pub download: Option<Cow<'static, str>>,
+    download: Option<Cow<'static, str>>,
 
     /// A space-separated list of URLs the browser will send POST requests (with the body PING)
     /// when the link is followed (typically used for tracking).
-    pub ping: Option<Cow<'static, str>>,
+    ping: Option<Cow<'static, str>>,
 
     /// Relationship between the location in the document containing the hyperlink and the
     /// destination resource.
-    pub rel: Option<SpaceSeparated<Rel>>,
+    rel: Option<SpaceSeparated<Rel>>,
 
     /// Hint the language of the linked resource.
-    pub hreflang: Option<Cow<'static, str>>,
+    hreflang: Option<Cow<'static, str>>,
 
     /// Hint for the type of the referenced resource.
-    pub r#type: Option<Cow<'static, str>>,
+    r#type: Option<Cow<'static, str>>,
 
     /// How much referrer information to send.
     #[element(attribute_name = "referrerpolicy")]
-    pub referrer_policy: ReferrerPolicy,
+    referrer_policy: ReferrerPolicy,
 }
 
-impl<V, Ext> AnchorElement<V, Ext> {
+impl<V> AnchorElement<V> {
     /// Try to open the link in a new tab.
     pub fn target_blank(mut self) -> Self {
         self.kind.target = Some(Cow::Borrowed("_blank"));
