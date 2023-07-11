@@ -21,6 +21,7 @@ pub struct Link {
     rel: Option<SpaceSeparated<Rel>>,
 
     // Potential destination for a preload request ([Rel::Preload], [Rel::Modulepreload]).
+    #[element(attribute_name = "as")]
     r#as: Option<As>,
 
     /// The media the resource applies to.
@@ -35,6 +36,7 @@ pub struct Link {
     hreflang: Option<Cow<'static, str>>,
 
     /// Hint for the type of the referenced resource.
+    #[element(attribute_name = "type")]
     r#type: Option<Cow<'static, str>>,
 
     /// Sizes of the icons ([Rel::Icon]).

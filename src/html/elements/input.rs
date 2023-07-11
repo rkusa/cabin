@@ -118,6 +118,7 @@ pub struct Input {
     step: Option<Cow<'static, str>>,
 
     /// Type of form control.
+    #[element(attribute_name = "type")]
     r#type: Option<Type>,
 
     /// Value of the form control

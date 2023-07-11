@@ -12,6 +12,7 @@ pub struct Script {
     src: Option<Cow<'static, str>>,
 
     /// The type of the script.
+    #[element(attribute_name = "type")]
     r#type: Option<Cow<'static, str>>,
 
     /// Whether to prevent execution in user agents that support module scripts.
@@ -20,6 +21,7 @@ pub struct Script {
 
     /// Execute script when available, without blocking while fetching.
     #[element(method_name = "with_async")]
+    #[element(attribute_name = "async")]
     r#async: bool,
 
     /// Defer script execution.

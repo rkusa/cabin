@@ -7,5 +7,6 @@ use cabin_macros::Element;
 #[derive(Default, Element)]
 pub struct Label {
     /// The id of the form control the label is the caption for.
+    #[element(attribute_name = "for")]
     r#for: Option<Cow<'static, str>>,
 }

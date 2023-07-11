@@ -32,6 +32,7 @@ pub struct Anchor {
     hreflang: Option<Cow<'static, str>>,
 
     /// Hint for the type of the referenced resource.
+    #[element(attribute_name = "type")]
     r#type: Option<Cow<'static, str>>,
 
     /// How much referrer information to send.

@@ -47,6 +47,7 @@ pub struct Button {
     popover_target_action: Option<PopoverTargetAction>,
 
     /// Type of button.
+    #[element(attribute_name = "type")]
     r#type: Option<Type>,
 
     /// Value to be used for form submission
