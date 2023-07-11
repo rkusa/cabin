@@ -1,5 +1,4 @@
 mod boxed;
-mod deferred;
 mod future;
 mod iter;
 pub mod text;
@@ -11,7 +10,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 pub use boxed::BoxedView;
-pub use deferred::DeferredView;
 // pub use boxed::BoxedView;
 pub use future::FutureExt;
 use http_error::HttpError;
