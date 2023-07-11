@@ -39,34 +39,34 @@ pub struct Anchor {
     referrer_policy: ReferrerPolicy,
 }
 
-impl<V> AnchorElement<V> {
+impl<Ext> AnchorElement<Ext> {
     /// Try to open the link in a new tab.
     pub fn target_blank(mut self) -> Self {
-        self.kind.target = Some(Cow::Borrowed("_blank"));
+        self.base.target = Some(Cow::Borrowed("_blank"));
         self
     }
 
     /// Open the link in the parent browsing context.
     pub fn target_parent(mut self) -> Self {
-        self.kind.target = Some(Cow::Borrowed("_parent"));
+        self.base.target = Some(Cow::Borrowed("_parent"));
         self
     }
 
     /// Open the link in the topmost browsing context.
     pub fn target_top(mut self) -> Self {
-        self.kind.target = Some(Cow::Borrowed("_top"));
+        self.base.target = Some(Cow::Borrowed("_top"));
         self
     }
 
     /// Treat the linked URL as a download and let the browser suggest a filename.
     pub fn download(mut self) -> Self {
-        self.kind.download = Some(Cow::Borrowed(""));
+        self.base.download = Some(Cow::Borrowed(""));
         self
     }
 
     /// Appends a [Rel] to the link.
     pub fn append_rel(mut self, rel: Rel) -> Self {
-        self.kind.rel = match self.kind.rel.take() {
+        self.base.rel = match self.base.rel.take() {
             Some(SpaceSeparated::Single(existing)) => {
                 Some(SpaceSeparated::List([existing, rel].into()))
             }

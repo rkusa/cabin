@@ -7,7 +7,6 @@ use std::future::Future;
 
 use bytes::Bytes;
 pub use error::Error;
-use html::elements::link::Rel;
 pub use http::StatusCode;
 use http::{HeaderValue, Response};
 use http_body::Full;
@@ -32,17 +31,24 @@ pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 // TODO: move behind feature flag?
 pub fn cabin_stylesheets() -> impl View {
-    html::link()
-        .id("cabin-styles")
-        .rel(Rel::StyleSheet)
-        .href("/styles.css")
+    html::link(
+        html::link::default()
+            .id("cabin-styles")
+            .rel(html::elements::link::Rel::StyleSheet)
+            .href("/styles.css"),
+    )
 }
 
 pub fn cabin_scripts() -> impl View {
     (
-        html::script(()).src("/server-component.js").r#async(),
+        html::script(
+            html::script::default()
+                .src("/server-component.js")
+                .r#async(),
+            (),
+        ),
         #[cfg(feature = "livereload")]
-        html::script(()).src("/livereload.js").r#async(),
+        html::script(html::script::default().src("/livereload.js").r#async(), ()),
     )
 }
 
@@ -57,10 +63,13 @@ pub struct Event {
 fn default_document(content: impl View) -> impl View {
     (
         html::doctype(),
-        html::html((
-            html::head((cabin_stylesheets(), cabin_scripts())),
-            html::body(content),
-        )),
+        html::html(
+            (),
+            (
+                html::head((), (cabin_stylesheets(), cabin_scripts())),
+                html::body((), content),
+            ),
+        ),
     )
 }
 

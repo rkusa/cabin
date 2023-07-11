@@ -84,7 +84,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                             E: ::serde::Serialize + 'static,
                         {
                             let event = event(#event::default());
-                            self.kind.#ident = Some(Box::new(move || {
+                            self.base.#ident = Some(Box::new(move || {
                                 use std::hash::{Hash, Hasher};
                                 let mut hasher = ::twox_hash::XxHash32::default();
                                 ::std::any::TypeId::of::<E>().hash(&mut hasher);
@@ -126,7 +126,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            self.kind.#ident = Some(#ident.into());
+                            self.base.#ident = Some(#ident.into());
                             self
                         }
                     });
@@ -144,7 +144,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: #ty) -> Self {
-                            self.kind.#ident = #ident;
+                            self.base.#ident = #ident;
                             self
                         }
                     });
@@ -162,7 +162,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                     builder_methods.push(quote! {
                         #(#attrs)*
                         pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            self.kind.#ident = #ident.into();
+                            self.base.#ident = #ident.into();
                             self
                         }
                     });
@@ -185,64 +185,74 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
     let fn_ident = format_ident!("{tag_name}");
     let is_void = opts.is_void;
 
-    let element_ext = quote! {
+    let factory = if opts.is_void {
+        quote! {
+            #(#attrs)*
+            pub fn #fn_ident(
+                attributes: impl Into<::cabin::html::attributes::Attributes<#ident, ()>>,
+            ) -> ::cabin::html::Html<(), #ident, ()> {
+                ::cabin::html::Html::new(attributes, ())
+            }
+        }
+    } else {
+        quote! {
+            #[cfg(debug_assertions)]
+            #(#attrs)*
+            pub fn #fn_ident<V: ::cabin::View>(
+                attributes: impl Into<::cabin::html::attributes::Attributes<#ident, ()>>,
+                content: V
+            ) -> ::cabin::html::Html<::cabin::view::BoxedView, #ident, ()> {
+                ::cabin::html::Html::new(attributes, content.boxed())
+            }
+
+            #[cfg(not(debug_assertions))]
+            #(#attrs)*
+            pub fn #fn_ident<V: ::cabin::View>(
+                attributes: impl Into<::cabin::html::attributes::Attributes<#ident, ()>>,
+                content: V
+            ) -> ::cabin::html::Html<V, #ident, ()> {
+                ::cabin::html::Html::new(attributes, content)
+            }
+        }
+    };
+
+    Ok(quote! {
+        #(#attrs)*
+        pub type #alias_ident<Ext> = ::cabin::html::attributes::Attributes<#ident, Ext>;
+
+        #factory
+
+        pub mod #fn_ident {
+            #[inline]
+            pub fn default<Ext: Default>() -> ::cabin::html::attributes::Attributes<super::#ident, Ext> {
+                ::cabin::html::attributes::Attributes::default()
+            }
+        }
+
         #[automatically_derived]
-        impl ::cabin::html::ElementExt for #ident {
+        impl<Ext> #alias_ident<Ext> {
+            #(#builder_methods)*
+        }
+
+        #[automatically_derived]
+        impl ::cabin::html::elements::ElementExt for #ident {
             fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error>
             {
                 #(#render_statements)*
 
                 Ok(())
             }
+        }
+
+        #[automatically_derived]
+        impl ::cabin::html::elements::Element for #ident {
+            const TAG: &'static str = #tag_name;
 
             fn is_void_element() -> bool {
                 #is_void
             }
         }
-    };
-
-    if is_void {
-        Ok(quote! {
-            #(#attrs)*
-            pub type #alias_ident = ::cabin::html::Html<(), #ident>;
-
-            #(#attrs)*
-            pub fn #fn_ident() -> #alias_ident {
-                ::cabin::html::Html::new(#tag_name, ())
-            }
-
-            #[automatically_derived]
-            impl #alias_ident {
-                #(#builder_methods)*
-            }
-
-            #element_ext
-        })
-    } else {
-        Ok(quote! {
-            #(#attrs)*
-            pub type #alias_ident<V> = ::cabin::html::Html<V, #ident>;
-
-            #[cfg(debug_assertions)]
-            #(#attrs)*
-            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<::cabin::view::BoxedView> {
-                ::cabin::html::Html::new(#tag_name, content.boxed())
-            }
-
-            #[cfg(not(debug_assertions))]
-            #(#attrs)*
-            pub fn #fn_ident<V: ::cabin::View>(content: V) -> #alias_ident<V> {
-                ::cabin::html::Html::new(#tag_name, content)
-            }
-
-            #[automatically_derived]
-            impl<V> #alias_ident<V> {
-                #(#builder_methods)*
-            }
-
-            #element_ext
-        })
-    }
+    })
 }
 
 pub(crate) enum Kind {

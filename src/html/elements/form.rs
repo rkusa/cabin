@@ -20,16 +20,16 @@ pub struct Form {
     // rel
 }
 
-impl<V> FormElement<V> {
+impl<Ext> FormElement<Ext> {
     /// Set the form's method to `get`.
     pub fn method_get(mut self) -> Self {
-        self.kind.method = Some(Method::Get);
+        self.base.method = Some(Method::Get);
         self
     }
 
     /// Set the form's method to `post`.
     pub fn method_post(mut self) -> Self {
-        self.kind.method = Some(Method::Post);
+        self.base.method = Some(Method::Post);
         self
     }
 }

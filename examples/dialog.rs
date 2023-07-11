@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
+use cabin::html::attributes::default;
 use cabin::state::State;
 use cabin::{html, View};
 use serde::{Deserialize, Serialize};
@@ -25,10 +26,14 @@ fn dialog(content: impl View) -> impl View {
         .restore_or(false);
 
     (
-        open.then_some(
-            html::dialog((content, html::button("close").on_click(DialogEvent::Close))).open(open),
-        ),
-        html::button("open").on_click(DialogEvent::Open),
+        open.then_some(html::dialog(
+            default().open(open),
+            (
+                content,
+                html::button(default().on_click(DialogEvent::Close), "close"),
+            ),
+        )),
+        html::button(default().on_click(DialogEvent::Open), "open"),
     )
 }
 

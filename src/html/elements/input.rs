@@ -8,8 +8,8 @@ use cabin_macros::Element;
 
 use super::button::PopoverTargetAction;
 use super::form::Method;
+use crate::html::attributes::SerializeEventFn;
 use crate::html::events::InputEvent;
-use crate::html::SerializeEventFn;
 
 // TODO: typed inputs? (number, date, ...)
 /// An `a` element represents a typed data field, usually with a form control to allow the user to
@@ -127,114 +127,114 @@ pub struct Input {
     width: Option<u32>,
 }
 
-impl InputElement {
+impl<Ext> InputElement<Ext> {
     pub fn type_hidden(mut self) -> Self {
-        self.kind.r#type = Some(Type::Hidden);
+        self.base.r#type = Some(Type::Hidden);
         self
     }
 
     pub fn type_text(mut self) -> Self {
-        self.kind.r#type = Some(Type::Text);
+        self.base.r#type = Some(Type::Text);
         self
     }
 
     pub fn type_search(mut self) -> Self {
-        self.kind.r#type = Some(Type::Search);
+        self.base.r#type = Some(Type::Search);
         self
     }
 
     pub fn type_tel(mut self) -> Self {
-        self.kind.r#type = Some(Type::Tel);
+        self.base.r#type = Some(Type::Tel);
         self
     }
 
     pub fn type_url(mut self) -> Self {
-        self.kind.r#type = Some(Type::Url);
+        self.base.r#type = Some(Type::Url);
         self
     }
 
     pub fn type_email(mut self) -> Self {
-        self.kind.r#type = Some(Type::Email);
+        self.base.r#type = Some(Type::Email);
         self
     }
 
     pub fn type_password(mut self) -> Self {
-        self.kind.r#type = Some(Type::Password);
+        self.base.r#type = Some(Type::Password);
         self
     }
 
     pub fn type_date(mut self) -> Self {
-        self.kind.r#type = Some(Type::Date);
+        self.base.r#type = Some(Type::Date);
         self
     }
 
     pub fn type_month(mut self) -> Self {
-        self.kind.r#type = Some(Type::Month);
+        self.base.r#type = Some(Type::Month);
         self
     }
 
     pub fn type_week(mut self) -> Self {
-        self.kind.r#type = Some(Type::Week);
+        self.base.r#type = Some(Type::Week);
         self
     }
 
     pub fn type_time(mut self) -> Self {
-        self.kind.r#type = Some(Type::Time);
+        self.base.r#type = Some(Type::Time);
         self
     }
 
     pub fn type_date_time_local(mut self) -> Self {
-        self.kind.r#type = Some(Type::DateTimeLocal);
+        self.base.r#type = Some(Type::DateTimeLocal);
         self
     }
 
     pub fn type_number(mut self) -> Self {
-        self.kind.r#type = Some(Type::Number);
+        self.base.r#type = Some(Type::Number);
         self
     }
 
     pub fn type_range(mut self) -> Self {
-        self.kind.r#type = Some(Type::Range);
+        self.base.r#type = Some(Type::Range);
         self
     }
 
     pub fn type_color(mut self) -> Self {
-        self.kind.r#type = Some(Type::Color);
+        self.base.r#type = Some(Type::Color);
         self
     }
 
     pub fn type_checkbox(mut self) -> Self {
-        self.kind.r#type = Some(Type::Checkbox);
+        self.base.r#type = Some(Type::Checkbox);
         self
     }
 
     pub fn type_radio(mut self) -> Self {
-        self.kind.r#type = Some(Type::Radio);
+        self.base.r#type = Some(Type::Radio);
         self
     }
 
     pub fn type_file(mut self) -> Self {
-        self.kind.r#type = Some(Type::File);
+        self.base.r#type = Some(Type::File);
         self
     }
 
     pub fn type_submit(mut self) -> Self {
-        self.kind.r#type = Some(Type::Submit);
+        self.base.r#type = Some(Type::Submit);
         self
     }
 
     pub fn type_image(mut self) -> Self {
-        self.kind.r#type = Some(Type::Image);
+        self.base.r#type = Some(Type::Image);
         self
     }
 
     pub fn type_reset(mut self) -> Self {
-        self.kind.r#type = Some(Type::Reset);
+        self.base.r#type = Some(Type::Reset);
         self
     }
 
     pub fn type_button(mut self) -> Self {
-        self.kind.r#type = Some(Type::Button);
+        self.base.r#type = Some(Type::Button);
         self
     }
 }

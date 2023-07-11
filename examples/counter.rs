@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
+use cabin::html::attributes::default;
 use cabin::state::State;
 use cabin::{html, View};
 use serde::{Deserialize, Serialize};
@@ -18,8 +19,8 @@ async fn counter(start_at: usize) -> impl View {
         .restore_or(start_at);
 
     (
-        html::div(html::text!("Count: {}", count)),
-        html::button("inc").on_click(Increment),
+        html::div((), html::text!("Count: {}", count)),
+        html::button(default().on_click(Increment), "inc"),
     )
 }
 

@@ -146,12 +146,12 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
 
     Ok(quote! {
         #[automatically_derived]
-        impl<V, K> ::cabin::html::Html<V, K> {
+        impl<El, Ext> ::cabin::html::attributes::Attributes<El, Ext> {
             #(#builder_methods)*
         }
 
         #[automatically_derived]
-        impl #impl_generics ::cabin::html::ElementExt for #struct_ident #ty_generics #where_clause {
+        impl #impl_generics ::cabin::html::elements::ElementExt for #struct_ident #ty_generics #where_clause {
             fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error>
             {
                 #(#render_statements)*

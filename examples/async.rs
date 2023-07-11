@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::net::SocketAddr;
 
 use axum::Json;
+use cabin::html::attributes::default;
 use cabin::html::events::InputValue;
 use cabin::state::State;
 use cabin::{html, View};
@@ -23,14 +24,19 @@ async fn search() -> impl View {
 
     let items = search_countries(&query).await;
 
-    html::div((
-        html::div(
-            html::input()
-                .attr("value", query)
-                .on_input(|ev| Search(ev.value)),
+    html::div(
+        (),
+        (
+            html::div(
+                (),
+                html::input(default().on_input(|ev| Search(ev.value)).value(query)),
+            ),
+            html::div(
+                (),
+                html::ul((), items.into_iter().map(|item| html::li((), item))),
+            ),
         ),
-        html::div(html::ul(items.into_iter().map(html::li))),
-    ))
+    )
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {

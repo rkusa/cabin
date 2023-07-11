@@ -65,10 +65,10 @@ pub struct Link {
     fetch_priority: FetchPriority,
 }
 
-impl LinkElement {
+impl<Ext> LinkElement<Ext> {
     /// Appends a [Rel] to the link.
     pub fn append_rel(mut self, rel: Rel) -> Self {
-        self.kind.rel = match self.kind.rel.take() {
+        self.base.rel = match self.base.rel.take() {
             Some(SpaceSeparated::Single(existing)) => {
                 Some(SpaceSeparated::List([existing, rel].into()))
             }
@@ -83,7 +83,7 @@ impl LinkElement {
 
     /// Indicate that the element is potentially render blocking.
     pub fn blocking(mut self) -> Self {
-        self.kind.blocking = Some(RenderBlocking);
+        self.base.blocking = Some(RenderBlocking);
         self
     }
 }

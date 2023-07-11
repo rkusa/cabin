@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
+use cabin::html::attributes::default;
 use cabin::state::State;
 use cabin::{html, View};
 use serde::{Deserialize, Serialize};
@@ -25,11 +26,14 @@ fn level(n: usize) -> impl View {
         })
         .restore_or(n < 3);
 
-    html::fieldset((
-        html::button(html::text!("{}", count)).on_click(Increment(n)),
-        html::button("toggle child").on_click(ToggleChild(n)),
-        has_next_level.then(|| level(n + 1).boxed()),
-    ))
+    html::fieldset(
+        (),
+        (
+            html::button(default().on_click(Increment(n)), html::text!("{}", count)),
+            html::button(default().on_click(ToggleChild(n)), "toggle child"),
+            has_next_level.then(|| level(n + 1).boxed()),
+        ),
+    )
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]

@@ -3,7 +3,7 @@ use std::fmt;
 
 use cabin_macros::Attributes;
 
-use crate::html::Html;
+use crate::html::attributes::Attributes;
 
 #[derive(Default, Attributes)]
 pub struct Global {
@@ -101,7 +101,7 @@ pub struct Global {
     translate: Option<DontTranslate>,
 }
 
-impl<V, K> Html<V, K> {
+impl<El, Ext> Attributes<El, Ext> {
     /// Indicate that the contents of this element should not be translated when the page is
     /// localized.
     pub fn no_translate(mut self) -> Self {

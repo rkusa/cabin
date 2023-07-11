@@ -45,22 +45,22 @@ pub struct Script {
     fetch_priority: FetchPriority,
 }
 
-impl<V> ScriptElement<V> {
+impl<Ext> ScriptElement<Ext> {
     /// Execute script when available, without blocking while fetching.
     pub fn r#async(mut self) -> Self {
-        self.kind.r#async = true;
+        self.base.r#async = true;
         self
     }
 
     /// Defer script execution.
     pub fn defer(mut self) -> Self {
-        self.kind.defer = true;
+        self.base.defer = true;
         self
     }
 
     /// Indicate that the element is potentially render blocking.
     pub fn blocking(mut self) -> Self {
-        self.kind.blocking = Some(RenderBlocking);
+        self.base.blocking = Some(RenderBlocking);
         self
     }
 }

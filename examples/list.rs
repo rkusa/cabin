@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::Json;
+use cabin::html::attributes::default;
 use cabin::state::State;
 use cabin::view::IteratorExt;
 use cabin::{html, View};
@@ -24,7 +25,7 @@ enum ItemsEvent {
     Increment(usize),
 }
 
-async fn list(default: impl FnOnce() -> Vec<Item>) -> impl View {
+async fn list(initial: impl FnOnce() -> Vec<Item>) -> impl View {
     let items = State::<Vec<Item>>::id("list")
         .update(|items, event: ItemsEvent| match event {
             ItemsEvent::AddAbove => {
@@ -46,18 +47,32 @@ async fn list(default: impl FnOnce() -> Vec<Item>) -> impl View {
                 }
             }
         })
-        .restore_or_else(default);
+        .restore_or_else(initial);
 
     (
-        html::div(html::button("add above").on_click(ItemsEvent::AddAbove)),
-        html::ul(items.into_iter().keyed(|item| item.id).map(|item| {
-            html::li((
-                html::button(html::text!("{}", item.count))
-                    .on_click(ItemsEvent::Increment(item.id)),
-                html::button("x").on_click(ItemsEvent::Delete(item.id)),
-            ))
-        })),
-        html::div(html::button("add below").on_click(ItemsEvent::AddBelow)),
+        html::div(
+            (),
+            html::button(default().on_click(ItemsEvent::AddAbove), "add above"),
+        ),
+        html::ul(
+            (),
+            items.into_iter().keyed(|item| item.id).map(|item| {
+                html::li(
+                    (),
+                    (
+                        html::button(
+                            default().on_click(ItemsEvent::Increment(item.id)),
+                            html::text!("{}", item.count),
+                        ),
+                        html::button(default().on_click(ItemsEvent::Delete(item.id)), "x"),
+                    ),
+                )
+            }),
+        ),
+        html::div(
+            (),
+            html::button(default().on_click(ItemsEvent::AddBelow), "add below"),
+        ),
     )
 }
 

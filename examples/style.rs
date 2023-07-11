@@ -10,18 +10,22 @@ async fn app() -> impl View {
         .update(|count, _: ()| *count += 1)
         .restore_or(0);
 
-    html::button(html::text!("{}", count)).on_click(()).class(
-        // TODO: modifier groups?
-        // TODO: autocomplate after XZY. (for modifiers)
-        // TODO: autocomplete after text::
-        css!(
-            css::BLOCK,
-            css::text::BLACK,
-            css::text::SM,
-            css::bg::BLACK.hover(),
-            css::text::WHITE.hover(),
-            css::text::XS.hover().focus(),
-        ) + (count == 0).then_some(css!(css::text::color("red"))),
+    html::button(
+        html::attributes::default().on_click(()).class(
+            // TODO: modifier groups?
+            // TODO: autocomplate after XZY. (for modifiers)
+            // TODO: autocomplete after text::
+            css![
+                css::BLOCK,
+                css::text::BLACK,
+                css::text::SM,
+                css::bg::BLACK.hover(),
+                css::text::WHITE.hover(),
+                css::text::XS.hover().focus(),
+            ]
+            .append_when(count == 0, css![css::text::color("red")]),
+        ),
+        html::text!("{}", count),
     )
 }
 
