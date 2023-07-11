@@ -46,8 +46,6 @@ mod exports {
     #[doc(inline)]
     pub use super::elements::nav::nav;
     #[doc(inline)]
-    pub use super::elements::old::*;
-    #[doc(inline)]
     pub use super::elements::script::script;
     #[doc(inline)]
     pub use super::elements::span::span;
