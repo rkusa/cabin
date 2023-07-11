@@ -38,6 +38,7 @@ pub mod outline;
 pub mod p;
 pub mod pb;
 pub mod pl;
+pub mod place;
 pub mod position;
 pub mod pr;
 pub mod pt;
