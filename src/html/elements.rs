@@ -54,7 +54,6 @@ pub mod old {
     element!($, __h5, h5);
     element!($, __h6, h6);
     element!($, __hgroup, hgroup);
-    void_element!($, __input, input, input, Input);
     element!($, __li, li);
     element!($, __table, table);
     element!($, __tbody, tbody);

@@ -3,6 +3,7 @@ use std::{error, fmt};
 
 use axum::Json;
 use cabin::View;
+use http::StatusCode;
 
 async fn app() -> impl View {
     health().await
@@ -20,17 +21,17 @@ async fn test_database_connection() -> Result<(), DbError> {
     Err(DbError)
 }
 
-impl From<DbError> for cabin::Error {
-    fn from(err: DbError) -> Self {
-        cabin::Error::from_err(err)
-    }
-}
-
 impl error::Error for DbError {}
 
 impl fmt::Display for DbError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("error connecting to database")
+    }
+}
+
+impl http_error::HttpError for DbError {
+    fn status_code(&self) -> http::StatusCode {
+        StatusCode::INTERNAL_SERVER_ERROR
     }
 }
 
