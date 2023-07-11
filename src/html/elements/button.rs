@@ -8,49 +8,51 @@ use super::form::Method;
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
 #[derive(Default, Element)]
-pub struct Button {
+pub struct Button<Ext = ()> {
+    pub extension: Ext,
+
     /// Whether the button is disabled.
-    disabled: Option<bool>,
+    pub disabled: Option<bool>,
 
     /// Associates the button with a `form` element.
-    form: Option<Cow<'static, str>>,
+    pub form: Option<Cow<'static, str>>,
 
     /// The URL to use for form submission.
     #[element(attribute_name = "formaction")]
-    form_action: Option<Cow<'static, str>>,
+    pub form_action: Option<Cow<'static, str>>,
 
     /// Entry list encoding type to use for form submission.
     #[element(attribute_name = "formenctype")]
-    form_enctype: Option<Cow<'static, str>>,
+    pub form_enctype: Option<Cow<'static, str>>,
 
     /// Variant to use for form submission
     #[element(attribute_name = "formmethod")]
-    form_method: Option<Method>,
+    pub form_method: Option<Method>,
 
     /// Bypass form control validation for form submission.
     #[element(attribute_name = "formnovalidate")]
-    form_novalidate: Option<bool>,
+    pub form_novalidate: Option<bool>,
 
     /// Navigable for form submission
     #[element(attribute_name = "formtarget")]
-    form_target: Option<Cow<'static, str>>,
+    pub form_target: Option<Cow<'static, str>>,
 
     /// Name of the button to use for form submission.
-    name: Option<Cow<'static, str>>,
+    pub name: Option<Cow<'static, str>>,
 
     /// ID of an element with a popover attribute.
     #[element(attribute_name = "popovertarget")]
-    popover_target: Option<Cow<'static, str>>,
+    pub popover_target: Option<Cow<'static, str>>,
 
     /// The action to take on the targeted popover element.
     #[element(attribute_name = "popovertargetaction")]
-    popover_target_action: Option<PopoverTargetAction>,
+    pub popover_target_action: Option<PopoverTargetAction>,
 
     /// Type of button.
-    r#type: Option<Type>,
+    pub r#type: Option<Type>,
 
     /// Value to be used for form submission
-    value: Option<Cow<'static, str>>,
+    pub value: Option<Cow<'static, str>>,
 }
 
 /// The action to take on the targeted popover element.

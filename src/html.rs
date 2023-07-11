@@ -70,7 +70,7 @@ pub struct Html<V, K> {
     // Boxed to not blow up struct size.
     global: Option<Box<Global>>,
     aria: Option<Box<Aria>>,
-    kind: K,
+    pub kind: K,
     content: V,
 }
 

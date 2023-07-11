@@ -5,7 +5,9 @@ use cabin_macros::Element;
 /// A `label` element that represents a caption that can be associated with a specific form
 /// control.
 #[derive(Default, Element)]
-pub struct Label {
+pub struct Label<Ext = ()> {
+    pub extension: Ext,
+
     /// The id of the form control the label is the caption for.
-    r#for: Option<Cow<'static, str>>,
+    pub r#for: Option<Cow<'static, str>>,
 }

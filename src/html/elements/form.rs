@@ -6,21 +6,23 @@ use cabin_macros::Element;
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
 #[derive(Default, Element)]
-pub struct Form {
+pub struct Form<Ext = ()> {
+    pub extension: Ext,
+
     // accept-charset — Character encodings to use for form submission
     /// URL to use for form submission.
-    action: Option<Cow<'static, str>>,
+    pub action: Option<Cow<'static, str>>,
     // autocomplete — Default setting for autofill feature for controls in the form
     // enctype — Entry list encoding type to use for form submission
     /// Variant used for form submission.
-    method: Option<Method>,
+    pub method: Option<Method>,
     // name — Name of form to use in the document.forms API
     // novalidate — Bypass form control validation for form submission
     // target — Navigable for form submission
     // rel
 }
 
-impl<V> FormElement<V> {
+impl<V, Ext> FormElement<V, Ext> {
     /// Set the form's method to `get`.
     pub fn method_get(mut self) -> Self {
         self.kind.method = Some(Method::Get);

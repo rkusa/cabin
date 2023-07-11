@@ -16,118 +16,120 @@ use crate::html::SerializeEventFn;
 /// edit data.
 #[derive(Default, Element)]
 #[element(void)]
-pub struct Input {
+pub struct Input<Ext = ()> {
+    pub extension: Ext,
+
     #[element(event = InputEvent)]
-    on_input: Option<Box<SerializeEventFn>>,
+    pub on_input: Option<Box<SerializeEventFn>>,
 
     /// Hint for expected file type in file upload controls.
-    accept: Option<Cow<'static, str>>,
+    pub accept: Option<Cow<'static, str>>,
 
     /// Replacement text for use when images (type=image) are not available.
-    alt: Option<Cow<'static, str>>,
+    pub alt: Option<Cow<'static, str>>,
 
     /// Hint for form autofill feature.
-    autocomplete: Option<AutoComplete>,
+    pub autocomplete: Option<AutoComplete>,
 
     /// Whether the control is checked.
-    checked: Option<bool>,
+    pub checked: Option<bool>,
 
     /// Name of form control to use for sending the element's directionality in form submission.
-    dirname: Option<Cow<'static, str>>,
+    pub dirname: Option<Cow<'static, str>>,
 
     /// Whether the form control is disabled.
-    disabled: Option<bool>,
+    pub disabled: Option<bool>,
 
     /// Associates the element with a form element.
-    form: Option<Cow<'static, str>>,
+    pub form: Option<Cow<'static, str>>,
 
     /// URL to use for form submission.
     #[element(attribute_name = "formaction")]
-    form_action: Option<Cow<'static, str>>,
+    pub form_action: Option<Cow<'static, str>>,
 
     /// Entry list encoding type to use for form submission.
     #[element(attribute_name = "formenctype")]
-    form_enctype: Option<Cow<'static, str>>,
+    pub form_enctype: Option<Cow<'static, str>>,
 
     /// Variant to use for form submission.
     #[element(attribute_name = "formmethod")]
-    form_method: Option<Method>,
+    pub form_method: Option<Method>,
 
     /// Bypass form control validation for form submission.
     #[element(attribute_name = "formnovalidate")]
-    form_novalidate: Option<Cow<'static, str>>,
+    pub form_novalidate: Option<Cow<'static, str>>,
 
     /// Navigable for form submission.
     #[element(attribute_name = "formtarget")]
-    form_target: Option<Cow<'static, str>>,
+    pub form_target: Option<Cow<'static, str>>,
 
     /// Vertical dimension.
-    height: Option<u32>,
+    pub height: Option<u32>,
 
     /// List of autocomplete options.
-    list: Option<Cow<'static, str>>,
+    pub list: Option<Cow<'static, str>>,
 
     /// Maximum value
-    max: Option<Cow<'static, str>>,
+    pub max: Option<Cow<'static, str>>,
 
     /// Maximum length of value.
     #[element(attribute_name = "maxlength")]
-    max_length: Option<i32>,
+    pub max_length: Option<i32>,
 
     /// Minimum value
-    min: Option<Cow<'static, str>>,
+    pub min: Option<Cow<'static, str>>,
 
     /// Minimum length of value
     #[element(attribute_name = "minlength")]
-    min_length: Option<i32>,
+    pub min_length: Option<i32>,
 
     /// Whether to allow multiple values.
-    multiple: Option<bool>,
+    pub multiple: Option<bool>,
 
     /// Name of the element to use for form submission.
-    name: Option<Cow<'static, str>>,
+    pub name: Option<Cow<'static, str>>,
 
     /// Pattern to be matched by the form control's value.
-    pattern: Option<Cow<'static, str>>,
+    pub pattern: Option<Cow<'static, str>>,
 
     /// User-visible label to be placed within the form control.
-    placeholder: Option<Cow<'static, str>>,
+    pub placeholder: Option<Cow<'static, str>>,
 
     /// Targets a popover element to toggle, show, or hide.
     #[element(attribute_name = "popovertarget")]
-    popover_target: Option<Cow<'static, str>>,
+    pub popover_target: Option<Cow<'static, str>>,
 
     /// Indicates whether a targeted popover element is to be toggled, shown, or hidden
     #[element(attribute_name = "popovertargetaction")]
-    popover_target_action: Option<PopoverTargetAction>,
+    pub popover_target_action: Option<PopoverTargetAction>,
 
     /// Whether to allow the value to be edited by the user
     #[element(attribute_name = "readonly")]
-    read_only: Option<bool>,
+    pub read_only: Option<bool>,
 
     /// Whether the control is required for form submission
-    required: Option<bool>,
+    pub required: Option<bool>,
 
     /// Size of the control
-    size: Option<u32>,
+    pub size: Option<u32>,
 
     /// Address of the resource
-    src: Option<Cow<'static, str>>,
+    pub src: Option<Cow<'static, str>>,
 
     /// Granularity to be matched by the form control's value
-    step: Option<Cow<'static, str>>,
+    pub step: Option<Cow<'static, str>>,
 
     /// Type of form control.
-    r#type: Option<Type>,
+    pub r#type: Option<Type>,
 
     /// Value of the form control
-    value: Option<Cow<'static, str>>,
+    pub value: Option<Cow<'static, str>>,
 
     /// Horizontal dimension.
-    width: Option<u32>,
+    pub width: Option<u32>,
 }
 
-impl InputElement {
+impl<Ext> InputElement<Ext> {
     pub fn type_hidden(mut self) -> Self {
         self.kind.r#type = Some(Type::Hidden);
         self
