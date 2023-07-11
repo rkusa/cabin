@@ -29,7 +29,7 @@ pub const FULL: Property<Length> = Property(HEIGHT, Length::Percent(100.0));
 /// ```css
 /// height: 100vw;
 /// ```
-pub const SCREEN: Property<Length> = Property(HEIGHT, Length::Vw(100));
+pub const SCREEN: Property<Length> = Property(HEIGHT, Length::Vh(100));
 
 /// ```css
 /// height: min-content;
