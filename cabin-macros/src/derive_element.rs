@@ -2,8 +2,10 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::{
-    token, Attribute, Data, DataStruct, DeriveInput, Error, Fields, Ident, Lit, PathArguments, Type,
+    parse_quote, token, Attribute, Data, DataStruct, DeriveInput, Error, Expr, ExprLit, ExprPath,
+    Fields, Ident, Lit, Path, PathArguments, Type,
 };
 
 pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
@@ -65,6 +67,60 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
             .unwrap_or_else(|| ident.clone());
 
         match kind {
+            Kind::Event => {
+                let Some(event) = opts.event else {
+                    return Err(Error::new(
+                        ident.span(),
+                        "event attribute requires event type via #[element(event = ...)]",
+                    ));
+                };
+
+                if !opts.skip {
+                    let what = format!("{method_name} event");
+                    builder_methods.push(quote! {
+                        #(#attrs)*
+                        pub fn #method_name<E>(mut self, event: impl FnOnce(#event) -> E) -> Self
+                        where
+                            E: ::serde::Serialize + 'static,
+                        {
+                            let event = event(#event::default());
+                            self.kind.#ident = Some(Box::new(move || {
+                                use std::hash::{Hash, Hasher};
+                                let mut hasher = ::twox_hash::XxHash32::default();
+                                ::std::any::TypeId::of::<E>().hash(&mut hasher);
+                                let hash = hasher.finish() as u32;
+                                ::serde_json::to_string(&event)
+                                    .map_err(|err| ::cabin::error::InternalError::Serialize {
+                                        what: #what,
+                                        err,
+                                    })
+                                    .map(|json| (hash, json))
+                            }));
+
+                            self
+                        }
+                    });
+                }
+
+                let attr_name = opts.attribute_name.unwrap_or_else(|| {
+                    let name = ident.to_string();
+                    name.strip_prefix("on_")
+                        .map(|s| s.to_string())
+                        .unwrap_or(name)
+                });
+                let attr_name_id = format!("cabin-{attr_name}");
+                let attr_name_payload = format!("cabin-{attr_name}-payload");
+                render_statements.push(quote! {
+                    if let Some(event) = self.#ident {
+                        // TODO: directly write into r?
+                        let (id, payload) = &(event)()?;
+                        r.attribute(#attr_name_id, id)
+                            .map_err(crate::error::InternalError::from)?;
+                        r.attribute(#attr_name_payload, payload)
+                            .map_err(crate::error::InternalError::from)?;
+                    }
+                });
+            }
             Kind::Option => {
                 if !opts.skip {
                     builder_methods.push(quote! {
@@ -190,6 +246,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 }
 
 pub(crate) enum Kind {
+    Event,
     Option,
     Bool,
     Other,
@@ -197,6 +254,10 @@ pub(crate) enum Kind {
 
 pub(crate) fn extract_inner_type(ty: &Type) -> syn::Result<(&Type, Kind)> {
     if let Type::Path(p) = ty {
+        if p.clone() == parse_quote!(Option<Box<SerializeEventFn>>) {
+            return Ok((ty, Kind::Event));
+        }
+
         if p.path.segments.len() != 1 {
             return Ok((ty, Kind::Other));
         }
@@ -236,7 +297,10 @@ fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
         if let Some(value) = opt.value {
             if opt.key == format_ident!("tag_name") {
-                let Lit::Str(s) = value else {
+                let Expr::Lit(ExprLit {
+                    lit: Lit::Str(s), ..
+                }) = value
+                else {
                     return Err(Error::new(value.span(), "tag_name must be a str"));
                 };
 
@@ -259,6 +323,7 @@ pub(crate) struct FieldOpts {
     pub(crate) method_name: Option<String>,
     pub(crate) attribute_name: Option<String>,
     pub(crate) skip: bool,
+    pub(crate) event: Option<Path>,
 }
 
 pub(crate) fn extract_field_options(tag: &str, attrs: &[Attribute]) -> syn::Result<FieldOpts> {
@@ -271,17 +336,29 @@ pub(crate) fn extract_field_options(tag: &str, attrs: &[Attribute]) -> syn::Resu
     for opt in attr.parse_args_with(Punctuated::<OptionExpr, token::Comma>::parse_terminated)? {
         if let Some(value) = opt.value {
             if opt.key == format_ident!("method_name") {
-                let Lit::Str(s) = value else {
+                let Expr::Lit(ExprLit {
+                    lit: Lit::Str(s), ..
+                }) = value
+                else {
                     return Err(Error::new(value.span(), "method_name must be a str"));
                 };
 
                 opts.method_name = Some(s.value());
             } else if opt.key == format_ident!("attribute_name") {
-                let Lit::Str(s) = value else {
+                let Expr::Lit(ExprLit {
+                    lit: Lit::Str(s), ..
+                }) = value
+                else {
                     return Err(Error::new(value.span(), "attribute_name must be a str"));
                 };
 
                 opts.attribute_name = Some(s.value());
+            } else if opt.key == format_ident!("event") {
+                let Expr::Path(ExprPath { path, .. }) = value else {
+                    return Err(Error::new(value.span(), "event must be a path"));
+                };
+
+                opts.event = Some(path);
             } else {
                 return Err(Error::new(opt.key.span(), "unknown element option"));
             }
@@ -298,14 +375,14 @@ pub(crate) fn extract_field_options(tag: &str, attrs: &[Attribute]) -> syn::Resu
 #[derive(Debug, Hash)]
 struct OptionExpr {
     key: Ident,
-    value: Option<Lit>,
+    value: Option<Expr>,
 }
 
 impl Parse for OptionExpr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let key = Ident::parse(input)?;
         let value = if Option::<token::Eq>::parse(input)?.is_some() {
-            Some(Lit::parse(input)?)
+            Some(Expr::parse(input)?)
         } else {
             None
         };

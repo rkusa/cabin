@@ -48,6 +48,12 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
             .unwrap_or_else(|| ident.clone());
 
         match kind {
+            Kind::Event => {
+                return Err(Error::new(
+                    ident.span(),
+                    "event attributes are not implemented yet",
+                ));
+            }
             Kind::Option => {
                 if !opts.skip {
                     builder_methods.push(quote! {
