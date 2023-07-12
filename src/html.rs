@@ -15,8 +15,8 @@ use crate::view::{RenderFuture, View};
 pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::anchor::{self as a, a, Anchor};
-    // #[doc(inline)]
-    // pub use super::elements::aria::Aria;
+    #[doc(inline)]
+    pub use super::elements::aria::{self as aria, Aria};
     // #[doc(inline)]
     // pub use super::elements::body::{body, Body};
     // #[doc(inline)]

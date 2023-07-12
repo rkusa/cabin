@@ -3,362 +3,747 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
-use cabin_macros::Attributes;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::{element, Attribute};
 
-use crate::html::attributes::{Attributes2, Pair};
+use crate::html::attributes::{Attributes, Pair};
 
-#[derive(Default, Attributes)]
-pub struct AriaAttributes {
+#[element(tag = false)]
+pub trait Aria: Attributes {
     /// Identifies the currently active element when DOM focus is on a composite widget, combobox,
     /// textbox, group, or application.
     ///
     /// <https://w3c.github.io/aria/#aria-activedescendant>
-    #[attributes(attribute_name = "aria-activedescendant")]
-    aria_active_descendant: Option<Cow<'static, str>>,
+    fn aria_active_descendant(
+        self,
+        aria_active_descendant: impl Into<Cow<'static, str>>,
+    ) -> impl Aria {
+        self.with(AriaActiveDescendant(aria_active_descendant.into()))
+    }
 
     /// Indicates whether assistive technologies will present all, or only parts of, the changed
     /// region based on the change notifications defined by the aria-relevant attribute.
     ///
     /// <https://w3c.github.io/aria/#aria-atomic>
-    #[attributes(attribute_name = "aria-atomic")]
-    aria_atomic: Option<bool>,
+    fn aria_atomic(self, aria_atomic: bool) -> impl Aria {
+        self.with(AriaAtomic(aria_atomic))
+    }
 
     /// Indicates whether inputting text could trigger display of one or more predictions of the
     /// user's intended value for a combobox, searchbox, or textbox and specifies how predictions
     /// would be presented if they were made.
     ///
     /// <https://w3c.github.io/aria/#aria-autocomplete>
-    #[attributes(attribute_name = "aria-autocomplete")]
-    aria_autocomplete: Option<AutoAutocomplete>,
+    fn aria_autocomplete(self, aria_autocomplete: AutoAutocomplete) -> impl Aria {
+        self.with(aria_autocomplete)
+    }
 
     /// Defines a string value that labels the current element, which is intended to be converted
     /// into Braille. See related aria-label.
     ///
     /// <https://w3c.github.io/aria/#aria-braillelabel>
-    #[attributes(attribute_name = "aria-braillelabel")]
-    aria_braille_label: Option<Cow<'static, str>>,
+    fn aria_braille_label(self, aria_braille_label: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaBrailleLabel(aria_braille_label.into()))
+    }
 
     /// Defines a human-readable, author-localized abbreviated description for the role of an
     /// element, which is intended to be converted into Braille. See related aria-roledescription.
     ///
     /// <https://w3c.github.io/aria/#aria-brailleroledescription>
-    #[attributes(attribute_name = "aria-brailleroledescription")]
-    aria_braille_role_description: Option<Cow<'static, str>>,
+    fn aria_braille_role_description(
+        self,
+        aria_braille_role_description: impl Into<Cow<'static, str>>,
+    ) -> impl Aria {
+        self.with(AriaBrailleRoleDescription(
+            aria_braille_role_description.into(),
+        ))
+    }
 
     /// Indicates an element is being modified and that assistive technologies could wait until the
     /// modifications are complete before exposing them to the user.
     ///
     /// <https://w3c.github.io/aria/#aria-busy>
-    #[attributes(attribute_name = "aria-busy")]
-    aria_busy: Option<bool>,
+    fn aria_busy(self, aria_busy: bool) -> impl Aria {
+        self.with(AriaBusy(aria_busy))
+    }
 
     /// Indicates the current "checked" state of checkboxes, radio buttons, and other widgets. See
     /// related aria-pressed and aria-selected.
     ///
     /// <https://w3c.github.io/aria/#aria-checked>
-    #[attributes(attribute_name = "aria-checked")]
-    aria_checked: Option<AriaChecked>,
+    fn aria_checked(self, aria_checked: AriaChecked) -> impl Aria {
+        self.with(aria_checked)
+    }
 
     /// Defines the total number of columns in a table, grid, or treegrid. See related
     /// aria-colindex.
     ///
     /// <https://w3c.github.io/aria/#aria-colcount>
-    #[attributes(attribute_name = "aria-colcount")]
-    aria_col_count: Option<i32>,
+    fn aria_col_count(self, aria_col_count: impl Into<i32>) -> impl Aria {
+        self.with(AriaColCount(aria_col_count.into()))
+    }
 
     /// Defines an element's column index or position with respect to the total number of columns
     /// within a table, grid, or treegrid. See related aria-colindextext, aria-colcount, and
     /// aria-colspan.
     ///
     /// <https://w3c.github.io/aria/#aria-colindex>
-    #[attributes(attribute_name = "aria-colindex")]
-    aria_col_index: Option<u32>,
+    fn aria_col_index(self, aria_col_index: impl Into<u32>) -> impl Aria {
+        self.with(AriaColIndex(aria_col_index.into()))
+    }
 
     /// Defines a human readable text alternative of aria-colindex. See related aria-rowindextext.
     ///
     /// <https://w3c.github.io/aria/#aria-colindextext>
-    #[attributes(attribute_name = "aria-colindextext")]
-    aria_colindextext: Option<Cow<'static, str>>,
+    fn aria_colindextext(self, aria_colindextext: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaColindextext(aria_colindextext.into()))
+    }
 
     /// Defines the number of columns spanned by a cell or gridcell within a table, grid, or
     /// treegrid. See related aria-colindex and aria-rowspan.
     ///
     /// <https://w3c.github.io/aria/#aria-colspan>
-    #[attributes(attribute_name = "aria-colspan")]
-    aria_col_span: Option<u32>,
+    fn aria_col_span(self, aria_col_span: impl Into<u32>) -> impl Aria {
+        self.with(AriaColSpan(aria_col_span.into()))
+    }
 
     /// Identifies the element (or elements) whose contents or presence are controlled by the
     /// current element. See related aria-owns.
     ///
     /// <https://w3c.github.io/aria/#aria-controls>
-    #[attributes(attribute_name = "aria-controls")]
-    aria_controls: Option<Cow<'static, str>>,
+    fn aria_controls(self, aria_controls: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaControls(aria_controls.into()))
+    }
 
     /// Indicates the element that represents the current item within a container or set of related
     /// elements.
     ///
     /// <https://w3c.github.io/aria/#aria-current>
-    #[attributes(attribute_name = "aria-current")]
-    aria_current: Option<AriaCurrent>,
+    fn aria_current(self, aria_current: AriaCurrent) -> impl Aria {
+        self.with(aria_current)
+    }
 
     /// Identifies the element (or elements) that describes the object. See related aria-labelledby
     /// and aria-description.
     ///
     /// <https://w3c.github.io/aria/#aria-describedby>
-    #[attributes(attribute_name = "aria-describedby")]
-    aria_describedby: Option<Cow<'static, str>>,
+    fn aria_describedby(self, aria_describedby: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaDescribedby(aria_describedby.into()))
+    }
 
     /// Defines a string value that describes or annotates the current element. See related
     /// aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-description>
-    #[attributes(attribute_name = "aria-description")]
-    aria_description: Option<Cow<'static, str>>,
+    fn aria_description(self, aria_description: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaDescription(aria_description.into()))
+    }
 
     /// Identifies the element (or elements) that provide additional information related to the
     /// object. See related aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-details>
-    #[attributes(attribute_name = "aria-details")]
-    aria_details: Option<Cow<'static, str>>,
+    fn aria_details(self, aria_details: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaDetails(aria_details.into()))
+    }
 
     /// Indicates that the element is perceivable but disabled, so it is not editable or otherwise
     /// operable. See related aria-hidden and aria-readonly.
     ///
     /// <https://w3c.github.io/aria/#aria-disabled>
-    #[attributes(attribute_name = "aria-disabled")]
-    aria_disabled: Option<bool>,
+    fn aria_disabled(self, aria_disabled: bool) -> impl Aria {
+        self.with(AriaDisabled(aria_disabled))
+    }
 
     /// Identifies the element (or elements) that provides an error message for an object. See
     /// related aria-invalid and aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-errormessage>
-    #[attributes(attribute_name = "aria-errormessage")]
-    aria_error_message: Option<Cow<'static, str>>,
+    fn aria_error_message(self, aria_error_message: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaErrorMessage(aria_error_message.into()))
+    }
 
     /// Indicates whether a grouping element owned or controlled by this element is expanded or
     /// collapsed.
     ///
     /// <https://w3c.github.io/aria/#aria-expanded>
-    #[attributes(attribute_name = "aria-expanded")]
-    aria_expanded: Option<bool>,
+    fn aria_expanded(self, aria_expanded: bool) -> impl Aria {
+        self.with(AriaExpanded(aria_expanded))
+    }
 
     /// Identifies the next element (or elements) in an alternate reading order of content which,
     /// at the user's discretion, allows assistive technology to override the general default of
     /// reading in document source order.
     ///
     /// <https://w3c.github.io/aria/#aria-flowto>
-    #[attributes(attribute_name = "aria-flowto")]
-    aria_flow_to: Option<Cow<'static, str>>,
+    fn aria_flow_to(self, aria_flow_to: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaFlowTo(aria_flow_to.into()))
+    }
 
     /// Indicates the availability and type of interactive popup element, such as menu or dialog,
     /// that can be triggered by an element.
     ///
     /// <https://w3c.github.io/aria/#aria-haspopup>
-    #[attributes(attribute_name = "aria-haspopup")]
-    aria_haspopup: Option<AriaHasPopup>,
+    fn aria_haspopup(self, aria_haspopup: AriaHasPopup) -> impl Aria {
+        self.with(aria_haspopup)
+    }
 
     /// Indicates whether the element is exposed to an accessibility API. See related
     /// aria-disabled.
     ///
     /// <https://w3c.github.io/aria/#aria-hidden>
-    #[attributes(attribute_name = "aria-hidden")]
-    aria_hidden: Option<bool>,
+    fn aria_hidden(self, aria_hidden: bool) -> impl Aria {
+        self.with(AriaHidden(aria_hidden))
+    }
 
     /// Indicates the entered value does not conform to the format expected by the application.
     /// See related aria-errormessage.
     ///
     /// <https://w3c.github.io/aria/#aria-invalid>
-    #[attributes(attribute_name = "aria-invalid")]
-    aria_invalid: Option<AriaInvalid>,
+    fn aria_invalid(self, aria_invalid: AriaInvalid) -> impl Aria {
+        self.with(aria_invalid)
+    }
 
     /// Defines keyboard shortcuts that an author has implemented to activate or give focus to an
     /// element.
     ///
     /// <https://w3c.github.io/aria/#aria-keyshortcuts>
-    #[attributes(attribute_name = "aria-keyshortcuts")]
-    aria_key_shortcuts: Option<Cow<'static, str>>,
+    fn aria_key_shortcuts(self, aria_key_shortcuts: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaKeyShortcuts(aria_key_shortcuts.into()))
+    }
 
     /// Defines a string value that labels the current element. See related aria-labelledby.
     ///
     /// <https://w3c.github.io/aria/#aria-label>
-    #[attributes(attribute_name = "aria-label")]
-    aria_label: Option<Cow<'static, str>>,
+    fn aria_label(self, aria_label: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaLabel(aria_label.into()))
+    }
 
     /// Identifies the element (or elements) that labels the current element. See related
     /// aria-label and aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-labelledby>
-    #[attributes(attribute_name = "aria-labelledby")]
-    aria_labelledby: Option<Cow<'static, str>>,
+    fn aria_labelledby(self, aria_labelledby: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaLabelledby(aria_labelledby.into()))
+    }
 
     /// Defines the hierarchical level of an element within a structure.
     ///
     /// <https://w3c.github.io/aria/#aria-level>
-    #[attributes(attribute_name = "aria-level")]
-    aria_level: Option<u32>,
+    fn aria_level(self, aria_level: impl Into<u32>) -> impl Aria {
+        self.with(AriaLevel(aria_level.into()))
+    }
 
     /// Indicates that an element will be updated, and describes the types of updates the user
     /// agents, assistive technologies, and user can expect from the live region.
     ///
     /// <https://w3c.github.io/aria/#aria-live>
-    #[attributes(attribute_name = "aria-live")]
-    aria_live: Option<AriaLive>,
+    fn aria_live(self, aria_live: AriaLive) -> impl Aria {
+        self.with(aria_live)
+    }
 
     /// Indicates whether an element is modal when displayed.
     ///
     /// <https://w3c.github.io/aria/#aria-modal>
-    #[attributes(attribute_name = "aria-modal")]
-    aria_modal: Option<bool>,
+    fn aria_modal(self, aria_modal: bool) -> impl Aria {
+        self.with(AriaModal(aria_modal))
+    }
 
     /// Indicates whether a text box accepts multiple lines of input or only a single line.
     ///
     /// <https://w3c.github.io/aria/#aria-multiline>
-    #[attributes(attribute_name = "aria-multiline")]
-    aria_multi_line: Option<bool>,
+    fn aria_multi_line(self, aria_multi_line: bool) -> impl Aria {
+        self.with(AriaMultiLine(aria_multi_line))
+    }
 
     /// Indicates that the user can select more than one item from the current selectable
     /// descendants.
     ///
     /// <https://w3c.github.io/aria/#aria-multiselectable>
-    #[attributes(attribute_name = "aria-multiselectable")]
-    aria_multi_selectable: Option<bool>,
+    fn aria_multi_selectable(self, aria_multi_selectable: bool) -> impl Aria {
+        self.with(AriaMultiSelectable(aria_multi_selectable))
+    }
 
     /// Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.
     ///
     /// <https://w3c.github.io/aria/#aria-orientation>
-    #[attributes(attribute_name = "aria-orientation")]
-    aria_orientation: Option<AriaOrientation>,
+    fn aria_orientation(self, aria_orientation: AriaOrientation) -> impl Aria {
+        self.with(aria_orientation)
+    }
 
     /// Identifies an element (or elements) in order to define a visual, functional, or contextual
     /// parent/child relationship between DOM elements where the DOM hierarchy cannot be used to
     /// represent the relationship. See related aria-controls.
     ///
     /// <https://w3c.github.io/aria/#aria-owns>
-    #[attributes(attribute_name = "aria-owns")]
-    aria_owns: Option<Cow<'static, str>>,
+    fn aria_owns(self, aria_owns: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaOwns(aria_owns.into()))
+    }
 
     /// Defines a short hint (a word or short phrase) intended to aid the user with data entry when
     /// the control has no value. A hint could be a sample value or a brief description of the
     /// expected format.
     ///
     /// <https://w3c.github.io/aria/#aria-placeholder>
-    #[attributes(attribute_name = "aria-placeholder")]
-    aria_placeholder: Option<Cow<'static, str>>,
+    fn aria_placeholder(self, aria_placeholder: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaPlaceholder(aria_placeholder.into()))
+    }
 
     /// Defines an element's number or position in the current set of listitems or treeitems. Not
     /// required if all elements in the set are present in the DOM. See related aria-setsize.
     ///
     /// <https://w3c.github.io/aria/#aria-posinset>
-    #[attributes(attribute_name = "aria-posinset")]
-    aria_pos_inset: Option<u32>,
+    fn aria_pos_inset(self, aria_pos_inset: impl Into<u32>) -> impl Aria {
+        self.with(AriaPosInset(aria_pos_inset.into()))
+    }
 
     /// Indicates the current "pressed" state of toggle buttons. See related aria-checked and
     /// aria-selected.
     ///
     /// <https://w3c.github.io/aria/#aria-pressed>
-    #[attributes(attribute_name = "aria-pressed")]
-    aria_pressed: Option<AriaPressed>,
+    fn aria_pressed(self, aria_pressed: AriaPressed) -> impl Aria {
+        self.with(aria_pressed)
+    }
 
     /// Indicates that the element is not editable, but is otherwise operable. See related
     /// aria-disabled.
     ///
     /// <https://w3c.github.io/aria/#aria-readonly>
-    #[attributes(attribute_name = "aria-readonly")]
-    aria_readonly: Option<bool>,
+    fn aria_readonly(self, aria_readonly: bool) -> impl Aria {
+        self.with(AriaReadonly(aria_readonly))
+    }
 
     /// Indicates what notifications the user agent will trigger when the accessibility tree within
     /// a live region is modified. See related aria-atomic.
     ///
     /// <https://w3c.github.io/aria/#aria-relevant>
-    #[attributes(attribute_name = "aria-relevant")]
-    aria_relevant: Option<AriaRelevant>,
+    fn aria_relevant(self, aria_relevant: AriaRelevant) -> impl Aria {
+        self.with(aria_relevant)
+    }
 
     /// Indicates that user input is required on the element before a form can be submitted.
     ///
     /// <https://w3c.github.io/aria/#aria-required>
-    #[attributes(attribute_name = "aria-required")]
-    aria_required: Option<bool>,
+    fn aria_required(self, aria_required: bool) -> impl Aria {
+        self.with(AriaRequired(aria_required))
+    }
 
     /// Defines a human-readable, author-localized description for the role of an element.
     ///
     /// <https://w3c.github.io/aria/#aria-roledescription>
-    #[attributes(attribute_name = "aria-roledescription")]
-    aria_role_description: Option<Cow<'static, str>>,
+    fn aria_role_description(
+        self,
+        aria_role_description: impl Into<Cow<'static, str>>,
+    ) -> impl Aria {
+        self.with(AriaRoleDescription(aria_role_description.into()))
+    }
 
     /// Defines the total number of rows in a table, grid, or treegrid. See related aria-rowindex.
     ///
     /// <https://w3c.github.io/aria/#aria-rowcount>
-    #[attributes(attribute_name = "aria-rowcount")]
-    aria_row_count: Option<i32>,
+    fn aria_row_count(self, aria_row_count: impl Into<i32>) -> impl Aria {
+        self.with(AriaRowCount(aria_row_count.into()))
+    }
 
     /// Defines an element's row index or position with respect to the total number of rows within
     /// a table, grid, or treegrid. See related aria-rowindextext, aria-rowcount, and aria-rowspan.
     ///
     /// <https://w3c.github.io/aria/#aria-rowindex>
-    #[attributes(attribute_name = "aria-rowindex")]
-    aria_row_index: Option<u32>,
+    fn aria_row_index(self, aria_row_index: impl Into<u32>) -> impl Aria {
+        self.with(AriaRowIndex(aria_row_index.into()))
+    }
 
     /// Defines a human readable text alternative of aria-rowindex. See related aria-colindextext.
     ///
     /// <https://w3c.github.io/aria/#aria-rowindextext>
-    #[attributes(attribute_name = "aria-rowindextext")]
-    aria_row_index_text: Option<Cow<'static, str>>,
+    fn aria_row_index_text(self, aria_row_index_text: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaRowIndexText(aria_row_index_text.into()))
+    }
 
     /// Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.
     /// See related aria-rowindex and aria-colspan.
     ///
     /// <https://w3c.github.io/aria/#aria-rowspan>
-    #[attributes(attribute_name = "aria-rowspan")]
-    aria_row_span: Option<u32>,
+    fn aria_row_span(self, aria_row_span: impl Into<u32>) -> impl Aria {
+        self.with(AriaRowSpan(aria_row_span.into()))
+    }
 
     /// Indicates the current "selected" state of various widgets. See related aria-checked and
     /// aria-pressed.
     ///
     /// <https://w3c.github.io/aria/#aria-selected>
-    #[attributes(attribute_name = "aria-selected")]
-    aria_selected: Option<bool>,
+    fn aria_selected(self, aria_selected: bool) -> impl Aria {
+        self.with(AriaSelected(aria_selected))
+    }
 
     /// Defines the number of items in the current set of listitems or treeitems. Not required if
     /// all elements in the set are present in the DOM. See related aria-posinset.
     ///
     /// <https://w3c.github.io/aria/#aria-setsize>
-    #[attributes(attribute_name = "aria-setsize")]
-    aria_set_size: Option<i32>,
+    fn aria_set_size(self, aria_set_size: impl Into<i32>) -> impl Aria {
+        self.with(AriaSetSize(aria_set_size.into()))
+    }
 
     /// Indicates if items in a table or grid are sorted in ascending or descending order.
     ///
     /// <https://w3c.github.io/aria/#aria-sort>
-    #[attributes(attribute_name = "aria-sort")]
-    aria_sort: Option<AriaSort>,
+    fn aria_sort(self, aria_sort: AriaSort) -> impl Aria {
+        self.with(aria_sort)
+    }
 
     /// Defines the maximum allowed value for a range widget.
     ///
     /// <https://w3c.github.io/aria/#aria-valuemax>
-    #[attributes(attribute_name = "aria-valuemax")]
-    aria_value_max: Option<Number>,
+    fn aria_value_max(self, aria_value_max: impl Into<Number>) -> impl Aria {
+        self.with(AriaValueMax(aria_value_max.into()))
+    }
 
     /// Defines the minimum allowed value for a range widget.
     ///
     /// <https://w3c.github.io/aria/#aria-valuemin>
-    #[attributes(attribute_name = "aria-valuemin")]
-    aria_value_min: Option<Number>,
+    fn aria_value_min(self, aria_value_min: impl Into<Number>) -> impl Aria {
+        self.with(AriaValueMin(aria_value_min.into()))
+    }
 
     /// Defines the current value for a range widget. See related aria-valuetext.
     ///
     /// <https://w3c.github.io/aria/#aria-valuenow>
-    #[attributes(attribute_name = "aria-valuenow")]
-    aria_value_now: Option<Number>,
+    fn aria_value_now(self, aria_value_now: impl Into<Number>) -> impl Aria {
+        self.with(AriaValueNow(aria_value_now.into()))
+    }
 
     /// Defines the human readable text alternative of aria-valuenow for a range widget.
     ///
     /// <https://w3c.github.io/aria/#aria-valuetext>
-    #[attributes(attribute_name = "aria-valuetext")]
-    aria_value_text: Option<Cow<'static, str>>,
+    fn aria_value_text(self, aria_value_text: impl Into<Cow<'static, str>>) -> impl Aria {
+        self.with(AriaValueText(aria_value_text.into()))
+    }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Identifies the currently active element when DOM focus is on a composite widget, combobox,
+/// textbox, group, or application.
+///
+/// <https://w3c.github.io/aria/#aria-activedescendant>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-activedescendant")]
+pub struct AriaActiveDescendant(pub Cow<'static, str>);
+
+/// Indicates whether assistive technologies will present all, or only parts of, the changed
+/// region based on the change notifications defined by the aria-relevant attribute.
+///
+/// <https://w3c.github.io/aria/#aria-atomic>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-atomic")]
+pub struct AriaAtomic(pub bool);
+
+/// Defines a string value that labels the current element, which is intended to be converted
+/// into Braille. See related aria-label.
+///
+/// <https://w3c.github.io/aria/#aria-braillelabel>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-braillelabel")]
+pub struct AriaBrailleLabel(pub Cow<'static, str>);
+
+/// Defines a human-readable, author-localized abbreviated description for the role of an
+/// element, which is intended to be converted into Braille. See related aria-roledescription.
+///
+/// <https://w3c.github.io/aria/#aria-brailleroledescription>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-brailleroledescription")]
+pub struct AriaBrailleRoleDescription(pub Cow<'static, str>);
+
+/// Indicates an element is being modified and that assistive technologies could wait until the
+/// modifications are complete before exposing them to the user.
+///
+/// <https://w3c.github.io/aria/#aria-busy>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-busy")]
+pub struct AriaBusy(pub bool);
+
+/// Defines the total number of columns in a table, grid, or treegrid. See related
+/// aria-colindex.
+///
+/// <https://w3c.github.io/aria/#aria-colcount>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-colcount")]
+pub struct AriaColCount(pub i32);
+
+/// Defines an element's column index or position with respect to the total number of columns
+/// within a table, grid, or treegrid. See related aria-colindextext, aria-colcount, and
+/// aria-colspan.
+///
+/// <https://w3c.github.io/aria/#aria-colindex>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-colindex")]
+pub struct AriaColIndex(pub u32);
+
+/// Defines a human readable text alternative of aria-colindex. See related aria-rowindextext.
+///
+/// <https://w3c.github.io/aria/#aria-colindextext>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-colindextext")]
+pub struct AriaColindextext(pub Cow<'static, str>);
+
+/// Defines the number of columns spanned by a cell or gridcell within a table, grid, or
+/// treegrid. See related aria-colindex and aria-rowspan.
+///
+/// <https://w3c.github.io/aria/#aria-colspan>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-colspan")]
+pub struct AriaColSpan(pub u32);
+
+/// Identifies the element (or elements) whose contents or presence are controlled by the
+/// current element. See related aria-owns.
+///
+/// <https://w3c.github.io/aria/#aria-controls>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-controls")]
+pub struct AriaControls(pub Cow<'static, str>);
+
+/// Identifies the element (or elements) that describes the object. See related aria-labelledby
+/// and aria-description.
+///
+/// <https://w3c.github.io/aria/#aria-describedby>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-describedby")]
+pub struct AriaDescribedby(pub Cow<'static, str>);
+
+/// Defines a string value that describes or annotates the current element. See related
+/// aria-describedby.
+///
+/// <https://w3c.github.io/aria/#aria-description>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-description")]
+pub struct AriaDescription(pub Cow<'static, str>);
+
+/// Identifies the element (or elements) that provide additional information related to the
+/// object. See related aria-describedby.
+///
+/// <https://w3c.github.io/aria/#aria-details>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-details")]
+pub struct AriaDetails(pub Cow<'static, str>);
+
+/// Indicates that the element is perceivable but disabled, so it is not editable or otherwise
+/// operable. See related aria-hidden and aria-readonly.
+///
+/// <https://w3c.github.io/aria/#aria-disabled>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-disabled")]
+pub struct AriaDisabled(pub bool);
+
+/// Identifies the element (or elements) that provides an error message for an object. See
+/// related aria-invalid and aria-describedby.
+///
+/// <https://w3c.github.io/aria/#aria-errormessage>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-errormessage")]
+pub struct AriaErrorMessage(pub Cow<'static, str>);
+
+/// Indicates whether a grouping element owned or controlled by this element is expanded or
+/// collapsed.
+///
+/// <https://w3c.github.io/aria/#aria-expanded>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-expanded")]
+pub struct AriaExpanded(pub bool);
+
+/// Identifies the next element (or elements) in an alternate reading order of content which,
+/// at the user's discretion, allows assistive technology to override the general default of
+/// reading in document source order.
+///
+/// <https://w3c.github.io/aria/#aria-flowto>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-flowto")]
+pub struct AriaFlowTo(pub Cow<'static, str>);
+
+/// Indicates whether the element is exposed to an accessibility API. See related
+/// aria-disabled.
+///
+/// <https://w3c.github.io/aria/#aria-hidden>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-hidden")]
+pub struct AriaHidden(pub bool);
+
+/// Defines keyboard shortcuts that an author has implemented to activate or give focus to an
+/// element.
+///
+/// <https://w3c.github.io/aria/#aria-keyshortcuts>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-keyshortcuts")]
+pub struct AriaKeyShortcuts(pub Cow<'static, str>);
+
+/// Defines a string value that labels the current element. See related aria-labelledby.
+///
+/// <https://w3c.github.io/aria/#aria-label>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-label")]
+pub struct AriaLabel(pub Cow<'static, str>);
+
+/// Identifies the element (or elements) that labels the current element. See related
+/// aria-label and aria-describedby.
+///
+/// <https://w3c.github.io/aria/#aria-labelledby>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-labelledby")]
+pub struct AriaLabelledby(pub Cow<'static, str>);
+
+/// Defines the hierarchical level of an element within a structure.
+///
+/// <https://w3c.github.io/aria/#aria-level>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-level")]
+pub struct AriaLevel(pub u32);
+
+/// Indicates whether an element is modal when displayed.
+///
+/// <https://w3c.github.io/aria/#aria-modal>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-modal")]
+pub struct AriaModal(pub bool);
+
+/// Indicates whether a text box accepts multiple lines of input or only a single line.
+///
+/// <https://w3c.github.io/aria/#aria-multiline>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-multiline")]
+pub struct AriaMultiLine(pub bool);
+
+/// Indicates that the user can select more than one item from the current selectable
+/// descendants.
+///
+/// <https://w3c.github.io/aria/#aria-multiselectable>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-multiselectable")]
+pub struct AriaMultiSelectable(pub bool);
+
+/// Identifies an element (or elements) in order to define a visual, functional, or contextual
+/// parent/child relationship between DOM elements where the DOM hierarchy cannot be used to
+/// represent the relationship. See related aria-controls.
+///
+/// <https://w3c.github.io/aria/#aria-owns>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-owns")]
+pub struct AriaOwns(pub Cow<'static, str>);
+
+/// Defines a short hint (a word or short phrase) intended to aid the user with data entry when
+/// the control has no value. A hint could be a sample value or a brief description of the
+/// expected format.
+///
+/// <https://w3c.github.io/aria/#aria-placeholder>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-placeholder")]
+pub struct AriaPlaceholder(pub Cow<'static, str>);
+
+/// Defines an element's number or position in the current set of listitems or treeitems. Not
+/// required if all elements in the set are present in the DOM. See related aria-setsize.
+///
+/// <https://w3c.github.io/aria/#aria-posinset>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-posinset")]
+pub struct AriaPosInset(pub u32);
+
+/// Indicates that the element is not editable, but is otherwise operable. See related
+/// aria-disabled.
+///
+/// <https://w3c.github.io/aria/#aria-readonly>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-readonly")]
+pub struct AriaReadonly(pub bool);
+
+/// Indicates that user input is required on the element before a form can be submitted.
+///
+/// <https://w3c.github.io/aria/#aria-required>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-required")]
+pub struct AriaRequired(pub bool);
+
+/// Defines a human-readable, author-localized description for the role of an element.
+///
+/// <https://w3c.github.io/aria/#aria-roledescription>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-roledescription")]
+pub struct AriaRoleDescription(pub Cow<'static, str>);
+
+/// Defines the total number of rows in a table, grid, or treegrid. See related aria-rowindex.
+///
+/// <https://w3c.github.io/aria/#aria-rowcount>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-rowcount")]
+pub struct AriaRowCount(pub i32);
+
+/// Defines an element's row index or position with respect to the total number of rows within
+/// a table, grid, or treegrid. See related aria-rowindextext, aria-rowcount, and aria-rowspan.
+///
+/// <https://w3c.github.io/aria/#aria-rowindex>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-rowindex")]
+pub struct AriaRowIndex(pub u32);
+
+/// Defines a human readable text alternative of aria-rowindex. See related aria-colindextext.
+///
+/// <https://w3c.github.io/aria/#aria-rowindextext>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-rowindextext")]
+pub struct AriaRowIndexText(pub Cow<'static, str>);
+
+/// Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.
+/// See related aria-rowindex and aria-colspan.
+///
+/// <https://w3c.github.io/aria/#aria-rowspan>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-rowspan")]
+pub struct AriaRowSpan(pub u32);
+
+/// Indicates the current "selected" state of various widgets. See related aria-checked and
+/// aria-pressed.
+///
+/// <https://w3c.github.io/aria/#aria-selected>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-selected")]
+pub struct AriaSelected(pub bool);
+
+/// Defines the number of items in the current set of listitems or treeitems. Not required if
+/// all elements in the set are present in the DOM. See related aria-posinset.
+///
+/// <https://w3c.github.io/aria/#aria-setsize>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-setsize")]
+pub struct AriaSetSize(pub i32);
+
+/// Defines the maximum allowed value for a range widget.
+///
+/// <https://w3c.github.io/aria/#aria-valuemax>
+#[derive(Debug, Clone, PartialEq, PartialOrd, Hash, Attribute)]
+#[attribute(name = "aria-valuemax")]
+pub struct AriaValueMax(pub Number);
+
+/// Defines the minimum allowed value for a range widget.
+///
+/// <https://w3c.github.io/aria/#aria-valuemin>
+#[derive(Debug, Clone, PartialEq, PartialOrd, Hash, Attribute)]
+#[attribute(name = "aria-valuemin")]
+pub struct AriaValueMin(pub Number);
+
+/// Defines the current value for a range widget. See related aria-valuetext.
+///
+/// <https://w3c.github.io/aria/#aria-valuenow>
+#[derive(Debug, Clone, PartialEq, PartialOrd, Hash, Attribute)]
+#[attribute(name = "aria-valuenow")]
+pub struct AriaValueNow(pub Number);
+
+/// Defines the human readable text alternative of aria-valuenow for a range widget.
+///
+/// <https://w3c.github.io/aria/#aria-valuetext>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-valuetext")]
+pub struct AriaValueText(pub Cow<'static, str>);
+
+/// Indicates whether inputting text could trigger display of one or more predictions of the
+/// user's intended value for a combobox, searchbox, or textbox and specifies how predictions
+/// would be presented if they were made.
+///
+/// <https://w3c.github.io/aria/#aria-autocomplete>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum AutoAutocomplete {
     /// When a user is providing input, text suggesting one way to complete the provided input
     /// might be dynamically inserted after the caret.
@@ -390,7 +775,12 @@ impl fmt::Display for AutoAutocomplete {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates the current "checked" state of checkboxes, radio buttons, and other widgets. See
+/// related aria-pressed and aria-selected.
+///
+/// <https://w3c.github.io/aria/#aria-checked>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-checked")]
 pub enum AriaChecked {
     /// The element is checked.
     True,
@@ -412,7 +802,12 @@ impl fmt::Display for AriaChecked {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates the element that represents the current item within a container or set of related
+/// elements.
+///
+/// <https://w3c.github.io/aria/#aria-current>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-current")]
 pub enum AriaCurrent {
     /// Represents the current page within a set of pages.
     Page,
@@ -450,7 +845,12 @@ impl fmt::Display for AriaCurrent {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates the availability and type of interactive popup element, such as menu or dialog,
+/// that can be triggered by an element.
+///
+/// <https://w3c.github.io/aria/#aria-haspopup>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-haspopup")]
 pub enum AriaHasPopup {
     /// Indicates the element does not have a popup.
     False,
@@ -488,7 +888,12 @@ impl fmt::Display for AriaHasPopup {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates the entered value does not conform to the format expected by the application.
+/// See related aria-errormessage.
+///
+/// <https://w3c.github.io/aria/#aria-invalid>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-invalid")]
 pub enum AriaInvalid {
     /// A grammatical error was detected.
     Grammar,
@@ -514,7 +919,12 @@ impl fmt::Display for AriaInvalid {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates that an element will be updated, and describes the types of updates the user
+/// agents, assistive technologies, and user can expect from the live region.
+///
+/// <https://w3c.github.io/aria/#aria-live>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-live")]
 pub enum AriaLive {
     /// Indicates that updates to the region have the highest priority and should be presented
     /// the user immediately.
@@ -539,7 +949,11 @@ impl fmt::Display for AriaLive {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.
+///
+/// <https://w3c.github.io/aria/#aria-orientation>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-orientation")]
 pub enum AriaOrientation {
     /// The element is oriented horizontally.
     Horizontal,
@@ -557,7 +971,12 @@ impl fmt::Display for AriaOrientation {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates the current "pressed" state of toggle buttons. See related aria-checked and
+/// aria-selected.
+///
+/// <https://w3c.github.io/aria/#aria-pressed>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-pressed")]
 pub enum AriaPressed {
     /// The element is pressed.
     True,
@@ -579,7 +998,12 @@ impl fmt::Display for AriaPressed {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates what notifications the user agent will trigger when the accessibility tree within
+/// a live region is modified. See related aria-atomic.
+///
+/// <https://w3c.github.io/aria/#aria-relevant>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-relevant")]
 pub enum AriaRelevant {
     /// Element nodes are added to the accessibility tree within the live region.
     Additions,
@@ -611,7 +1035,11 @@ impl fmt::Display for AriaRelevant {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Indicates if items in a table or grid are sorted in ascending or descending order.
+///
+/// <https://w3c.github.io/aria/#aria-sort>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-sort")]
 pub enum AriaSort {
     /// Items are sorted in ascending order.
     Ascending,
@@ -634,7 +1062,7 @@ impl fmt::Display for AriaSort {
 }
 
 /// Hashable f64 (hashed with precision of 6).
-#[derive(PartialEq, PartialOrd, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Number(pub f64);
 
 impl Deref for Number {

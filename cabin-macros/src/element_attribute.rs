@@ -3,7 +3,9 @@ use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::Comma;
-use syn::{token, Attribute, Error, Expr, ExprLit, FnArg, ItemTrait, Lit, TraitItem, TraitItemFn};
+use syn::{
+    token, Attribute, Error, Expr, ExprLit, FnArg, ItemTrait, Lit, LitBool, TraitItem, TraitItemFn,
+};
 
 use crate::OptionExpr;
 
@@ -78,12 +80,16 @@ pub(crate) fn element_attribute(
         });
     }
 
-    let tag_name = opts
-        .tag_name
-        .unwrap_or_else(|| ident.to_string().to_lowercase());
+    let tag_name = if let Tag::EnabledNamed(name) = &opts.tag {
+        name.clone()
+    } else {
+        ident.to_string().to_lowercase()
+    };
     let fn_ident = format_ident!("{tag_name}");
 
-    let factory = if opts.is_void {
+    let factory = if matches!(opts.tag, Tag::Disabled) {
+        quote! {}
+    } else if opts.is_void {
         quote! {
             #(#attrs)*
             pub fn #fn_ident<A: #ident>(attrs: A) -> ::cabin::html::Html<A, ()> {
@@ -116,7 +122,7 @@ pub(crate) fn element_attribute(
 
         #(#attr_factories)*
 
-        impl Anchor for () {}
+        impl #ident for () {}
 
         impl<L, R> #ident for Pair<L, R>
         where
@@ -129,8 +135,16 @@ pub(crate) fn element_attribute(
 
 #[derive(Debug, Default)]
 struct Opts {
-    tag_name: Option<String>,
+    tag: Tag,
     is_void: bool,
+}
+
+#[derive(Debug, Default)]
+enum Tag {
+    #[default]
+    Enabled,
+    EnabledNamed(String),
+    Disabled,
 }
 
 fn extract_options(attrs: Punctuated<OptionExpr, Comma>) -> syn::Result<Opts> {
@@ -138,23 +152,34 @@ fn extract_options(attrs: Punctuated<OptionExpr, Comma>) -> syn::Result<Opts> {
 
     for opt in attrs {
         if let Some(value) = opt.value {
-            if opt.key == format_ident!("tag_name") {
+            if opt.key == format_ident!("tag") {
+                if let Expr::Lit(ExprLit {
+                    lit: Lit::Bool(LitBool { value: false, .. }),
+                    ..
+                }) = &value
+                {
+                    opts.tag = Tag::Disabled;
+                    continue;
+                }
+
                 let Expr::Lit(ExprLit {
                     lit: Lit::Str(s), ..
                 }) = value
                 else {
-                    return Err(Error::new(value.span(), "tag_name must be a str"));
+                    return Err(Error::new(
+                        value.span(),
+                        "tag_name must be a str or `false`",
+                    ));
                 };
 
-                opts.tag_name = Some(s.value());
-            } else {
-                return Err(Error::new(opt.key.span(), "unknown element option"));
+                opts.tag = Tag::EnabledNamed(s.value());
+                continue;
             }
         } else if opt.key == format_ident!("void") {
             opts.is_void = true;
-        } else {
-            return Err(Error::new(opt.key.span(), "unknown element option"));
         }
+
+        return Err(Error::new(opt.key.span(), "unknown element option"));
     }
 
     Ok(opts)

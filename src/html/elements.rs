@@ -1,7 +1,7 @@
 use crate::error::InternalError;
 
 pub mod anchor;
-// pub mod aria;
+pub mod aria;
 // pub mod body;
 // pub mod button;
 // pub mod common;

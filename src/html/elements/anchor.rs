@@ -3,13 +3,14 @@ use std::fmt;
 
 use cabin_macros::{element, Attribute};
 
-use crate::html::attributes::{Attributes, Pair};
+use crate::html::attributes::Pair;
 use crate::html::list::SpaceSeparated;
+use crate::html::Aria;
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
-#[element(tag_name = "a")]
-pub trait Anchor: Attributes {
+#[element(tag = "a")]
+pub trait Anchor: Aria {
     /// Address of the hyperlink.
     fn href(self, href: impl Into<Cow<'static, str>>) -> impl Anchor {
         self.with(Href(href.into()))
