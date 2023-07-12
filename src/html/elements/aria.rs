@@ -6,7 +6,7 @@ use std::ops::{Deref, DerefMut};
 use cabin_macros::Attributes;
 
 #[derive(Default, Attributes)]
-pub struct Aria {
+pub struct AriaAttributes {
     /// Identifies the currently active element when DOM focus is on a composite widget, combobox,
     /// textbox, group, or application.
     ///

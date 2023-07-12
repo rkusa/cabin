@@ -1,4 +1,3 @@
-mod derive_attributes;
 mod derive_element;
 
 use proc_macro::TokenStream;
@@ -8,10 +7,10 @@ use syn::punctuated::Punctuated;
 use syn::token::{Comma, Dot, Paren};
 use syn::{parse_macro_input, DeriveInput, ExprLit, Ident, Path};
 
-#[proc_macro_derive(Element, attributes(element))]
+#[proc_macro_derive(Element, attributes(attributes))]
 pub fn derive_element(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
-    match derive_element::derive_element(input) {
+    match derive_element::derive_element(input, true) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }
@@ -20,7 +19,7 @@ pub fn derive_element(item: TokenStream) -> TokenStream {
 #[proc_macro_derive(Attributes, attributes(attributes))]
 pub fn derive_attributes(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
-    match derive_attributes::derive_attributes(input) {
+    match derive_element::derive_element(input, false) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

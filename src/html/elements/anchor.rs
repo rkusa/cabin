@@ -3,13 +3,14 @@ use std::fmt;
 
 use cabin_macros::Element;
 
+use crate::html::attributes::Attributes;
 use crate::html::list::SpaceSeparated;
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
 #[derive(Default, Element)]
-#[element(tag_name = "a")]
-pub struct Anchor {
+#[attributes(tag_name = "a")]
+pub struct AnchorAttributes {
     /// Address of the hyperlink.
     href: Option<Cow<'static, str>>,
 
@@ -17,7 +18,7 @@ pub struct Anchor {
     target: Option<Cow<'static, str>>,
 
     /// Treat the linked URL as a download with the specified filename.
-    #[element(method_name = "download_filename")]
+    #[attributes(method_name = "download_filename")]
     download: Option<Cow<'static, str>>,
 
     /// A space-separated list of URLs the browser will send POST requests (with the body PING)
@@ -32,42 +33,42 @@ pub struct Anchor {
     hreflang: Option<Cow<'static, str>>,
 
     /// Hint for the type of the referenced resource.
-    #[element(attribute_name = "type")]
+    #[attributes(attribute_name = "type")]
     r#type: Option<Cow<'static, str>>,
 
     /// How much referrer information to send.
-    #[element(attribute_name = "referrerpolicy")]
+    #[attributes(attribute_name = "referrerpolicy")]
     referrer_policy: ReferrerPolicy,
 }
 
-impl<Ext> AnchorElement<Ext> {
+pub trait AnchorExt: AsMut<AnchorAttributes> + Sized {
     /// Try to open the link in a new tab.
-    pub fn target_blank(mut self) -> Self {
-        self.base.target = Some(Cow::Borrowed("_blank"));
+    fn target_blank(mut self) -> Self {
+        self.as_mut().target = Some(Cow::Borrowed("_blank"));
         self
     }
 
     /// Open the link in the parent browsing context.
-    pub fn target_parent(mut self) -> Self {
-        self.base.target = Some(Cow::Borrowed("_parent"));
+    fn target_parent(mut self) -> Self {
+        self.as_mut().target = Some(Cow::Borrowed("_parent"));
         self
     }
 
     /// Open the link in the topmost browsing context.
-    pub fn target_top(mut self) -> Self {
-        self.base.target = Some(Cow::Borrowed("_top"));
+    fn target_top(mut self) -> Self {
+        self.as_mut().target = Some(Cow::Borrowed("_top"));
         self
     }
 
     /// Treat the linked URL as a download and let the browser suggest a filename.
-    pub fn download(mut self) -> Self {
-        self.base.download = Some(Cow::Borrowed(""));
+    fn download(mut self) -> Self {
+        self.as_mut().download = Some(Cow::Borrowed(""));
         self
     }
 
     /// Appends a [Rel] to the link.
-    pub fn append_rel(mut self, rel: Rel) -> Self {
-        self.base.rel = match self.base.rel.take() {
+    fn append_rel(mut self, rel: Rel) -> Self {
+        self.as_mut().rel = match self.as_mut().rel.take() {
             Some(SpaceSeparated::Single(existing)) => {
                 Some(SpaceSeparated::List([existing, rel].into()))
             }
@@ -80,6 +81,8 @@ impl<Ext> AnchorElement<Ext> {
         self
     }
 }
+
+impl AnchorExt for Attributes<AnchorAttributes> {}
 
 /// Relationship between the document and the linked resource.
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]

@@ -1,43 +1,33 @@
-use std::any::TypeId;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 
-use serde::Serialize;
-use twox_hash::XxHash32;
-
+use super::elements::aria::{Aria, AriaAttributes};
+use super::elements::common::{Common, CommonAttributes};
+use super::elements::global::{Global, GlobalAttributes};
+use super::elements::ElementExt;
 use crate::error::InternalError;
-use crate::html::elements::aria::Aria;
-use crate::html::elements::global::Global;
 use crate::render::ElementRenderer;
 
-use super::elements::ElementExt;
-
 #[derive(Default)]
-pub struct Attributes<El, Ext> {
-    pub id: Option<Cow<'static, str>>,
-    pub class: Option<Cow<'static, str>>,
-    pub on_click: Option<Box<SerializeEventFn>>,
+pub struct Attributes<El> {
+    pub common: CommonAttributes,
     // Boxed to not blow up struct size.
-    pub global: Option<Box<Global>>,
-    pub aria: Option<Box<Aria>>,
+    pub global: Option<Box<GlobalAttributes>>,
+    pub aria: Option<Box<AriaAttributes>>,
     pub custom: Option<HashMap<&'static str, Cow<'static, str>>>,
     pub base: El,
-    pub extension: Ext,
 }
 
-pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
-
-pub fn default<El: Default, Ext: Default>() -> Attributes<El, Ext> {
+pub fn default<El: Default>() -> Attributes<El> {
     Attributes::default()
 }
 
-impl<El, Ext> Attributes<El, Ext> {
+impl<El> Attributes<El> {
     pub fn custom(
         mut self,
         name: &'static str,
         value: impl Into<Cow<'static, str>>,
-    ) -> Attributes<El, Ext> {
+    ) -> Attributes<El> {
         // TODO: replace with `get_or_insert_default();` once stable
         let attrs = match self.custom.as_mut() {
             Some(attrs) => attrs,
@@ -50,83 +40,36 @@ impl<El, Ext> Attributes<El, Ext> {
         self
     }
 
-    /// Unique identifier across the document.
-    pub fn id(mut self, id: impl Into<Cow<'static, str>>) -> Attributes<El, Ext> {
-        self.id = Some(id.into());
-        self
-    }
-
-    /// The various classes that the element belongs to.
-    pub fn class(mut self, class: impl Into<Cow<'static, str>>) -> Attributes<El, Ext> {
-        self.class = Some(class.into());
-        self
-    }
-
     /// Append classes that the element belongs to.
-    pub fn add_class(mut self, class: impl Into<Cow<'static, str>>) -> Attributes<El, Ext> {
-        self.class = match self.class {
+    pub fn add_class(mut self, class: impl Into<Cow<'static, str>>) -> Attributes<El> {
+        self.common.class = match self.common.class {
             Some(before) => Some(format!("{} {}", before, class.into()).into()),
             None => Some(class.into()),
         };
         self
     }
-
-    pub fn on_click<E>(mut self, event: E) -> Self
-    where
-        E: Serialize + 'static,
-    {
-        self.on_click = Some(Box::new(move || {
-            let mut hasher = XxHash32::default();
-            TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_click event",
-                    err,
-                })
-                .map(|json| (hash, json))
-        }));
-
-        self
-    }
 }
 
-impl<El, Ext> ElementExt for Attributes<El, Ext>
+impl<El> ElementExt for Attributes<El>
 where
     El: ElementExt,
-    Ext: ElementExt,
 {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         let Attributes {
-            id,
-            class,
-            on_click,
+            common,
             global,
             aria,
             custom,
             base,
-            extension,
         } = self;
 
-        if let Some(event) = on_click {
-            // TODO: directly write into el?
-            let (id, payload) = &(event)()?;
-            r.attribute("cabin-click", id)
-                .map_err(crate::error::InternalError::from)?;
-            r.attribute("cabin-click-payload", payload)
-                .map_err(crate::error::InternalError::from)?;
+        common.render(r)?;
+        if let Some(global) = global {
+            global.render(r)?;
         }
-
-        if let Some(id) = id {
-            r.attribute("id", id)
-                .map_err(crate::error::InternalError::from)?;
+        if let Some(aria) = aria {
+            aria.render(r)?;
         }
-
-        if let Some(class) = class {
-            r.attribute("class", class)
-                .map_err(crate::error::InternalError::from)?;
-        }
-
         if let Some(attrs) = custom {
             for (name, value) in attrs {
                 if !valid_attribute_name(name) {
@@ -140,14 +83,7 @@ where
             }
         }
 
-        if let Some(global) = global {
-            global.render(r)?;
-        }
-        if let Some(aria) = aria {
-            aria.render(r)?;
-        }
         base.render(r)?;
-        extension.render(r)?;
 
         Ok(())
     }
@@ -171,8 +107,40 @@ fn valid_attribute_name(name: &str) -> bool {
     })
 }
 
-impl<El: Default, Ext: Default> From<()> for Attributes<El, Ext> {
+impl<El: Default> From<()> for Attributes<El> {
     fn from(_: ()) -> Self {
         Attributes::default()
     }
 }
+
+impl<El> AsMut<CommonAttributes> for Attributes<El> {
+    fn as_mut(&mut self) -> &mut CommonAttributes {
+        &mut self.common
+    }
+}
+
+impl<El> Common for Attributes<El> {}
+
+impl<El> AsMut<GlobalAttributes> for Attributes<El> {
+    fn as_mut(&mut self) -> &mut GlobalAttributes {
+        // TODO: use get_or_insert_default() once stable
+        if self.global.is_none() {
+            self.global = Default::default();
+        }
+        self.global.as_mut().unwrap()
+    }
+}
+
+impl<El> Global for Attributes<El> {}
+
+impl<El> AsMut<AriaAttributes> for Attributes<El> {
+    fn as_mut(&mut self) -> &mut AriaAttributes {
+        // TODO: use get_or_insert_default() once stable
+        if self.aria.is_none() {
+            self.aria = Default::default();
+        }
+        self.aria.as_mut().unwrap()
+    }
+}
+
+impl<El> Aria for Attributes<El> {}

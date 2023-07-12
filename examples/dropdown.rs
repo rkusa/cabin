@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use axum::Json;
 use cabin::html::attributes::default;
+use cabin::html::{Common, Global};
 use cabin::state::State;
 use cabin::view::IteratorExt;
 use cabin::{html, View};

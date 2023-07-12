@@ -8,16 +8,17 @@ use cabin_macros::Element;
 
 use super::button::PopoverTargetAction;
 use super::form::Method;
-use crate::html::attributes::SerializeEventFn;
+use super::SerializeEventFn;
+use crate::html::attributes::Attributes;
 use crate::html::events::InputEvent;
 
 // TODO: typed inputs? (number, date, ...)
 /// An `a` element represents a typed data field, usually with a form control to allow the user to
 /// edit data.
 #[derive(Default, Element)]
-#[element(void)]
-pub struct Input {
-    #[element(event = InputEvent)]
+#[attributes(void)]
+pub struct InputAttributes {
+    #[attributes(event = InputEvent)]
     on_input: Option<Box<SerializeEventFn>>,
 
     /// Hint for expected file type in file upload controls.
@@ -42,23 +43,23 @@ pub struct Input {
     form: Option<Cow<'static, str>>,
 
     /// URL to use for form submission.
-    #[element(attribute_name = "formaction")]
+    #[attributes(attribute_name = "formaction")]
     form_action: Option<Cow<'static, str>>,
 
     /// Entry list encoding type to use for form submission.
-    #[element(attribute_name = "formenctype")]
+    #[attributes(attribute_name = "formenctype")]
     form_enctype: Option<Cow<'static, str>>,
 
     /// Variant to use for form submission.
-    #[element(attribute_name = "formmethod")]
+    #[attributes(attribute_name = "formmethod")]
     form_method: Option<Method>,
 
     /// Bypass form control validation for form submission.
-    #[element(attribute_name = "formnovalidate")]
+    #[attributes(attribute_name = "formnovalidate")]
     form_novalidate: Option<Cow<'static, str>>,
 
     /// Navigable for form submission.
-    #[element(attribute_name = "formtarget")]
+    #[attributes(attribute_name = "formtarget")]
     form_target: Option<Cow<'static, str>>,
 
     /// Vertical dimension.
@@ -71,14 +72,14 @@ pub struct Input {
     max: Option<Cow<'static, str>>,
 
     /// Maximum length of value.
-    #[element(attribute_name = "maxlength")]
+    #[attributes(attribute_name = "maxlength")]
     max_length: Option<i32>,
 
     /// Minimum value
     min: Option<Cow<'static, str>>,
 
     /// Minimum length of value
-    #[element(attribute_name = "minlength")]
+    #[attributes(attribute_name = "minlength")]
     min_length: Option<i32>,
 
     /// Whether to allow multiple values.
@@ -94,15 +95,15 @@ pub struct Input {
     placeholder: Option<Cow<'static, str>>,
 
     /// Targets a popover element to toggle, show, or hide.
-    #[element(attribute_name = "popovertarget")]
+    #[attributes(attribute_name = "popovertarget")]
     popover_target: Option<Cow<'static, str>>,
 
     /// Indicates whether a targeted popover element is to be toggled, shown, or hidden
-    #[element(attribute_name = "popovertargetaction")]
+    #[attributes(attribute_name = "popovertargetaction")]
     popover_target_action: Option<PopoverTargetAction>,
 
     /// Whether to allow the value to be edited by the user
-    #[element(attribute_name = "readonly")]
+    #[attributes(attribute_name = "readonly")]
     read_only: Option<bool>,
 
     /// Whether the control is required for form submission
@@ -118,7 +119,7 @@ pub struct Input {
     step: Option<Cow<'static, str>>,
 
     /// Type of form control.
-    #[element(attribute_name = "type")]
+    #[attributes(attribute_name = "type")]
     r#type: Option<Type>,
 
     /// Value of the form control
@@ -128,117 +129,119 @@ pub struct Input {
     width: Option<u32>,
 }
 
-impl<Ext> InputElement<Ext> {
-    pub fn type_hidden(mut self) -> Self {
-        self.base.r#type = Some(Type::Hidden);
+pub trait InputExt: AsMut<InputAttributes> + Sized {
+    fn type_hidden(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Hidden);
         self
     }
 
-    pub fn type_text(mut self) -> Self {
-        self.base.r#type = Some(Type::Text);
+    fn type_text(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Text);
         self
     }
 
-    pub fn type_search(mut self) -> Self {
-        self.base.r#type = Some(Type::Search);
+    fn type_search(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Search);
         self
     }
 
-    pub fn type_tel(mut self) -> Self {
-        self.base.r#type = Some(Type::Tel);
+    fn type_tel(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Tel);
         self
     }
 
-    pub fn type_url(mut self) -> Self {
-        self.base.r#type = Some(Type::Url);
+    fn type_url(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Url);
         self
     }
 
-    pub fn type_email(mut self) -> Self {
-        self.base.r#type = Some(Type::Email);
+    fn type_email(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Email);
         self
     }
 
-    pub fn type_password(mut self) -> Self {
-        self.base.r#type = Some(Type::Password);
+    fn type_password(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Password);
         self
     }
 
-    pub fn type_date(mut self) -> Self {
-        self.base.r#type = Some(Type::Date);
+    fn type_date(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Date);
         self
     }
 
-    pub fn type_month(mut self) -> Self {
-        self.base.r#type = Some(Type::Month);
+    fn type_month(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Month);
         self
     }
 
-    pub fn type_week(mut self) -> Self {
-        self.base.r#type = Some(Type::Week);
+    fn type_week(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Week);
         self
     }
 
-    pub fn type_time(mut self) -> Self {
-        self.base.r#type = Some(Type::Time);
+    fn type_time(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Time);
         self
     }
 
-    pub fn type_date_time_local(mut self) -> Self {
-        self.base.r#type = Some(Type::DateTimeLocal);
+    fn type_date_time_local(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::DateTimeLocal);
         self
     }
 
-    pub fn type_number(mut self) -> Self {
-        self.base.r#type = Some(Type::Number);
+    fn type_number(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Number);
         self
     }
 
-    pub fn type_range(mut self) -> Self {
-        self.base.r#type = Some(Type::Range);
+    fn type_range(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Range);
         self
     }
 
-    pub fn type_color(mut self) -> Self {
-        self.base.r#type = Some(Type::Color);
+    fn type_color(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Color);
         self
     }
 
-    pub fn type_checkbox(mut self) -> Self {
-        self.base.r#type = Some(Type::Checkbox);
+    fn type_checkbox(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Checkbox);
         self
     }
 
-    pub fn type_radio(mut self) -> Self {
-        self.base.r#type = Some(Type::Radio);
+    fn type_radio(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Radio);
         self
     }
 
-    pub fn type_file(mut self) -> Self {
-        self.base.r#type = Some(Type::File);
+    fn type_file(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::File);
         self
     }
 
-    pub fn type_submit(mut self) -> Self {
-        self.base.r#type = Some(Type::Submit);
+    fn type_submit(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Submit);
         self
     }
 
-    pub fn type_image(mut self) -> Self {
-        self.base.r#type = Some(Type::Image);
+    fn type_image(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Image);
         self
     }
 
-    pub fn type_reset(mut self) -> Self {
-        self.base.r#type = Some(Type::Reset);
+    fn type_reset(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Reset);
         self
     }
 
-    pub fn type_button(mut self) -> Self {
-        self.base.r#type = Some(Type::Button);
+    fn type_button(mut self) -> Self {
+        self.as_mut().r#type = Some(Type::Button);
         self
     }
 }
+
+impl InputExt for Attributes<InputAttributes> {}
 
 /// Data type of an input element.
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]

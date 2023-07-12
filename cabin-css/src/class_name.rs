@@ -81,8 +81,9 @@ impl<'a> fmt::Display for ClassName<'a> {
     }
 }
 
-impl<El: Default, Ext: Default> From<ClassName<'static>> for Attributes<El, Ext> {
+impl<El: Default> From<ClassName<'static>> for Attributes<El> {
     fn from(value: ClassName<'static>) -> Self {
-        Attributes::default().class(value)
+        use cabin::html::elements::common::Common;
+        Attributes::<El>::default().class(value)
     }
 }

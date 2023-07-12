@@ -4,24 +4,25 @@ use std::fmt;
 use cabin_macros::Element;
 
 use super::anchor::ReferrerPolicy;
+use crate::html::attributes::Attributes;
 use crate::html::list::SpaceSeparated;
 
 /// A `link` element allows to link to other resources.
 #[derive(Default, Element)]
-#[element(void)]
-pub struct Link {
+#[attributes(void)]
+pub struct LinkAttributes {
     /// Address of the hyperlink.
     href: Option<Cow<'static, str>>,
 
     /// Handling of crossorigin requests.
-    #[element(attribute_name = "crossorigin")]
+    #[attributes(attribute_name = "crossorigin")]
     cross_origin: Option<CrossOrigin>,
 
     /// Relationship between the document and the linked resource.
     rel: Option<SpaceSeparated<Rel>>,
 
     // Potential destination for a preload request ([Rel::Preload], [Rel::Modulepreload]).
-    #[element(attribute_name = "as")]
+    #[attributes(attribute_name = "as")]
     r#as: Option<As>,
 
     /// The media the resource applies to.
@@ -36,7 +37,7 @@ pub struct Link {
     hreflang: Option<Cow<'static, str>>,
 
     /// Hint for the type of the referenced resource.
-    #[element(attribute_name = "type")]
+    #[attributes(attribute_name = "type")]
     r#type: Option<Cow<'static, str>>,
 
     /// Sizes of the icons ([Rel::Icon]).
@@ -44,33 +45,33 @@ pub struct Link {
 
     /// Images to use in different situations.
     /// For [Rel::Preload] and [As::Image] only.
-    #[element(attribute_name = "imageSrcset")]
+    #[attributes(attribute_name = "imageSrcset")]
     image_srcset: Option<Cow<'static, str>>,
 
     /// Image sizes for different page layouts.
     /// For [Rel::Preload] and [As::Image] only.
-    #[element(attribute_name = "imageSizes")]
+    #[attributes(attribute_name = "imageSizes")]
     image_sizes: Option<Cow<'static, str>>,
 
     /// How much referrer information to send.
-    #[element(attribute_name = "referrerpolicy")]
+    #[attributes(attribute_name = "referrerpolicy")]
     referrer_policy: ReferrerPolicy,
 
-    #[element(skip)]
+    #[attributes(skip)]
     blocking: Option<RenderBlocking>,
 
     /// Whether the link is disabled.
     disabled: bool,
 
     /// Sets the priority for fetches initiated by the element.
-    #[element(attribute_name = "fetchpriority")]
+    #[attributes(attribute_name = "fetchpriority")]
     fetch_priority: FetchPriority,
 }
 
-impl<Ext> LinkElement<Ext> {
+pub trait LinkExt: AsMut<LinkAttributes> + Sized {
     /// Appends a [Rel] to the link.
-    pub fn append_rel(mut self, rel: Rel) -> Self {
-        self.base.rel = match self.base.rel.take() {
+    fn append_rel(mut self, rel: Rel) -> Self {
+        self.as_mut().rel = match self.as_mut().rel.take() {
             Some(SpaceSeparated::Single(existing)) => {
                 Some(SpaceSeparated::List([existing, rel].into()))
             }
@@ -84,11 +85,13 @@ impl<Ext> LinkElement<Ext> {
     }
 
     /// Indicate that the element is potentially render blocking.
-    pub fn blocking(mut self) -> Self {
-        self.base.blocking = Some(RenderBlocking);
+    fn blocking(mut self) -> Self {
+        self.as_mut().blocking = Some(RenderBlocking);
         self
     }
 }
+
+impl LinkExt for Attributes<LinkAttributes> {}
 
 /// The referrer information send when following a hyperlink.
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]

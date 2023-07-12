@@ -1,5 +1,5 @@
 use cabin_macros::Element;
 
-/// The `html` element represents the body of an HTML document.
+/// The `body` element represents the body of an HTML document.
 #[derive(Default, Element)]
-pub struct Body {}
+pub struct BodyAttributes {}

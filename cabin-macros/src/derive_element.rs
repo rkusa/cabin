@@ -8,7 +8,7 @@ use syn::{
     Fields, Ident, Lit, Path, PathArguments, Type,
 };
 
-pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
+pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<TokenStream> {
     let DeriveInput {
         attrs,
         vis: _,
@@ -34,10 +34,10 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
     let opts = extract_options(&attrs)?;
 
-    // Do not forward `element` attributes
+    // Do not forward `attributes` attributes
     let attrs = attrs
         .into_iter()
-        .filter(|a| !a.path().is_ident("element"))
+        .filter(|a| !a.path().is_ident("attributes"))
         .collect::<Vec<_>>();
 
     // let mut html_generics = generics.clone();
@@ -60,7 +60,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
             .filter(|a| a.path().is_ident("doc") || a.path().is_ident("cfg"))
             .collect::<Vec<_>>();
 
-        let opts = extract_field_options("element", &f.attrs)?;
+        let opts = extract_field_options("attributes", &f.attrs)?;
         let method_name = opts
             .method_name
             .map(|name| format_ident!("{name}"))
@@ -68,23 +68,34 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
 
         match kind {
             Kind::Event => {
-                let Some(event) = opts.event else {
-                    return Err(Error::new(
-                        ident.span(),
-                        "event attribute requires event type via #[element(event = ...)]",
-                    ));
-                };
-
                 if !opts.skip {
+                    let (arg, fn_call) = if let Some(event) = opts.event {
+                        (
+                            quote! {
+                                impl FnOnce(#event) -> E
+                            },
+                            quote! {
+                                let event = event(#event::default());
+                            },
+                        )
+                    } else {
+                        (
+                            quote! {
+                                E
+                            },
+                            quote! {},
+                        )
+                    };
+
                     let what = format!("{method_name} event");
                     builder_methods.push(quote! {
                         #(#attrs)*
-                        pub fn #method_name<E>(mut self, event: impl FnOnce(#event) -> E) -> Self
+                        fn #method_name<E>(mut self, event: #arg) -> Self
                         where
                             E: ::serde::Serialize + 'static,
                         {
-                            let event = event(#event::default());
-                            self.base.#ident = Some(Box::new(move || {
+                            #fn_call
+                            self.as_mut().#ident = Some(Box::new(move || {
                                 use std::hash::{Hash, Hasher};
                                 let mut hasher = ::twox_hash::XxHash32::default();
                                 ::std::any::TypeId::of::<E>().hash(&mut hasher);
@@ -125,8 +136,8 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                 if !opts.skip {
                     builder_methods.push(quote! {
                         #(#attrs)*
-                        pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            self.base.#ident = Some(#ident.into());
+                        fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
+                            self.as_mut().#ident = Some(#ident.into());
                             self
                         }
                     });
@@ -143,8 +154,8 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                 if !opts.skip {
                     builder_methods.push(quote! {
                         #(#attrs)*
-                        pub fn #method_name(mut self, #ident: #ty) -> Self {
-                            self.base.#ident = #ident;
+                        fn #method_name(mut self, #ident: #ty) -> Self {
+                            self.as_mut().#ident = #ident;
                             self
                         }
                     });
@@ -161,8 +172,8 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
                 if !opts.skip {
                     builder_methods.push(quote! {
                         #(#attrs)*
-                        pub fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
-                            self.base.#ident = #ident.into();
+                        fn #method_name(mut self, #ident: impl Into<#ty>) -> Self {
+                            self.as_mut().#ident = #ident.into();
                             self
                         }
                     });
@@ -178,10 +189,16 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
         }
     }
 
-    let alias_ident = format_ident!("{}Element", ident);
+    let trait_ident = format_ident!(
+        "{}",
+        ident
+            .to_string()
+            .strip_suffix("Attributes")
+            .ok_or_else(|| Error::new(ident.span(), "Struct name must end with `Attributes`"))?
+    );
     let tag_name = opts
         .tag_name
-        .unwrap_or_else(|| ident.to_string().to_lowercase());
+        .unwrap_or_else(|| trait_ident.to_string().to_lowercase());
     let fn_ident = format_ident!("{tag_name}");
     let is_void = opts.is_void;
 
@@ -189,8 +206,8 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
         quote! {
             #(#attrs)*
             pub fn #fn_ident(
-                attributes: impl Into<::cabin::html::attributes::Attributes<#ident, ()>>,
-            ) -> ::cabin::html::Html<(), #ident, ()> {
+                attributes: impl Into<::cabin::html::attributes::Attributes<#ident>>,
+            ) -> ::cabin::html::Html<(), #ident> {
                 ::cabin::html::Html::new(attributes, ())
             }
         }
@@ -199,40 +216,72 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
             #[cfg(debug_assertions)]
             #(#attrs)*
             pub fn #fn_ident<V: ::cabin::View>(
-                attributes: impl Into<::cabin::html::attributes::Attributes<#ident, ()>>,
+                attributes: impl Into<::cabin::html::attributes::Attributes<#ident>>,
                 content: V
-            ) -> ::cabin::html::Html<::cabin::view::BoxedView, #ident, ()> {
+            ) -> ::cabin::html::Html<::cabin::view::BoxedView, #ident> {
                 ::cabin::html::Html::new(attributes, content.boxed())
             }
 
             #[cfg(not(debug_assertions))]
             #(#attrs)*
             pub fn #fn_ident<V: ::cabin::View>(
-                attributes: impl Into<::cabin::html::attributes::Attributes<#ident, ()>>,
+                attributes: impl Into<::cabin::html::attributes::Attributes<#ident>>,
                 content: V
-            ) -> ::cabin::html::Html<V, #ident, ()> {
+            ) -> ::cabin::html::Html<V, #ident> {
                 ::cabin::html::Html::new(attributes, content)
             }
         }
     };
 
+    let element = if is_element {
+        quote! {
+            #factory
+
+            pub mod #fn_ident {
+                #[inline]
+                pub fn default() -> ::cabin::html::attributes::Attributes<super::#ident> {
+                    ::cabin::html::attributes::Attributes::default()
+                }
+            }
+
+            #[automatically_derived]
+            impl AsMut<#ident> for ::cabin::html::attributes::Attributes<#ident> {
+                fn as_mut(&mut self) -> &mut #ident {
+                    &mut self.base
+                }
+            }
+
+            #[automatically_derived]
+            impl #trait_ident for ::cabin::html::attributes::Attributes<#ident> {}
+
+            #[automatically_derived]
+            impl ::cabin::html::elements::Element for #ident {
+                const TAG: &'static str = #tag_name;
+
+                fn is_void_element() -> bool {
+                    #is_void
+                }
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     Ok(quote! {
-        #(#attrs)*
-        pub type #alias_ident<Ext> = ::cabin::html::attributes::Attributes<#ident, Ext>;
+        #[automatically_derived]
+        pub trait #trait_ident: AsMut<#ident> + Sized {
+            #(#builder_methods)*
+        }
 
-        #factory
-
-        pub mod #fn_ident {
-            #[inline]
-            pub fn default<Ext: Default>() -> ::cabin::html::attributes::Attributes<super::#ident, Ext> {
-                ::cabin::html::attributes::Attributes::default()
+        #[automatically_derived]
+        impl AsMut<#ident> for #ident {
+            fn as_mut(&mut self) -> &mut #ident {
+                self
             }
         }
 
         #[automatically_derived]
-        impl<Ext> #alias_ident<Ext> {
-            #(#builder_methods)*
-        }
+        impl #trait_ident for #ident {}
 
         #[automatically_derived]
         impl ::cabin::html::elements::ElementExt for #ident {
@@ -244,14 +293,7 @@ pub fn derive_element(input: DeriveInput) -> syn::Result<TokenStream> {
             }
         }
 
-        #[automatically_derived]
-        impl ::cabin::html::elements::Element for #ident {
-            const TAG: &'static str = #tag_name;
-
-            fn is_void_element() -> bool {
-                #is_void
-            }
-        }
+        #element
     })
 }
 
@@ -300,7 +342,7 @@ struct Opts {
 fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
     let mut opts = Opts::default();
 
-    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("element")) else {
+    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("attributes")) else {
         return Ok(opts);
     };
 

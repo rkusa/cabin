@@ -3,10 +3,11 @@ use std::fmt;
 
 use cabin_macros::Element;
 
-/// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
-/// address.
+use crate::html::attributes::Attributes;
+
+// TODO
 #[derive(Default, Element)]
-pub struct Form {
+pub struct FormAttributes {
     // accept-charset — Character encodings to use for form submission
     /// URL to use for form submission.
     action: Option<Cow<'static, str>>,
@@ -20,19 +21,21 @@ pub struct Form {
     // rel
 }
 
-impl<Ext> FormElement<Ext> {
+pub trait FormExt: AsMut<FormAttributes> + Sized {
     /// Set the form's method to `get`.
-    pub fn method_get(mut self) -> Self {
-        self.base.method = Some(Method::Get);
+    fn method_get(mut self) -> Self {
+        self.as_mut().method = Some(Method::Get);
         self
     }
 
     /// Set the form's method to `post`.
-    pub fn method_post(mut self) -> Self {
-        self.base.method = Some(Method::Post);
+    fn method_post(mut self) -> Self {
+        self.as_mut().method = Some(Method::Post);
         self
     }
 }
+
+impl FormExt for Attributes<FormAttributes> {}
 
 /// Variant used for form submission.
 #[derive(Default, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]

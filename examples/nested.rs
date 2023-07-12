@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use axum::Json;
 use cabin::html::attributes::default;
+use cabin::html::Common;
 use cabin::state::State;
 use cabin::{html, View};
 use serde::{Deserialize, Serialize};

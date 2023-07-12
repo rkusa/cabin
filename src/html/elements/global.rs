@@ -6,7 +6,7 @@ use cabin_macros::Attributes;
 use crate::html::attributes::Attributes;
 
 #[derive(Default, Attributes)]
-pub struct Global {
+pub struct GlobalAttributes {
     /// Used by the user agent as a guide for creating a keyboard shortcut that activates or
     /// focuses the element.
     #[attributes(attribute_name = "accesskey")]
@@ -101,21 +101,11 @@ pub struct Global {
     translate: Option<DontTranslate>,
 }
 
-impl<El, Ext> Attributes<El, Ext> {
+impl<El> Attributes<El> {
     /// Indicate that the contents of this element should not be translated when the page is
     /// localized.
     pub fn no_translate(mut self) -> Self {
-        self.global = match self.global.take() {
-            Some(mut o) => {
-                o.translate = Some(DontTranslate);
-                Some(o)
-            }
-            None => {
-                let mut o = Box::<Global>::default();
-                o.translate = Some(DontTranslate);
-                Some(o)
-            }
-        };
+        AsMut::<GlobalAttributes>::as_mut(&mut self).translate = Some(DontTranslate);
         self
     }
 }
@@ -293,7 +283,7 @@ impl fmt::Display for TabIndex {
 }
 
 #[derive(Hash)]
-struct DontTranslate;
+pub struct DontTranslate;
 
 impl fmt::Display for DontTranslate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

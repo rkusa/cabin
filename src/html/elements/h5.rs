@@ -2,4 +2,4 @@ use cabin_macros::Element;
 
 // TODO
 #[derive(Default, Element)]
-pub struct H5 {}
+pub struct H5Attributes {}

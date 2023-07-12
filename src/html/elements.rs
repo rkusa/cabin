@@ -1,9 +1,11 @@
+use crate::error::InternalError;
 use crate::render::ElementRenderer;
 
 pub mod anchor;
 pub mod aria;
 pub mod body;
 pub mod button;
+pub mod common;
 pub mod dialog;
 pub mod div;
 pub mod fieldset;
@@ -26,6 +28,8 @@ pub mod script;
 pub mod span;
 pub mod time;
 pub mod ul;
+
+pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
 
 pub trait ElementExt {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error>;

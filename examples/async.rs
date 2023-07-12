@@ -4,6 +4,7 @@ use std::net::SocketAddr;
 use axum::Json;
 use cabin::html::attributes::default;
 use cabin::html::events::InputValue;
+use cabin::html::Input;
 use cabin::state::State;
 use cabin::{html, View};
 use serde::{Deserialize, Serialize};

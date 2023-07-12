@@ -13,55 +13,61 @@ use self::elements::{Element, ElementExt};
 use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
 
-mod exports {
+pub(crate) mod exports {
     #[doc(inline)]
-    pub use super::elements::anchor::a;
+    pub use super::elements::anchor::{a, Anchor, AnchorExt};
     #[doc(inline)]
-    pub use super::elements::body::body;
+    pub use super::elements::aria::Aria;
     #[doc(inline)]
-    pub use super::elements::button::button;
+    pub use super::elements::body::{body, Body};
     #[doc(inline)]
-    pub use super::elements::dialog::dialog;
+    pub use super::elements::button::{button, Button};
     #[doc(inline)]
-    pub use super::elements::div::div;
+    pub use super::elements::common::Common;
     #[doc(inline)]
-    pub use super::elements::fieldset::fieldset;
+    pub use super::elements::dialog::{dialog, Dialog};
     #[doc(inline)]
-    pub use super::elements::form::form;
+    pub use super::elements::div::{div, Div};
     #[doc(inline)]
-    pub use super::elements::h1::h1;
+    pub use super::elements::fieldset::{fieldset, Fieldset};
     #[doc(inline)]
-    pub use super::elements::h2::h2;
+    pub use super::elements::form::{form, Form, FormExt};
     #[doc(inline)]
-    pub use super::elements::h3::h3;
+    pub use super::elements::global::Global;
     #[doc(inline)]
-    pub use super::elements::h4::h4;
+    pub use super::elements::h1::{h1, H1};
     #[doc(inline)]
-    pub use super::elements::h5::h5;
+    pub use super::elements::h2::{h2, H2};
     #[doc(inline)]
-    pub use super::elements::h6::h6;
+    pub use super::elements::h3::{h3, H3};
     #[doc(inline)]
-    pub use super::elements::head::head;
+    pub use super::elements::h4::{h4, H4};
     #[doc(inline)]
-    pub use super::elements::html::html;
+    pub use super::elements::h5::{h5, H5};
     #[doc(inline)]
-    pub use super::elements::input::input;
+    pub use super::elements::h6::{h6, H6};
     #[doc(inline)]
-    pub use super::elements::label::label;
+    pub use super::elements::head::{head, Head};
     #[doc(inline)]
-    pub use super::elements::li::li;
+    pub use super::elements::html::{html, Html};
     #[doc(inline)]
-    pub use super::elements::link::link;
+    pub use super::elements::input::{input, Input, InputExt};
     #[doc(inline)]
-    pub use super::elements::nav::nav;
+    pub use super::elements::label::{label, Label};
     #[doc(inline)]
-    pub use super::elements::script::script;
+    pub use super::elements::li::{li, Li};
     #[doc(inline)]
-    pub use super::elements::span::span;
+    pub use super::elements::link::{link, Link, LinkExt};
     #[doc(inline)]
-    pub use super::elements::time::time;
+    pub use super::elements::nav::{nav, Nav};
     #[doc(inline)]
-    pub use super::elements::ul::ul;
+    pub use super::elements::script::{script, Script, ScriptExt};
+    #[doc(inline)]
+    pub use super::elements::span::{span, Span};
+    #[doc(inline)]
+    pub use super::elements::time::{time, Time};
+    #[doc(inline)]
+    pub use super::elements::ul::{ul, Ul};
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
 
@@ -70,18 +76,17 @@ mod exports {
     }
 }
 
-pub struct Html<V, El, Ext> {
-    attributes: Attributes<El, Ext>,
+pub struct Html<V, El> {
+    attributes: Attributes<El>,
     content: V,
 }
 
-impl<V, El, Ext> Html<V, El, Ext>
+impl<V, El> Html<V, El>
 where
     V: View,
     El: Element,
-    Ext: ElementExt,
 {
-    pub fn new(attributes: impl Into<Attributes<El, Ext>>, content: V) -> Html<V, El, Ext> {
+    pub fn new(attributes: impl Into<Attributes<El>>, content: V) -> Html<V, El> {
         Html {
             attributes: attributes.into(),
             content,
@@ -89,11 +94,10 @@ where
     }
 }
 
-impl<V, El, Ext> View for Html<V, El, Ext>
+impl<V, El> View for Html<V, El>
 where
     V: View + 'static,
     El: Element + 'static,
-    Ext: ElementExt + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         RenderFuture::Future(Box::pin(async move {

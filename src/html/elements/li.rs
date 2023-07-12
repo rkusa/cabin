@@ -2,4 +2,4 @@ use cabin_macros::Element;
 
 // TODO
 #[derive(Default, Element)]
-pub struct Li {}
+pub struct LiAttributes {}

@@ -1,5 +1,5 @@
 use cabin_macros::Element;
 
-/// The `time` element represents a section with navigation links.
+// TODO: doc comment
 #[derive(Default, Element)]
-pub struct Span {}
+pub struct SpanAttributes {}

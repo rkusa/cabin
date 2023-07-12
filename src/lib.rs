@@ -20,6 +20,7 @@ pub use view::View;
 pub mod error;
 pub mod html;
 mod local_pool;
+pub mod prelude;
 pub mod private;
 pub mod render;
 pub mod scope;
@@ -31,6 +32,8 @@ pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 // TODO: move behind feature flag?
 pub fn cabin_stylesheets() -> impl View {
+    use html::elements::common::Common;
+    use html::elements::link::Link;
     html::link(
         html::link::default()
             .id("cabin-styles")
@@ -40,6 +43,7 @@ pub fn cabin_stylesheets() -> impl View {
 }
 
 pub fn cabin_scripts() -> impl View {
+    use html::elements::script::{Script, ScriptExt};
     (
         html::script(
             html::script::default()
