@@ -1,0 +1,19 @@
+---
+source: cabin-tailwind/src/registry.rs
+expression: r.out
+---
+@media (min-width: 640px) { ._893db909 {
+display: block;
+}}
+@media (min-width: 768px) { ._7015aadd {
+display: block;
+}}
+@media (max-width: 1023px) {   ._e6b89c {
+display: block;
+}}
+@media (max-width: 767px) { ._7520792a {
+display: block;
+}}
+@media (max-width: 1023px) { @media (min-width: 640px) { ._8e474869 {
+display: block;
+}} }

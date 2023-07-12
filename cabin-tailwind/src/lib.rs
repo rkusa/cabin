@@ -6,12 +6,12 @@ mod utilities;
 use std::fmt;
 use std::hash::Hasher;
 
-pub use cabin_macros::css;
+pub use cabin_macros::tw;
 pub use class_name::ClassName;
 pub use utilities::*;
 
 pub mod prelude {
-    pub use crate::{self as css, css, Responsive, Style};
+    pub use crate::{self as css, tw, Responsive, Style};
 }
 
 pub trait Style {

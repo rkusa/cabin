@@ -49,8 +49,8 @@ where
     }
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
-        #[cfg(feature = "cabin-css")]
-        let _ = cabin_css::registry::StyleRegistry::global();
+        #[cfg(feature = "cabin-tailwind")]
+        let _ = cabin_tailwind::registry::StyleRegistry::global();
 
         let mut service = self.service.clone();
         Box::pin(async move {
@@ -77,12 +77,12 @@ where
                     ))
                     .unwrap()),
 
-                #[cfg(feature = "cabin-css")]
+                #[cfg(feature = "cabin-tailwind")]
                 (&Method::GET, &["styles.css"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/css")
                     .body(UnsyncBoxBody::new(
                         Full::new(Bytes::from(
-                            cabin_css::registry::StyleRegistry::global().style_sheet(),
+                            cabin_tailwind::registry::StyleRegistry::global().style_sheet(),
                         ))
                         .map_err(|_| unreachable!()),
                     ))

@@ -1,5 +1,5 @@
 ---
-source: cabin-css/src/registry.rs
+source: cabin-tailwind/src/registry.rs
 expression: r.out
 ---
 @media (min-width: 640px) { ._893db909 {

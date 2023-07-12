@@ -4,7 +4,7 @@ use axum::Json;
 use cabin::html::Common;
 use cabin::state::State;
 use cabin::{html, View};
-use cabin_css::{self as css, css, Style};
+use cabin_tailwind::prelude::*;
 
 async fn app() -> impl View {
     let count = State::id(())
@@ -16,7 +16,7 @@ async fn app() -> impl View {
             // TODO: modifier groups?
             // TODO: autocomplate after XZY. (for modifiers)
             // TODO: autocomplete after text::
-            css![
+            tw![
                 css::BLOCK,
                 css::text::BLACK,
                 css::text::SM,
@@ -24,7 +24,7 @@ async fn app() -> impl View {
                 css::text::WHITE.hover(),
                 css::text::XS.hover().focus(),
             ]
-            .append_when(count == 0, css![css::text::color("red")]),
+            .append_when(count == 0, tw![css::text::color("red")]),
         ),
         html::text!("{}", count),
     )

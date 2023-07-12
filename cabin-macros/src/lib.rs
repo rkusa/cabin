@@ -169,7 +169,7 @@ impl Parse for Styles {
 }
 
 #[proc_macro]
-pub fn css(item: TokenStream) -> TokenStream {
+pub fn tw(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as Styles);
     // dbg!(&input);
 
@@ -180,14 +180,14 @@ pub fn css(item: TokenStream) -> TokenStream {
         {
             static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-            #[::cabin::private::linkme::distributed_slice(::cabin_css::registry::STYLES)]
+            #[::cabin::private::linkme::distributed_slice(::cabin_tailwind::registry::STYLES)]
             #[linkme(crate = ::cabin::private::linkme)]
-            fn __register(r: &mut ::cabin_css::registry::StyleRegistry) {
+            fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
                 let name = r.add(&[#(&#styles,)*]);
                 NAME.set(name).ok();
             }
 
-            ::cabin_css::ClassName(Some(::std::borrow::Cow::Borrowed(
+            ::cabin_tailwind::ClassName(Some(::std::borrow::Cow::Borrowed(
                 NAME.get().map(|s| s.as_str()).unwrap_or_default()
             )))
         }

@@ -5,7 +5,7 @@ edition = "2021"
 
 [workspace]
 members = [
-    "cabin-css",
+    "cabin-tailwind",
     "cabin-macros",
     "cabin-service",
 ]
@@ -34,6 +34,6 @@ twox-hash = "1.6"
 
 [dev-dependencies]
 axum = "0.6"
-cabin-css = { path = "./cabin-css", default-features = false }
+cabin-tailwind = { path = "./cabin-tailwind", default-features = false }
 cabin-service = { path = "./cabin-service" }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
