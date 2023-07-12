@@ -4,10 +4,11 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
-    token, Attribute, Data, DataStruct, DeriveInput, Error, Expr, ExprLit, Fields, Ident, Lit, Type,
+    token, Attribute, Data, DataEnum, DataStruct, DeriveInput, Error, Expr, ExprLit, Fields, Ident,
+    Lit, Type,
 };
 
-pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
+pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
     let DeriveInput {
         attrs,
         vis: _,
@@ -17,7 +18,31 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
     } = input;
 
     if !generics.params.is_empty() {
-        return Err(Error::new(ident.span(), "Attributes can not have generics"));
+        return Err(Error::new(ident.span(), "Attribute can not have generics"));
+    }
+
+    let opts = extract_options(&attrs)?;
+    let attr_name = opts
+        .name
+        .unwrap_or_else(|| ident.to_string().to_lowercase());
+
+    if !valid_attribute_name(&attr_name) {
+        return Err(Error::new(
+            ident.span(),
+            format!("Invalid html attribute name `{}`", attr_name),
+        ));
+    }
+
+    if let Data::Enum(DataEnum { .. }) = data {
+        return Ok(quote! {
+            #[automatically_derived]
+            impl ::cabin::html::attributes::Attributes for #ident {
+                fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
+                    r.attribute(#attr_name, self).map_err(::cabin::error::InternalError::from)?;
+                    Ok(())
+                }
+            }
+        });
     }
 
     let Data::Struct(DataStruct {
@@ -27,22 +52,16 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
     else {
         return Err(Error::new(
             ident.span(),
-            "Attributes can only be derived from an unnamed struct",
+            "Attribute can only be derived from an unnamed struct",
         ));
     };
 
     if fields.unnamed.len() != 1 {
         return Err(Error::new(
             ident.span(),
-            "Attributes can only be derived from an unnamed struct with exactly one field",
+            "Attribute can only be derived from an unnamed struct with exactly one field",
         ));
     }
-
-    let opts = extract_options(&attrs)?;
-
-    let attr_name = opts
-        .name
-        .unwrap_or_else(|| ident.to_string().to_lowercase());
 
     let field = fields.unnamed.first().unwrap();
     let (_, kind) = extract_inner_type(&field.ty)?;
@@ -50,7 +69,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
     match kind {
         Kind::Bool => Ok(quote! {
             #[automatically_derived]
-            impl ::cabin::html::attributes::Attributes2 for #ident {
+            impl ::cabin::html::attributes::Attributes for #ident {
                 fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
                     if self.0 {
                         r.attribute(#attr_name, self.0).map_err(::cabin::error::InternalError::from)?;
@@ -61,7 +80,7 @@ pub fn derive_attributes(input: DeriveInput) -> syn::Result<TokenStream> {
         }),
         Kind::Other => Ok(quote! {
             #[automatically_derived]
-            impl ::cabin::html::attributes::Attributes2 for #ident {
+            impl ::cabin::html::attributes::Attributes for #ident {
                 fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
                     r.attribute(#attr_name, self.0).map_err(::cabin::error::InternalError::from)?;
                     Ok(())
@@ -94,7 +113,7 @@ struct Opts {
 fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
     let mut opts = Opts::default();
 
-    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("attributes")) else {
+    let Some(attr) = attrs.iter().find(|a| a.path().is_ident("attribute")) else {
         return Ok(opts);
     };
 
@@ -134,4 +153,22 @@ impl Parse for OptionExpr {
         };
         Ok(OptionExpr { key, value })
     }
+}
+
+fn valid_attribute_name(name: &str) -> bool {
+    // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
+    !name.chars().any(|ch| {
+        matches!(ch,
+            ' ' | '"' | '\'' | '>' | '/' | '=' |
+            /* controls */
+            '\u{7F}'..='\u{9F}' |
+            /* non character */
+            '\u{FDD0}'..='\u{FDEF}' |  '\u{FFFE}' | '\u{FFFF}' | '\u{1FFFE}' | '\u{1FFFF}' |
+            '\u{2FFFE}' | '\u{2FFFF}' | '\u{3FFFE}' | '\u{3FFFF}' | '\u{4FFFE}' | '\u{4FFFF}' |
+            '\u{5FFFE}' | '\u{5FFFF}' | '\u{6FFFE}' | '\u{6FFFF}' | '\u{7FFFE}' | '\u{7FFFF}' |
+            '\u{8FFFE}' | '\u{8FFFF}' | '\u{9FFFE}' | '\u{9FFFF}' | '\u{AFFFE}' | '\u{AFFFF}' |
+            '\u{BFFFE}' | '\u{BFFFF}' | '\u{CFFFE}' | '\u{CFFFF}' | '\u{DFFFE}' | '\u{DFFFF}' |
+            '\u{EFFFE}' | '\u{EFFFF}' | '\u{FFFFE}' | '\u{FFFFF}' | '\u{10FFFE}' |  '\u{10FFFF}'
+        )
+    })
 }

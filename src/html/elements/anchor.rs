@@ -1,94 +1,127 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::{element, Attribute};
 
-use crate::html::attributes::{Attributes2, Pair};
-
-use crate::html::attributes::Attributes;
+use crate::html::attributes::{Attributes, Pair};
 use crate::html::list::SpaceSeparated;
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
-#[derive(Default, Element)]
-#[attributes(tag_name = "a")]
-pub struct AnchorAttributes {
+#[element(tag_name = "a")]
+pub trait Anchor: Attributes {
     /// Address of the hyperlink.
-    href: Option<Cow<'static, str>>,
+    fn href(self, href: impl Into<Cow<'static, str>>) -> impl Anchor {
+        self.with(Href(href.into()))
+    }
 
     /// The _browsing context_ the link should be opened in.
-    target: Option<Cow<'static, str>>,
+    fn target(self, target: impl Into<Cow<'static, str>>) -> impl Anchor {
+        self.with(Target(target.into()))
+    }
 
-    /// Treat the linked URL as a download with the specified filename.
-    #[attributes(method_name = "download_filename")]
-    download: Option<Cow<'static, str>>,
-
-    /// A space-separated list of URLs the browser will send POST requests (with the body PING)
-    /// when the link is followed (typically used for tracking).
-    ping: Option<Cow<'static, str>>,
-
-    /// Relationship between the location in the document containing the hyperlink and the
-    /// destination resource.
-    rel: Option<SpaceSeparated<Rel>>,
-
-    /// Hint the language of the linked resource.
-    hreflang: Option<Cow<'static, str>>,
-
-    /// Hint for the type of the referenced resource.
-    #[attributes(attribute_name = "type")]
-    r#type: Option<Cow<'static, str>>,
-
-    /// How much referrer information to send.
-    #[attributes(attribute_name = "referrerpolicy")]
-    referrer_policy: ReferrerPolicy,
-}
-
-pub trait AnchorExt: AsMut<AnchorAttributes> + Sized {
     /// Try to open the link in a new tab.
-    fn target_blank(mut self) -> Self {
-        self.as_mut().target = Some(Cow::Borrowed("_blank"));
-        self
+    fn target_blank(self) -> impl Anchor {
+        self.with(Target(Cow::Borrowed("_blank")))
     }
 
     /// Open the link in the parent browsing context.
-    fn target_parent(mut self) -> Self {
-        self.as_mut().target = Some(Cow::Borrowed("_parent"));
-        self
+    fn target_parent(self) -> impl Anchor {
+        self.with(Target(Cow::Borrowed("_parent")))
     }
 
     /// Open the link in the topmost browsing context.
-    fn target_top(mut self) -> Self {
-        self.as_mut().target = Some(Cow::Borrowed("_top"));
-        self
+    fn target_top(self) -> impl Anchor {
+        self.with(Target(Cow::Borrowed("_top")))
+    }
+
+    /// Treat the linked URL as a download with the specified filename.
+    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> impl Anchor {
+        self.with(Download(download.into()))
     }
 
     /// Treat the linked URL as a download and let the browser suggest a filename.
-    fn download(mut self) -> Self {
-        self.as_mut().download = Some(Cow::Borrowed(""));
-        self
+    fn download(self) -> impl Anchor {
+        self.with(Download(Cow::Borrowed("")))
+    }
+
+    /// A space-separated list of URLs the browser will send POST requests (with the body PING)
+    /// when the link is followed (typically used for tracking).
+    fn ping(self, ping: impl Into<Cow<'static, str>>) -> impl Anchor {
+        self.with(Ping(ping.into()))
+    }
+
+    /// Relationship between the location in the document containing the hyperlink and the
+    /// destination resource.
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> impl Anchor {
+        self.with(RelList(rel.into()))
     }
 
     /// Appends a [Rel] to the link.
-    fn append_rel(mut self, rel: Rel) -> Self {
-        self.as_mut().rel = match self.as_mut().rel.take() {
-            Some(SpaceSeparated::Single(existing)) => {
-                Some(SpaceSeparated::List([existing, rel].into()))
-            }
-            Some(SpaceSeparated::List(mut list)) => {
-                list.insert(rel);
-                Some(SpaceSeparated::List(list))
-            }
-            None => Some(SpaceSeparated::Single(rel)),
-        };
-        self
+    #[element(skip)]
+    fn append_rel(mut self, rel: Rel) -> impl Anchor {
+        if let Some(list) = self.get_mut::<RelList>() {
+            list.0 = match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
+                SpaceSeparated::Single(existing) => SpaceSeparated::List([existing, rel].into()),
+                SpaceSeparated::List(mut list) => {
+                    list.insert(rel);
+                    SpaceSeparated::List(list)
+                }
+            };
+            Pair::with_fake(self)
+        } else {
+            self.with(RelList(SpaceSeparated::Single(rel)))
+        }
+    }
+
+    /// Hint the language of the linked resource.
+    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> impl Anchor {
+        self.with(Hreflang(hreflang.into()))
+    }
+
+    /// Hint for the type of the referenced resource.
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> impl Anchor {
+        self.with(Type(r#type.into()))
+    }
+
+    /// How much referrer information to send.
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> impl Anchor {
+        self.with(referrer_policy)
     }
 }
 
-impl AnchorExt for Attributes<AnchorAttributes> {}
+/// Address of the hyperlink.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Href(pub Cow<'static, str>);
+
+/// The _browsing context_ the link should be opened in.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Target(pub Cow<'static, str>);
+
+/// Treat the linked URL as a download with the specified filename.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Download(pub Cow<'static, str>);
+
+/// A space-separated list of URLs the browser will send POST requests (with the body PING)
+/// when the link is followed (typically used for tracking).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Ping(pub Cow<'static, str>);
+
+/// Relationship between the location in the document containing the hyperlink and the
+/// destination resource.
+#[derive(Debug, Clone, Hash, Attribute)]
+pub struct RelList(pub SpaceSeparated<Rel>);
+
+/// Hint the language of the linked resource.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Hreflang(pub Cow<'static, str>);
+
+/// Hint for the type of the referenced resource.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Type(pub Cow<'static, str>);
 
 /// Relationship between the document and the linked resource.
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Rel {
     /// Alternate representation of the current document.
     Alternate,
@@ -162,7 +195,7 @@ impl fmt::Display for Rel {
 }
 
 /// The referrer information send when following a hyperlink.
-#[derive(Default, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum ReferrerPolicy {
     /// No referrer information always.
     NoReferrer,

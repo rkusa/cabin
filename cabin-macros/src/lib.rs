@@ -1,37 +1,61 @@
-mod derive_attributes;
-mod derive_element;
+mod derive_attribute;
+mod element_attribute;
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::token::{Comma, Dot, Paren};
-use syn::{parse_macro_input, DeriveInput, ExprLit, Ident, Path};
+use syn::token::{Comma, Dot, Eq, Paren};
+use syn::{
+    parse_macro_input, DeriveInput, Expr, ExprLit, Ident, ItemTrait, Path, TraitItem, TraitItemFn,
+};
 
-#[proc_macro_derive(Element, attributes(attributes))]
-pub fn derive_element(item: TokenStream) -> TokenStream {
+#[proc_macro_attribute]
+pub fn element(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(attr with Punctuated::<OptionExpr, Comma>::parse_terminated);
+    let input = parse_macro_input!(item as ItemTrait);
+    let mut original = input.clone();
+    let addition: proc_macro2::TokenStream = match element_attribute::element_attribute(args, input)
+    {
+        Ok(ts) => ts,
+        Err(err) => return err.into_compile_error().into(),
+    };
+    for item in &mut original.items {
+        if let TraitItem::Fn(TraitItemFn { attrs, .. }) = item {
+            attrs.retain(|attr| !attr.meta.path().is_ident("element"));
+        }
+    }
+    quote! {
+        #original
+        #addition
+    }
+    .into()
+}
+
+#[proc_macro_derive(Attribute, attributes(attribute))]
+pub fn derive_attribute(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
-    match derive_element::derive_element(input, true) {
+    match derive_attribute::derive_attribute(input) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }
 }
 
-#[proc_macro_derive(Attributes, attributes(attributes))]
-pub fn derive_attributes(item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as DeriveInput);
-    match derive_element::derive_element(input, false) {
-        Ok(ts) => ts.into(),
-        Err(err) => err.into_compile_error().into(),
-    }
+#[derive(Debug, Hash)]
+struct OptionExpr {
+    key: Ident,
+    value: Option<Expr>,
 }
 
-#[proc_macro_derive(Attributes2, attributes(attributes))]
-pub fn derive_attributes2(item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as DeriveInput);
-    match derive_attributes::derive_attributes(input) {
-        Ok(ts) => ts.into(),
-        Err(err) => err.into_compile_error().into(),
+impl Parse for OptionExpr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let key = Ident::parse(input)?;
+        let value = if Option::<Eq>::parse(input)?.is_some() {
+            Some(Expr::parse(input)?)
+        } else {
+            None
+        };
+        Ok(OptionExpr { key, value })
     }
 }
 

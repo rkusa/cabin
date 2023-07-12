@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SpaceSeparated<T> {
     Single(T),
     List(HashSet<T>),
