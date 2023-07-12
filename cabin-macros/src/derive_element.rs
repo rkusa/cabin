@@ -48,6 +48,8 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
 
     let mut builder_methods = Vec::with_capacity(fields.named.len());
     let mut render_statements = Vec::with_capacity(fields.named.len());
+    let mut trait_methods = Vec::with_capacity(fields.named.len());
+    let mut attribute_structs = Vec::with_capacity(fields.named.len());
 
     for f in fields.named.iter() {
         let ident = f.ident.as_ref().unwrap();
@@ -65,6 +67,7 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
             .method_name
             .map(|name| format_ident!("{name}"))
             .unwrap_or_else(|| ident.clone());
+        let struct_name = format_ident!("{}", to_pascal_case(&ident.to_string()));
 
         match kind {
             Kind::Event => {
@@ -131,6 +134,17 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
                             .map_err(crate::error::InternalError::from)?;
                     }
                 });
+                trait_methods.push(quote! {
+                    #(#attrs)*
+                    fn #method_name(self, #ident: impl Into<#ty>) -> Pair<#struct_name, Self> {
+                        self.with(#struct_name(#ident.into()))
+                    }
+                });
+                attribute_structs.push(quote! {
+                    #(#attrs)*
+                    #[derive2(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attributes2)]
+                    pub struct #struct_name(pub #ty);
+                });
             }
             Kind::Option => {
                 if !opts.skip {
@@ -148,6 +162,17 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
                     if let Some(#ident) = &self.#ident {
                         r.attribute(#attr_name, #ident).map_err(::cabin::error::InternalError::from)?;
                     }
+                });
+                trait_methods.push(quote! {
+                    #(#attrs)*
+                    fn #method_name(self, #ident: impl Into<#ty>) -> Pair<#struct_name, Self> {
+                        self.with(#struct_name(#ident.into()))
+                    }
+                });
+                attribute_structs.push(quote! {
+                    #(#attrs)*
+                    #[derive2(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attributes2)]
+                    pub struct #struct_name(pub #ty);
                 });
             }
             Kind::Bool => {
@@ -167,6 +192,18 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
                         r.empty_attribute(#attr_name).map_err(::cabin::error::InternalError::from)?;
                     }
                 });
+
+                trait_methods.push(quote! {
+                    #(#attrs)*
+                    fn #method_name(self, #ident: #ty) -> Pair<#struct_name, Self> {
+                        self.with(#struct_name(#ident))
+                    }
+                });
+                attribute_structs.push(quote! {
+                    #(#attrs)*
+                    #[derive2(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attributes2)]
+                    pub struct #struct_name(pub #ty);
+                });
             }
             Kind::Other => {
                 if !opts.skip {
@@ -184,6 +221,18 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
                     if self.#ident != Default::default() {
                         r.attribute(#attr_name, self.#ident).map_err(::cabin::error::InternalError::from)?;
                     }
+                });
+
+                trait_methods.push(quote! {
+                    #(#attrs)*
+                    fn #method_name(self, #ident: impl Into<#ty>) -> Pair<#struct_name, Self> {
+                        self.with(#struct_name(#ident.into()))
+                    }
+                });
+                attribute_structs.push(quote! {
+                    #(#attrs)*
+                    #[derive2(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attributes2)]
+                    pub struct #struct_name(pub #ty);
                 });
             }
         }
@@ -267,6 +316,7 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
         quote! {}
     };
 
+    let trait2_ident = format_ident!("{trait_ident}2");
     Ok(quote! {
         #[automatically_derived]
         pub trait #trait_ident: AsMut<#ident> + Sized {
@@ -294,7 +344,32 @@ pub fn derive_element(input: DeriveInput, is_element: bool) -> syn::Result<Token
         }
 
         #element
+
+        pub trait #trait2_ident: Attributes2 {
+            #(#trait_methods)*
+        }
+
+        #(#attribute_structs)*
     })
+}
+
+fn to_pascal_case(s: &str) -> String {
+    let s = s.strip_prefix("r#").unwrap_or(s);
+    let mut pc = String::with_capacity(s.len());
+    let mut upper_next = true;
+    for ch in s.chars() {
+        if ch == '_' {
+            upper_next = true;
+            continue;
+        }
+        pc.push(if upper_next {
+            upper_next = false;
+            ch.to_ascii_uppercase()
+        } else {
+            ch
+        });
+    }
+    pc
 }
 
 pub(crate) enum Kind {

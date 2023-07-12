@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::borrow::Cow;
 use std::collections::HashMap;
 
@@ -7,6 +8,58 @@ use super::elements::global::{Global, GlobalAttributes};
 use super::elements::ElementExt;
 use crate::error::InternalError;
 use crate::render::ElementRenderer;
+
+pub trait Attributes2: Sized + 'static {
+    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error>;
+
+    fn get<T: 'static>(&self) -> Option<&T> {
+        <dyn Any>::downcast_ref(self)
+    }
+
+    fn with<A: Attributes2>(self, attr: A) -> Pair<A, Self> {
+        Pair::new(attr, self)
+    }
+}
+
+pub struct Pair<L, R> {
+    left: L,
+    right: R,
+}
+
+impl<L, R> Pair<L, R> {
+    pub fn new(left: L, right: R) -> Self {
+        Pair { left, right }
+    }
+}
+
+impl Attributes2 for () {
+    fn render(self, _r: &mut ElementRenderer) -> Result<(), crate::Error> {
+        Ok(())
+    }
+
+    fn get<T: 'static>(&self) -> Option<&T> {
+        None
+    }
+}
+
+impl<L: Attributes2, R: Attributes2> Attributes2 for Pair<L, R> {
+    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
+        self.left.render(r)?;
+        self.right.render(r)?;
+        Ok(())
+    }
+
+    fn get<T: 'static>(&self) -> Option<&T> {
+        self.left.get().or_else(|| self.right.get())
+    }
+}
+
+impl Attributes2 for (&'static str, Cow<'static, str>) {
+    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
+        r.attribute(self.0, self.1).map_err(InternalError::from)?;
+        Ok(())
+    }
+}
 
 #[derive(Default)]
 pub struct Attributes<El> {

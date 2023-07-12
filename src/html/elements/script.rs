@@ -1,6 +1,9 @@
 use std::borrow::Cow;
 
 use cabin_macros::Element;
+use cabin_macros::{Attributes2, Element};
+
+use crate::html::attributes::{Attributes2, Pair};
 
 use super::anchor::ReferrerPolicy;
 use super::link::{CrossOrigin, FetchPriority, RenderBlocking};

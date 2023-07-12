@@ -11,6 +11,9 @@ use super::form::Method;
 use super::SerializeEventFn;
 use crate::html::attributes::Attributes;
 use crate::html::events::InputEvent;
+use cabin_macros::{Attributes2, Element};
+
+use crate::html::attributes::{Attributes2, Pair};
 
 // TODO: typed inputs? (number, date, ...)
 /// An `a` element represents a typed data field, usually with a form control to allow the user to

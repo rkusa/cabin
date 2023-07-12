@@ -1,3 +1,4 @@
+mod derive_attributes;
 mod derive_element;
 
 use proc_macro::TokenStream;
@@ -20,6 +21,15 @@ pub fn derive_element(item: TokenStream) -> TokenStream {
 pub fn derive_attributes(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     match derive_element::derive_element(input, false) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
+
+#[proc_macro_derive(Attributes2, attributes(attributes))]
+pub fn derive_attributes2(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    match derive_attributes::derive_attributes(input) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

@@ -4,6 +4,9 @@ use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
 use cabin_macros::Attributes;
+use cabin_macros::{Attributes2, Element};
+
+use crate::html::attributes::{Attributes2, Pair};
 
 #[derive(Default, Attributes)]
 pub struct AriaAttributes {
