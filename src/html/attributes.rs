@@ -1,7 +1,5 @@
 use std::any::Any;
-use std::borrow::Cow;
 
-use crate::error::InternalError;
 use crate::render::ElementRenderer;
 
 pub trait Attributes: Sized + 'static {
@@ -55,6 +53,10 @@ impl Attributes for () {
     fn get<T: 'static>(&self) -> Option<&T> {
         None
     }
+
+    fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        None
+    }
 }
 
 impl<L: Attributes, R: Attributes> Attributes for Pair<L, R> {
@@ -74,11 +76,11 @@ impl<L: Attributes, R: Attributes> Attributes for Pair<L, R> {
             .and_then(|l| l.get())
             .or_else(|| self.right.as_ref().and_then(|r| r.get()))
     }
-}
 
-impl Attributes for (&'static str, Cow<'static, str>) {
-    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
-        r.attribute(self.0, self.1).map_err(InternalError::from)?;
-        Ok(())
+    fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.left
+            .as_mut()
+            .and_then(|l| l.get_mut())
+            .or_else(|| self.right.as_mut().and_then(|r| r.get_mut()))
     }
 }
