@@ -7,7 +7,7 @@
 
 use core::fmt;
 
-use crate::{Length, Property, Style};
+use crate::{Length, Property, Utility};
 
 const COLOR: &str = "color";
 
@@ -39,7 +39,7 @@ pub const fn size(font_size: Length, line_height: LineHeight) -> FontSize {
     }
 }
 
-impl Style for FontSize {
+impl Utility for FontSize {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "font-size: {};", self.font_size)?;
         writeln!(f, "line-height: {};", self.line_height)?;

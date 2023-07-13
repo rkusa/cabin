@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 /// The `body` element represents the body of an HTML document.
-#[derive(Default, Element)]
-pub struct BodyAttributes {}
+#[element]
+pub trait Body: Common + Global + Aria {}

@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 /// The `html` element represents the root of an HTML document.
-#[derive(Default, Element)]
-pub struct HtmlAttributes {}
+#[element]
+pub trait Html: Common + Global + Aria {}

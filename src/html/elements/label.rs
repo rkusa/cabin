@@ -1,15 +1,21 @@
-use cabin_macros::{Attributes2, Element};
 use std::borrow::Cow;
 
-use crate::html::attributes::{Attributes2, Pair};
+use cabin_macros::{element, Attribute};
 
-use cabin_macros::Element;
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 /// A `label` element that represents a caption that can be associated with a specific form
 /// control.
-#[derive(Default, Element)]
-pub struct LabelAttributes {
+#[element]
+pub trait Label: Common + Global + Aria {
     /// The id of the form control the label is the caption for.
-    #[attributes(attribute_name = "for")]
-    r#for: Option<Cow<'static, str>>,
+    fn r#for(self, r#for: impl Into<Cow<'static, str>>) -> impl Label {
+        self.with(For(r#for.into()))
+    }
 }
+
+/// The id of the form control the label is the caption for.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct For(pub Cow<'static, str>);

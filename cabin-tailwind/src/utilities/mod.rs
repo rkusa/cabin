@@ -108,7 +108,7 @@ pub use via::percent as via;
 pub use w::unit as w;
 pub use z::index as z;
 
-use crate::{Length, Property, StaticClass, Style};
+use crate::{Length, Property, StaticClass, Utility};
 
 pub const GROUP: StaticClass = StaticClass("group");
 
@@ -135,7 +135,7 @@ pub fn opacityf(x: f32) -> Property<Length> {
     Property("opacity", Length::Percent(x))
 }
 
-impl Style for SrOnly {
+impl Utility for SrOnly {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "position: absolute;")?;
         writeln!(f, "width: 1px;")?;
@@ -150,7 +150,7 @@ impl Style for SrOnly {
     }
 }
 
-impl Style for NotSrOnly {
+impl Utility for NotSrOnly {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "position: static;")?;
         writeln!(f, "width: auto;")?;

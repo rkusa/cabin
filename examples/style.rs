@@ -1,9 +1,8 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::html::Common;
+use cabin::prelude::*;
 use cabin::state::State;
-use cabin::{html, View};
 use cabin_tailwind::prelude::*;
 
 async fn app() -> impl View {
@@ -11,22 +10,22 @@ async fn app() -> impl View {
         .update(|count, _: ()| *count += 1)
         .restore_or(0);
 
-    html::button(
-        html::attributes::default().on_click(()).class(
+    button(
+        on_click(()).class(
             // TODO: modifier groups?
             // TODO: autocomplate after XZY. (for modifiers)
             // TODO: autocomplete after text::
             tw![
-                css::BLOCK,
-                css::text::BLACK,
-                css::text::SM,
-                css::bg::BLACK.hover(),
-                css::text::WHITE.hover(),
-                css::text::XS.hover().focus(),
+                BLOCK,
+                text::BLACK,
+                text::SM,
+                bg::BLACK.hover(),
+                text::WHITE.hover(),
+                text::XS.hover().focus(),
             ]
-            .append_when(count == 0, tw![css::text::color("red")]),
+            .append_when(count == 0, tw![text::color("red")]),
         ),
-        html::text!("{}", count),
+        text!("{}", count),
     )
 }
 

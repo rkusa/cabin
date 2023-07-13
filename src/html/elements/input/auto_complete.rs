@@ -2,7 +2,11 @@ use std::borrow::Cow;
 use std::fmt;
 use std::marker::PhantomData;
 
-#[derive(Hash)]
+use cabin_macros::Attribute;
+
+/// Hint for form autofill feature.
+#[derive(Hash, Attribute)]
+#[attribute(outer)]
 pub struct AutoComplete {
     a: Option<Cow<'static, str>>,
     b: Option<&'static str>,

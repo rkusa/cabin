@@ -1,10 +1,8 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::html::attributes::default;
-use cabin::html::Common;
+use cabin::prelude::*;
 use cabin::state::State;
-use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -27,11 +25,11 @@ fn level(n: usize) -> impl View {
         })
         .restore_or(n < 3);
 
-    html::fieldset(
+    fieldset(
         (),
         (
-            html::button(default().on_click(Increment(n)), html::text!("{}", count)),
-            html::button(default().on_click(ToggleChild(n)), "toggle child"),
+            button(on_click(Increment(n)), text!("{}", count)),
+            button(on_click(ToggleChild(n)), "toggle child"),
             has_next_level.then(|| level(n + 1).boxed()),
         ),
     )

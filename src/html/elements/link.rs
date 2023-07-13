@@ -1,103 +1,167 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
-
-use crate::html::attributes::{Attributes2, Pair};
+use cabin_macros::{element, Attribute};
 
 use super::anchor::ReferrerPolicy;
-use crate::html::attributes::Attributes;
+use super::button::Disabled;
+use super::common::Common;
+use super::global::Global;
+use crate::html::attributes::Pair;
 use crate::html::list::SpaceSeparated;
+use crate::html::Aria;
 
 /// A `link` element allows to link to other resources.
-#[derive(Default, Element)]
-#[attributes(void)]
-pub struct LinkAttributes {
-    /// Address of the hyperlink.
-    href: Option<Cow<'static, str>>,
+#[element(void)]
+pub trait Link: Common + Global + Aria {
+    //// Address of the hyperlink.
+    fn href(self, href: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(Href(href.into()))
+    }
 
     /// Handling of crossorigin requests.
-    #[attributes(attribute_name = "crossorigin")]
-    cross_origin: Option<CrossOrigin>,
+    fn cross_origin(self, cross_origin: CrossOrigin) -> impl Link {
+        self.with(cross_origin)
+    }
 
     /// Relationship between the document and the linked resource.
-    rel: Option<SpaceSeparated<Rel>>,
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> impl Link {
+        self.with(RelList(rel.into()))
+    }
 
-    // Potential destination for a preload request ([Rel::Preload], [Rel::Modulepreload]).
-    #[attributes(attribute_name = "as")]
-    r#as: Option<As>,
+    /// Appends a [Rel] to the link.
+    #[element(skip)]
+    fn append_rel(mut self, rel: Rel) -> impl Link {
+        if let Some(list) = self.get_mut::<RelList>() {
+            list.0 = match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
+                SpaceSeparated::Single(existing) => SpaceSeparated::List([existing, rel].into()),
+                SpaceSeparated::List(mut list) => {
+                    list.insert(rel);
+                    SpaceSeparated::List(list)
+                }
+            };
+            Pair::with_fake(self)
+        } else {
+            self.with(RelList(SpaceSeparated::Single(rel)))
+        }
+    }
+
+    fn r#as(self, r#as: As) -> impl Link {
+        self.with(r#as)
+    }
 
     /// The media the resource applies to.
-    media: Option<Cow<'static, str>>,
+    fn media(self, media: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(Media(media.into()))
+    }
 
     /// Integrity metadata used in _Subresource Integrity_ checks.
     /// Must only be specified on links with [Rel::StyleSheet], [Rel::Preload], or
     /// [Rel::Modulepreload].
-    integrity: Option<Cow<'static, str>>,
+    fn integrity(self, integrity: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(Integrity(integrity.into()))
+    }
 
     /// Hint the language of the linked resource.
-    hreflang: Option<Cow<'static, str>>,
+    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(Hreflang(hreflang.into()))
+    }
 
     /// Hint for the type of the referenced resource.
-    #[attributes(attribute_name = "type")]
-    r#type: Option<Cow<'static, str>>,
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(Type(r#type.into()))
+    }
 
     /// Sizes of the icons ([Rel::Icon]).
-    sizes: Option<Cow<'static, str>>,
+    fn sizes(self, sizes: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(Sizes(sizes.into()))
+    }
 
     /// Images to use in different situations.
     /// For [Rel::Preload] and [As::Image] only.
-    #[attributes(attribute_name = "imageSrcset")]
-    image_srcset: Option<Cow<'static, str>>,
+    fn image_srcset(self, image_srcset: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(ImageSrcset(image_srcset.into()))
+    }
 
     /// Image sizes for different page layouts.
     /// For [Rel::Preload] and [As::Image] only.
-    #[attributes(attribute_name = "imageSizes")]
-    image_sizes: Option<Cow<'static, str>>,
+    fn image_sizes(self, image_sizes: impl Into<Cow<'static, str>>) -> impl Link {
+        self.with(ImageSizes(image_sizes.into()))
+    }
 
     /// How much referrer information to send.
-    #[attributes(attribute_name = "referrerpolicy")]
-    referrer_policy: ReferrerPolicy,
-
-    #[attributes(skip)]
-    blocking: Option<RenderBlocking>,
-
-    /// Whether the link is disabled.
-    disabled: bool,
-
-    /// Sets the priority for fetches initiated by the element.
-    #[attributes(attribute_name = "fetchpriority")]
-    fetch_priority: FetchPriority,
-}
-
-pub trait LinkExt: AsMut<LinkAttributes> + Sized {
-    /// Appends a [Rel] to the link.
-    fn append_rel(mut self, rel: Rel) -> Self {
-        self.as_mut().rel = match self.as_mut().rel.take() {
-            Some(SpaceSeparated::Single(existing)) => {
-                Some(SpaceSeparated::List([existing, rel].into()))
-            }
-            Some(SpaceSeparated::List(mut list)) => {
-                list.insert(rel);
-                Some(SpaceSeparated::List(list))
-            }
-            None => Some(SpaceSeparated::Single(rel)),
-        };
-        self
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> impl Link {
+        self.with(referrer_policy)
     }
 
     /// Indicate that the element is potentially render blocking.
-    fn blocking(mut self) -> Self {
-        self.as_mut().blocking = Some(RenderBlocking);
-        self
+    fn blocking(self) -> impl Link {
+        self.with_blocking(true)
+    }
+
+    /// Indicate that the element is potentially render blocking.
+    fn with_blocking(self, blocking: bool) -> impl Link {
+        self.with(Blocking(blocking))
+    }
+
+    /// Whether the link is disabled.
+    fn disabled(self) -> impl Link {
+        self.with_disabled(true)
+    }
+
+    /// Whether the link is disabled.
+    fn with_disabled(self, disabled: bool) -> impl Link {
+        self.with(Disabled(disabled))
+    }
+
+    /// Sets the priority for fetches initiated by the element.
+    fn fetch_priority(self, fetch_priority: FetchPriority) -> impl Link {
+        self.with(fetch_priority)
     }
 }
+/// Address of the hyperlink.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Href(pub Cow<'static, str>);
 
-impl LinkExt for Attributes<LinkAttributes> {}
+/// Relationship between the document and the linked resource.
+#[derive(Debug, Clone, Hash, Attribute)]
+#[attribute(name = "rel")]
+pub struct RelList(pub SpaceSeparated<Rel>);
+
+/// The media the resource applies to.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Media(pub Cow<'static, str>);
+
+/// Integrity metadata used in _Subresource Integrity_ checks.
+/// Must only be specified on links with [Rel::StyleSheet], [Rel::Preload], or
+/// [Rel::Modulepreload].
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Integrity(pub Cow<'static, str>);
+
+/// Hint the language of the linked resource.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Hreflang(pub Cow<'static, str>);
+
+/// Hint for the type of the referenced resource.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Type(pub Cow<'static, str>);
+
+/// Sizes of the icons ([Rel::Icon]).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Sizes(pub Cow<'static, str>);
+
+/// Images to use in different situations.
+/// For [Rel::Preload] and [As::Image] only.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct ImageSrcset(pub Cow<'static, str>);
+
+/// Image sizes for different page layouts.
+/// For [Rel::Preload] and [As::Image] only.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct ImageSizes(pub Cow<'static, str>);
 
 /// The referrer information send when following a hyperlink.
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum CrossOrigin {
     /// Requests for the element will have their mode set to "cors" and their credientials mode
     /// set to "same-origin".
@@ -118,7 +182,7 @@ impl fmt::Display for CrossOrigin {
 }
 
 /// Relationship between the document and the linked resource.
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Rel {
     /// Alternate representation of the current document.
     Alternate,
@@ -184,29 +248,29 @@ pub enum Rel {
 impl fmt::Display for Rel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Rel::Alternate => f.write_str("alternate"),
-            Rel::Canonical => f.write_str("canonical"),
-            Rel::Author => f.write_str("author"),
-            Rel::DnsPrefetch => f.write_str("dns-prefetch"),
-            Rel::Help => f.write_str("help"),
-            Rel::Icon => f.write_str("icon"),
-            Rel::Manifest => f.write_str("manifest"),
-            Rel::License => f.write_str("license"),
-            Rel::Modulepreload => f.write_str("modulepreload"),
-            Rel::Next => f.write_str("next"),
-            Rel::Pingback => f.write_str("pingback"),
-            Rel::Preconnect => f.write_str("preconnect"),
-            Rel::Prefetch => f.write_str("prefetch"),
-            Rel::Preload => f.write_str("preload"),
-            Rel::Prev => f.write_str("prev"),
-            Rel::Search => f.write_str("search"),
-            Rel::StyleSheet => f.write_str("stylesheet"),
+            Self::Alternate => f.write_str("alternate"),
+            Self::Canonical => f.write_str("canonical"),
+            Self::Author => f.write_str("author"),
+            Self::DnsPrefetch => f.write_str("dns-prefetch"),
+            Self::Help => f.write_str("help"),
+            Self::Icon => f.write_str("icon"),
+            Self::Manifest => f.write_str("manifest"),
+            Self::License => f.write_str("license"),
+            Self::Modulepreload => f.write_str("modulepreload"),
+            Self::Next => f.write_str("next"),
+            Self::Pingback => f.write_str("pingback"),
+            Self::Preconnect => f.write_str("preconnect"),
+            Self::Prefetch => f.write_str("prefetch"),
+            Self::Preload => f.write_str("preload"),
+            Self::Prev => f.write_str("prev"),
+            Self::Search => f.write_str("search"),
+            Self::StyleSheet => f.write_str("stylesheet"),
         }
     }
 }
 
 /// Type of resource being preloaded.
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum As {
     Fetch,
     Audio,
@@ -235,44 +299,47 @@ pub enum As {
 impl fmt::Display for As {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            As::Fetch => f.write_str("fetch"),
-            As::Audio => f.write_str("audio"),
-            As::AudioWorklet => f.write_str("audioworklet"),
-            As::Document => f.write_str("document"),
-            As::Embed => f.write_str("embed"),
-            As::Font => f.write_str("font"),
-            As::Frame => f.write_str("frame"),
-            As::IFrame => f.write_str("iframe"),
-            As::Image => f.write_str("image"),
-            As::Manifest => f.write_str("manifest"),
-            As::Object => f.write_str("object"),
-            As::PaintWorklet => f.write_str("paintworklet"),
-            As::Report => f.write_str("report"),
-            As::Script => f.write_str("script"),
-            As::ServiceWorker => f.write_str("serviceworker"),
-            As::SharedWorker => f.write_str("sharedworker"),
-            As::Style => f.write_str("style"),
-            As::Track => f.write_str("track"),
-            As::Video => f.write_str("video"),
-            As::WebIdentity => f.write_str("webidentity"),
-            As::Worker => f.write_str("worker"),
-            As::Xslt => f.write_str("xslt"),
+            Self::Fetch => f.write_str("fetch"),
+            Self::Audio => f.write_str("audio"),
+            Self::AudioWorklet => f.write_str("audioworklet"),
+            Self::Document => f.write_str("document"),
+            Self::Embed => f.write_str("embed"),
+            Self::Font => f.write_str("font"),
+            Self::Frame => f.write_str("frame"),
+            Self::IFrame => f.write_str("iframe"),
+            Self::Image => f.write_str("image"),
+            Self::Manifest => f.write_str("manifest"),
+            Self::Object => f.write_str("object"),
+            Self::PaintWorklet => f.write_str("paintworklet"),
+            Self::Report => f.write_str("report"),
+            Self::Script => f.write_str("script"),
+            Self::ServiceWorker => f.write_str("serviceworker"),
+            Self::SharedWorker => f.write_str("sharedworker"),
+            Self::Style => f.write_str("style"),
+            Self::Track => f.write_str("track"),
+            Self::Video => f.write_str("video"),
+            Self::WebIdentity => f.write_str("webidentity"),
+            Self::Worker => f.write_str("worker"),
+            Self::Xslt => f.write_str("xslt"),
         }
     }
 }
 
 /// The element is potentially render-blocking.
-#[derive(Hash)]
-pub(super) struct RenderBlocking;
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Blocking(pub bool);
 
-impl fmt::Display for RenderBlocking {
+impl fmt::Display for Blocking {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("render")
+        if self.0 {
+            f.write_str("render")?;
+        }
+        Ok(())
     }
 }
 
-/// The priority for fetches initiated by an element.
-#[derive(Default, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+/// Sets the priority for fetches initiated by the element.
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum FetchPriority {
     /// Signals automatic determination of fetch priority relative to other resources with the
     /// same destination.
@@ -289,9 +356,9 @@ pub enum FetchPriority {
 impl fmt::Display for FetchPriority {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FetchPriority::Auto => f.write_str("auto"),
-            FetchPriority::High => f.write_str("high"),
-            FetchPriority::Low => f.write_str("low"),
+            Self::Auto => f.write_str("auto"),
+            Self::High => f.write_str("high"),
+            Self::Low => f.write_str("low"),
         }
     }
 }

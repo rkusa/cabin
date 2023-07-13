@@ -1,10 +1,10 @@
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct Disabled<S>(pub S);
 
-impl<S: Style> Style for Disabled<S> {
+impl<S: Utility> Utility for Disabled<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.0.declarations(f)
     }

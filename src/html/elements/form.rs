@@ -1,47 +1,42 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::{element, Attribute};
 
-use crate::html::attributes::{Attributes2, Pair};
-
-use crate::html::attributes::Attributes;
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 // TODO
-#[derive(Default, Element)]
-pub struct FormAttributes {
-    // accept-charset — Character encodings to use for form submission
+#[element]
+pub trait Form: Common + Global + Aria {
     /// URL to use for form submission.
-    action: Option<Cow<'static, str>>,
-    // autocomplete — Default setting for autofill feature for controls in the form
-    // enctype — Entry list encoding type to use for form submission
-    /// Variant used for form submission.
-    method: Option<Method>,
-    // name — Name of form to use in the document.forms API
-    // novalidate — Bypass form control validation for form submission
-    // target — Navigable for form submission
-    // rel
-}
+    fn action(self, action: impl Into<Cow<'static, str>>) -> impl Form {
+        self.with(Action(action.into()))
+    }
 
-pub trait FormExt: AsMut<FormAttributes> + Sized {
+    /// Variant used for form submission.
+    fn method(self, method: Method) -> impl Form {
+        self.with(method)
+    }
+
     /// Set the form's method to `get`.
-    fn method_get(mut self) -> Self {
-        self.as_mut().method = Some(Method::Get);
-        self
+    fn method_get(self) -> impl Form {
+        self.method(Method::Get)
     }
 
     /// Set the form's method to `post`.
-    fn method_post(mut self) -> Self {
-        self.as_mut().method = Some(Method::Post);
-        self
+    fn method_post(self) -> impl Form {
+        self.method(Method::Post)
     }
 }
 
-impl FormExt for Attributes<FormAttributes> {}
+/// URL to use for form submission.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Action(pub Cow<'static, str>);
 
 /// Variant used for form submission.
-#[derive(Default, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum Method {
     /// Submit as GET request.
     #[default]
@@ -57,9 +52,9 @@ pub enum Method {
 impl fmt::Display for Method {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Method::Get => f.write_str("get"),
-            Method::Post => f.write_str("post"),
-            Method::Dialog => f.write_str("dialog"),
+            Self::Get => f.write_str("get"),
+            Self::Post => f.write_str("post"),
+            Self::Dialog => f.write_str("dialog"),
         }
     }
 }

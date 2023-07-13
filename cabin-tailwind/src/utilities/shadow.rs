@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct BoxShadow(pub &'static str, pub &'static str);
 
@@ -45,7 +45,7 @@ pub const INNER: BoxShadow = BoxShadow(
 
 pub const NONE: BoxShadow = BoxShadow("0 0 #0000", "0 0 #0000");
 
-impl Style for BoxShadow {
+impl Utility for BoxShadow {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         write!(f, "--tw-shadow: {};", self.0)?;
         write!(f, "--tw-ring-shadow: {};", self.1)?;

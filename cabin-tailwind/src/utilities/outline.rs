@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use crate::{Length, Property, Style};
+use crate::{Length, Property, Utility};
 
 const OUTLINE_STYLE: &str = "outline-style";
 const OUTLINE_WIDTH: &str = "outline-width";
@@ -70,7 +70,7 @@ pub fn widthf(x: f32) -> Property<Length> {
 
 pub struct OutlineNone;
 
-impl Style for OutlineNone {
+impl Utility for OutlineNone {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "outline: 2px solid transparent;")?;
         writeln!(f, "outline-offset: 2px;")?;

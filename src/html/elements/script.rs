@@ -1,74 +1,104 @@
 use std::borrow::Cow;
 
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
-
-use crate::html::attributes::{Attributes2, Pair};
+use cabin_macros::{element, Attribute};
 
 use super::anchor::ReferrerPolicy;
-use super::link::{CrossOrigin, FetchPriority, RenderBlocking};
-use crate::html::attributes::Attributes;
+use super::common::Common;
+use super::global::Global;
+use super::link::{Blocking, CrossOrigin, FetchPriority};
+use crate::html::Aria;
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
-#[derive(Default, Element)]
-pub struct ScriptAttributes {
+#[element]
+pub trait Script: Common + Global + Aria {
     /// Address of the resource.
-    src: Option<Cow<'static, str>>,
+    fn src(self, src: impl Into<Cow<'static, str>>) -> impl Script {
+        self.with(Src(src.into()))
+    }
 
     /// The type of the script.
-    #[attributes(attribute_name = "type")]
-    r#type: Option<Cow<'static, str>>,
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> impl Script {
+        self.with(Type(r#type.into()))
+    }
 
     /// Whether to prevent execution in user agents that support module scripts.
-    #[attributes(attribute_name = "nomodule")]
-    no_module: bool,
+    fn no_module(self) -> impl Script {
+        self.with_no_module(true)
+    }
+
+    /// Whether to prevent execution in user agents that support module scripts.
+    fn with_no_module(self, no_module: bool) -> impl Script {
+        self.with(NoModule(no_module))
+    }
 
     /// Execute script when available, without blocking while fetching.
-    #[attributes(method_name = "with_async")]
-    #[attributes(attribute_name = "async")]
-    r#async: bool,
+    fn r#async(self) -> impl Script {
+        self.with_async(true)
+    }
+
+    /// Execute script when available, without blocking while fetching.
+    fn with_async(self, r#async: bool) -> impl Script {
+        self.with(Async(r#async))
+    }
 
     /// Defer script execution.
-    #[attributes(method_name = "with_defer")]
-    defer: bool,
+    fn defer(self) -> impl Script {
+        self.with_defer(true)
+    }
+
+    /// Defer script execution.
+    fn with_defer(self, defer: bool) -> impl Script {
+        self.with(Defer(defer))
+    }
 
     /// Handling of crossorigin requests.
-    #[attributes(attribute_name = "crossorigin")]
-    cross_origin: Option<CrossOrigin>,
+    fn cross_origin(self, cross_origin: CrossOrigin) -> impl Script {
+        self.with(cross_origin)
+    }
 
     /// Integrity metadata used in _Subresource Integrity_ checks.
-    integrity: Option<Cow<'static, str>>,
+    fn integrity(self, integrity: impl Into<Cow<'static, str>>) -> impl Script {
+        self.with(Integrity(integrity.into()))
+    }
 
     /// How much referrer information to send.
-    #[attributes(attribute_name = "referrerpolicy")]
-    referrer_policy: ReferrerPolicy,
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> impl Script {
+        self.with(referrer_policy)
+    }
 
-    #[attributes(skip)]
-    blocking: Option<RenderBlocking>,
+    fn blocking(self) -> impl Script {
+        self.with_blocking(true)
+    }
+
+    fn with_blocking(self, blocking: bool) -> impl Script {
+        self.with(Blocking(blocking))
+    }
 
     /// Sets the priority for fetches initiated by the element.
-    #[attributes(attribute_name = "fetchpriority")]
-    fetch_priority: FetchPriority,
-}
-
-pub trait ScriptExt: AsMut<ScriptAttributes> + Sized {
-    /// Execute script when available, without blocking while fetching.
-    fn r#async(mut self) -> Self {
-        self.as_mut().r#async = true;
-        self
-    }
-
-    /// Defer script execution.
-    fn defer(mut self) -> Self {
-        self.as_mut().defer = true;
-        self
-    }
-
-    /// Indicate that the element is potentially render blocking.
-    fn blocking(mut self) -> Self {
-        self.as_mut().blocking = Some(RenderBlocking);
-        self
+    fn fetch_priority(self, fetch_priority: FetchPriority) -> impl Script {
+        self.with(fetch_priority)
     }
 }
+/// Address of the resource.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Src(pub Cow<'static, str>);
 
-impl ScriptExt for Attributes<ScriptAttributes> {}
+/// The type of the script.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Type(pub Cow<'static, str>);
+
+/// Whether to prevent execution in user agents that support module scripts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct NoModule(pub bool);
+
+/// Execute script when available, without blocking while fetching.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Async(pub bool);
+
+/// Defer script execution.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Defer(pub bool);
+
+/// Integrity metadata used in _Subresource Integrity_ checks.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub struct Integrity(pub Cow<'static, str>);

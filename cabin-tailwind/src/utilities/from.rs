@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::{Length, Property, Style};
+use crate::{Length, Property, Utility};
 
 pub struct FromColor(pub(crate) &'static str);
 
@@ -22,7 +22,7 @@ pub fn percentf(x: f32) -> Property<Length> {
     Property("--tw-gradient-from-position", Length::Percent(x))
 }
 
-impl Style for FromColor {
+impl Utility for FromColor {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(
             f,

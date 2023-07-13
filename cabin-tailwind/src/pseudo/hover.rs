@@ -1,10 +1,10 @@
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct Hover<S>(pub S);
 
-impl<S: Style> Style for Hover<S> {
+impl<S: Utility> Utility for Hover<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.0.declarations(f)
     }

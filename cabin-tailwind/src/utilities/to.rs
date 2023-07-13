@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::{Length, Property, Style};
+use crate::{Length, Property, Utility};
 
 pub struct ToColor(pub(crate) &'static str);
 
@@ -22,7 +22,7 @@ pub fn percentf(x: f32) -> Property<Length> {
     Property("--tw-gradient-to-position", Length::Percent(x))
 }
 
-impl Style for ToColor {
+impl Utility for ToColor {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(
             f,

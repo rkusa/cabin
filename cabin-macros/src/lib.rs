@@ -221,9 +221,9 @@ pub fn tw(item: TokenStream) -> TokenStream {
                 NAME.set(name).ok();
             }
 
-            ::cabin_tailwind::ClassName(Some(::std::borrow::Cow::Borrowed(
+            ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
                 NAME.get().map(|s| s.as_str()).unwrap_or_default()
-            )))
+            ))
         }
     }
     .into()

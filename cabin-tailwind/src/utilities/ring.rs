@@ -6,7 +6,7 @@ use std::fmt;
 
 pub use offset::width as offset;
 
-use crate::{Length, Property, Style};
+use crate::{Length, Property, Utility};
 
 const BOX_SHADOW: &str = "box-shadow";
 
@@ -39,7 +39,7 @@ pub mod offset {
 
     pub struct RingOffsetWidth(pub Length);
 
-    impl Style for RingOffsetWidth {
+    impl Utility for RingOffsetWidth {
         fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
             write!(f, "--tw-ring-offset-width: {};", self.0)?;
             write!(
@@ -51,7 +51,7 @@ pub mod offset {
         }
     }
 
-    impl<V: fmt::Display> Style for RingOffsetColor<V> {
+    impl<V: fmt::Display> Utility for RingOffsetColor<V> {
         fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
             writeln!(f, "--tw-ring-offset-color: {};", self.0)?;
             writeln!(
@@ -88,7 +88,7 @@ pub fn widthf(x: f32) -> RingWidth {
 
 pub struct RingWidth(pub Length);
 
-impl Style for RingWidth {
+impl Utility for RingWidth {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         write!(f, "--tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);")?;
         write!(f, "--tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc({} + var(--tw-ring-offset-width)) var(--tw-ring-color);", self.0)?;
@@ -97,7 +97,7 @@ impl Style for RingWidth {
     }
 }
 
-impl<V: fmt::Display> Style for RingColor<V> {
+impl<V: fmt::Display> Utility for RingColor<V> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "--tw-ring-color: {};", self.0)?;
         Ok(())

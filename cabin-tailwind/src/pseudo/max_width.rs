@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct MaxWidth<S> {
     pub max_width_px: u32,
@@ -16,7 +16,7 @@ impl<S> MaxWidth<S> {
     }
 }
 
-impl<S: Style> Style for MaxWidth<S> {
+impl<S: Utility> Utility for MaxWidth<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.style.declarations(f)
     }

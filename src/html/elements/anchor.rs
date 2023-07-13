@@ -3,6 +3,8 @@ use std::fmt;
 
 use cabin_macros::{element, Attribute};
 
+use super::common::Common;
+use super::global::Global;
 use crate::html::attributes::Pair;
 use crate::html::list::SpaceSeparated;
 use crate::html::Aria;
@@ -10,7 +12,7 @@ use crate::html::Aria;
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
 #[element(tag = "a")]
-pub trait Anchor: Aria {
+pub trait Anchor: Common + Global + Aria {
     /// Address of the hyperlink.
     fn href(self, href: impl Into<Cow<'static, str>>) -> impl Anchor {
         self.with(Href(href.into()))
@@ -111,6 +113,7 @@ pub struct Ping(pub Cow<'static, str>);
 /// Relationship between the location in the document containing the hyperlink and the
 /// destination resource.
 #[derive(Debug, Clone, Hash, Attribute)]
+#[attribute(name = "rel")]
 pub struct RelList(pub SpaceSeparated<Rel>);
 
 /// Hint the language of the linked resource.
@@ -177,20 +180,20 @@ pub enum Rel {
 impl fmt::Display for Rel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Rel::Alternate => f.write_str("alternate"),
-            Rel::Author => f.write_str("author"),
-            Rel::Bookmark => f.write_str("bookmark"),
-            Rel::External => f.write_str("external"),
-            Rel::Help => f.write_str("help"),
-            Rel::License => f.write_str("license"),
-            Rel::Next => f.write_str("next"),
-            Rel::NoFollow => f.write_str("nofollow"),
-            Rel::NoOpener => f.write_str("noopener"),
-            Rel::NoReferrer => f.write_str("noreferrer"),
-            Rel::Opener => f.write_str("opener"),
-            Rel::Prev => f.write_str("prev"),
-            Rel::Search => f.write_str("search"),
-            Rel::Tag => f.write_str("tag"),
+            Self::Alternate => f.write_str("alternate"),
+            Self::Author => f.write_str("author"),
+            Self::Bookmark => f.write_str("bookmark"),
+            Self::External => f.write_str("external"),
+            Self::Help => f.write_str("help"),
+            Self::License => f.write_str("license"),
+            Self::Next => f.write_str("next"),
+            Self::NoFollow => f.write_str("nofollow"),
+            Self::NoOpener => f.write_str("noopener"),
+            Self::NoReferrer => f.write_str("noreferrer"),
+            Self::Opener => f.write_str("opener"),
+            Self::Prev => f.write_str("prev"),
+            Self::Search => f.write_str("search"),
+            Self::Tag => f.write_str("tag"),
         }
     }
 }
@@ -233,16 +236,14 @@ pub enum ReferrerPolicy {
 impl fmt::Display for ReferrerPolicy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ReferrerPolicy::NoReferrer => f.write_str("no-referrer"),
-            ReferrerPolicy::NoReferrerWhenDowngrade => f.write_str("no-referrer-when-downgrade"),
-            ReferrerPolicy::SameOrigin => f.write_str("same-origin"),
-            ReferrerPolicy::Origin => f.write_str("origin"),
-            ReferrerPolicy::StrictOrigin => f.write_str("strict-origin"),
-            ReferrerPolicy::OriginWhenCrossOrigin => f.write_str("origin-when-cross-origin"),
-            ReferrerPolicy::StrictOriginWhenCrossOrigin => {
-                f.write_str("strict-origin-when-cross-origin")
-            }
-            ReferrerPolicy::UnsafeUrl => f.write_str("unsafe-url"),
+            Self::NoReferrer => f.write_str("no-referrer"),
+            Self::NoReferrerWhenDowngrade => f.write_str("no-referrer-when-downgrade"),
+            Self::SameOrigin => f.write_str("same-origin"),
+            Self::Origin => f.write_str("origin"),
+            Self::StrictOrigin => f.write_str("strict-origin"),
+            Self::OriginWhenCrossOrigin => f.write_str("origin-when-cross-origin"),
+            Self::StrictOriginWhenCrossOrigin => f.write_str("strict-origin-when-cross-origin"),
+            Self::UnsafeUrl => f.write_str("unsafe-url"),
         }
     }
 }

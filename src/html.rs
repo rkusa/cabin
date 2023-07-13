@@ -16,59 +16,59 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::anchor::{self as a, a, Anchor};
     #[doc(inline)]
-    pub use super::elements::aria::{self as aria, Aria};
-    // #[doc(inline)]
-    // pub use super::elements::body::{body, Body};
-    // #[doc(inline)]
-    // pub use super::elements::button::{button, Button};
-    // #[doc(inline)]
-    // pub use super::elements::common::Common;
-    // #[doc(inline)]
-    // pub use super::elements::dialog::{dialog, Dialog};
-    // #[doc(inline)]
-    // pub use super::elements::div::{div, Div};
-    // #[doc(inline)]
-    // pub use super::elements::fieldset::{fieldset, Fieldset};
-    // #[doc(inline)]
-    // pub use super::elements::form::{form, Form, FormExt};
-    // #[doc(inline)]
-    // pub use super::elements::global::Global;
-    // #[doc(inline)]
-    // pub use super::elements::h1::{h1, H1};
-    // #[doc(inline)]
-    // pub use super::elements::h2::{h2, H2};
-    // #[doc(inline)]
-    // pub use super::elements::h3::{h3, H3};
-    // #[doc(inline)]
-    // pub use super::elements::h4::{h4, H4};
-    // #[doc(inline)]
-    // pub use super::elements::h5::{h5, H5};
-    // #[doc(inline)]
-    // pub use super::elements::h6::{h6, H6};
-    // #[doc(inline)]
-    // pub use super::elements::head::{head, Head};
-    // #[doc(inline)]
-    // pub use super::elements::html::{html, Html};
-    // #[doc(inline)]
-    // pub use super::elements::input::{input, Input, InputExt};
-    // #[doc(inline)]
-    // pub use super::elements::label::{label, Label};
-    // #[doc(inline)]
-    // pub use super::elements::li::{li, Li};
-    // #[doc(inline)]
-    // pub use super::elements::link::{link, Link, LinkExt};
-    // #[doc(inline)]
-    // pub use super::elements::nav::{nav, Nav};
-    // #[doc(inline)]
-    // pub use super::elements::script::{script, Script, ScriptExt};
-    // #[doc(inline)]
-    // pub use super::elements::span::{span, Span};
-    // #[doc(inline)]
-    // pub use super::elements::time::{time, Time};
-    // #[doc(inline)]
-    // pub use super::elements::ul::{ul, Ul};
-    // #[doc(inline)]
-    // pub use crate::view::text::{text, Text};
+    pub use super::elements::aria::*;
+    #[doc(inline)]
+    pub use super::elements::body::{body, Body};
+    #[doc(inline)]
+    pub use super::elements::button::{self as button, button, Button};
+    #[doc(inline)]
+    pub use super::elements::common::*;
+    #[doc(inline)]
+    pub use super::elements::dialog::{self as dialog, dialog, Dialog};
+    #[doc(inline)]
+    pub use super::elements::div::{self as div, div, Div};
+    #[doc(inline)]
+    pub use super::elements::fieldset::{self as fieldset, fieldset, Fieldset};
+    #[doc(inline)]
+    pub use super::elements::form::{self as from, form, Form};
+    #[doc(inline)]
+    pub use super::elements::global::*;
+    #[doc(inline)]
+    pub use super::elements::h1::{self as h1, h1, H1};
+    #[doc(inline)]
+    pub use super::elements::h2::{self as h2, h2, H2};
+    #[doc(inline)]
+    pub use super::elements::h3::{self as h3, h3, H3};
+    #[doc(inline)]
+    pub use super::elements::h4::{self as h4, h4, H4};
+    #[doc(inline)]
+    pub use super::elements::h5::{self as h5, h5, H5};
+    #[doc(inline)]
+    pub use super::elements::h6::{self as h6, h6, H6};
+    #[doc(inline)]
+    pub use super::elements::head::{self as head, head, Head};
+    #[doc(inline)]
+    pub use super::elements::html::{self as html, html, Html};
+    #[doc(inline)]
+    pub use super::elements::input::{self as input, input, Input};
+    #[doc(inline)]
+    pub use super::elements::label::{self as label, label, Label};
+    #[doc(inline)]
+    pub use super::elements::li::{self as li, li, Li};
+    #[doc(inline)]
+    pub use super::elements::link::{self as link, link, Link};
+    #[doc(inline)]
+    pub use super::elements::nav::{self as nav, nav, Nav};
+    #[doc(inline)]
+    pub use super::elements::script::{self as script, script, Script};
+    #[doc(inline)]
+    pub use super::elements::span::{self as span, span, Span};
+    #[doc(inline)]
+    pub use super::elements::time::{self as time, time, Time};
+    #[doc(inline)]
+    pub use super::elements::ul::{self as ul, ul, Ul};
+    #[doc(inline)]
+    pub use crate::view::text::{text, Text};
 
     pub fn doctype() -> impl crate::View {
         super::raw("<!DOCTYPE html>")

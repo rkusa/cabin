@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 // TODO: doc comment
-#[derive(Default, Element)]
-pub struct SpanAttributes {}
+#[element]
+pub trait Span: Common + Global + Aria {}

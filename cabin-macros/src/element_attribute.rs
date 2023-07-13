@@ -4,7 +4,8 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::Comma;
 use syn::{
-    token, Attribute, Error, Expr, ExprLit, FnArg, ItemTrait, Lit, LitBool, TraitItem, TraitItemFn,
+    parse_quote, token, Attribute, Error, Expr, ExprLit, FnArg, GenericArgument, ItemTrait, Lit,
+    LitBool, Path, PathArguments, ReturnType, TraitItem, TraitItemFn, Type, TypePath,
 };
 
 use crate::OptionExpr;
@@ -65,6 +66,28 @@ pub(crate) fn element_attribute(
                 .into_iter()
                 .filter(|input| matches!(input, FnArg::Typed(_))),
         );
+        if let ReturnType::Type(_, ty) = &mut sig.output {
+            if let Type::Path(TypePath {
+                path: Path { segments, .. },
+                ..
+            }) = ty.as_mut()
+            {
+                for segment in segments.iter_mut() {
+                    if let PathArguments::AngleBracketed(args) = &mut segment.arguments {
+                        for arg in args.args.iter_mut() {
+                            if let GenericArgument::Type(Type::Path(TypePath { path, .. })) = arg {
+                                if path.is_ident("Self") {
+                                    *arg = parse_quote!(());
+                                }
+                            }
+                        }
+                        // args.args = Punctuated::from_iter(args.args.into_iter().map(|arg| {
+                        //     panic!("{:#?}", arg);
+                        // }));
+                    }
+                }
+            }
+        }
 
         // Forward only certain args
         let attrs = attrs
@@ -124,12 +147,15 @@ pub(crate) fn element_attribute(
 
         impl #ident for () {}
 
-        impl<L, R> #ident for Pair<L, R>
+        impl<L, R> #ident for ::cabin::html::attributes::Pair<L, R>
         where
             L: ::cabin::html::attributes::Attributes,
             R: ::cabin::html::attributes::Attributes,
         {
         }
+
+
+        impl #ident for ::cabin::html::elements::common::Class {}
     })
 }
 
@@ -177,6 +203,7 @@ fn extract_options(attrs: Punctuated<OptionExpr, Comma>) -> syn::Result<Opts> {
             }
         } else if opt.key == format_ident!("void") {
             opts.is_void = true;
+            continue;
         }
 
         return Err(Error::new(opt.key.span(), "unknown element option"));

@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::{Length, Property, Style};
+use crate::{Length, Property, Utility};
 
 pub struct ViaColor(pub(crate) &'static str);
 
@@ -22,7 +22,7 @@ pub fn percentf(x: f32) -> Property<Length> {
     Property("--tw-gradient-via-position", Length::Percent(x))
 }
 
-impl Style for ViaColor {
+impl Utility for ViaColor {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         // TODO: better handling of colors (handle non six digit hex inputs)
         writeln!(

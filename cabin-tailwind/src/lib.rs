@@ -1,20 +1,20 @@
-mod class_name;
 mod pseudo;
 pub mod registry;
-mod utilities;
+pub mod utilities;
 
 use std::fmt;
 use std::hash::Hasher;
 
+pub use cabin::html::elements::common::Class;
 pub use cabin_macros::tw;
-pub use class_name::ClassName;
-pub use utilities::*;
+pub use utilities as css;
 
 pub mod prelude {
-    pub use crate::{self as css, tw, Responsive, Style};
+    pub use crate::utilities::*;
+    pub use crate::{tw, Responsive, Utility};
 }
 
-pub trait Style {
+pub trait Utility {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result;
 
     fn selector_prefix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
@@ -208,13 +208,13 @@ impl fmt::Display for Length {
     }
 }
 
-impl<V: fmt::Display> Style for Property<V> {
+impl<V: fmt::Display> Utility for Property<V> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.1)
     }
 }
 
-impl<V: fmt::Display> Style for PropertyTwice<V> {
+impl<V: fmt::Display> Utility for PropertyTwice<V> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.2)?;
         writeln!(f, "{}: {};", self.1, self.2)?;
@@ -222,7 +222,7 @@ impl<V: fmt::Display> Style for PropertyTwice<V> {
     }
 }
 
-impl Style for StaticClass {
+impl Utility for StaticClass {
     fn declarations(&self, _: &mut dyn fmt::Write) -> fmt::Result {
         Ok(())
     }

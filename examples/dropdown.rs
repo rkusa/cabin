@@ -1,11 +1,9 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::html::attributes::default;
-use cabin::html::{Common, Global};
+use cabin::prelude::*;
 use cabin::state::State;
 use cabin::view::IteratorExt;
-use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -14,9 +12,9 @@ async fn app() -> impl View {
         .restore_or(3);
 
     (
-        html::button(
-            default().on_click(Increment).style("min-width:40px"),
-            html::text!("{}", count),
+        button(
+            on_click(Increment).style("min-width:40px"),
+            text!("{}", count),
         ),
         dialog(count),
     )
@@ -27,22 +25,19 @@ fn dialog(count: usize) -> impl View {
         .update(|opened, _: ToggleDropdown| *opened = !*opened)
         .restore_or(false);
 
-    html::div(
-        default().style("display:inline;position:relative"),
+    div(
+        style("display:inline;position:relative"),
         (
-            html::button(default().on_click(ToggleDropdown), "open"),
+            button(on_click(ToggleDropdown), "open"),
             opened.then(|| {
-                html::ul(
-                    default().style(
+                ul(
+                    style(
                         "position:absolute;top:20px;right:0;background:#ddd;\
                 list-style-type:none;padding:4px;",
                     ),
-                    (0..count).keyed(|item| *item).map(|item| {
-                        html::li(
-                            default().style("white-space:nowrap;"),
-                            html::text!("Item {}", item),
-                        )
-                    }),
+                    (0..count)
+                        .keyed(|item| *item)
+                        .map(|item| li(style("white-space:nowrap;"), text!("Item {}", item))),
                 )
             }),
         ),

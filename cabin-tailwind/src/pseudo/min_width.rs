@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct MinWidth<S> {
     pub min_width_px: u32,
@@ -16,7 +16,7 @@ impl<S> MinWidth<S> {
     }
 }
 
-impl<S: Style> Style for MinWidth<S> {
+impl<S: Utility> Utility for MinWidth<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.style.declarations(f)
     }

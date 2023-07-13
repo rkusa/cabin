@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 /// The `div` element represents a generic container for flow content.
-#[derive(Default, Element)]
-pub struct DivAttributes {}
+#[element]
+pub trait Div: Common + Global + Aria {}

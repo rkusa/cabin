@@ -2,18 +2,18 @@ use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
 use axum::Json;
+use cabin::prelude::*;
 use cabin::view::FutureExt;
-use cabin::{html, View};
 
 async fn app() -> impl View {
     let start = Instant::now();
-    html::ul(
+    ul(
         (),
         (
             delayed(start, Duration::from_secs(1)).into_view(),
             delayed(start, Duration::from_secs(2)).into_view(),
             delayed(start, Duration::from_secs(3)).into_view(),
-            html::text!("page finished after {:.2}", start.elapsed().as_secs_f64()),
+            text!("page finished after {:.2}", start.elapsed().as_secs_f64()),
         ),
     )
 }
@@ -22,9 +22,9 @@ async fn delayed(start: Instant, delay: Duration) -> impl View {
     let started_at = start.elapsed();
     let inner = Instant::now();
     tokio::time::sleep(delay).await;
-    html::li(
+    li(
         (),
-        html::text!(
+        text!(
             "delayed for {:?}, started after {:.2}, took {:.2}, finished after {:.2}",
             delay,
             started_at.as_secs_f64(),

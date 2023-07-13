@@ -7,7 +7,7 @@ use std::hash::Hasher;
 use once_cell::race::OnceBox;
 use twox_hash::XxHash32;
 
-use super::Style;
+use super::Utility;
 
 #[linkme::distributed_slice]
 pub static STYLES: [fn(&mut StyleRegistry)] = [..];
@@ -46,7 +46,7 @@ impl StyleRegistry {
         })
     }
 
-    pub fn add(&mut self, styles: &[&dyn Style]) -> String {
+    pub fn add(&mut self, styles: &[&dyn Utility]) -> String {
         let mut sorted = styles
             .iter()
             .map(|s| (hash_style(*s), *s))
@@ -127,7 +127,7 @@ impl StyleRegistry {
     }
 }
 
-fn hash_style(style: &dyn Style) -> u64 {
+fn hash_style(style: &dyn Utility) -> u64 {
     struct HashWriter(DefaultHasher);
 
     impl fmt::Write for HashWriter {
@@ -147,12 +147,14 @@ fn hash_style(style: &dyn Style) -> u64 {
 fn test_deduplication() {
     // Generate same class name if styles are the same just in a different order.
 
+    use crate::utilities::{p, BLOCK};
+
     let mut r = StyleRegistry {
         out: Default::default(),
         hashes: Default::default(),
     };
-    let a = r.add(&[&super::BLOCK, &super::p(4)]);
-    let b = r.add(&[&super::p(4), &super::BLOCK]);
+    let a = r.add(&[&BLOCK, &p(4)]);
+    let b = r.add(&[&p(4), &BLOCK]);
     assert_eq!(a, b);
     insta::assert_snapshot!(r.out);
 }
@@ -162,17 +164,18 @@ fn test_order() {
     // Test order of @media statements
 
     use super::Responsive;
+    use crate::utilities::BLOCK;
 
     let mut r = StyleRegistry {
         out: Default::default(),
         hashes: Default::default(),
     };
     r.add(&[
-        &super::BLOCK.sm().max_md(),
-        &super::BLOCK.md(),
-        &super::BLOCK.max_sm(),
-        &super::BLOCK.max_md(),
-        &super::BLOCK.sm(),
+        &BLOCK.sm().max_md(),
+        &BLOCK.md(),
+        &BLOCK.max_sm(),
+        &BLOCK.max_md(),
+        &BLOCK.sm(),
     ]);
     insta::assert_snapshot!(r.out);
 }

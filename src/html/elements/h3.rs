@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
-// TODO
-#[derive(Default, Element)]
-pub struct H3Attributes {}
+/// TODO:
+#[element]
+pub trait H3: Common + Global + Aria {}

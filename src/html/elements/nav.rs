@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
-/// The `time` element represents a section with navigation links.
-#[derive(Default, Element)]
-pub struct NavAttributes {}
+/// TODO: doc comment
+#[element]
+pub trait Nav: Common + Global + Aria {}

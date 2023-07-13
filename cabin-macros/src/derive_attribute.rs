@@ -33,7 +33,7 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
         ));
     }
 
-    if let Data::Enum(DataEnum { .. }) = data {
+    if opts.outer || matches!(data, Data::Enum(DataEnum { .. })) {
         return Ok(quote! {
             #[automatically_derived]
             impl ::cabin::html::attributes::Attributes for #ident {
@@ -108,6 +108,7 @@ pub(crate) fn extract_inner_type(ty: &Type) -> syn::Result<(&Type, Kind)> {
 #[derive(Debug, Default)]
 struct Opts {
     name: Option<String>,
+    outer: bool,
 }
 
 fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
@@ -130,6 +131,9 @@ fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
                 opts.name = Some(s.value());
                 continue;
             }
+        } else if opt.key == format_ident!("outer") {
+            opts.outer = true;
+            continue;
         }
         return Err(Error::new(opt.key.span(), "unknown element option"));
     }

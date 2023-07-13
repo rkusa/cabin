@@ -1,11 +1,9 @@
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::html::attributes::default;
-use cabin::html::Common;
+use cabin::prelude::*;
 use cabin::state::State;
 use cabin::view::IteratorExt;
-use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -51,29 +49,23 @@ async fn list(initial: impl FnOnce() -> Vec<Item>) -> impl View {
         .restore_or_else(initial);
 
     (
-        html::div(
-            (),
-            html::button(default().on_click(ItemsEvent::AddAbove), "add above"),
-        ),
-        html::ul(
+        div((), button(on_click(ItemsEvent::AddAbove), "add above")),
+        ul(
             (),
             items.into_iter().keyed(|item| item.id).map(|item| {
-                html::li(
+                li(
                     (),
                     (
-                        html::button(
-                            default().on_click(ItemsEvent::Increment(item.id)),
-                            html::text!("{}", item.count),
+                        button(
+                            on_click(ItemsEvent::Increment(item.id)),
+                            text!("{}", item.count),
                         ),
-                        html::button(default().on_click(ItemsEvent::Delete(item.id)), "x"),
+                        button(on_click(ItemsEvent::Delete(item.id)), "x"),
                     ),
                 )
             }),
         ),
-        html::div(
-            (),
-            html::button(default().on_click(ItemsEvent::AddBelow), "add below"),
-        ),
+        div((), button(on_click(ItemsEvent::AddBelow), "add below")),
     )
 }
 

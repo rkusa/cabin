@@ -1,10 +1,10 @@
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct Focus<S>(pub S);
 
-impl<S: Style> Style for Focus<S> {
+impl<S: Utility> Utility for Focus<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.0.declarations(f)
     }

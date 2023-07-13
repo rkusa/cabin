@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::future::Future;
 
 use bytes::Bytes;
+pub use cabin_macros::{element, Attribute};
 pub use error::Error;
 pub use http::StatusCode;
 use http::{HeaderValue, Response};
@@ -32,30 +33,23 @@ pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 // TODO: move behind feature flag?
-// pub fn cabin_stylesheets() -> impl View {
-//     use html::elements::common::Common;
-//     use html::elements::link::Link;
-//     html::link(
-//         html::link::default()
-//             .id("cabin-styles")
-//             .rel(html::elements::link::Rel::StyleSheet)
-//             .href("/styles.css"),
-//     )
-// }
+pub fn cabin_stylesheets() -> impl View {
+    use html::elements::link::Link;
+    html::link(
+        html::id("cabin-styles")
+            .rel(html::elements::link::Rel::StyleSheet)
+            .href("/styles.css"),
+    )
+}
 
-// pub fn cabin_scripts() -> impl View {
-//     use html::elements::script::{Script, ScriptExt};
-//     (
-//         html::script(
-//             html::script::default()
-//                 .src("/server-component.js")
-//                 .r#async(),
-//             (),
-//         ),
-//         #[cfg(feature = "livereload")]
-//         html::script(html::script::default().src("/livereload.js").r#async(), ()),
-//     )
-// }
+pub fn cabin_scripts() -> impl View {
+    use html::elements::script::Script;
+    (
+        html::script(html::script::src("/server-component.js").r#async(), ()),
+        #[cfg(feature = "livereload")]
+        html::script(html::script::src("/livereload.js").r#async(), ()),
+    )
+}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -68,13 +62,13 @@ pub struct Event {
 fn default_document(content: impl View) -> impl View {
     (
         html::doctype(),
-        // html::html(
-        //     (),
-        //     (
-        //         html::head((), (cabin_stylesheets(), cabin_scripts())),
-        //         html::body((), content),
-        //     ),
-        // ),
+        html::html(
+            (),
+            (
+                html::head((), (cabin_stylesheets(), cabin_scripts())),
+                html::body((), content),
+            ),
+        ),
     )
 }
 

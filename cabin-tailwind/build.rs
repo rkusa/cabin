@@ -32,7 +32,7 @@ fn main() {
         .unwrap();
     }
     writeln!(out, r#"}}"#).unwrap();
-    writeln!(out, r#"impl<S: Style> Responsive for S {{"#).unwrap();
+    writeln!(out, r#"impl<T: Utility> Responsive for T {{"#).unwrap();
     for (ident, min_width_px) in theme.breakpoints {
         writeln!(
             out,

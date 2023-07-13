@@ -2,11 +2,9 @@ use std::borrow::Cow;
 use std::net::SocketAddr;
 
 use axum::Json;
-use cabin::html::attributes::default;
 use cabin::html::events::InputValue;
-use cabin::html::Input;
+use cabin::prelude::*;
 use cabin::state::State;
-use cabin::{html, View};
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -25,17 +23,14 @@ async fn search() -> impl View {
 
     let items = search_countries(&query).await;
 
-    html::div(
+    div(
         (),
         (
-            html::div(
+            div(
                 (),
-                html::input(default().on_input(|ev| Search(ev.value)).value(query)),
+                input(input::on_input(|ev| Search(ev.value)).value(query)),
             ),
-            html::div(
-                (),
-                html::ul((), items.into_iter().map(|item| html::li((), item))),
-            ),
+            div((), ul((), items.into_iter().map(|item| li((), item)))),
         ),
     )
 }

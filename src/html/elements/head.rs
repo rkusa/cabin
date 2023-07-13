@@ -1,8 +1,9 @@
-use cabin_macros::Element;
-use cabin_macros::{Attributes2, Element};
+use cabin_macros::element;
 
-use crate::html::attributes::{Attributes2, Pair};
+use super::common::Common;
+use super::global::Global;
+use crate::html::Aria;
 
 /// The `head` element represents a collection of metadata for a document.
-#[derive(Default, Element)]
-pub struct HeadAttributes {}
+#[element]
+pub trait Head: Common + Global + Aria {}

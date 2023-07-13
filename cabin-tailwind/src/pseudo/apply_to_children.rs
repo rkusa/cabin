@@ -1,10 +1,10 @@
 use std::fmt;
 
-use crate::Style;
+use crate::Utility;
 
 pub struct ApplyToChildren<S>(pub S);
 
-impl<S: Style> Style for ApplyToChildren<S> {
+impl<S: Utility> Utility for ApplyToChildren<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.0.declarations(f)
     }
