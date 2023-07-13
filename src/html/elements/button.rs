@@ -70,6 +70,18 @@ pub trait Button: Common + Global + Aria {
         self.with(popover_target_action)
     }
 
+    fn type_submit(self) -> impl Button {
+        self.r#type(Type::Submit)
+    }
+
+    fn type_reset(self) -> impl Button {
+        self.r#type(Type::Reset)
+    }
+
+    fn type_button(self) -> impl Button {
+        self.r#type(Type::Button)
+    }
+
     /// Type of button.
     fn r#type(self, r#type: Type) -> impl Button {
         self.with(r#type)

@@ -30,7 +30,7 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::fieldset::{self as fieldset, fieldset, Fieldset};
     #[doc(inline)]
-    pub use super::elements::form::{self as from, form, Form};
+    pub use super::elements::form::{self as form, form, Form};
     #[doc(inline)]
     pub use super::elements::global::*;
     #[doc(inline)]
