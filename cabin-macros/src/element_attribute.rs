@@ -95,10 +95,13 @@ pub(crate) fn element_attribute(
             .filter(|a| a.path().is_ident("doc") || a.path().is_ident("cfg"))
             .collect::<Vec<_>>();
 
+        let (_, type_generics, _) = sig.generics.split_for_impl();
+        let turbofish = type_generics.as_turbofish();
+
         attr_factories.push(quote! {
             #(#attrs)*
             #vis #sig {
-                #ident::#method_name((), #(#arg_names,)*)
+                #ident::#method_name #turbofish((), #(#arg_names,)*)
             }
         });
     }

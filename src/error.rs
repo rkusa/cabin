@@ -18,6 +18,7 @@ enum Inner {
     },
     Other {
         status: StatusCode,
+        reason: Option<String>,
         source: Option<Box<dyn error::Error + Send + 'static>>,
     },
 }
@@ -27,6 +28,17 @@ impl Error {
         Self {
             inner: Inner::Other {
                 status,
+                reason: None,
+                source: None,
+            },
+        }
+    }
+
+    pub fn from_status_code_and_reason(status: StatusCode, reason: impl Into<String>) -> Self {
+        Self {
+            inner: Inner::Other {
+                status,
+                reason: Some(reason.into()),
                 source: None,
             },
         }
@@ -36,6 +48,7 @@ impl Error {
         Self {
             inner: Inner::Other {
                 status: StatusCode::INTERNAL_SERVER_ERROR,
+                reason: None,
                 source: Some(Box::new(err)),
             },
         }
@@ -56,7 +69,27 @@ impl Error {
                 status: Some(status),
                 source,
             },
-            Inner::Other { source, .. } => Inner::Other { status, source },
+            Inner::Other { source, .. } => Inner::Other {
+                status,
+                reason: None,
+                source,
+            },
+        };
+        self
+    }
+
+    pub fn with_reason(mut self, reason: impl Into<String>) -> Self {
+        self.inner = match self.inner {
+            Inner::Http { status, source } => Inner::Other {
+                status: status.unwrap_or_else(|| source.status_code()),
+                reason: Some(reason.into()),
+                source: Some(Box::new(InnerHttpError(source))),
+            },
+            Inner::Other { status, source, .. } => Inner::Other {
+                status,
+                reason: Some(reason.into()),
+                source,
+            },
         };
         self
     }
@@ -71,7 +104,7 @@ pub enum InternalError {
     },
     Deserialize {
         what: &'static str,
-        err: serde_json::Error,
+        err: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
     InvalidAttributeName {
         name: String,
@@ -92,7 +125,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.inner {
             Inner::Http { source, .. } => source.fmt(f),
-            Inner::Other { status, source } => {
+            Inner::Other { status, source, .. } => {
                 if let Some(err) = source {
                     err.fmt(f)
                 } else {
@@ -108,7 +141,7 @@ impl error::Error for InternalError {
         match self {
             Self::Render | Self::InvalidAttributeName { .. } => None,
             Self::Serialize { err, .. } => Some(err),
-            Self::Deserialize { err, .. } => Some(err),
+            Self::Deserialize { err, .. } => Some(err.as_ref()),
             Self::Join(err) => Some(err),
         }
     }
@@ -139,6 +172,7 @@ impl From<InternalError> for Error {
         Self {
             inner: Inner::Other {
                 status: StatusCode::INTERNAL_SERVER_ERROR,
+                reason: None,
                 source: Some(Box::new(err)),
             },
         }
@@ -164,6 +198,20 @@ impl HttpError for Error {
             Inner::Other { status, .. } => *status,
         }
     }
+
+    fn reason(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Inner::Other {
+            reason: Some(reason),
+            ..
+        } = &self.inner
+        {
+            return f.write_str(reason);
+        }
+        if let Some(reason) = self.status_code().canonical_reason() {
+            f.write_str(reason)?;
+        }
+        Ok(())
+    }
 }
 
 impl From<Error> for Response<Bytes> {
@@ -185,5 +233,20 @@ impl From<Error> for Response<Bytes> {
                 .body(Bytes::default())
                 .unwrap(),
         }
+    }
+}
+
+#[derive(Debug)]
+struct InnerHttpError(Box<dyn HttpError + Send + 'static>);
+
+impl fmt::Display for InnerHttpError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl error::Error for InnerHttpError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        self.0.source()
     }
 }

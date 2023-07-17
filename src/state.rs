@@ -66,6 +66,15 @@ where
         Scope::serialize_state(self.id, &value);
         value
     }
+
+    pub fn restore_or_default(self) -> T
+    where
+        T: Default,
+    {
+        let value = self.value.unwrap_or_default();
+        Scope::serialize_state(self.id, &value);
+        value
+    }
 }
 
 fn hash(val: impl Hash) -> u32 {

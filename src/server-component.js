@@ -1,6 +1,6 @@
 /**
  * @param {number} eventId
- * @param {object} payload
+ * @param {object | URLSearchParams} payload
  * @param {Node} target
  */
 // TODO: remove `console.log`s or add option to disable them
@@ -15,16 +15,38 @@ async function update(eventId, payload, target) {
   try {
     const state = document.getElementById("state").innerText;
 
-    const res = await fetch(location.href, {
-      signal,
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: `{"eventId":${eventId},"payload":${JSON.stringify(
-        payload
-      )},"state":${state}}`,
-    });
+    const req =
+      payload instanceof URLSearchParams
+        ? {
+            signal,
+            method: "PUT",
+            body: (() => {
+              const formData = new FormData();
+              formData.append(
+                "payload",
+                new Blob([payload.toString()], {
+                  type: "application/x-www-form-urlencoded",
+                }),
+              );
+              formData.append("event_id", eventId);
+              formData.append(
+                "state",
+                new Blob([state], { type: "application/json" }),
+              );
+              return formData;
+            })(),
+          }
+        : {
+            signal,
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: `{"eventId":${eventId},"payload":${JSON.stringify(
+              payload,
+            )},"state":${state}}`,
+          };
+    const res = await fetch(location.href, req);
     if (signal.aborted) {
       console.log("already aborted, ignoring");
       return;
@@ -91,9 +113,9 @@ function setUpEventListener(eventName, opts) {
               ? Object.entries(opts.eventPayload(e)).reduce(
                   (result, [placeholder, value]) =>
                     result.replace(placeholder, value),
-                  node.getAttribute(`${attrName}-payload`)
+                  node.getAttribute(`${attrName}-payload`),
                 )
-              : node.getAttribute(`${attrName}-payload`)
+              : node.getAttribute(`${attrName}-payload`),
           );
           await update(parseInt(eventId), payload, document.body);
         } finally {
@@ -113,6 +135,43 @@ function setUpEventListener(eventName, opts) {
 setUpEventListener("click", { preventDefault: true, disable: true });
 setUpEventListener("input", {
   eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+});
+document.addEventListener("submit", async function handleEvent(e) {
+  /** @type {HTMLFormElement} */
+  let form = e.target;
+  do {
+    const eventId = form.getAttribute("cabin-submit");
+    if (!eventId) {
+      return;
+    }
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    const payload = new URLSearchParams(new FormData(form));
+
+    // disable whole form
+    /** @type {WeakMap<HTMLElement, bool>} */
+    const disabledBefore = new WeakMap();
+    for (const el of form.elements) {
+      disabledBefore.set(el, el.disabled);
+      el.disabled = true;
+    }
+
+    try {
+      await update(parseInt(eventId), payload, document.body);
+    } finally {
+      // restore disabled state
+      for (const el of form.elements) {
+        const before = disabledBefore.get(el);
+        if (before !== undefined) {
+          el.disabled = before;
+        }
+      }
+    }
+
+    break;
+  } while ((form = form.parentElement));
 });
 
 /**

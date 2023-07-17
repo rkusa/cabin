@@ -17,19 +17,23 @@ livereload = []
 [dependencies]
 bytes = "1.2"
 cabin-macros = { path = "./cabin-macros", version = "0.1" }
+futures-util = "0.3"
 http = "0.2"
 http-body = "0.4"
 http-error = { git = "https://github.com/rkusa/http-error.git", rev = "7453f21" } # path = "../http-error" }
 linkme = "0.3"
+mime = "0.3"
+multer = { version = "2.1.0", features = ["json"] }
 num_cpus = "1.15"
 once_cell = "1.15"
-paste = "1.0" # TODO: without the additiona dependency?
+paste = "1.0" # TODO: without the additional dependency?
 rand = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["raw_value"] }
-tracing = "0.1"
+serde_urlencoded = "0.7"
 tokio = { version = "1.0", features = ["rt"] }
 tokio-util = { version = "0.7", features = ["rt"] }
+tracing = "0.1"
 twox-hash = "1.6"
 
 [dev-dependencies]

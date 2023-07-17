@@ -1,9 +1,8 @@
 use std::net::SocketAddr;
 use std::{error, fmt};
 
-use axum::Json;
 use cabin::View;
-use http::StatusCode;
+use http::{Request, StatusCode};
 
 async fn app() -> impl View {
     health().await
@@ -41,7 +40,7 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| cabin::get_page(app))
-                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
+                .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
         .layer(cabin_service::framework());
 

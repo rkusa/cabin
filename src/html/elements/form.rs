@@ -29,6 +29,19 @@ pub trait Form: Common + Global + Aria {
     fn method_post(self) -> impl Form {
         self.method(Method::Post)
     }
+
+    fn on_submit<E>(self) -> impl Form
+    where
+        E: 'static,
+    {
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = twox_hash::XxHash32::default();
+        std::any::TypeId::of::<E>().hash(&mut hasher);
+        let hash = hasher.finish() as u32;
+
+        self.with(OnSubmit(hash))
+    }
 }
 
 /// URL to use for form submission.
@@ -58,3 +71,7 @@ impl fmt::Display for Method {
         }
     }
 }
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "cabin-submit")]
+pub struct OnSubmit(pub u32);

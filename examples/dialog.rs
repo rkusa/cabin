@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use axum::Json;
 use cabin::html;
 use cabin::prelude::*;
 use cabin::state::State;
+use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
@@ -40,7 +40,7 @@ async fn main() {
         .route(
             "/",
             axum::routing::get(|| cabin::get_page(app))
-                .put(|Json(event): Json<cabin::Event>| cabin::put_page(event, app)),
+                .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
         .layer(cabin_service::framework());
 

@@ -31,8 +31,13 @@ struct Inner {
     error: Option<InternalError>,
 }
 
+pub(crate) enum Payload {
+    Json(Box<RawValue>),
+    UrlEncoded(String),
+}
+
 enum Event {
-    Raw { id: u32, payload: Box<RawValue> },
+    Raw { id: u32, payload: Payload },
     Deserialized(Box<dyn Any>),
 }
 
@@ -54,18 +59,33 @@ where
                         return None;
                     }
 
-                    match serde_json::from_str(payload.get()) {
-                        Ok(payload) => {
-                            *event = Event::Deserialized(Box::new(payload));
-                            Some(payload)
-                        }
-                        Err(err) => {
-                            state.error = Some(InternalError::Deserialize {
-                                what: "event payload",
-                                err,
-                            });
-                            None
-                        }
+                    match payload {
+                        Payload::Json(payload) => match serde_json::from_str(payload.get()) {
+                            Ok(payload) => {
+                                *event = Event::Deserialized(Box::new(payload));
+                                Some(payload)
+                            }
+                            Err(err) => {
+                                state.error = Some(InternalError::Deserialize {
+                                    what: "event json payload",
+                                    err: Box::new(err),
+                                });
+                                None
+                            }
+                        },
+                        Payload::UrlEncoded(payload) => match serde_urlencoded::from_str(payload) {
+                            Ok(payload) => {
+                                *event = Event::Deserialized(Box::new(payload));
+                                Some(payload)
+                            }
+                            Err(err) => {
+                                state.error = Some(InternalError::Deserialize {
+                                    what: "event urlencoded payload",
+                                    err: Box::new(err),
+                                });
+                                None
+                            }
+                        },
                     }
                 }
                 Event::Deserialized(payload) => payload.downcast_ref::<E>().copied(),
@@ -94,14 +114,28 @@ where
                         return None;
                     }
 
-                    match serde_json::from_str(payload.get()) {
-                        Ok(payload) => Some(payload),
-                        Err(err) => {
-                            state.error = Some(InternalError::Deserialize {
-                                what: "event payload",
-                                err,
-                            });
-                            None
+                    match payload {
+                        Payload::Json(payload) => match serde_json::from_str(payload.get()) {
+                            Ok(payload) => Some(payload),
+                            Err(err) => {
+                                state.error = Some(InternalError::Deserialize {
+                                    what: "event json payload",
+                                    err: Box::new(err),
+                                });
+                                None
+                            }
+                        },
+                        Payload::UrlEncoded(payload) => {
+                            match serde_urlencoded::from_str(&payload) {
+                                Ok(payload) => Some(payload),
+                                Err(err) => {
+                                    state.error = Some(InternalError::Deserialize {
+                                        what: "event urlencoded payload",
+                                        err: Box::new(err),
+                                    });
+                                    None
+                                }
+                            }
                         }
                     }
                 }
@@ -138,7 +172,7 @@ impl Scope {
         self
     }
 
-    pub fn with_event(self, id: u32, payload: Box<RawValue>) -> Self {
+    pub(crate) fn with_event(self, id: u32, payload: Payload) -> Self {
         {
             let mut state = self.inner.borrow_mut();
             state.event = Some(Event::Raw { id, payload });
@@ -172,7 +206,7 @@ impl Scope {
                     Err(err) => {
                         inner.error = Some(InternalError::Deserialize {
                             what: "previous state",
-                            err,
+                            err: Box::new(err),
                         });
                         None
                     }
