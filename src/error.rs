@@ -191,6 +191,29 @@ impl From<tokio::task::JoinError> for InternalError {
     }
 }
 
+impl From<Box<dyn HttpError + Send + 'static>> for Error {
+    fn from(err: Box<dyn HttpError + Send + 'static>) -> Self {
+        Self {
+            inner: Inner::Http {
+                status: None,
+                source: err,
+            },
+        }
+    }
+}
+
+impl From<Error> for Box<dyn HttpError + Send + 'static> {
+    fn from(err: Error) -> Self {
+        match err.inner {
+            Inner::Http {
+                status: None,
+                source,
+            } => source,
+            _ => Box::new(err),
+        }
+    }
+}
+
 impl HttpError for Error {
     fn status_code(&self) -> StatusCode {
         match &self.inner {

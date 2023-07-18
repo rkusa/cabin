@@ -3,12 +3,13 @@ use std::{error, fmt};
 
 use cabin::View;
 use http::{Request, StatusCode};
+use http_error::AnyHttpError;
 
 async fn app() -> impl View {
     health().await
 }
 
-async fn health() -> Result<impl View, DbError> {
+async fn health() -> Result<impl View, AnyHttpError> {
     test_database_connection().await?;
     Ok("Ok")
 }

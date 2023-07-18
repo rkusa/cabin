@@ -99,12 +99,15 @@ where
 impl<V, E> View for Result<V, E>
 where
     V: View,
-    E: HttpError + Send + 'static,
+    Box<dyn HttpError + Send + 'static>: From<E>,
+    E: 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
             Ok(v) => v.render(r, include_hash),
-            Err(err) => RenderFuture::ready(Err(crate::Error::from_http_err(err))),
+            Err(err) => RenderFuture::ready(Err(crate::Error::from(Box::<
+                dyn HttpError + Send + 'static,
+            >::from(err)))),
         }
     }
 
