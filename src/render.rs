@@ -4,31 +4,38 @@ mod tests;
 use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
 
+use http::{HeaderMap, HeaderValue};
 use twox_hash::XxHash32;
 
 use crate::View;
 
 pub struct Renderer {
     out: String,
+    headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
     skip_hash: bool,
 }
 
 pub(crate) struct Out {
-    pub view: String,
+    pub html: String,
+    pub headers: HeaderMap<HeaderValue>,
 }
 
 impl Renderer {
     pub(crate) fn new() -> Self {
         Renderer {
             out: String::with_capacity(256),
+            headers: Default::default(),
             hasher: XxHash32::default(),
             skip_hash: false,
         }
     }
 
     pub(crate) fn end(self) -> Out {
-        Out { view: self.out }
+        Out {
+            html: self.out,
+            headers: self.headers,
+        }
     }
 
     pub fn element(
@@ -66,6 +73,10 @@ impl Renderer {
             content_started: false,
             hash_offset,
         })
+    }
+
+    pub fn headers_mut(&mut self) -> &mut HeaderMap<HeaderValue> {
+        &mut self.headers
     }
 
     pub fn text(self) -> TextRenderer {

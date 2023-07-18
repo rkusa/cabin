@@ -17,7 +17,7 @@ use http_body::{Body, Full};
 use http_error::HttpError;
 use mime::Mime;
 use multer::Multipart;
-use render::Renderer;
+use render::{Out, Renderer};
 use scope::{Payload, Scope};
 use serde_json::value::RawValue;
 use state::StateId;
@@ -104,11 +104,17 @@ where
     let result = match result {
         Ok(result) => result,
         Err(err) => {
-            if err.status_code().is_success() {
+            if err.status_code().is_server_error() {
                 tracing::error!(
                     %err,
                     caused_by = format_caused_by(std::error::Error::source(&err)),
                     "server error",
+                );
+            } else {
+                tracing::debug!(
+                    %err,
+                    caused_by = format_caused_by(std::error::Error::source(&err)),
+                    "client error",
                 );
             }
             let (parts, body) = Response::from(err).into_parts();
@@ -116,17 +122,21 @@ where
         }
     };
 
-    let html = result.end().view;
-    Response::builder()
-        .header(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        )
-        .body(Full::new(Bytes::from(format!(
-            "{html}\n\
+    let Out { html, headers } = result.end();
+    let mut res = Response::builder().header(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("text/html; charset=utf-8"),
+    );
+    for (key, value) in headers {
+        if let Some(key) = key {
+            res = res.header(key, value);
+        }
+    }
+    res.body(Full::new(Bytes::from(format!(
+        "{html}\n\
             <script type=\"application/json\" id=\"state\">{scope}</script>"
-        ))))
-        .unwrap()
+    ))))
+    .unwrap()
 }
 
 pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
@@ -146,10 +156,19 @@ where
     let event = match parse_body(req).await {
         Ok(result) => result,
         Err(err) => {
-            eprintln!(
-                "{err}\n{}",
-                format_caused_by(std::error::Error::source(&err))
-            );
+            if err.status_code().is_server_error() {
+                tracing::error!(
+                    %err,
+                    caused_by = format_caused_by(std::error::Error::source(&err)),
+                    "server error",
+                );
+            } else {
+                tracing::debug!(
+                    %err,
+                    caused_by = format_caused_by(std::error::Error::source(&err)),
+                    "client error",
+                );
+            }
             let (parts, body) = Response::from(err).into_parts();
             return Response::from_parts(parts, Full::new(body));
         }
@@ -171,26 +190,39 @@ where
     let result = match result {
         Ok(result) => result,
         Err(err) => {
-            eprintln!(
-                "{err}\n{}",
-                format_caused_by(std::error::Error::source(&err))
-            );
+            if err.status_code().is_server_error() {
+                tracing::error!(
+                    %err,
+                    caused_by = format_caused_by(std::error::Error::source(&err)),
+                    "server error",
+                );
+            } else {
+                tracing::debug!(
+                    %err,
+                    caused_by = format_caused_by(std::error::Error::source(&err)),
+                    "client error",
+                );
+            }
             let (parts, body) = Response::from(err).into_parts();
             return Response::from_parts(parts, Full::new(body));
         }
     };
 
-    let html = result.end().view;
-    Response::builder()
-        .header(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        )
-        .body(Full::new(Bytes::from(format!(
-            "{html}\n\
+    let Out { html, headers } = result.end();
+    let mut res = Response::builder().header(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("text/html; charset=utf-8"),
+    );
+    for (key, value) in headers {
+        if let Some(key) = key {
+            res = res.header(key, value);
+        }
+    }
+    res.body(Full::new(Bytes::from(format!(
+        "{html}\n\
             <script type=\"application/json\" id=\"state\">{scope}</script>"
-        ))))
-        .unwrap()
+    ))))
+    .unwrap()
 }
 
 async fn parse_body<B>(req: Request<B>) -> Result<Event, Error>
