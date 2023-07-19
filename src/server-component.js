@@ -15,6 +15,7 @@ async function update(eventId, payload, target) {
   try {
     const state = document.getElementById("state").innerText;
 
+    /** @type {RequestInit} */
     const req =
       payload instanceof URLSearchParams
         ? {
@@ -49,6 +50,11 @@ async function update(eventId, payload, target) {
     const res = await fetch(location.href, req);
     if (signal.aborted) {
       console.log("already aborted, ignoring");
+      return;
+    }
+
+    if (res.redirected && res.ok) {
+      window.location = res.url;
       return;
     }
 
