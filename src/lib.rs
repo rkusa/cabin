@@ -110,7 +110,7 @@ where
                     caused_by = format_caused_by(std::error::Error::source(&err)),
                     "server error",
                 );
-            } else {
+            } else if err.status_code().is_client_error() {
                 tracing::debug!(
                     %err,
                     caused_by = format_caused_by(std::error::Error::source(&err)),
@@ -162,7 +162,7 @@ where
                     caused_by = format_caused_by(std::error::Error::source(&err)),
                     "server error",
                 );
-            } else {
+            } else if err.status_code().is_client_error() {
                 tracing::debug!(
                     %err,
                     caused_by = format_caused_by(std::error::Error::source(&err)),
@@ -196,7 +196,7 @@ where
                     caused_by = format_caused_by(std::error::Error::source(&err)),
                     "server error",
                 );
-            } else {
+            } else if err.status_code().is_client_error() {
                 tracing::debug!(
                     %err,
                     caused_by = format_caused_by(std::error::Error::source(&err)),
