@@ -55,7 +55,7 @@ where
 
     pub fn map<B>(
         mut self,
-        f: impl Fn(I::Item) -> B,
+        mut f: impl FnMut(I::Item) -> B,
     ) -> Map<I, impl FnMut(I::Item) -> KeyedView<B>> {
         self.iter.map(move |item| {
             let key = hash((self.f)(&item));
