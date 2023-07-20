@@ -87,3 +87,55 @@ pub const START: Property = Property(TEXT_ALIGN, "start");
 /// text-align: end;
 /// ```
 pub const END: Property = Property(TEXT_ALIGN, "end");
+
+const TEXT_TRANSFORM: &str = "text-transform";
+
+/// ```css
+/// text-transform: uppercase;
+/// ```
+pub const UPPERCASE: Property = Property(TEXT_TRANSFORM, "uppercase");
+
+/// ```css
+/// text-transform: lowercase;
+/// ```
+pub const LOWERCASE: Property = Property(TEXT_TRANSFORM, "lowercase");
+
+/// ```css
+/// text-transform: capitalize;
+/// ```
+pub const CAPITALIZE: Property = Property(TEXT_TRANSFORM, "capitalize");
+
+/// ```css
+/// text-transform: none;
+/// ```
+pub const NORMAL_CASE: Property = Property(TEXT_TRANSFORM, "none");
+
+const TEXT_OVERFLOW: &str = "text-overflow";
+
+/// ```css
+/// text-overflow: ellipsis;
+/// ```
+pub const ELLIPSIS: Property = Property(TEXT_OVERFLOW, "ellipsis");
+
+/// ```css
+/// text-overflow: clip;
+/// ```
+pub const CLIP: Property = Property(TEXT_OVERFLOW, "clip");
+
+/// ```css
+/// overflow: hidden;
+/// text-overflow: ellipsis;
+/// white-space: nowrap;
+/// ```
+pub const TRUNCATE: Truncate = Truncate;
+
+pub struct Truncate;
+
+impl Utility for Truncate {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        f.write_str("overflow: hidden;")?;
+        f.write_str("text-overflow: ellipsis;")?;
+        f.write_str("white-space: nowrap;")?;
+        Ok(())
+    }
+}
