@@ -72,7 +72,7 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
             impl ::cabin::html::attributes::Attributes for #ident {
                 fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
                     if self.0 {
-                        r.attribute(#attr_name, self.0).map_err(::cabin::error::InternalError::from)?;
+                        r.empty_attribute(#attr_name).map_err(::cabin::error::InternalError::from)?;
                     }
                     Ok(())
                 }
