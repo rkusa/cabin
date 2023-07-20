@@ -50,9 +50,9 @@ pub fn cabin_stylesheets() -> impl View {
 pub fn cabin_scripts() -> impl View {
     use html::elements::script::Script;
     (
-        html::script(html::script::src("/server-component.js").r#async(), ()),
+        html::script(html::script::src("/server-component.js").defer(), ()),
         #[cfg(feature = "livereload")]
-        html::script(html::script::src("/livereload.js").r#async(), ()),
+        html::script(html::script::src("/livereload.js").defer(), ()),
     )
 }
 
