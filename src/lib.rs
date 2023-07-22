@@ -6,6 +6,7 @@ extern crate self as cabin;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::pin;
+use std::sync::OnceLock;
 
 use bytes::Bytes;
 pub use cabin_macros::{element, Attribute};
@@ -37,23 +38,37 @@ pub mod view;
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
 pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
-// TODO: move behind feature flag?
-pub fn cabin_stylesheets() -> impl View {
-    use html::elements::link::Link;
-    html::link(
-        html::id("cabin-styles")
-            .rel(html::elements::link::Rel::StyleSheet)
-            .href("/styles.css"),
+pub fn cabin_scripts() -> impl View {
+    use html::elements::script::Script;
+
+    static SRC_SC: OnceLock<String> = OnceLock::new();
+    let src_sc = SRC_SC.get_or_init(|| {
+        let hash = content_hash(SERVER_COMPONENT_JS.as_bytes());
+        format!("/server-component.js?{hash}")
+    });
+
+    #[cfg(feature = "livereload")]
+    let src_lr = {
+        static SRC_LR: OnceLock<String> = OnceLock::new();
+        let src_lr = SRC_LR.get_or_init(|| {
+            let hash = content_hash(LIVERELOAD_JS.as_bytes());
+            format!("/livereload.js?{hash}")
+        });
+        src_lr
+    };
+
+    (
+        html::script(html::script::src(src_sc).defer(), ()),
+        #[cfg(feature = "livereload")]
+        html::script(html::script::src(src_lr).defer(), ()),
     )
 }
 
-pub fn cabin_scripts() -> impl View {
-    use html::elements::script::Script;
-    (
-        html::script(html::script::src("/server-component.js").defer(), ()),
-        #[cfg(feature = "livereload")]
-        html::script(html::script::src("/livereload.js").defer(), ()),
-    )
+pub fn content_hash(bytes: &[u8]) -> u32 {
+    use std::hash::Hasher;
+    let mut hasher = twox_hash::XxHash32::default();
+    hasher.write(bytes);
+    hasher.finish() as u32
 }
 
 pub struct Event {
@@ -67,10 +82,7 @@ fn default_document(content: impl View) -> impl View {
         html::doctype(),
         html::html(
             (),
-            (
-                html::head((), (cabin_stylesheets(), cabin_scripts())),
-                html::body((), content),
-            ),
+            (html::head((), cabin_scripts()), html::body((), content)),
         ),
     )
 }

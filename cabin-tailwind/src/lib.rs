@@ -6,6 +6,7 @@ use std::fmt;
 use std::hash::Hasher;
 
 pub use cabin::html::elements::common::Class;
+use cabin::View;
 pub use cabin_macros::tw;
 pub use utilities as css;
 
@@ -234,4 +235,23 @@ impl Utility for StaticClass {
     fn override_class_name(&self) -> Option<&str> {
         Some("group")
     }
+}
+
+pub fn cabin_stylesheets() -> impl View {
+    use std::sync::OnceLock;
+
+    use cabin::{content_hash, html};
+    use html::elements::link::Link;
+
+    static HREF: OnceLock<String> = OnceLock::new();
+    let href = HREF.get_or_init(|| {
+        let hash = content_hash(registry::StyleRegistry::global().style_sheet().as_bytes());
+        format!("/styles.css?{hash}")
+    });
+
+    html::link(
+        html::id("cabin-styles")
+            .rel(html::elements::link::Rel::StyleSheet)
+            .href(href),
+    )
 }
