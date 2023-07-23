@@ -13,6 +13,7 @@ use crate::OptionExpr;
 pub(crate) fn element_attribute(
     args: Punctuated<OptionExpr, Comma>,
     input: ItemTrait,
+    is_attributes: bool,
 ) -> syn::Result<TokenStream> {
     let ItemTrait {
         attrs,
@@ -81,9 +82,6 @@ pub(crate) fn element_attribute(
                                 }
                             }
                         }
-                        // args.args = Punctuated::from_iter(args.args.into_iter().map(|arg| {
-                        //     panic!("{:#?}", arg);
-                        // }));
                     }
                 }
             }
@@ -142,6 +140,12 @@ pub(crate) fn element_attribute(
 
         }
     };
+
+    if is_attributes {
+        return Ok(quote! {
+            #(#attr_factories)*
+        });
+    }
 
     Ok(quote! {
         #factory

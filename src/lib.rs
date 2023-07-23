@@ -9,7 +9,7 @@ use std::pin::pin;
 use std::sync::OnceLock;
 
 use bytes::Bytes;
-pub use cabin_macros::{element, Attribute};
+pub use cabin_macros::{attributes, element, Attribute};
 pub use error::Error;
 use futures_util::stream::TryStreamExt;
 pub use http::StatusCode;
