@@ -5,9 +5,9 @@ use std::task::{Context, Poll};
 
 use bytes::Bytes;
 use cabin::SERVER_COMPONENT_JS;
-use http::{header, Method, Request, Response};
+use http::{header, Method, Request, Response, StatusCode};
 use http_body::combinators::UnsyncBoxBody;
-use http_body::{Body as HttpBody, Full};
+use http_body::{Body as HttpBody, Empty, Full};
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -108,6 +108,11 @@ where
                         ))
                         .unwrap())
                 }
+
+                (&Method::GET, &["client_redirect"]) => Ok(Response::builder()
+                    .status(StatusCode::NO_CONTENT)
+                    .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
+                    .unwrap()),
 
                 _ => service.call(req).await.map_err(Into::into).map(|r| {
                     let (parts, body) = r.into_parts();

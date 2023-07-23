@@ -53,8 +53,9 @@ async function update(eventId, payload, target) {
       return;
     }
 
-    if (res.redirected && res.ok) {
-      window.location = res.url;
+    const url = new URL(res.url);
+    if (res.ok && res.redirected && url.pathname === "/client_redirect") {
+      window.location = url.search.substring(1);
       return;
     }
 
