@@ -36,7 +36,8 @@ pub trait Utility {
         None
     }
 
-    /// The higher the returned number the later the style is positioned in the stylesheet.
+    /// The higher the returned number the later the style is positioned in the stylesheet to take
+    /// precedence.
     fn order(&self) -> usize {
         0
     }

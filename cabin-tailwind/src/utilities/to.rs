@@ -24,11 +24,17 @@ pub fn percentf(x: f32) -> Property<Length> {
 
 impl Utility for ToColor {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        // TODO: better handling of colors (handle non six digit hex inputs)
         writeln!(
             f,
-            "--tw-gradient-to: {} var(--tw-gradient-to-position);",
+            "--tw-gradient-to: {}FF var(--tw-gradient-to-position);",
             self.0
         )?;
         Ok(())
+    }
+
+    fn order(&self) -> usize {
+        // Take precedence over from color.
+        1
     }
 }

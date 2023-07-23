@@ -71,7 +71,9 @@ impl StyleRegistry {
 
         // As everything is written to a string, all unwraps below are fine.
         let mut all_names = String::with_capacity(8);
-        for (_, styles) in grouped {
+        for (_, mut styles) in grouped {
+            styles.sort_by_key(|s| s.order());
+
             let pos = self.out.len();
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.get(0) {
