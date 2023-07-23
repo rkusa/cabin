@@ -52,6 +52,7 @@ pub mod right;
 pub mod ring;
 pub mod rounded;
 pub mod shadow;
+pub mod space;
 pub mod start;
 pub mod text;
 pub mod to;
