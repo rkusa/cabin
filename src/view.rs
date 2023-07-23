@@ -14,7 +14,6 @@ pub use boxed::BoxedView;
 pub use future::FutureExt;
 use http_error::HttpError;
 pub use iter::IteratorExt;
-use paste::paste;
 
 use crate::render::{Escape, Renderer};
 
@@ -132,32 +131,30 @@ impl Future for RenderFuture {
 }
 
 macro_rules! impl_tuple {
-    ( $count:tt; $( $ix:tt ),* ) => {
-        paste!{
-            impl<$( [<V$ix>]: View + 'static),*> View for ($([<V$ix>],)*) {
-                fn render(mut self, r: Renderer, _include_hash: bool) -> RenderFuture {
-                    RenderFuture::Future(Box::pin(async move {
-                        $(
-                            self.$ix.prime();
-                        )*
-                        $(
-                            let r = self.$ix.render(r, true).await?;
-                        )*
-                        Ok(r)
-                    }))
-                }
+    ( $count:tt; $( $ix:tt ),*; $( $generic:tt ),* ) => {
+        impl<$( $generic: View + 'static),*> View for ($($generic,)*) {
+            fn render(mut self, r: Renderer, _include_hash: bool) -> RenderFuture {
+                RenderFuture::Future(Box::pin(async move {
+                    $(
+                        self.$ix.prime();
+                    )*
+                    $(
+                        let r = self.$ix.render(r, true).await?;
+                    )*
+                    Ok(r)
+                }))
             }
         }
     };
 }
 
-impl_tuple!( 1; 0);
-impl_tuple!( 2; 0, 1);
-impl_tuple!( 3; 0, 1, 2);
-impl_tuple!( 4; 0, 1, 2, 3);
-impl_tuple!( 5; 0, 1, 2, 3, 4);
-impl_tuple!( 6; 0, 1, 2, 3, 4, 5);
-impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6);
-impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7);
-impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8);
-impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+impl_tuple!( 1; 0; V0);
+impl_tuple!( 2; 0, 1; V0, V1);
+impl_tuple!( 3; 0, 1, 2; V0, V1, V2);
+impl_tuple!( 4; 0, 1, 2, 3; V0, V1, V2, V3);
+impl_tuple!( 5; 0, 1, 2, 3, 4; V0, V1, V2, V3, V4);
+impl_tuple!( 6; 0, 1, 2, 3, 4, 5; V0, V1, V2, V3, V4, V5);
+impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6; V0, V1, V2, V3, V4, V5, V6);
+impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7; V0, V1, V2, V3, V4, V5, V6, V7);
+impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8; V0, V1, V2, V3, V4, V5, V6, V7, V8);
+impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9; V0, V1, V2, V3, V4, V5, V6, V7, V8, V9);

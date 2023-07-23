@@ -97,14 +97,20 @@ enum StyleExpr {
         // e.g.: css::w::px(46).hover()
         method_calls: StyleMethodCalls,
     },
+    // e.g.: (css::bg::BLACK, css::w::px(46))
+    Tuple {
+        paren_token: Paren,
+        args: Punctuated<StyleExpr, Comma>,
+        method_calls: StyleMethodCalls,
+    },
 }
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, Clone)]
 struct StyleMethodCalls {
     method_calls: Option<Vec<StyleMethodCall>>,
 }
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, Clone)]
 struct StyleMethodCall {
     dot_token: Dot,
     method: Option<Ident>,      // optional to allow incomplete inputs
@@ -113,6 +119,15 @@ struct StyleMethodCall {
 
 impl Parse for StyleExpr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        if input.peek(Paren) {
+            let content;
+            return Ok(StyleExpr::Tuple {
+                paren_token: syn::parenthesized!(content in input),
+                args: content.parse_terminated(StyleExpr::parse, Comma)?,
+                method_calls: input.parse()?,
+            });
+        }
+
         let path = Path::parse(input)?;
 
         if input.peek(Paren) {
@@ -182,6 +197,16 @@ impl ToTokens for StyleExpr {
                 });
                 method_calls.to_tokens(tokens);
             }
+            StyleExpr::Tuple {
+                paren_token,
+                args,
+                method_calls,
+            } => {
+                paren_token.surround(tokens, |tokens| {
+                    args.to_tokens(tokens);
+                });
+                method_calls.to_tokens(tokens);
+            }
         }
     }
 }
@@ -224,13 +249,44 @@ impl Parse for Styles {
     }
 }
 
+fn flatten_recursively(iter: impl Iterator<Item = StyleExpr>) -> impl Iterator<Item = StyleExpr> {
+    iter.flat_map(|style| match style {
+        s @ StyleExpr::Path { .. } => Box::new(std::iter::once(s)),
+        s @ StyleExpr::Call { .. } => Box::new(std::iter::once(s)),
+        StyleExpr::Tuple {
+            args,
+            method_calls: parent_method_calls,
+            ..
+        } => Box::new(flatten_recursively(args.into_iter()).map(move |mut s| {
+            if parent_method_calls.method_calls.is_some() {
+                match &mut s {
+                    StyleExpr::Call { method_calls, .. } | StyleExpr::Path { method_calls, .. } => {
+                        if method_calls.method_calls.is_none() {
+                            method_calls.method_calls = parent_method_calls.method_calls.clone();
+                        } else {
+                            method_calls
+                                .method_calls
+                                .as_mut()
+                                .unwrap()
+                                .extend(parent_method_calls.method_calls.clone().unwrap())
+                        }
+                    }
+                    StyleExpr::Tuple { .. } => unreachable!(),
+                }
+            }
+            s
+        })) as Box<dyn Iterator<Item = StyleExpr>>,
+    })
+}
+
 #[proc_macro]
 pub fn tw(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as Styles);
     // dbg!(&input);
 
-    // Partition into ones without any modifier, and the ones with modifieres
-    let styles = input.styles.into_iter();
+    // TODO: Partition here into ones without any modifier, and the ones with modifieres?
+    // Flatten tuples out
+    let styles = flatten_recursively(input.styles.into_iter());
 
     quote! {
         {
