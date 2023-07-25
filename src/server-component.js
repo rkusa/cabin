@@ -2,15 +2,20 @@
  * @param {number} eventId
  * @param {object | URLSearchParams} payload
  * @param {Node} target
+ * @param {AbortController | undefined} abortController
  */
 // TODO: remove `console.log`s or add option to disable them
-async function update(eventId, payload, target) {
+async function update(eventId, payload, target, abortController) {
   if (this.abortController) {
     console.log("abort");
     this.abortController.abort();
   }
-  const abortController = (this.abortController = new AbortController());
+  abortController = this.abortController =
+    abortController ?? new AbortController();
   const signal = this.abortController.signal;
+  if (signal.aborted) {
+    return;
+  }
 
   try {
     const state = document.getElementById("state").innerText;
@@ -94,6 +99,8 @@ document.addEventListener("cabinRefresh", async function () {
 
 function setUpEventListener(eventName, opts) {
   const attrName = `cabin-${eventName}`;
+  /** @type {WeakMap<Element, AbortController>} */
+  const abortControllers = new WeakMap();
 
   /**
    * @param {Event} e
@@ -101,6 +108,25 @@ function setUpEventListener(eventName, opts) {
   async function handleEvent(e) {
     /** @type {Element} */
     let node = e.target;
+
+    {
+      const abortController = abortControllers.get(node);
+      if (abortController) {
+        abortController.abort();
+      }
+    }
+
+    const abortController = new AbortController();
+    abortControllers.set(node, abortController);
+
+    if (opts.debounce) {
+      await new Promise((resolve) => setTimeout(resolve, opts.debounce));
+      if (abortController.signal.aborted) {
+        console.log("debounce ignored");
+        return;
+      }
+    }
+
     do {
       const eventId = node.getAttribute(attrName);
       if (eventId && (!opts.disable || !node.disabled)) {
@@ -124,7 +150,12 @@ function setUpEventListener(eventName, opts) {
                 )
               : node.getAttribute(`${attrName}-payload`),
           );
-          await update(parseInt(eventId), payload, document.body);
+          await update(
+            parseInt(eventId),
+            payload,
+            document.body,
+            abortController,
+          );
         } finally {
           if (opts.disable) {
             node.disabled = false;
@@ -141,6 +172,7 @@ function setUpEventListener(eventName, opts) {
 
 setUpEventListener("click", { preventDefault: true, disable: true });
 setUpEventListener("input", {
+  debounce: 500,
   eventPayload: (e) => ({ "_##InputValue": e.target.value }),
 });
 setUpEventListener("change", {
