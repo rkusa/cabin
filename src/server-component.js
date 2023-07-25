@@ -142,6 +142,9 @@ setUpEventListener("click", { preventDefault: true, disable: true });
 setUpEventListener("input", {
   eventPayload: (e) => ({ "_##InputValue": e.target.value }),
 });
+setUpEventListener("change", {
+  eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+});
 document.addEventListener("submit", async function handleEvent(e) {
   /** @type {HTMLFormElement} */
   let form = e.target;

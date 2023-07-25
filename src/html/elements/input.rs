@@ -319,6 +319,26 @@ pub trait Input: Common + Global + Aria {
                 .map(|json| (hash, json))
         })))
     }
+
+    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> impl Input
+    where
+        E: ::serde::Serialize + 'static,
+    {
+        let event = event(InputEvent::default());
+        self.with(OnChange(Box::new(move || {
+            use std::hash::{Hash, Hasher};
+
+            let mut hasher = twox_hash::XxHash32::default();
+            std::any::TypeId::of::<E>().hash(&mut hasher);
+            let hash = hasher.finish() as u32;
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "on_change event",
+                    err,
+                })
+                .map(|json| (hash, json))
+        })))
+    }
 }
 
 /// Hint for expected file type in file upload controls.
@@ -466,6 +486,21 @@ impl Attributes for OnInput {
         r.attribute("cabin-input", id)
             .map_err(crate::error::InternalError::from)?;
         r.attribute("cabin-input-payload", payload)
+            .map_err(crate::error::InternalError::from)?;
+
+        Ok(())
+    }
+}
+
+pub struct OnChange(pub Box<SerializeEventFn>);
+
+impl Attributes for OnChange {
+    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
+        // TODO: directly write into el?
+        let (id, payload) = &(self.0)()?;
+        r.attribute("cabin-change", id)
+            .map_err(crate::error::InternalError::from)?;
+        r.attribute("cabin-change-payload", payload)
             .map_err(crate::error::InternalError::from)?;
 
         Ok(())

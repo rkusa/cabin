@@ -60,7 +60,13 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::nav::{self as nav, nav, Nav};
     #[doc(inline)]
+    pub use super::elements::optgroup::{self as optgroup, optgroup, OptGroup};
+    #[doc(inline)]
+    pub use super::elements::option::{self as option, option, SelectOption};
+    #[doc(inline)]
     pub use super::elements::script::{self as script, script, Script};
+    #[doc(inline)]
+    pub use super::elements::select::{self as select, select, Select};
     #[doc(inline)]
     pub use super::elements::span::{self as span, span, Span};
     #[doc(inline)]
