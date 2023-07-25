@@ -4,10 +4,8 @@
  * @param {Node} target
  * @param {AbortController | undefined} abortController
  */
-// TODO: remove `console.log`s or add option to disable them
 async function update(eventId, payload, target, abortController) {
   if (this.abortController) {
-    console.log("abort");
     this.abortController.abort();
   }
   abortController = this.abortController =
@@ -54,7 +52,6 @@ async function update(eventId, payload, target, abortController) {
           };
     const res = await fetch(location.href, req);
     if (signal.aborted) {
-      console.log("already aborted, ignoring");
       return;
     }
 
@@ -65,7 +62,6 @@ async function update(eventId, payload, target, abortController) {
     }
 
     if (!target.parentNode) {
-      console.log("update target not mounted anymore, ignoring");
       return;
     }
 
@@ -127,7 +123,6 @@ function setUpEventListener(eventName, opts) {
     if (opts.debounce) {
       await new Promise((resolve) => setTimeout(resolve, opts.debounce));
       if (abortController.signal.aborted) {
-        console.log("debounce ignored");
         return;
       }
     }
@@ -231,7 +226,7 @@ window.addEventListener("popstate", () => {
  * @param {Record<string, Node>} orphanKeyed
  */
 function patchChildren(rootBefore, rootAfter, orphanKeyed) {
-  console.log("apply", rootBefore, rootAfter);
+  // console.log("apply", rootBefore, rootAfter);
 
   let nodeBefore = rootBefore.firstChild;
   let nodeAfter = rootAfter.firstChild;
@@ -249,10 +244,10 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
   do {
     nextBefore = null;
     nextAfter = null;
-    console.log(nodeBefore, "vs", nodeAfter);
+    // console.log(nodeBefore, "vs", nodeAfter);
 
     if (!nodeAfter) {
-      console.log("removed", nodeBefore);
+      // console.log("removed", nodeBefore);
       nextBefore = nodeBefore.nextSibling;
       rootBefore.removeChild(nodeBefore);
       continue;
@@ -260,7 +255,7 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
 
     // This node and all its next siblings are new nodes and can be directly added
     if (nodeBefore === null) {
-      console.log("append new", nodeAfter, "and siblings");
+      // console.log("append new", nodeAfter, "and siblings");
       const fragment = document.createDocumentFragment();
       let node = nodeAfter;
       while (node) {
@@ -269,7 +264,7 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
           const previous =
             document.getElementById(node.id) ?? orphanKeyed[node.id];
           if (previous) {
-            console.log(`found existing ${node.id} and moved it into place`);
+            // console.log(`found existing ${node.id} and moved it into place`);
             fragment.appendChild(previous);
             delete orphanKeyed[node.id];
             node = next;
@@ -294,11 +289,11 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
       nextBefore = nodeBefore;
       nextAfter = nodeAfter.nextSibling;
       if (previous) {
-        console.log(`found existing ${nodeAfter.id} and moved it into place`);
+        // console.log(`found existing ${nodeAfter.id} and moved it into place`);
         rootBefore.insertBefore(previous, nodeBefore);
         delete orphanKeyed[nodeAfter.id];
       } else {
-        console.log("new iter item, move new into place");
+        // console.log("new iter item, move new into place");
         rootBefore.insertBefore(nodeAfter, nodeBefore);
         continue;
       }
@@ -309,7 +304,7 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
       nodeBefore.nodeType !== nodeAfter.nodeType ||
       nodeBefore.nodeName !== nodeAfter.nodeName
     ) {
-      console.log("replace due to type change");
+      // console.log("replace due to type change");
       nextBefore = nodeBefore.nextSibling;
       nextAfter = nodeAfter.nextSibling;
       rootBefore.replaceChild(nodeAfter, nodeBefore);
@@ -333,21 +328,21 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
           nodeAfter.hasAttribute("hash") &&
           nodeBefore.getAttribute("hash") == nodeAfter.getAttribute("hash")
         ) {
-          console.log("skip due to unchanged hash");
+          // console.log("skip due to unchanged hash");
           break;
         }
 
-        console.log("patch attributes");
+        // console.log("patch attributes");
         patchAttributes(nodeBefore, nodeAfter);
         patchChildren(nodeBefore, nodeAfter, orphanKeyed);
         break;
 
       case Node.TEXT_NODE:
         if (nodeAfter.textContent !== nodeBefore.textContent) {
-          console.log("update text");
+          // console.log("update text");
           nodeBefore.textContent = nodeAfter.textContent;
         } else {
-          console.log("text is unchanged");
+          // console.log("text is unchanged");
         }
         break;
     }
@@ -386,7 +381,7 @@ function patchAttributes(childBefore, childAfter) {
 
     const newValue = childAfter.getAttribute(name);
     if (childBefore.getAttribute(name) !== newValue) {
-      console.log("update attribute", name);
+      // console.log("update attribute", name);
       switch (name) {
         case "value":
           childBefore.value = newValue;
@@ -403,7 +398,7 @@ function patchAttributes(childBefore, childAfter) {
     if (ignoreAttribute(childBefore, name)) {
       continue;
     }
-    console.log("remove attribute", name);
+    // console.log("remove attribute", name);
     childBefore.removeAttribute(name);
   }
 }
