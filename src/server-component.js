@@ -80,6 +80,11 @@ async function update(eventId, payload, target, abortController) {
     template.innerHTML = html;
     patchChildren(target, template.content, {});
     console.timeEnd("patch");
+
+    const rewriteUrl = res.headers.get("location");
+    if (rewriteUrl) {
+      history.pushState(null, undefined, rewriteUrl);
+    }
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       // ignore
@@ -214,6 +219,10 @@ document.addEventListener("submit", async function handleEvent(e) {
 
     break;
   } while ((form = form.parentElement));
+});
+
+window.addEventListener("popstate", () => {
+  document.dispatchEvent(new CustomEvent("cabinRefresh"));
 });
 
 /**
