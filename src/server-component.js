@@ -380,16 +380,19 @@ function patchAttributes(childBefore, childAfter) {
     }
 
     const newValue = childAfter.getAttribute(name);
-    if (childBefore.getAttribute(name) !== newValue) {
-      // console.log("update attribute", name);
-      switch (name) {
-        case "value":
+    switch (name) {
+      case "value":
+        if (childBefore.value !== newValue) {
+          // console.log("update attribute", name);
           childBefore.value = newValue;
-          break;
-        default:
+        }
+        break;
+      default:
+        if (childBefore.getAttribute(name) !== newValue) {
+          // console.log("update attribute", name);
           childBefore.setAttribute(name, newValue);
-          break;
-      }
+        }
+        break;
     }
   }
 
