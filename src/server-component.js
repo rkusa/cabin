@@ -78,7 +78,7 @@ async function update(eventId, payload, target, abortController) {
     console.timeEnd("patch");
 
     const rewriteUrl = res.headers.get("location");
-    if (rewriteUrl) {
+    if (rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
       history.pushState(null, undefined, rewriteUrl);
     }
   } catch (err) {
