@@ -9,6 +9,11 @@ use crate::html::attributes::{Attributes, Pair};
 
 #[element(tag = false)]
 pub trait Aria: Attributes {
+    // Set the aria role of the element.
+    fn role(self, role: Role) -> Pair<Role, Self> {
+        self.with(role)
+    }
+
     /// Identifies the currently active element when DOM focus is on a composite widget, combobox,
     /// textbox, group, or application.
     ///
@@ -532,6 +537,466 @@ pub trait Aria: Attributes {
         aria_value_text: impl Into<Cow<'static, str>>,
     ) -> Pair<AriaValueText, Self> {
         self.with(AriaValueText(aria_value_text.into()))
+    }
+}
+
+/// The aria role of the element.
+///
+/// <https://w3c.github.io/aria/#role_definitions>
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+pub enum Role {
+    /// A type of live region with important, and usually time-sensitive, information. See related
+    /// [Role::AlertDialog] and [Role::Status].
+    Alert,
+
+    /// A type of dialog that contains an alert message, where initial focus goes to an element
+    /// within the dialog. See related [Role::Alert] and [Role::Dialog].
+    AlertDialog,
+
+    /// A structure containing one or more focusable elements requiring user input, such as keyboard
+    /// or gesture events, that do not follow a standard interaction pattern supported by a [Role::Widget]
+    /// role.
+    Application,
+
+    /// A section of a page that consists of a composition that forms an independent part of a
+    /// document, page, or site.
+    Article,
+
+    /// A section containing [Role::AssociationListItemKey] and [Role::AssociationListItemValue] elements.
+    AssociationList,
+
+    /// A single key item in an association list.
+    AssociationListItemKey,
+
+    /// A single value item in an association list.
+    AssociationListItemValue,
+
+    /// A landmark that contains mostly site-oriented content, rather than page-specific content.
+    Banner,
+
+    /// A section of content that is quoted from another source.
+    Blockquote,
+
+    /// An input that allows for user-triggered actions when clicked or pressed. See related [Role::Link].
+    Button,
+
+    /// Visible content that names, or describes a [Role::Group], [Role::Figure], [Role::Table], [Role::Grid], [Role::RadioGroup],
+    /// or [Role::TreeGrid].
+    Caption,
+
+    /// A cell in a tabular container. See related [Role::GridCell].
+    Cell,
+
+    /// A checkable input that has three possible values: true, false, or mixed.
+    Checkbox,
+
+    /// A section whose content represents a fragment of computer code.
+    Code,
+
+    /// A cell containing header information for a column.
+    ColumnHeader,
+
+    /// An input that controls another element, such as a [Role::Listbox] or [Role::Grid], that can dynamically
+    /// pop up to help the user set the value of the [Role::Input].
+    Combobox,
+
+    /// A form of [Role::Widget] that performs an action but does not receive input data.
+    Command,
+
+    /// A comment contains content expressing reaction to other content.
+    Comment,
+
+    /// A [Role::Landmark] that is designed to be complementary to the main content that it is a sibling
+    /// to, or a direct descendant of. The contents of a complementary landmark would be expected to
+    /// remain meaningful if it were to be separated from the main content it is relevant to.
+    Complementary,
+
+    /// A [Role::Widget] that can contain navigable descendants or owned children.
+    Composite,
+
+    /// A [Role::Landmark] that contains information about the parent document.
+    ContentInfo,
+
+    /// A definition of a term or concept. See related [Role::Term].
+    Definition,
+
+    /// A deletion represents content that is marked as removed, content that is being suggested for
+    /// removal, or content that is no longer relevant in the context of its accompanying content.
+    /// See related [Role::Insertion].
+    Deletion,
+
+    /// A dialog is a descendant window of the primary window of a web application. For HTML pages,
+    /// the primary application window is the entire web document, i.e., the body element.
+    Dialog,
+
+    /// An element containing content that assistive technology users might want to browse in a
+    /// reading mode.
+    Document,
+
+    /// One or more emphasized characters. See related [Role::Strong].
+    Emphasis,
+
+    /// A scrollable [Role::List] of [Role::Article]s where scrolling might cause [Role::Article]s to be added to or
+    /// removed from either end of the list.
+    Feed,
+
+    /// A perceivable [Role::Section] of content that typically contains a graphical document, images,
+    /// media player, code snippets, or example text. The parts of a figure MAY be user-navigable.
+    Figure,
+
+    /// A [Role::Landmark] region that contains a collection of items and objects that, as a whole,
+    /// combine to create a form. See related [Role::Search].
+    Form,
+
+    /// A nameless container element that has no semantic meaning on its own.
+    Generic,
+
+    /// A composite [Role::Widget] containing a collection of one or more rows with one or more cells where
+    /// some or all cells in the grid are focusable by using methods of two-dimensional navigation,
+    /// such as directional arrow keys.
+    Grid,
+
+    /// A [Role::Cell] in a [Role::Grid] or [Role::TreeGrid].
+    GridCell,
+
+    /// A set of user interface objects that is not intended to be included in a page summary or
+    /// table of contents by assistive technologies.
+    Group,
+
+    /// A heading for a section of the page.
+    Heading,
+
+    /// A container for a collection of elements that form an image. See synonym [Role::Img].
+    Image,
+
+    /// A container for a collection of elements that form an image. See synonym [Role::Image].
+    Img,
+
+    /// A generic type of [Role::Widget] that allows user input.
+    Input,
+
+    /// An insertion contains content that is marked as added or content that is being suggested for
+    /// addition. See related [Role::Deletion].
+    Insertion,
+
+    /// A perceivable [Role::Section] containing content that is relevant to a specific, author-specified
+    /// purpose and sufficiently important that users will likely want to be able to navigate to the
+    /// section easily and to have it listed in a summary of the page. Such a page summary could be
+    /// generated dynamically by a user agent or assistive technology.
+    Landmark,
+
+    /// An interactive reference to an internal or external resource that, when activated, causes
+    /// the user agent to navigate to that resource. See related [Role::Button].
+    Link,
+
+    /// A [Role::Section] containing [Role::ListItem] elements. See related [Role::Listbox].
+    List,
+
+    /// A [Role::Widget] that allows the user to select one or more items from a list of choices. See
+    /// related [Role::Combobox] and list.
+    Listbox,
+
+    /// A single item in a list or directory.
+    ListItem,
+
+    /// A type of live region where new information is added in meaningful order and old information
+    /// can disappear. See related [Role::Marquee].
+    Log,
+
+    /// A [Role::Landmark] containing the main content of a document.
+    Main,
+
+    /// Content which is marked or highlighted for reference or notation purposes, due to the
+    /// content's relevance in the enclosing context.
+    Mark,
+
+    /// A type of live region where non-essential information changes frequently. See related [Role::Log].
+    Marquee,
+
+    /// Content that represents a mathematical expression.
+    Math,
+
+    /// A type of [Role::Widget] that offers a list of choices to the user.
+    Menu,
+
+    /// A presentation of [Role::Menu] that usually remains visible and is usually presented horizontally.
+    Menubar,
+
+    /// An option in a set of choices contained by a [Role::Menu] or [Role::Menubar].
+    MenuItem,
+
+    /// A [Role::MenuItem] with a checkable state whose possible values are true, false, or mixed.
+    MenuItemCheckbox,
+
+    /// A checkable [Role::MenuItem] in a set of elements with the same role, only one of which can be
+    /// checked at a time.
+    MenuItemRadio,
+
+    /// An element that represents a scalar measurement within a known range, or a fractional value.
+    /// See related [Role::Progressbar].
+    Meter,
+
+    /// A [Role::Landmark] containing a collection of navigational elements (usually links) for navigating
+    /// the document or related documents.
+    Navigation,
+
+    /// An element whose implicit native role semantics will not be mapped to the accessibility API.
+    /// See synonym [Role::Presentation].
+    None,
+
+    /// A [Role::Section] whose content represents additional information or parenthetical context to the
+    /// primary content it supplements.
+    Note,
+
+    /// An item in a [Role::Listbox].
+    Option,
+
+    /// A paragraph of content.
+    Paragraph,
+
+    /// An element whose implicit native role semantics will not be mapped to the accessibility API.
+    /// See synonym [Role::None].
+    Presentation,
+
+    /// An element that displays the progress status for tasks that take a long time.
+    Progressbar,
+
+    /// A checkable input in a group of elements with the same role, only one of which can be
+    /// checked at a time.
+    Radio,
+
+    /// A group of [Role::Radio] buttons.
+    RadioGroup,
+
+    /// An element representing a range of values.
+    Range,
+
+    /// A [Role::Landmark] containing content that is relevant to a specific, author-specified purpose and
+    /// sufficiently important that users will likely want to be able to navigate to the section
+    /// easily and to have it listed in a summary of the page. Such a page summary could be
+    /// generated dynamically by a user agent or assistive technology.
+    Region,
+
+    /// The base role from which all other roles inherit.
+    Roletype,
+
+    /// A row of cells in a tabular container.
+    Row,
+
+    /// A structure containing one or more row elements in a tabular container.
+    RowGroup,
+
+    /// A cell containing header information for a row.
+    RowHeader,
+
+    /// A graphical object that controls the scrolling of content within a viewing area, regardless
+    /// of whether the content is fully displayed within the viewing area.
+    Scrollbar,
+
+    /// A [Role::Landmark] region that contains a collection of items and objects that, as a whole,
+    /// combine to create a search facility. See related [Role::Form] and [Role::Searchbox].
+    Search,
+
+    /// A type of textbox intended for specifying search criteria. See related [Role::Textbox] and
+    /// [Role::Search].
+    Searchbox,
+
+    /// A renderable structural containment unit on a page.
+    Section,
+
+    /// A structure that labels or summarizes the topic of its related section.
+    SectionHead,
+
+    /// A form [Role::Widget] that allows the user to make selections from a set of choices.
+    Select,
+
+    /// A divider that separates and distinguishes sections of content or groups of [Role::MenuItem]s.
+    Separator,
+
+    /// An input where the user selects a value from within a given range.
+    Slider,
+
+    /// A form of [Role::Range] that expects the user to select from among discrete choices.
+    SpinButton,
+
+    /// A type of live region whose content is advisory information for the user but is not
+    /// important enough to justify an [Role::Alert], often but not necessarily presented as a status bar.
+    Status,
+
+    /// Content that is important, serious, or urgent. See related [Role::Emphasis].
+    Strong,
+
+    /// A document structural element.
+    Structure,
+
+    /// One or more subscripted characters. See related [Role::Superscript].
+    Subscript,
+
+    /// A single proposed change to content.
+    Suggestion,
+
+    /// One or more superscripted characters. See related [Role::Subscript].
+    Superscript,
+
+    /// A type of checkbox that represents on/off values, as opposed to checked/unchecked values.
+    /// See related [Role::Checkbox].
+    Switch,
+
+    /// A grouping label providing a mechanism for selecting the tab content that is to be rendered
+    /// to the user.
+    Tab,
+
+    /// A [Role::Section] containing data arranged in rows and columns. See related [Role::Grid].
+    Table,
+
+    /// A list of [Role::Tab] elements, which are references to [Role::TabPanel] elements.
+    TabList,
+
+    /// A container for the resources associated with a [Role::Tab], where each tab is contained in a
+    /// [Role::TabList].
+    TabPanel,
+
+    /// A word or phrase with an optional corresponding definition. See related [Role::Definition].
+    Term,
+
+    /// A type of input that allows free-form text as its value.
+    Textbox,
+
+    /// An element that represents a specific point in time.
+    Time,
+
+    /// A type of live region containing a numerical counter which indicates an amount of elapsed
+    /// time from a start point, or the time remaining until an end point.
+    Timer,
+
+    /// A collection of commonly used function buttons or controls represented in compact visual
+    /// form.
+    Toolbar,
+
+    /// A contextual popup that displays a description for an element.
+    Tooltip,
+
+    /// A [Role::Widget] that allows the user to select one or more items from a hierarchically organized
+    /// collection.
+    Tree,
+
+    /// A grid whose rows can be expanded and collapsed in the same manner as for a [Role::Tree].
+    TreeGrid,
+
+    /// An item in a [Role::Tree].
+    TreeItem,
+
+    /// An interactive component of a graphical user interface (GUI).
+    Widget,
+
+    /// A browser or application window.
+    Window,
+}
+
+impl fmt::Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Role::Alert => f.write_str("alert"),
+            Role::AlertDialog => f.write_str("alertdialog"),
+            Role::Application => f.write_str("application"),
+            Role::Article => f.write_str("article"),
+            Role::AssociationList => f.write_str("associationlist"),
+            Role::AssociationListItemKey => f.write_str("associationlistitemkey"),
+            Role::AssociationListItemValue => f.write_str("associationlistitemvalue"),
+            Role::Banner => f.write_str("banner"),
+            Role::Blockquote => f.write_str("blockquote"),
+            Role::Button => f.write_str("button"),
+            Role::Caption => f.write_str("caption"),
+            Role::Cell => f.write_str("cell"),
+            Role::Checkbox => f.write_str("checkbox"),
+            Role::Code => f.write_str("code"),
+            Role::ColumnHeader => f.write_str("columnheader"),
+            Role::Combobox => f.write_str("combobox"),
+            Role::Command => f.write_str("command"),
+            Role::Comment => f.write_str("comment"),
+            Role::Complementary => f.write_str("complementary"),
+            Role::Composite => f.write_str("composite"),
+            Role::ContentInfo => f.write_str("contentinfo"),
+            Role::Definition => f.write_str("definition"),
+            Role::Deletion => f.write_str("deletion"),
+            Role::Dialog => f.write_str("dialog"),
+            Role::Document => f.write_str("document"),
+            Role::Emphasis => f.write_str("emphasis"),
+            Role::Feed => f.write_str("feed"),
+            Role::Figure => f.write_str("figure"),
+            Role::Form => f.write_str("form"),
+            Role::Generic => f.write_str("generic"),
+            Role::Grid => f.write_str("grid"),
+            Role::GridCell => f.write_str("gridcell"),
+            Role::Group => f.write_str("group"),
+            Role::Heading => f.write_str("heading"),
+            Role::Image => f.write_str("image"),
+            Role::Img => f.write_str("img"),
+            Role::Input => f.write_str("input"),
+            Role::Insertion => f.write_str("insertion"),
+            Role::Landmark => f.write_str("landmark"),
+            Role::Link => f.write_str("link"),
+            Role::List => f.write_str("list"),
+            Role::Listbox => f.write_str("listbox"),
+            Role::ListItem => f.write_str("listitem"),
+            Role::Log => f.write_str("log"),
+            Role::Main => f.write_str("main"),
+            Role::Mark => f.write_str("mark"),
+            Role::Marquee => f.write_str("marquee"),
+            Role::Math => f.write_str("math"),
+            Role::Menu => f.write_str("menu"),
+            Role::Menubar => f.write_str("menubar"),
+            Role::MenuItem => f.write_str("menuitem"),
+            Role::MenuItemCheckbox => f.write_str("menuitemcheckbox"),
+            Role::MenuItemRadio => f.write_str("menuitemradio"),
+            Role::Meter => f.write_str("meter"),
+            Role::Navigation => f.write_str("navigation"),
+            Role::None => f.write_str("none"),
+            Role::Note => f.write_str("note"),
+            Role::Option => f.write_str("option"),
+            Role::Paragraph => f.write_str("paragraph"),
+            Role::Presentation => f.write_str("presentation"),
+            Role::Progressbar => f.write_str("progressbar"),
+            Role::Radio => f.write_str("radio"),
+            Role::RadioGroup => f.write_str("radiogroup"),
+            Role::Range => f.write_str("range"),
+            Role::Region => f.write_str("region"),
+            Role::Roletype => f.write_str("roletype"),
+            Role::Row => f.write_str("row"),
+            Role::RowGroup => f.write_str("rowgroup"),
+            Role::RowHeader => f.write_str("rowheader"),
+            Role::Scrollbar => f.write_str("scrollbar"),
+            Role::Search => f.write_str("search"),
+            Role::Searchbox => f.write_str("searchbox"),
+            Role::Section => f.write_str("section"),
+            Role::SectionHead => f.write_str("sectionhead"),
+            Role::Select => f.write_str("select"),
+            Role::Separator => f.write_str("separator"),
+            Role::Slider => f.write_str("slider"),
+            Role::SpinButton => f.write_str("spinbutton"),
+            Role::Status => f.write_str("status"),
+            Role::Strong => f.write_str("strong"),
+            Role::Structure => f.write_str("structure"),
+            Role::Subscript => f.write_str("subscript"),
+            Role::Suggestion => f.write_str("suggestion"),
+            Role::Superscript => f.write_str("superscript"),
+            Role::Switch => f.write_str("switch"),
+            Role::Tab => f.write_str("tab"),
+            Role::Table => f.write_str("table"),
+            Role::TabList => f.write_str("tablist"),
+            Role::TabPanel => f.write_str("tabpanel"),
+            Role::Term => f.write_str("term"),
+            Role::Textbox => f.write_str("textbox"),
+            Role::Time => f.write_str("time"),
+            Role::Timer => f.write_str("timer"),
+            Role::Toolbar => f.write_str("toolbar"),
+            Role::Tooltip => f.write_str("tooltip"),
+            Role::Tree => f.write_str("tree"),
+            Role::TreeGrid => f.write_str("treegrid"),
+            Role::TreeItem => f.write_str("treeitem"),
+            Role::Widget => f.write_str("widget"),
+            Role::Window => f.write_str("window"),
+        }
     }
 }
 
