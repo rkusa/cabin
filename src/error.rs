@@ -110,6 +110,19 @@ pub enum InternalError {
         name: String,
     },
     Join(tokio::task::JoinError),
+    MissingBoundaryAttribute,
+}
+
+impl From<InternalError> for Box<(dyn HttpError + Send + 'static)> {
+    fn from(err: InternalError) -> Self {
+        Box::new(err)
+    }
+}
+
+impl HttpError for InternalError {
+    fn status_code(&self) -> StatusCode {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
 }
 
 impl error::Error for Error {
@@ -139,7 +152,9 @@ impl fmt::Display for Error {
 impl error::Error for InternalError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Render | Self::InvalidAttributeName { .. } => None,
+            Self::Render | Self::InvalidAttributeName { .. } | Self::MissingBoundaryAttribute => {
+                None
+            }
             Self::Serialize { err, .. } => Some(err),
             Self::Deserialize { err, .. } => Some(err.as_ref()),
             Self::Join(err) => Some(err),
@@ -157,6 +172,9 @@ impl fmt::Display for InternalError {
                 write!(f, "invalid attribute name `{name}`")
             }
             Self::Join(_) => f.write_str("failed to run internal future to completion"),
+            Self::MissingBoundaryAttribute => {
+                f.write_str("#[cabin::boundary] attribute is missing")
+            }
         }
     }
 }
@@ -210,6 +228,18 @@ impl From<Error> for Box<dyn HttpError + Send + 'static> {
                 source,
             } => source,
             _ => Box::new(err),
+        }
+    }
+}
+
+impl From<Box<dyn error::Error + Send + Sync + 'static>> for Error {
+    fn from(err: Box<dyn error::Error + Send + Sync + 'static>) -> Self {
+        Self {
+            inner: Inner::Other {
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+                reason: None,
+                source: Some(err),
+            },
         }
     }
 }

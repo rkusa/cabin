@@ -1,3 +1,4 @@
+pub mod boundary;
 mod boxed;
 mod future;
 mod iter;
@@ -9,8 +10,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+pub use boundary::Boundary;
 pub use boxed::BoxedView;
-// pub use boxed::BoxedView;
 pub use future::FutureExt;
 use http_error::HttpError;
 pub use iter::IteratorExt;

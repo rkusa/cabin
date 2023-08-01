@@ -16,6 +16,15 @@ async function update(eventId, payload, target, abortController) {
   }
 
   try {
+    let state = undefined;
+    if (
+      target.firstChild &&
+      target.firstChild instanceof HTMLScriptElement &&
+      target.firstChild.getAttribute("type") === "application/json"
+    ) {
+      state = target.firstChild.innerText;
+    }
+
     /** @type {RequestInit} */
     const req =
       payload instanceof URLSearchParams
@@ -31,6 +40,12 @@ async function update(eventId, payload, target, abortController) {
                 }),
               );
               formData.append("event_id", eventId);
+              if (state) {
+                formData.append(
+                  "state",
+                  new Blob([state], { type: "application/json" }),
+                );
+              }
               return formData;
             })(),
           }
@@ -40,9 +55,15 @@ async function update(eventId, payload, target, abortController) {
             headers: {
               "Content-Type": "application/json",
             },
-            body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}}`,
+            body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}${
+              state ? `,"state":${state}` : ""
+            }}`,
           };
-    const res = await fetch(location.href, req);
+    const endpoint =
+      target instanceof CabinBoundary
+        ? `/__boundary/${target.getAttribute("name")}`
+        : location.href;
+    const res = await fetch(endpoint, req);
     if (signal.aborted) {
       return;
     }
@@ -86,11 +107,7 @@ async function update(eventId, payload, target, abortController) {
   }
 }
 
-document.addEventListener("cabinRefresh", async function () {
-  await update(0, {}, document.body);
-});
-
-function setUpEventListener(eventName, opts) {
+function setUpEventListener(el, eventName, opts) {
   const attrName = `cabin-${eventName}`;
   /** @type {WeakMap<Element, AbortController>} */
   const abortControllers = new WeakMap();
@@ -145,9 +162,11 @@ function setUpEventListener(eventName, opts) {
           await update(
             parseInt(eventId),
             payload,
-            document.body,
+            el == document ? document.body : el,
             abortController,
           );
+        } catch (err) {
+          throw err;
         } finally {
           if (opts.disable) {
             node.disabled = false;
@@ -159,58 +178,12 @@ function setUpEventListener(eventName, opts) {
     } while ((node = node.parentElement));
   }
 
-  document.addEventListener(eventName, handleEvent);
+  el.addEventListener(eventName, (e) =>
+    handleEvent(e).catch((err) => {
+      console.error(err);
+    }),
+  );
 }
-
-setUpEventListener("click", { preventDefault: true, disable: true });
-setUpEventListener("input", {
-  debounce: 500,
-  eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-});
-setUpEventListener("change", {
-  eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-});
-document.addEventListener("submit", async function handleEvent(e) {
-  /** @type {HTMLFormElement} */
-  let form = e.target;
-  do {
-    const eventId = form.getAttribute("cabin-submit");
-    if (!eventId) {
-      return;
-    }
-
-    e.stopPropagation();
-    e.preventDefault();
-
-    const payload = new URLSearchParams(new FormData(form));
-
-    // disable whole form
-    /** @type {WeakMap<HTMLElement, bool>} */
-    const disabledBefore = new WeakMap();
-    for (const el of form.elements) {
-      disabledBefore.set(el, el.disabled);
-      el.disabled = true;
-    }
-
-    try {
-      await update(parseInt(eventId), payload, document.body);
-    } finally {
-      // restore disabled state
-      for (const el of form.elements) {
-        const before = disabledBefore.get(el);
-        if (before !== undefined) {
-          el.disabled = before;
-        }
-      }
-    }
-
-    break;
-  } while ((form = form.parentElement));
-});
-
-window.addEventListener("popstate", () => {
-  document.dispatchEvent(new CustomEvent("cabinRefresh"));
-});
 
 /**
  * @param {Node} rootBefore
@@ -418,3 +391,95 @@ function ignoreAttribute(el, attr) {
 function isKeyedElement(node) {
   return node.nodeType === Node.ELEMENT_NODE && node.nodeName === "CABIN-KEYED";
 }
+
+function setupEventListeners(el) {
+  setUpEventListener(el, "click", { preventDefault: true, disable: true });
+  setUpEventListener(el, "input", {
+    debounce: 500,
+    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+  });
+  setUpEventListener(el, "change", {
+    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+  });
+  el.addEventListener("submit", async function handleEvent(e) {
+    /** @type {HTMLFormElement} */
+    let form = e.target;
+    do {
+      const eventId = form.getAttribute("cabin-submit");
+      if (!eventId) {
+        return;
+      }
+
+      e.stopPropagation();
+      e.preventDefault();
+
+      const payload = new URLSearchParams(new FormData(form));
+
+      // disable whole form
+      /** @type {WeakMap<HTMLElement, bool>} */
+      const disabledBefore = new WeakMap();
+      for (const el of form.elements) {
+        disabledBefore.set(el, el.disabled);
+        el.disabled = true;
+      }
+
+      try {
+        await update(parseInt(eventId), payload, document.body);
+      } finally {
+        // restore disabled state
+        for (const el of form.elements) {
+          const before = disabledBefore.get(el);
+          if (before !== undefined) {
+            el.disabled = before;
+          }
+        }
+      }
+
+      break;
+    } while ((form = form.parentElement));
+  });
+}
+
+setupEventListeners(document);
+
+document.addEventListener("cabinRefresh", async function () {
+  await update(0, {}, document.body);
+});
+
+window.addEventListener("popstate", () => {
+  document.dispatchEvent(new CustomEvent("cabinRefresh"));
+});
+
+class CabinBoundary extends HTMLElement {
+  constructor() {
+    super();
+
+    setupEventListeners(this);
+
+    // // TODO: handle missing
+    // const initial = JSON.parse(this.lastElementChild.textContent);
+    // this.removeChild(this.lastElementChild);
+
+    // this.state = initial.state;
+    // this.hashTree = initial.hashTree;
+    // console.log(this.hashTree);
+
+    // this.setUpEventListener("click", { preventDefault: true, disable: true });
+    // this.setUpEventListener("input", {
+    //   eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+    // });
+
+    // // If the browser restored previous form values, detect them and trigger an input event
+    // const inputs = this.querySelectorAll("input");
+    // inputs.forEach((input) => {
+    //   if (input.value !== input.getAttribute("value")) {
+    //     console.log("input", input, "changed, manually trigger input event");
+    //     input.dispatchEvent(
+    //       new Event("input", { bubbles: true, cancelable: true })
+    //     );
+    //   }
+    // });
+  }
+}
+
+customElements.define("cabin-boundary", CabinBoundary);

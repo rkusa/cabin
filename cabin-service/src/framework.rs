@@ -4,6 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
+use cabin::view::boundary::BoundaryRegistry;
 use cabin::SERVER_COMPONENT_JS;
 use http::{header, Method, Request, Response, StatusCode};
 use http_body::combinators::UnsyncBoxBody;
@@ -34,9 +35,8 @@ where
     S: Service<Request<ReqBody>, Response = Response<ResBody>> + Clone + Send + 'static,
     <S as Service<Request<ReqBody>>>::Error: Into<Infallible> + 'static,
     <S as Service<Request<ReqBody>>>::Future: Send + 'static,
-    ReqBody: HttpBody + Send + 'static,
-    <ReqBody as HttpBody>::Data: Send,
-    <ReqBody as HttpBody>::Error: std::error::Error,
+    ReqBody: HttpBody<Data = Bytes> + Send + 'static,
+    <ReqBody as HttpBody>::Error: std::error::Error + Send,
     ResBody: HttpBody<Data = Bytes, Error = ResBodyError> + Send + 'static,
 {
     type Response = Response<UnsyncBoxBody<Bytes, ResBodyError>>;
@@ -107,6 +107,16 @@ where
                             crate::livereload::Heartbeat::default().map_err(|_| unreachable!()),
                         ))
                         .unwrap())
+                }
+
+                (&Method::PUT, &["__boundary", id]) => {
+                    let id = id.to_string();
+                    let res = BoundaryRegistry::global().handle(&id, req).await;
+                    let (parts, body) = res.into_parts();
+                    Ok(Response::from_parts(
+                        parts,
+                        body.map_err(|_| unreachable!()).boxed_unsync(),
+                    ))
                 }
 
                 (&Method::GET, &["client_redirect"]) => Ok(Response::builder()

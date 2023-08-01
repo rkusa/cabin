@@ -8,7 +8,7 @@ use std::pin::pin;
 use std::sync::OnceLock;
 
 use bytes::Bytes;
-pub use cabin_macros::{attributes, element, Attribute};
+pub use cabin_macros::{attributes, boundary, element, Attribute};
 pub use error::Error;
 use futures_util::stream::TryStreamExt;
 pub use http::StatusCode;
@@ -71,8 +71,9 @@ pub fn content_hash(bytes: &[u8]) -> u32 {
 }
 
 pub struct Event {
-    event_id: u32,
-    payload: Payload,
+    pub(crate) event_id: u32,
+    pub(crate) state: Option<Box<RawValue>>,
+    pub(crate) payload: Payload,
 }
 
 fn default_document(content: impl View) -> impl View {
@@ -96,7 +97,7 @@ where
 {
     let result = local_pool::spawn(move || {
         let scope = Scope::new();
-        scope.clone().run(async move {
+        scope.run(async move {
             let r = Renderer::new();
             let body = render_fn().await;
             let doc = (document)((
@@ -109,23 +110,7 @@ where
     .await;
     let result = match result {
         Ok(result) => result,
-        Err(err) => {
-            if err.status_code().is_server_error() {
-                tracing::error!(
-                    %err,
-                    caused_by = format_caused_by(std::error::Error::source(&err)),
-                    "server error",
-                );
-            } else if err.status_code().is_client_error() {
-                tracing::debug!(
-                    %err,
-                    caused_by = format_caused_by(std::error::Error::source(&err)),
-                    "client error",
-                );
-            }
-            let (parts, body) = Response::from(err).into_parts();
-            return Response::from_parts(parts, Full::new(body));
-        }
+        Err(err) => return err_to_response(err),
     };
 
     let Out { html, headers } = result.end();
@@ -149,35 +134,19 @@ pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
 
 pub async fn put_page<F: Future<Output = V>, V: View, B>(
     req: Request<B>,
-    render_fn: impl FnOnce() -> F + Send + Sync + 'static,
+    render_fn: impl FnOnce() -> F + Send + 'static,
 ) -> Response<Full<Bytes>>
 where
-    B: Body<Data = Bytes> + Send + Sync,
-    B::Error: std::error::Error + Send + Sync + 'static,
+    B: Body<Data = Bytes> + Send,
+    B::Error: std::error::Error + Send + 'static,
 {
     let event = match parse_body(req).await {
         Ok(result) => result,
-        Err(err) => {
-            if err.status_code().is_server_error() {
-                tracing::error!(
-                    %err,
-                    caused_by = format_caused_by(std::error::Error::source(&err)),
-                    "server error",
-                );
-            } else if err.status_code().is_client_error() {
-                tracing::debug!(
-                    %err,
-                    caused_by = format_caused_by(std::error::Error::source(&err)),
-                    "client error",
-                );
-            }
-            let (parts, body) = Response::from(err).into_parts();
-            return Response::from_parts(parts, Full::new(body));
-        }
+        Err(err) => return err_to_response(err),
     };
     let result = local_pool::spawn(move || {
         let scope = Scope::new().with_event(event.event_id, event.payload);
-        scope.clone().run(async move {
+        scope.run(async move {
             let r = Renderer::new();
             render_fn().await.render(r, true).await
         })
@@ -185,23 +154,7 @@ where
     .await;
     let result = match result {
         Ok(result) => result,
-        Err(err) => {
-            if err.status_code().is_server_error() {
-                tracing::error!(
-                    %err,
-                    caused_by = format_caused_by(std::error::Error::source(&err)),
-                    "server error",
-                );
-            } else if err.status_code().is_client_error() {
-                tracing::debug!(
-                    %err,
-                    caused_by = format_caused_by(std::error::Error::source(&err)),
-                    "client error",
-                );
-            }
-            let (parts, body) = Response::from(err).into_parts();
-            return Response::from_parts(parts, Full::new(body));
-        }
+        Err(err) => return err_to_response(err),
     };
 
     let Out { html, headers } = result.end();
@@ -217,10 +170,28 @@ where
     res.body(Full::new(Bytes::from(html))).unwrap()
 }
 
+fn err_to_response(err: Error) -> Response<Full<Bytes>> {
+    if err.status_code().is_server_error() {
+        tracing::error!(
+            %err,
+            caused_by = format_caused_by(std::error::Error::source(&err)),
+            "server error",
+        );
+    } else if err.status_code().is_client_error() {
+        tracing::debug!(
+            %err,
+            caused_by = format_caused_by(std::error::Error::source(&err)),
+            "client error",
+        );
+    }
+    let (parts, body) = Response::from(err).into_parts();
+    Response::from_parts(parts, Full::new(body))
+}
+
 async fn parse_body<B>(req: Request<B>) -> Result<Event, Error>
 where
-    B: Body<Data = Bytes> + Send + Sync,
-    B::Error: std::error::Error + Send + Sync + 'static,
+    B: Body<Data = Bytes> + Send,
+    B::Error: std::error::Error + Send + 'static,
 {
     // TODO: content-length protection?
     let mime_type: Mime = req
@@ -236,6 +207,11 @@ where
             return Ok::<_, B::Error>(None);
         };
         Ok(Some((bytes?, body)))
+    })
+    .map_err(|err| {
+        // `multer::Multipart::new` below requires the error to by Sync, to avoid requiring that
+        // upstream simply flatten the error to a string here ...
+        Box::<dyn std::error::Error + Send + Sync + 'static>::from(err.to_string())
     });
 
     if mime_type == mime::APPLICATION_JSON {
@@ -243,6 +219,7 @@ where
         #[serde(rename_all = "camelCase")]
         struct JsonEvent {
             event_id: u32,
+            state: Option<Box<RawValue>>,
             payload: Box<RawValue>,
         }
 
@@ -252,16 +229,18 @@ where
                 Ok(data)
             })
             .await
-            .map_err(|err| Error::from_err(err).with_status(StatusCode::INTERNAL_SERVER_ERROR))?;
+            .map_err(|err| Error::from(err).with_status(StatusCode::INTERNAL_SERVER_ERROR))?;
         let event: JsonEvent = serde_json::from_slice(&whole_body)
             .map_err(|err| Error::from_err(err).with_status(StatusCode::BAD_REQUEST))?;
         Ok(Event {
             event_id: event.event_id,
+            state: event.state,
             payload: Payload::Json(event.payload),
         })
     } else if let Ok(boundary) = multer::parse_boundary(mime_type) {
         let mut multi_part = Multipart::new(body, boundary);
         let mut event_id: Option<u32> = None;
+        let mut state: Option<Box<RawValue>> = None;
         let mut payload: Option<String> = None;
         while let Some(field) = multi_part
             .next_field()
@@ -287,6 +266,13 @@ where
                             })?,
                     )
                 }
+                Some("state") => {
+                    state = Some(field.json().await.map_err(|err| {
+                        Error::from_err(err)
+                            .with_status(StatusCode::BAD_REQUEST)
+                            .with_reason("state is not valid json")
+                    })?)
+                }
                 Some("payload") => {
                     payload = Some(field.text().await.map_err(|err| {
                         Error::from_err(err)
@@ -302,6 +288,7 @@ where
             event_id: event_id.ok_or_else(|| {
                 Error::from_status_code_and_reason(StatusCode::BAD_REQUEST, "event_id missing")
             })?,
+            state,
             payload: Payload::UrlEncoded(payload.ok_or_else(|| {
                 Error::from_status_code_and_reason(StatusCode::BAD_REQUEST, "payload missing")
             })?),

@@ -52,6 +52,6 @@
     --tw-content: "";
 }
 
-cabin-keyed {
+cabin-keyed, cabin-boundary {
     display: contents;
 }

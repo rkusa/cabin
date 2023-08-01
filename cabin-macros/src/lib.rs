@@ -1,3 +1,4 @@
+mod boundary_attribute;
 mod derive_attribute;
 mod element_attribute;
 
@@ -7,7 +8,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::{Comma, Dot, Eq, Paren};
 use syn::{
-    parse_macro_input, DeriveInput, Expr, ExprLit, Ident, ItemTrait, Path, TraitItem, TraitItemFn,
+    parse_macro_input, DeriveInput, Expr, ExprLit, Ident, ItemFn, ItemTrait, Path, TraitItem,
+    TraitItemFn,
 };
 
 #[proc_macro_attribute]
@@ -58,6 +60,15 @@ pub fn attributes(attr: TokenStream, item: TokenStream) -> TokenStream {
 pub fn derive_attribute(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     match derive_attribute::derive_attribute(input) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
+
+#[proc_macro_attribute]
+pub fn boundary(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    match boundary_attribute::boundary_attribute(input) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

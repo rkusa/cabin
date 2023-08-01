@@ -39,4 +39,5 @@ twox-hash = "1.6"
 axum = "0.6"
 cabin-tailwind = { path = "./cabin-tailwind", default-features = false }
 cabin-service = { path = "./cabin-service" }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "fmt", "ansi"] }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
