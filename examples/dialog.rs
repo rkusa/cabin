@@ -28,6 +28,15 @@ fn dialog(content: impl View) -> impl View {
 
 #[tokio::main]
 async fn main() {
+    let filter =
+        tracing_subscriber::filter::filter_fn(|metadata| metadata.target().starts_with("cabin"));
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::Layer::new().pretty())
+        .with(filter)
+        .init();
+
     let server = axum::Router::new()
         .route(
             "/",

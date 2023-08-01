@@ -42,7 +42,7 @@ where
 
 impl<Args> BoundaryRef<Args>
 where
-    Args: Clone + 'static,
+    Args: 'static,
 {
     pub const fn new(id: &'static str, f: &'static BoundaryFn<Args>) -> Self {
         Self {
@@ -62,6 +62,7 @@ where
     Args: 'static,
 {
     id: Option<&'static str>,
+    // TODO: take reference to args to avoid cloning them?
     args: Args,
     view: BoxedView,
     is_update: bool,

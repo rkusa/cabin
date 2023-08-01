@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::Comma;
@@ -26,6 +26,7 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
         output,
     } = sig;
 
+    let inner_ident = format_ident!("__{ident}");
     let name = ident.to_string();
     let (args_idents, args_types) = inputs
         .iter()
@@ -35,7 +36,7 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
                 "boundary cannot have self argument",
             )),
             FnArg::Typed(PatType { pat, ty, .. }) => match pat.as_ref() {
-                Pat::Ident(ref ident) => Ok((ident, ty)),
+                Pat::Ident(ref ident) => Ok((ident.ident.clone(), ty.clone())),
                 pat => Err(Error::new(pat.span(), "boundary arguments must be idents")),
             },
         })
@@ -43,13 +44,27 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
         .into_iter()
         .unzip::<_, _, Punctuated<_, Comma>, Punctuated<_, Comma>>();
 
+    // remove `mut` keywords from outer inputs
+    let inputs_no_mut = inputs
+        .iter()
+        .cloned()
+        .map(|mut input| {
+            if let FnArg::Typed(PatType { ref mut pat, .. }) = &mut input {
+                if let Pat::Ident(ref mut ident) = pat.as_mut() {
+                    ident.mutability = None;
+                }
+            }
+            input
+        })
+        .collect::<Punctuated<_, Comma>>();
+
     let to_async = if asyncness.is_some() {
         quote! {
-            #ident(#args_idents)
+            #inner_ident(#args_idents)
         }
     } else {
         quote! {
-            ::std::future::ready(#ident(#args_idents))
+            ::std::future::ready(#inner_ident(#args_idents))
         }
     };
     let async_await = if asyncness.is_some() {
@@ -60,8 +75,8 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
 
     Ok(quote! {
         #(#attrs)*
-        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
-            #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs #variadic) #output {
+        #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs_no_mut #variadic) #output {
+            #vis #constness #asyncness #unsafety #abi fn #inner_ident #generics(#inputs #variadic) #output {
                 #block
             }
 
@@ -77,7 +92,7 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
                 r.register(&BOUNDARY)
             }
 
-            #ident(#args_idents) #async_await .with_id(ID)
+            #inner_ident(#args_idents) #async_await .with_id(ID)
         }
     })
 }
