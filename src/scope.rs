@@ -1,18 +1,15 @@
 use std::any::{Any, TypeId};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::future::Future;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 use serde::de::DeserializeOwned;
-use serde::Serialize;
 use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
 use twox_hash::XxHash32;
 
 use crate::error::InternalError;
-use crate::state::StateId;
 
 tokio::task_local! {
     static SCOPE: Scope;
@@ -25,8 +22,6 @@ pub struct Scope {
 }
 
 struct Inner {
-    prev_state: Option<HashMap<StateId, Box<RawValue>>>,
-    next_state: Vec<u8>,
     event: Option<Event>,
     error: Option<InternalError>,
 }
@@ -41,7 +36,7 @@ enum Event {
     Deserialized(Box<dyn Any>),
 }
 
-pub(crate) fn event<E>() -> Option<E>
+pub fn event<E>() -> Option<E>
 where
     E: DeserializeOwned + Copy + 'static,
 {
@@ -156,20 +151,10 @@ impl Scope {
     pub fn new() -> Self {
         Self {
             inner: Rc::new(RefCell::new(Inner {
-                prev_state: None,
-                next_state: vec![b'{'],
                 event: None,
                 error: None,
             })),
         }
-    }
-
-    pub fn with_prev_state(self, prev_state: HashMap<StateId, Box<RawValue>>) -> Self {
-        {
-            let mut state = self.inner.borrow_mut();
-            state.prev_state = Some(prev_state);
-        }
-        self
     }
 
     pub(crate) fn with_event(self, id: u32, payload: Payload) -> Self {
@@ -190,70 +175,6 @@ impl Scope {
             return Err(err.into());
         }
         result
-    }
-
-    pub(crate) fn restore<T>(id: StateId) -> Option<T>
-    where
-        T: DeserializeOwned,
-    {
-        SCOPE
-            .try_with(|scope| {
-                let mut inner = scope.inner.borrow_mut();
-                let prev = inner.prev_state.as_mut()?.remove(&id)?;
-
-                match serde_json::from_str(prev.get()) {
-                    Ok(payload) => Some(payload),
-                    Err(err) => {
-                        inner.error = Some(InternalError::Deserialize {
-                            what: "previous state",
-                            err: Box::new(err),
-                        });
-                        None
-                    }
-                }
-            })
-            .ok()
-            .flatten()
-    }
-
-    pub(crate) fn serialize_state<T>(id: StateId, value: &T)
-    where
-        T: Serialize,
-    {
-        SCOPE
-            .try_with(|scope| {
-                let mut inner = scope.inner.borrow_mut();
-
-                if inner.next_state.len() > 1 {
-                    inner.next_state.push(b',');
-                }
-
-                let mut ser = serde_json::Serializer::new(&mut inner.next_state);
-                if let Err(err) = id.serialize(&mut ser) {
-                    inner.error = Some(InternalError::Serialize {
-                        what: "state id",
-                        err,
-                    });
-                };
-                inner.next_state.push(b':');
-                let mut ser = serde_json::Serializer::new(&mut inner.next_state);
-                if let Err(err) = value.serialize(&mut ser) {
-                    inner.error = Some(InternalError::Serialize { what: "state", err });
-                };
-            })
-            .ok();
-    }
-
-    pub fn into_view(self) -> String {
-        let mut serialized_state = match Rc::try_unwrap(self.inner) {
-            Ok(inner) => inner.into_inner().next_state,
-            Err(scope) => {
-                let mut inner = scope.borrow_mut();
-                std::mem::replace(&mut inner.next_state, vec![b'{'])
-            }
-        };
-        serialized_state.push(b'}');
-        String::from_utf8(serialized_state).unwrap()
     }
 
     pub fn keyed_sync<F, R>(key: u32, f: F) -> R

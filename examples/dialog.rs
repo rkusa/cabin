@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use cabin::html;
 use cabin::prelude::*;
-use cabin::state::State;
+use cabin::scope::event;
 use http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -11,26 +11,18 @@ async fn app() -> impl View {
     dialog("Hello World")
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-enum DialogEvent {
-    Open,
-    Close,
-}
+#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+struct Toggle(bool);
 
 fn dialog(content: impl View) -> impl View {
-    let open = State::id("dialog")
-        .update(|open, event: DialogEvent| match event {
-            DialogEvent::Open => *open = true,
-            DialogEvent::Close => *open = false,
-        })
-        .restore_or(false);
+    let open = event::<Toggle>().unwrap_or_default();
 
     (
-        open.then_some(html::dialog(
-            dialog::with_open(open),
-            (content, button(on_click(DialogEvent::Close), "close")),
+        open.0.then_some(html::dialog(
+            dialog::with_open(open.0),
+            (content, button(on_click(Toggle(false)), "close")),
         )),
-        button(on_click(DialogEvent::Open), "open"),
+        button(on_click(Toggle(true)), "open"),
     )
 }
 

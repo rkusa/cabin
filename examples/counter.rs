@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::state::State;
+use cabin::scope::event;
 use http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -9,17 +9,15 @@ async fn app() -> impl View {
     counter(0).await
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-struct Increment;
+#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+struct Increment(usize);
 
 async fn counter(start_at: usize) -> impl View {
-    let count = State::id(())
-        .update::<Increment>(|count: &mut usize, _| *count += 1)
-        .restore_or(start_at);
+    let count = event::<Increment>().unwrap_or(Increment(start_at)).0;
 
     (
         div((), text!("Count: {}", count)),
-        button(on_click(Increment), "inc"),
+        button(on_click(Increment(count + 1)), "inc"),
     )
 }
 

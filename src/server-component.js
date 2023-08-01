@@ -16,8 +16,6 @@ async function update(eventId, payload, target, abortController) {
   }
 
   try {
-    const state = document.getElementById("state").innerText;
-
     /** @type {RequestInit} */
     const req =
       payload instanceof URLSearchParams
@@ -33,10 +31,6 @@ async function update(eventId, payload, target, abortController) {
                 }),
               );
               formData.append("event_id", eventId);
-              formData.append(
-                "state",
-                new Blob([state], { type: "application/json" }),
-              );
               return formData;
             })(),
           }
@@ -46,9 +40,7 @@ async function update(eventId, payload, target, abortController) {
             headers: {
               "Content-Type": "application/json",
             },
-            body: `{"eventId":${eventId},"payload":${JSON.stringify(
-              payload,
-            )},"state":${state}}`,
+            body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}}`,
           };
     const res = await fetch(location.href, req);
     if (signal.aborted) {

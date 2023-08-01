@@ -1,17 +1,17 @@
 use std::net::SocketAddr;
 
+use cabin::cabin_scripts;
 use cabin::prelude::*;
-use cabin::state::State;
+use cabin::scope::event;
+use cabin_tailwind::cabin_stylesheets;
 use cabin_tailwind::prelude::*;
 use http::Request;
 
 async fn app() -> impl View {
-    let count = State::id(())
-        .update(|count, _: ()| *count += 1)
-        .restore_or(0);
+    let count = event::<usize>().unwrap_or(0);
 
     button(
-        on_click(()).class(
+        on_click(count + 1).class(
             // TODO: modifier groups?
             // TODO: autocomplate after XZY. (for modifiers)
             // TODO: autocomplete after text::
@@ -29,12 +29,25 @@ async fn app() -> impl View {
     )
 }
 
+fn document(content: impl View) -> impl View {
+    (
+        doctype(),
+        html(
+            (),
+            (
+                head((), (cabin_stylesheets(), cabin_scripts())),
+                body((), content),
+            ),
+        ),
+    )
+}
+
 #[tokio::main]
 async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| cabin::get_page(app))
+            axum::routing::get(|| cabin::get_page_with(app, document))
                 .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
         .layer(cabin_service::framework());

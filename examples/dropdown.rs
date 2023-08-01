@@ -1,19 +1,18 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::state::State;
+use cabin::scope::event;
 use cabin::view::IteratorExt;
 use http::Request;
 use serde::{Deserialize, Serialize};
 
+// FIXME: fix example to keep both states
 async fn app() -> impl View {
-    let count = State::id("count")
-        .update(|count: &mut usize, _: Increment| *count += 1)
-        .restore_or(3);
+    let count = event::<Increment>().unwrap_or(Increment(3)).0;
 
     (
         button(
-            on_click(Increment).style("min-width:40px"),
+            on_click(Increment(count + 1)).style("min-width:40px"),
             text!("{}", count),
         ),
         dialog(count),
@@ -21,19 +20,17 @@ async fn app() -> impl View {
 }
 
 fn dialog(count: usize) -> impl View {
-    let opened = State::<bool>::id("dialog")
-        .update(|opened, _: ToggleDropdown| *opened = !*opened)
-        .restore_or(false);
+    let open = event::<Toggle>().unwrap_or_default();
 
     div(
         style("display:inline;position:relative"),
         (
-            button(on_click(ToggleDropdown), "open"),
-            opened.then(|| {
+            button(on_click(Toggle(!open.0)), "open"),
+            open.0.then(|| {
                 ul(
                     style(
                         "position:absolute;top:20px;right:0;background:#ddd;\
-                list-style-type:none;padding:4px;",
+                         list-style-type:none;padding:4px;",
                     ),
                     (0..count)
                         .keyed(|item| *item)
@@ -44,11 +41,11 @@ fn dialog(count: usize) -> impl View {
     )
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-struct ToggleDropdown;
+#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+struct Toggle(bool);
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-struct Increment;
+struct Increment(usize);
 
 #[tokio::main]
 async fn main() {

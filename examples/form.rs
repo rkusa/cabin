@@ -1,14 +1,12 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::state::State;
+use cabin::scope::take_event;
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    let data: Option<Data> = State::id(())
-        .update_take::<Data>(|data: &mut Option<Data>, new_data: Data| *data = Some(new_data))
-        .restore_or_default();
+    let data = take_event::<Data>();
 
     let values = data.clone().unwrap_or_default();
     (

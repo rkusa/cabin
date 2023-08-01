@@ -1,11 +1,11 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::state::State;
 use cabin::view::IteratorExt;
 use http::Request;
 use serde::{Deserialize, Serialize};
 
+// FIXME: restore example
 async fn app() -> impl View {
     list(|| vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await
 }
@@ -25,28 +25,29 @@ enum ItemsEvent {
 }
 
 async fn list(initial: impl FnOnce() -> Vec<Item>) -> impl View {
-    let items = State::<Vec<Item>>::id("list")
-        .update(|items, event: ItemsEvent| match event {
-            ItemsEvent::AddAbove => {
-                let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
-                let count = items.len() + 1;
-                items.insert(0, Item { id, count });
-            }
-            ItemsEvent::AddBelow => {
-                let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
-                let count = items.len() + 1;
-                items.push(Item { id, count });
-            }
-            ItemsEvent::Delete(id) => {
-                items.retain(|i| i.id != id);
-            }
-            ItemsEvent::Increment(id) => {
-                if let Some(item) = items.iter_mut().find(|item| item.id == id) {
-                    item.count += 1;
-                }
-            }
-        })
-        .restore_or_else(initial);
+    let items = initial();
+    // State::<Vec<Item>>::id("list")
+    // .update(|items, event: ItemsEvent| match event {
+    //     ItemsEvent::AddAbove => {
+    //         let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
+    //         let count = items.len() + 1;
+    //         items.insert(0, Item { id, count });
+    //     }
+    //     ItemsEvent::AddBelow => {
+    //         let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
+    //         let count = items.len() + 1;
+    //         items.push(Item { id, count });
+    //     }
+    //     ItemsEvent::Delete(id) => {
+    //         items.retain(|i| i.id != id);
+    //     }
+    //     ItemsEvent::Increment(id) => {
+    //         if let Some(item) = items.iter_mut().find(|item| item.id == id) {
+    //             item.count += 1;
+    //         }
+    //     }
+    // })
+    // .restore_or_else(initial);
 
     (
         div((), button(on_click(ItemsEvent::AddAbove), "add above")),

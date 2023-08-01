@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 
 use cabin::html::events::InputValue;
 use cabin::prelude::*;
-use cabin::state::State;
+use cabin::scope::take_event;
 use http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -15,12 +15,9 @@ async fn app() -> impl View {
 struct Search(InputValue);
 
 async fn search() -> impl View {
-    let query = State::id("query")
-        .update_take(|query, Search(v): Search| {
-            *query = v.into();
-        })
-        .restore_or(Cow::Borrowed("Ge"));
-
+    let query: Cow<'static, str> = take_event::<Search>()
+        .map(|e| e.0.take())
+        .unwrap_or(Cow::Borrowed("Ge"));
     let items = search_countries(&query).await;
 
     div(

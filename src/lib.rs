@@ -3,7 +3,6 @@
 
 extern crate self as cabin;
 
-use std::collections::HashMap;
 use std::future::Future;
 use std::pin::pin;
 use std::sync::OnceLock;
@@ -22,7 +21,6 @@ pub use redirect::Redirect;
 use render::{Out, Renderer};
 use scope::{Payload, Scope};
 use serde_json::value::RawValue;
-use state::StateId;
 pub use view::View;
 
 pub mod error;
@@ -34,7 +32,6 @@ mod redirect;
 pub mod render;
 pub mod scope;
 pub mod serde;
-pub mod state;
 pub mod view;
 
 pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
@@ -75,7 +72,6 @@ pub fn content_hash(bytes: &[u8]) -> u32 {
 
 pub struct Event {
     event_id: u32,
-    state: HashMap<StateId, Box<RawValue>>,
     payload: Payload,
 }
 
@@ -98,21 +94,17 @@ where
     V: View + 'static,
     D: View,
 {
-    let (scope, result) = local_pool::spawn(move || async move {
+    let result = local_pool::spawn(move || {
         let scope = Scope::new();
-        let result = scope
-            .clone()
-            .run(async move {
-                let r = Renderer::new();
-                let body = render_fn().await;
-                let doc = (document)((
-                    body,
-                    // tuple to force `include_hash`
-                ));
-                doc.render(r, false).await
-            })
-            .await;
-        (scope.into_view(), result)
+        scope.clone().run(async move {
+            let r = Renderer::new();
+            let body = render_fn().await;
+            let doc = (document)((
+                body,
+                // tuple to force `include_hash`
+            ));
+            doc.render(r, false).await
+        })
     })
     .await;
     let result = match result {
@@ -146,11 +138,7 @@ where
             res = res.header(key, value);
         }
     }
-    res.body(Full::new(Bytes::from(format!(
-        "{html}\n\
-            <script type=\"application/json\" id=\"state\">{scope}</script>"
-    ))))
-    .unwrap()
+    res.body(Full::new(Bytes::from(html))).unwrap()
 }
 
 pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
@@ -187,18 +175,12 @@ where
             return Response::from_parts(parts, Full::new(body));
         }
     };
-    let (scope, result) = local_pool::spawn(move || async move {
-        let scope = Scope::new()
-            .with_event(event.event_id, event.payload)
-            .with_prev_state(event.state);
-        let result = scope
-            .clone()
-            .run(async move {
-                let r = Renderer::new();
-                render_fn().await.render(r, true).await
-            })
-            .await;
-        (scope.into_view(), result)
+    let result = local_pool::spawn(move || {
+        let scope = Scope::new().with_event(event.event_id, event.payload);
+        scope.clone().run(async move {
+            let r = Renderer::new();
+            render_fn().await.render(r, true).await
+        })
     })
     .await;
     let result = match result {
@@ -232,11 +214,7 @@ where
             res = res.header(key, value);
         }
     }
-    res.body(Full::new(Bytes::from(format!(
-        "{html}\n\
-            <script type=\"application/json\" id=\"state\">{scope}</script>"
-    ))))
-    .unwrap()
+    res.body(Full::new(Bytes::from(html))).unwrap()
 }
 
 async fn parse_body<B>(req: Request<B>) -> Result<Event, Error>
@@ -265,7 +243,6 @@ where
         #[serde(rename_all = "camelCase")]
         struct JsonEvent {
             event_id: u32,
-            state: HashMap<StateId, Box<RawValue>>,
             payload: Box<RawValue>,
         }
 
@@ -280,13 +257,11 @@ where
             .map_err(|err| Error::from_err(err).with_status(StatusCode::BAD_REQUEST))?;
         Ok(Event {
             event_id: event.event_id,
-            state: event.state,
             payload: Payload::Json(event.payload),
         })
     } else if let Ok(boundary) = multer::parse_boundary(mime_type) {
         let mut multi_part = Multipart::new(body, boundary);
         let mut event_id: Option<u32> = None;
-        let mut state: Option<HashMap<StateId, Box<RawValue>>> = None;
         let mut payload: Option<String> = None;
         while let Some(field) = multi_part
             .next_field()
@@ -312,13 +287,6 @@ where
                             })?,
                     )
                 }
-                Some("state") => {
-                    state = Some(field.json().await.map_err(|err| {
-                        Error::from_err(err)
-                            .with_status(StatusCode::BAD_REQUEST)
-                            .with_reason("state is not valid json")
-                    })?)
-                }
                 Some("payload") => {
                     payload = Some(field.text().await.map_err(|err| {
                         Error::from_err(err)
@@ -333,9 +301,6 @@ where
         Ok(Event {
             event_id: event_id.ok_or_else(|| {
                 Error::from_status_code_and_reason(StatusCode::BAD_REQUEST, "event_id missing")
-            })?,
-            state: state.ok_or_else(|| {
-                Error::from_status_code_and_reason(StatusCode::BAD_REQUEST, "state missing")
             })?,
             payload: Payload::UrlEncoded(payload.ok_or_else(|| {
                 Error::from_status_code_and_reason(StatusCode::BAD_REQUEST, "payload missing")
