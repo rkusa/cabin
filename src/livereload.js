@@ -13,5 +13,9 @@ es.onopen = function () {
     openedOnce = true;
   }
 };
+window.addEventListener("unload", function () {
+  // Workaround for Chrome sometimes stalling requests due to the open connection
+  es.close();
+});
 // TODO: ignore timeout errors?
 // es.onerror = function (err) {};
