@@ -119,61 +119,71 @@ function setUpEventListener(el, eventName, opts) {
     /** @type {Element} */
     let node = e.target;
 
-    {
-      const abortController = abortControllers.get(node);
-      if (abortController) {
-        abortController.abort();
-      }
-    }
-
-    const abortController = new AbortController();
-    abortControllers.set(node, abortController);
-
-    if (opts.debounce) {
-      await new Promise((resolve) => setTimeout(resolve, opts.debounce));
-      if (abortController.signal.aborted) {
-        return;
-      }
-    }
-
     do {
       const eventId = node.getAttribute(attrName);
-      if (eventId && (!opts.disable || !node.disabled)) {
-        e.stopPropagation();
+      if (!eventId) {
+        continue;
+      }
 
-        if (opts.preventDefault) {
-          e.preventDefault();
+      if (opts.events && !opts.events.has(eventId)) {
+        // force update upon parent boundary update
+        this.removeAttribute("hash");
+        return;
+      }
+
+      if (opts.disable && node.disabled) {
+        return;
+      }
+
+      {
+        const abortController = abortControllers.get(node);
+        if (abortController) {
+          abortController.abort();
         }
+      }
 
+      const abortController = new AbortController();
+      abortControllers.set(node, abortController);
+
+      if (opts.debounce) {
+        await new Promise((resolve) => setTimeout(resolve, opts.debounce));
+        if (abortController.signal.aborted) {
+          return;
+        }
+      }
+
+      e.stopPropagation();
+
+      if (opts.preventDefault) {
+        e.preventDefault();
+      }
+
+      if (opts.disable) {
+        node.disabled = true;
+      }
+
+      try {
+        const payload = JSON.parse(
+          opts?.eventPayload
+            ? Object.entries(opts.eventPayload(e)).reduce(
+                (result, [placeholder, value]) =>
+                  result.replace(placeholder, value),
+                node.getAttribute(`${attrName}-payload`),
+              )
+            : node.getAttribute(`${attrName}-payload`),
+        );
+        await update(
+          parseInt(eventId),
+          payload,
+          el == document ? document.body : el,
+          abortController,
+        );
+      } catch (err) {
+        throw err;
+      } finally {
         if (opts.disable) {
-          node.disabled = true;
+          node.disabled = false;
         }
-
-        try {
-          const payload = JSON.parse(
-            opts?.eventPayload
-              ? Object.entries(opts.eventPayload(e)).reduce(
-                  (result, [placeholder, value]) =>
-                    result.replace(placeholder, value),
-                  node.getAttribute(`${attrName}-payload`),
-                )
-              : node.getAttribute(`${attrName}-payload`),
-          );
-          await update(
-            parseInt(eventId),
-            payload,
-            el == document ? document.body : el,
-            abortController,
-          );
-        } catch (err) {
-          throw err;
-        } finally {
-          if (opts.disable) {
-            node.disabled = false;
-          }
-        }
-
-        break;
       }
     } while ((node = node.parentElement));
   }
@@ -393,12 +403,26 @@ function isKeyedElement(node) {
 }
 
 function setupEventListeners(el) {
-  setUpEventListener(el, "click", { preventDefault: true, disable: true });
+  let events =
+    el instanceof CabinBoundary
+      ? new Set(el.getAttribute("events").split(","))
+      : null;
+  if (events && events.length === 0) {
+    events = undefined;
+  }
+
+  setUpEventListener(el, "click", {
+    events,
+    preventDefault: true,
+    disable: true,
+  });
   setUpEventListener(el, "input", {
+    events,
     debounce: 500,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
   });
   setUpEventListener(el, "change", {
+    events,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
   });
   el.addEventListener("submit", async function handleEvent(e) {
@@ -407,6 +431,11 @@ function setupEventListeners(el) {
     do {
       const eventId = form.getAttribute("cabin-submit");
       if (!eventId) {
+        return;
+      }
+      if (events && !events.has(eventId)) {
+        // force update upon parent boundary update
+        this.removeAttribute("hash");
         return;
       }
 
@@ -440,16 +469,6 @@ function setupEventListeners(el) {
   });
 }
 
-setupEventListeners(document);
-
-document.addEventListener("cabinRefresh", async function () {
-  await update(0, {}, document.body);
-});
-
-window.addEventListener("popstate", () => {
-  document.dispatchEvent(new CustomEvent("cabinRefresh"));
-});
-
 class CabinBoundary extends HTMLElement {
   constructor() {
     super();
@@ -459,3 +478,13 @@ class CabinBoundary extends HTMLElement {
 }
 
 customElements.define("cabin-boundary", CabinBoundary);
+
+setupEventListeners(document);
+
+document.addEventListener("cabinRefresh", async function () {
+  await update(0, {}, document.body);
+});
+
+window.addEventListener("popstate", () => {
+  document.dispatchEvent(new CustomEvent("cabinRefresh"));
+});

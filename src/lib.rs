@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![feature(return_position_impl_trait_in_trait)]
+#![feature(return_position_impl_trait_in_trait, const_type_id)]
 
 extern crate self as cabin;
 

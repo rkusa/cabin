@@ -1,11 +1,12 @@
+use std::any::TypeId;
 use std::collections::HashMap;
+use std::fmt;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::sync::Arc;
 
 use bytes::Bytes;
-use cabin_macros::Attribute;
 use http::{HeaderValue, Request, Response, StatusCode};
 use http_body::{Body, Full};
 use http_error::HttpError;
@@ -15,15 +16,16 @@ use serde::Serialize;
 
 use super::{BoxedView, RenderFuture};
 use crate::error::InternalError;
+use crate::html::attributes::Attributes;
 use crate::html::script::{self, script};
 use crate::html::Html;
-use crate::render::{Out, Renderer};
+use crate::render::{ElementRenderer, Out, Renderer};
 use crate::scope::Scope;
 use crate::{err_to_response, local_pool, parse_body, View};
 
 pub fn boundary<Args>(args: Args, view: impl View) -> Boundary<Args> {
     Boundary {
-        id: None,
+        boundary_ref: None,
         args: Some(args),
         view: view.boxed(),
         is_update: false,
@@ -37,32 +39,47 @@ where
     Args: 'static,
 {
     id: &'static str,
+    events: &'static [TypeId],
     args: PhantomData<Args>,
     f: &'static BoundaryFn<Args>,
+}
+
+#[derive(Default)]
+pub struct BoundaryEvent<E> {
+    marker: PhantomData<E>,
 }
 
 impl<Args> BoundaryRef<Args>
 where
     Args: 'static,
 {
-    pub const fn new(id: &'static str, f: &'static BoundaryFn<Args>) -> Self {
+    pub const fn new(
+        id: &'static str,
+        events: &'static [TypeId],
+        f: &'static BoundaryFn<Args>,
+    ) -> Self {
         Self {
             id,
+            events,
             args: PhantomData,
             f,
         }
     }
 
     async fn with(&'static self, args: Args) -> Boundary<Args> {
-        self::internal::Boundary::with_id((self.f)(args).await, self.id).into_update()
+        self::internal::Boundary::upgrade((self.f)(args).await, self).into_update()
     }
+}
+
+pub const fn type_id<T: 'static + ?Sized>() -> TypeId {
+    TypeId::of::<T>()
 }
 
 pub struct Boundary<Args>
 where
     Args: 'static,
 {
-    id: Option<&'static str>,
+    boundary_ref: Option<&'static BoundaryRef<Args>>,
     // TODO: take reference to args to avoid cloning them?
     args: Option<Args>,
     view: BoxedView,
@@ -72,21 +89,21 @@ where
 pub mod internal {
     pub use super::*;
 
-    pub trait Boundary {
-        fn with_id(self, id: &'static str) -> Self;
+    pub trait Boundary<Args> {
+        fn upgrade(self, id: &'static BoundaryRef<Args>) -> Self;
     }
 
-    impl<Args> Boundary for super::Boundary<Args> {
-        fn with_id(mut self, id: &'static str) -> Self {
-            self.id = Some(id);
+    impl<Args> Boundary<Args> for super::Boundary<Args> {
+        fn upgrade(mut self, boundary_ref: &'static BoundaryRef<Args>) -> Self {
+            self.boundary_ref = Some(boundary_ref);
             self
         }
     }
 
-    impl<Args, E> Boundary for Result<super::Boundary<Args>, E> {
-        fn with_id(mut self, id: &'static str) -> Self {
+    impl<Args, E> Boundary<Args> for Result<super::Boundary<Args>, E> {
+        fn upgrade(mut self, boundary_ref: &'static BoundaryRef<Args>) -> Self {
             if let Ok(b) = &mut self {
-                b.id = Some(id);
+                b.boundary_ref = Some(boundary_ref);
             }
             self
         }
@@ -113,7 +130,7 @@ where
         };
 
         // TODO: any way to make this a compile error?
-        let Some(id) = self.id else {
+        let Some(boundary_ref) = self.boundary_ref else {
             return RenderFuture::Ready(Some(Err(InternalError::MissingBoundaryAttribute.into())));
         };
 
@@ -132,14 +149,41 @@ where
         if self.is_update {
             body.render(r, include_hash)
         } else {
-            Html::new("cabin-boundary", Name(id), body).render(r, include_hash)
+            Html::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
         }
     }
 }
 
-// TODO: hash name in production?
-#[derive(Attribute)]
-pub struct Name(&'static str);
+impl<Args> Attributes for &'static BoundaryRef<Args> {
+    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
+        r.attribute("name", self.id).map_err(InternalError::from)?;
+        r.attribute("events", EventsList(self.events))
+            .map_err(InternalError::from)?;
+        Ok(())
+    }
+}
+
+#[derive(Hash)]
+struct EventsList(&'static [TypeId]);
+
+impl fmt::Display for EventsList {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use std::hash::{Hash, Hasher};
+
+        for (i, ev) in self.0.iter().enumerate() {
+            if i > 0 {
+                f.write_str(",")?;
+            }
+
+            let mut hasher = twox_hash::XxHash32::default();
+            ev.hash(&mut hasher);
+            let hash = hasher.finish() as u32;
+            write!(f, "{}", hash)?;
+        }
+
+        Ok(())
+    }
+}
 
 #[linkme::distributed_slice]
 pub static BOUNDARIES: [fn(&mut BoundaryRegistry)] = [..];
@@ -252,7 +296,7 @@ where
         match result {
             Ok(b) => b,
             Err(err) => Boundary {
-                id: None,
+                boundary_ref: None,
                 args: None,
                 view: View::boxed(Err::<Boundary<Args>, _>(err)),
                 is_update: false,

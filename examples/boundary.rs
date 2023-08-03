@@ -17,7 +17,7 @@ async fn app() -> impl View {
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]
 struct Increment(usize);
 
-#[cabin::boundary]
+#[cabin::boundary(Increment)]
 fn counter(count: usize) -> Boundary<usize> {
     let count = event::<Increment>().unwrap_or(Increment(count)).0;
 

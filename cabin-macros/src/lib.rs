@@ -9,7 +9,7 @@ use syn::punctuated::Punctuated;
 use syn::token::{Comma, Dot, Eq, Paren};
 use syn::{
     parse_macro_input, DeriveInput, Expr, ExprLit, Ident, ItemFn, ItemTrait, Path, TraitItem,
-    TraitItemFn,
+    TraitItemFn, Type,
 };
 
 #[proc_macro_attribute]
@@ -66,9 +66,10 @@ pub fn derive_attribute(item: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn boundary(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn boundary(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let events = parse_macro_input!(attr with Punctuated::<Type, Comma>::parse_terminated);
     let input = parse_macro_input!(item as ItemFn);
-    match boundary_attribute::boundary_attribute(input) {
+    match boundary_attribute::boundary_attribute(input, events) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

@@ -3,9 +3,12 @@ use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::Comma;
-use syn::{Error, FnArg, ItemFn, Pat, PatType, Signature};
+use syn::{Error, FnArg, ItemFn, Pat, PatType, Signature, Type};
 
-pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
+pub fn boundary_attribute(
+    item: ItemFn,
+    events: Punctuated<Type, Comma>,
+) -> syn::Result<TokenStream> {
     let ItemFn {
         attrs,
         vis,
@@ -72,6 +75,7 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
     } else {
         quote! {}
     };
+    let events = events.into_iter().collect::<Vec<Type>>();
 
     Ok(quote! {
         #(#attrs)*
@@ -83,6 +87,7 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
             const ID: &str = concat!(module_path!(), "::", #name);
             const BOUNDARY: ::cabin::view::boundary::BoundaryRef<(#args_types)> = ::cabin::view::boundary::BoundaryRef::new(
                 ID,
+                &[#(::cabin::view::boundary::type_id::<#events>(),)*],
                 &(move |(#args_idents)| Box::pin(#to_async)),
             );
 
@@ -92,9 +97,9 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
                 r.register(&BOUNDARY)
             }
 
-            ::cabin::view::boundary::internal::Boundary::with_id(
+            ::cabin::view::boundary::internal::Boundary::upgrade(
                 #inner_ident(#args_idents) #async_await,
-                ID
+                &BOUNDARY
             )
         }
     })
