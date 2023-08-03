@@ -60,11 +60,11 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
 
     let to_async = if asyncness.is_some() {
         quote! {
-            #inner_ident(#args_idents)
+            async move { ::cabin::view::boundary::Boundary::from(#inner_ident(#args_idents).await) }
         }
     } else {
         quote! {
-            ::std::future::ready(#inner_ident(#args_idents))
+            ::std::future::ready(::cabin::view::boundary::Boundary::from(#inner_ident(#args_idents)))
         }
     };
     let async_await = if asyncness.is_some() {
@@ -92,7 +92,10 @@ pub fn boundary_attribute(item: ItemFn) -> syn::Result<TokenStream> {
                 r.register(&BOUNDARY)
             }
 
-            #inner_ident(#args_idents) #async_await .with_id(ID)
+            ::cabin::view::boundary::internal::Boundary::with_id(
+                #inner_ident(#args_idents) #async_await,
+                ID
+            )
         }
     })
 }

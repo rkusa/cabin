@@ -8,6 +8,7 @@ use bytes::Bytes;
 use cabin_macros::Attribute;
 use http::{HeaderValue, Request, Response, StatusCode};
 use http_body::{Body, Full};
+use http_error::HttpError;
 use once_cell::race::OnceBox;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -23,7 +24,7 @@ use crate::{err_to_response, local_pool, parse_body, View};
 pub fn boundary<Args>(args: Args, view: impl View) -> Boundary<Args> {
     Boundary {
         id: None,
-        args,
+        args: Some(args),
         view: view.boxed(),
         is_update: false,
     }
@@ -53,7 +54,7 @@ where
     }
 
     async fn with(&'static self, args: Args) -> Boundary<Args> {
-        (self.f)(args).await.with_id(self.id).into_update()
+        self::internal::Boundary::with_id((self.f)(args).await, self.id).into_update()
     }
 }
 
@@ -63,20 +64,39 @@ where
 {
     id: Option<&'static str>,
     // TODO: take reference to args to avoid cloning them?
-    args: Args,
+    args: Option<Args>,
     view: BoxedView,
     is_update: bool,
+}
+
+pub mod internal {
+    pub use super::*;
+
+    pub trait Boundary {
+        fn with_id(self, id: &'static str) -> Self;
+    }
+
+    impl<Args> Boundary for super::Boundary<Args> {
+        fn with_id(mut self, id: &'static str) -> Self {
+            self.id = Some(id);
+            self
+        }
+    }
+
+    impl<Args, E> Boundary for Result<super::Boundary<Args>, E> {
+        fn with_id(mut self, id: &'static str) -> Self {
+            if let Ok(b) = &mut self {
+                b.id = Some(id);
+            }
+            self
+        }
+    }
 }
 
 impl<Args> Boundary<Args>
 where
     Args: 'static,
 {
-    pub fn with_id(mut self, id: &'static str) -> Self {
-        self.id = Some(id);
-        self
-    }
-
     fn into_update(mut self) -> Self {
         self.is_update = true;
         self
@@ -88,12 +108,16 @@ where
     Args: 'static + Serialize,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        let Some(args) = self.args else {
+            return self.view.render(r, include_hash);
+        };
+
         // TODO: any way to make this a compile error?
         let Some(id) = self.id else {
             return RenderFuture::Ready(Some(Err(InternalError::MissingBoundaryAttribute.into())));
         };
 
-        let state = match serde_json::to_string(&self.args) {
+        let state = match serde_json::to_string(&args) {
             Ok(state) => state,
             Err(err) => {
                 return RenderFuture::Ready(Some(Err(InternalError::Serialize {
@@ -215,5 +239,24 @@ impl BoundaryRegistry {
             }
         }
         res.body(Full::new(Bytes::from(html))).unwrap()
+    }
+}
+
+impl<Args, E> From<Result<Boundary<Args>, E>> for Boundary<Args>
+where
+    Args: 'static + Serialize,
+    Box<dyn HttpError + Send + 'static>: From<E>,
+    E: 'static,
+{
+    fn from(result: Result<Boundary<Args>, E>) -> Self {
+        match result {
+            Ok(b) => b,
+            Err(err) => Boundary {
+                id: None,
+                args: None,
+                view: View::boxed(Err::<Boundary<Args>, _>(err)),
+                is_update: false,
+            },
+        }
     }
 }

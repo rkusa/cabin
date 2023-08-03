@@ -25,7 +25,6 @@ fn counter(count: usize) -> Boundary<usize> {
         count,
         button(on_click(Increment(count + 1)), text!("{}", count)),
     )
-    .with_id(concat!(module_path!(), "::", "counter"))
 }
 
 #[tokio::main]

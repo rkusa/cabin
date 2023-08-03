@@ -455,30 +455,6 @@ class CabinBoundary extends HTMLElement {
     super();
 
     setupEventListeners(this);
-
-    // // TODO: handle missing
-    // const initial = JSON.parse(this.lastElementChild.textContent);
-    // this.removeChild(this.lastElementChild);
-
-    // this.state = initial.state;
-    // this.hashTree = initial.hashTree;
-    // console.log(this.hashTree);
-
-    // this.setUpEventListener("click", { preventDefault: true, disable: true });
-    // this.setUpEventListener("input", {
-    //   eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-    // });
-
-    // // If the browser restored previous form values, detect them and trigger an input event
-    // const inputs = this.querySelectorAll("input");
-    // inputs.forEach((input) => {
-    //   if (input.value !== input.getAttribute("value")) {
-    //     console.log("input", input, "changed, manually trigger input event");
-    //     input.dispatchEvent(
-    //       new Event("input", { bubbles: true, cancelable: true })
-    //     );
-    //   }
-    // });
   }
 }
 
