@@ -113,6 +113,7 @@ function setUpEventListener(el, eventName, opts) {
   const abortControllers = new WeakMap();
 
   /**
+   * @this {HTMLElement}
    * @param {Event} e
    */
   async function handleEvent(e) {
@@ -163,18 +164,46 @@ function setUpEventListener(el, eventName, opts) {
       }
 
       try {
-        const payload = JSON.parse(
-          opts?.eventPayload
-            ? Object.entries(opts.eventPayload(e)).reduce(
-                (result, [placeholder, value]) =>
-                  result.replace(placeholder, value),
-                node.getAttribute(`${attrName}-payload`),
-              )
-            : node.getAttribute(`${attrName}-payload`),
-        );
+        const payload = opts?.eventPayload
+          ? Object.entries(opts.eventPayload(e)).reduce(
+              (result, [placeholder, value]) =>
+                result.replace(placeholder, value),
+              node.getAttribute(`${attrName}-payload`),
+            )
+          : node.getAttribute(`${attrName}-payload`);
+
+        if (this instanceof CabinBoundary) {
+          let templates = [];
+          let template = this.lastElementChild;
+          while (
+            template &&
+            template instanceof HTMLTemplateElement &&
+            template.hasAttribute("event-id") &&
+            template.hasAttribute("event-payload")
+          ) {
+            templates.push(template);
+            template = template.previousElementSibling;
+          }
+          for (const template of templates) {
+            if (
+              template.getAttribute("event-id") === eventId &&
+              template.getAttribute("event-payload") === payload
+            ) {
+              console.time("patch");
+              patchChildren(el, template.content, {});
+              // put back prerendered templates
+              for (const template of templates) {
+                this.appendChild(template);
+              }
+              console.timeEnd("patch");
+              return;
+            }
+          }
+        }
+
         await update(
           parseInt(eventId),
-          payload,
+          JSON.parse(payload),
           el == document ? document.body : el,
           abortController,
         );
@@ -188,11 +217,11 @@ function setUpEventListener(el, eventName, opts) {
     } while ((node = node.parentElement));
   }
 
-  el.addEventListener(eventName, (e) =>
-    handleEvent(e).catch((err) => {
+  el.addEventListener(eventName, function (e) {
+    handleEvent.call(this, e).catch((err) => {
       console.error(err);
-    }),
-  );
+    });
+  });
 }
 
 /**
@@ -405,9 +434,14 @@ function isKeyedElement(node) {
 function setupEventListeners(el) {
   let events =
     el instanceof CabinBoundary
-      ? new Set(el.getAttribute("events").split(","))
+      ? new Set(
+          el
+            .getAttribute("events")
+            .split(",")
+            .filter((s) => s.length > 0),
+        )
       : null;
-  if (events && events.length === 0) {
+  if (events && events.size === 0) {
     events = undefined;
   }
 

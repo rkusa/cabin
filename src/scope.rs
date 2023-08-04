@@ -165,6 +165,14 @@ impl Scope {
         self
     }
 
+    pub(crate) fn with_deserialized_event(self, event: Box<dyn Any>) -> Self {
+        {
+            let mut state = self.inner.borrow_mut();
+            state.event = Some(Event::Deserialized(event));
+        }
+        self
+    }
+
     pub async fn run<T>(
         self,
         f: impl Future<Output = Result<T, crate::Error>>,

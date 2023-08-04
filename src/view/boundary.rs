@@ -1,7 +1,9 @@
-use std::any::TypeId;
+use std::any::{Any, TypeId};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt;
 use std::future::Future;
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -28,6 +30,7 @@ pub fn boundary<Args>(view: impl View, args: Args) -> Boundary<Args> {
         boundary_ref: None,
         args: Some(args),
         view: view.boxed(),
+        prerender: None,
         is_update: false,
     }
 }
@@ -83,7 +86,34 @@ where
     // TODO: take reference to args to avoid cloning them?
     args: Option<Args>,
     view: BoxedView,
+    #[allow(clippy::type_complexity)]
+    prerender: Option<Vec<(u32, Result<String, InternalError>, Box<dyn Any>)>>,
     is_update: bool,
+}
+
+impl<Args> Boundary<Args> {
+    pub fn prerender<E: Serialize + 'static>(mut self, event: E) -> Self {
+        let mut hasher = twox_hash::XxHash32::default();
+        std::any::TypeId::of::<E>().hash(&mut hasher);
+        let event_id = hasher.finish() as u32;
+
+        let json = serde_json::to_string(&event).map_err(|err| InternalError::Serialize {
+            what: "on_click event",
+            err,
+        });
+
+        // TODO: use `get_or_insert_default` once stable
+        if self.prerender.is_none() {
+            self.prerender = Some(vec![(event_id, json, Box::new(event))]);
+        } else {
+            self.prerender
+                .as_mut()
+                .unwrap()
+                .push((event_id, json, Box::new(event)));
+        }
+
+        self
+    }
 }
 
 pub mod internal {
@@ -122,7 +152,7 @@ where
 
 impl<Args> View for Boundary<Args>
 where
-    Args: 'static + Serialize,
+    Args: 'static + Clone + Serialize,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         let Some(args) = self.args else {
@@ -145,11 +175,73 @@ where
             }
         };
 
-        let body = (script(script::r#type("application/json"), state), self.view);
-        if self.is_update {
-            body.render(r, include_hash)
+        let preprender = self.prerender.map(move |prerender| async move {
+            let mut templates = Vec::with_capacity(prerender.len());
+            for (event_id, json, event) in prerender {
+                let scope = Scope::new().with_deserialized_event(event);
+
+                let args = args.clone();
+                let boundary = scope
+                    .run(async move { Ok(boundary_ref.with(args).await) })
+                    .await?;
+
+                let Some(args) = boundary.args else {
+                    continue;
+                };
+
+                let state = match serde_json::to_string(&args) {
+                    Ok(state) => state,
+                    Err(err) => {
+                        return Err(InternalError::Serialize {
+                            what: "boundary state",
+                            err,
+                        }
+                        .into())
+                    }
+                };
+
+                templates.push(
+                    Html::new(
+                        "template",
+                        ("event-id", Cow::Owned(event_id.to_string()))
+                            .with(("event-payload", Cow::Owned(json?))),
+                        (
+                            script(script::r#type("application/json"), state),
+                            boundary.view,
+                        ),
+                    )
+                    .boxed(),
+                )
+            }
+
+            Ok::<Vec<BoxedView>, crate::Error>(templates)
+        });
+
+        if let Some(preprender) = preprender {
+            RenderFuture::Future(Box::pin(async move {
+                let templates = preprender.await?;
+
+                let body = (
+                    script(script::r#type("application/json"), state),
+                    self.view,
+                    #[allow(clippy::map_identity)]
+                    templates.into_iter().map(|t| t),
+                );
+                if self.is_update {
+                    body.render(r, include_hash).await
+                } else {
+                    Html::new("cabin-boundary", boundary_ref, body)
+                        .render(r, include_hash)
+                        .await
+                }
+            }))
         } else {
-            Html::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
+            let body = (script(script::r#type("application/json"), state), self.view);
+            if self.is_update {
+                body.render(r, include_hash)
+            } else {
+                Html::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
+            }
         }
     }
 }
@@ -168,8 +260,6 @@ struct EventsList(&'static [TypeId]);
 
 impl fmt::Display for EventsList {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use std::hash::{Hash, Hasher};
-
         for (i, ev) in self.0.iter().enumerate() {
             if i > 0 {
                 f.write_str(",")?;
@@ -288,7 +378,7 @@ impl BoundaryRegistry {
 
 impl<Args, E> From<Result<Boundary<Args>, E>> for Boundary<Args>
 where
-    Args: 'static + Serialize,
+    Args: 'static + Clone + Serialize,
     Box<dyn HttpError + Send + 'static>: From<E>,
     E: 'static,
 {
@@ -299,6 +389,7 @@ where
                 boundary_ref: None,
                 args: None,
                 view: View::boxed(Err::<Boundary<Args>, _>(err)),
+                prerender: None,
                 is_update: false,
             },
         }

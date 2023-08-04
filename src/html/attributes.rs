@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::borrow::Cow;
 
 use crate::render::ElementRenderer;
 
@@ -82,5 +83,17 @@ impl<L: Attributes, R: Attributes> Attributes for Pair<L, R> {
             .as_mut()
             .and_then(|l| l.get_mut())
             .or_else(|| self.right.as_mut().and_then(|r| r.get_mut()))
+    }
+}
+
+impl Attributes for (&'static str, Cow<'static, str>) {
+    fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
+        r.attribute(self.0, self.1)
+            .map_err(crate::error::InternalError::from)?;
+        Ok(())
+    }
+
+    fn with<A: Attributes>(self, attr: A) -> Pair<A, Self> {
+        Pair::new(attr, self)
     }
 }

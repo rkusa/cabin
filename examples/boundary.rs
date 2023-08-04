@@ -25,6 +25,7 @@ fn counter(count: usize) -> Boundary<usize> {
         button(on_click(Increment(count + 1)), text!("{}", count)),
         count,
     )
+    .prerender(Increment(count + 1))
 }
 
 #[tokio::main]
