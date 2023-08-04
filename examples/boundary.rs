@@ -21,11 +21,9 @@ struct Increment(usize);
 fn counter(count: usize) -> Boundary<usize> {
     let count = event::<Increment>().unwrap_or(Increment(count)).0;
 
-    boundary(
-        button(on_click(Increment(count + 1)), text!("{}", count)),
-        count,
-    )
-    .prerender(Increment(count + 1))
+    button(on_click(Increment(count + 1)), text!("{}", count))
+        .boundary(count)
+        .prerender(Increment(count + 1))
 }
 
 #[tokio::main]

@@ -34,6 +34,13 @@ where
     {
         BoxedView::new(self)
     }
+
+    fn boundary<Args>(self, args: Args) -> Boundary<Args>
+    where
+        Self: Sized,
+    {
+        Boundary::new(self, args)
+    }
 }
 
 pub enum RenderFuture {

@@ -24,26 +24,24 @@ async fn app() -> impl View {
 fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
     let open = event::<Toggle>().unwrap_or(Toggle(open)).0;
 
-    boundary(
-        div(
-            style("display:inline;position:relative"),
-            (
-                button(on_click(Toggle(!open)), "open"),
-                open.then(|| {
-                    ul(
-                        style(
-                            "position:absolute;top:20px;right:0;background:#ddd;\
-                         list-style-type:none;padding:4px;",
-                        ),
-                        (0..count)
-                            .keyed(|item| *item)
-                            .map(|item| li(style("white-space:nowrap;"), text!("Item {}", item))),
-                    )
-                }),
-            ),
+    div(
+        style("display:inline;position:relative"),
+        (
+            button(on_click(Toggle(!open)), "open"),
+            open.then(|| {
+                ul(
+                    style(
+                        "position:absolute;top:20px;right:0;background:#ddd;\
+                     list-style-type:none;padding:4px;",
+                    ),
+                    (0..count)
+                        .keyed(|item| *item)
+                        .map(|item| li(style("white-space:nowrap;"), text!("Item {}", item))),
+                )
+            }),
         ),
-        (count, open),
     )
+    .boundary((count, open))
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

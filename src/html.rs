@@ -73,7 +73,6 @@ pub(crate) mod exports {
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]
     pub use super::elements::ul::{self as ul, ul, Ul};
-    pub use crate::view::boundary::boundary;
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
 

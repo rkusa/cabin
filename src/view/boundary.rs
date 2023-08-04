@@ -25,16 +25,6 @@ use crate::render::{ElementRenderer, Out, Renderer};
 use crate::scope::Scope;
 use crate::{err_to_response, local_pool, parse_body, View};
 
-pub fn boundary<Args>(view: impl View, args: Args) -> Boundary<Args> {
-    Boundary {
-        boundary_ref: None,
-        args: Some(args),
-        view: view.boxed(),
-        prerender: None,
-        is_update: false,
-    }
-}
-
 type BoundaryFn<Args> = dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = Boundary<Args>>>>;
 
 pub struct BoundaryRef<Args>
@@ -92,6 +82,16 @@ where
 }
 
 impl<Args> Boundary<Args> {
+    pub(crate) fn new(view: impl View, args: Args) -> Self {
+        Boundary {
+            boundary_ref: None,
+            args: Some(args),
+            view: view.boxed(),
+            prerender: None,
+            is_update: false,
+        }
+    }
+
     pub fn prerender<E: Serialize + 'static>(mut self, event: E) -> Self {
         let mut hasher = twox_hash::XxHash32::default();
         std::any::TypeId::of::<E>().hash(&mut hasher);

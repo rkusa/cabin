@@ -49,28 +49,26 @@ async fn list(mut items: Vec<Item>) -> Boundary<Vec<Item>> {
         }
     }
 
-    boundary(
-        (
-            div((), button(on_click(ItemsEvent::AddAbove), "add above")),
-            ul(
-                (),
-                items.clone().into_iter().keyed(|item| item.id).map(|item| {
-                    li(
-                        (),
-                        (
-                            button(
-                                on_click(ItemsEvent::Increment(item.id)),
-                                text!("{}", item.count),
-                            ),
-                            button(on_click(ItemsEvent::Delete(item.id)), "x"),
+    (
+        div((), button(on_click(ItemsEvent::AddAbove), "add above")),
+        ul(
+            (),
+            items.clone().into_iter().keyed(|item| item.id).map(|item| {
+                li(
+                    (),
+                    (
+                        button(
+                            on_click(ItemsEvent::Increment(item.id)),
+                            text!("{}", item.count),
                         ),
-                    )
-                }),
-            ),
-            div((), button(on_click(ItemsEvent::AddBelow), "add below")),
+                        button(on_click(ItemsEvent::Delete(item.id)), "x"),
+                    ),
+                )
+            }),
         ),
-        items.clone(),
+        div((), button(on_click(ItemsEvent::AddBelow), "add below")),
     )
+        .boundary(items.clone())
 }
 
 #[tokio::main]
