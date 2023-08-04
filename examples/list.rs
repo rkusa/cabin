@@ -50,12 +50,11 @@ async fn list(mut items: Vec<Item>) -> Boundary<Vec<Item>> {
     }
 
     boundary(
-        items.clone(),
         (
             div((), button(on_click(ItemsEvent::AddAbove), "add above")),
             ul(
                 (),
-                items.into_iter().keyed(|item| item.id).map(|item| {
+                items.clone().into_iter().keyed(|item| item.id).map(|item| {
                     li(
                         (),
                         (
@@ -70,6 +69,7 @@ async fn list(mut items: Vec<Item>) -> Boundary<Vec<Item>> {
             ),
             div((), button(on_click(ItemsEvent::AddBelow), "add below")),
         ),
+        items.clone(),
     )
 }
 

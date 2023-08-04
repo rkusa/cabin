@@ -25,7 +25,6 @@ fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
     let open = event::<Toggle>().unwrap_or(Toggle(open)).0;
 
     boundary(
-        (count, open),
         div(
             style("display:inline;position:relative"),
             (
@@ -43,6 +42,7 @@ fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
                 }),
             ),
         ),
+        (count, open),
     )
 }
 

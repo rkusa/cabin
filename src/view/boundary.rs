@@ -23,7 +23,7 @@ use crate::render::{ElementRenderer, Out, Renderer};
 use crate::scope::Scope;
 use crate::{err_to_response, local_pool, parse_body, View};
 
-pub fn boundary<Args>(args: Args, view: impl View) -> Boundary<Args> {
+pub fn boundary<Args>(view: impl View, args: Args) -> Boundary<Args> {
     Boundary {
         boundary_ref: None,
         args: Some(args),

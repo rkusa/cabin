@@ -22,8 +22,8 @@ fn counter(count: usize) -> Boundary<usize> {
     let count = event::<Increment>().unwrap_or(Increment(count)).0;
 
     boundary(
-        count,
         button(on_click(Increment(count + 1)), text!("{}", count)),
+        count,
     )
 }
 

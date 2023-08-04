@@ -23,7 +23,6 @@ fn level(n: usize, count: usize, has_next_level: bool) -> Boundary<(usize, usize
         .unwrap_or(has_next_level);
 
     boundary(
-        (n, count, has_next_level),
         fieldset(
             (),
             (
@@ -32,6 +31,7 @@ fn level(n: usize, count: usize, has_next_level: bool) -> Boundary<(usize, usize
                 has_next_level.then(|| level(n + 1, n + 1, n < 3).boxed()),
             ),
         ),
+        (n, count, has_next_level),
     )
 }
 
