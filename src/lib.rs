@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
-#![feature(return_position_impl_trait_in_trait, const_type_id)]
+// TODO: get rid of const_type_id
+#![feature(const_type_id)]
 
 extern crate self as cabin;
 
@@ -8,7 +9,7 @@ use std::pin::pin;
 use std::sync::OnceLock;
 
 use bytes::Bytes;
-pub use cabin_macros::{attributes, boundary, element, Attribute};
+pub use cabin_macros::{boundary, Attribute};
 pub use error::Error;
 use futures_util::stream::TryStreamExt;
 pub use http::StatusCode;
@@ -57,9 +58,9 @@ pub fn cabin_scripts() -> impl View {
     };
 
     (
-        html::script(html::script::src(src_sc).defer(), ()),
+        html::script(()).src(src_sc).defer(),
         #[cfg(feature = "livereload")]
-        html::script(html::script::src(src_lr).defer(), ()),
+        html::script(()).src(src_lr).defer(),
     )
 }
 
@@ -79,10 +80,7 @@ pub struct Event {
 fn default_document(content: impl View) -> impl View {
     (
         html::doctype(),
-        html::html(
-            (),
-            (html::head((), cabin_scripts()), html::body((), content)),
-        ),
+        html::html((html::head(cabin_scripts()), html::body(content))),
     )
 }
 

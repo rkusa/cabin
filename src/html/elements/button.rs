@@ -1,95 +1,117 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::{element, Attribute};
+use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
-use crate::html::Aria;
+use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::{Aria, Html};
+use crate::View;
+
+pub fn button(content: impl View) -> Html<marker::Button, (), impl View> {
+    #[cfg(debug_assertions)]
+    let content = content.boxed();
+    Html::new("button", (), content)
+}
+
+pub mod marker {
+    pub struct Button;
+}
+
+impl<A: Attributes, V: 'static> Button for Html<marker::Button, A, V> {}
+impl<A: Attributes, V: 'static> Common for Html<marker::Button, A, V> {}
+impl<A: Attributes, V: 'static> Global for Html<marker::Button, A, V> {}
+impl<A: Attributes, V: 'static> Aria for Html<marker::Button, A, V> {}
 
 // TODO: doc comment
-#[element]
-pub trait Button: Common + Global + Aria {
+pub trait Button: WithAttribute {
     /// Whether the button is disabled.
-    fn disabled(self) -> impl Button {
+    fn disabled(self) -> Self::Output<Disabled> {
         self.with_disabled(true)
     }
 
     /// Whether the button is disabled.
-    fn with_disabled(self, disabled: bool) -> impl Button {
-        self.with(Disabled(disabled))
+    fn with_disabled(self, disabled: bool) -> Self::Output<Disabled> {
+        self.with_attribute(Disabled(disabled))
     }
 
     /// Associates the button with a `form` element.
-    fn form(self, form: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(Form(form.into()))
+    fn form(self, form: impl Into<Cow<'static, str>>) -> Self::Output<Form> {
+        self.with_attribute(Form(form.into()))
     }
 
     /// The URL to use for form submission.
-    fn form_action(self, form_action: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(FormAction(form_action.into()))
+    fn form_action(self, form_action: impl Into<Cow<'static, str>>) -> Self::Output<FormAction> {
+        self.with_attribute(FormAction(form_action.into()))
     }
 
     /// Entry list encoding type to use for form submission.
-    fn form_enctype(self, form_enctype: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(FormEnctype(form_enctype.into()))
+    fn form_enctype(self, form_enctype: impl Into<Cow<'static, str>>) -> Self::Output<FormEnctype> {
+        self.with_attribute(FormEnctype(form_enctype.into()))
     }
 
     /// Variant to use for form submission
-    fn form_method(self, form_method: FormMethod) -> impl Button {
-        self.with(form_method)
+    fn form_method(self, form_method: FormMethod) -> Self::Output<FormMethod> {
+        self.with_attribute(form_method)
     }
 
     /// Bypass form control validation for form submission.
-    fn form_novalidate(self) -> impl Button {
+    fn form_novalidate(self) -> Self::Output<FormNovalidate> {
         self.with_form_novalidate(true)
     }
 
     /// Bypass form control validation for form submission.
-    fn with_form_novalidate(self, form_novalidate: bool) -> impl Button {
-        self.with(FormNovalidate(form_novalidate))
+    fn with_form_novalidate(self, form_novalidate: bool) -> Self::Output<FormNovalidate> {
+        self.with_attribute(FormNovalidate(form_novalidate))
     }
 
     /// Navigable for form submission
-    fn form_target(self, form_target: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(FormTarget(form_target.into()))
+    fn form_target(self, form_target: impl Into<Cow<'static, str>>) -> Self::Output<FormTarget> {
+        self.with_attribute(FormTarget(form_target.into()))
     }
 
     /// Name of the button to use for form submission.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(Name(name.into()))
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+        self.with_attribute(Name(name.into()))
     }
 
     /// ID of an element with a popover attribute.
-    fn popover_target(self, popover_target: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(PopoverTarget(popover_target.into()))
+    fn popover_target(
+        self,
+        popover_target: impl Into<Cow<'static, str>>,
+    ) -> Self::Output<PopoverTarget> {
+        self.with_attribute(PopoverTarget(popover_target.into()))
     }
 
     /// The action to take on the targeted popover element.
-    fn popover_target_action(self, popover_target_action: PopoverTargetAction) -> impl Button {
-        self.with(popover_target_action)
+    fn popover_target_action(
+        self,
+        popover_target_action: PopoverTargetAction,
+    ) -> Self::Output<PopoverTargetAction> {
+        self.with_attribute(popover_target_action)
     }
 
-    fn type_submit(self) -> impl Button {
+    fn type_submit(self) -> Self::Output<Type> {
         self.r#type(Type::Submit)
     }
 
-    fn type_reset(self) -> impl Button {
+    fn type_reset(self) -> Self::Output<Type> {
         self.r#type(Type::Reset)
     }
 
-    fn type_button(self) -> impl Button {
+    fn type_button(self) -> Self::Output<Type> {
         self.r#type(Type::Button)
     }
 
     /// Type of button.
-    fn r#type(self, r#type: Type) -> impl Button {
-        self.with(r#type)
+    fn r#type(self, r#type: Type) -> Self::Output<Type> {
+        self.with_attribute(r#type)
     }
 
     /// Value to be used for form submission
-    fn value(self, value: impl Into<Cow<'static, str>>) -> impl Button {
-        self.with(Value(value.into()))
+    fn value(self, value: impl Into<Cow<'static, str>>) -> Self::Output<Value> {
+        self.with_attribute(Value(value.into()))
     }
 }
 

@@ -12,10 +12,9 @@ async fn app() -> impl View {
     (
         // Incrementing the counter will cause the dialog to change outside of its boundary, which
         // causes its internal state to revert to its default (closed). This is intentional.
-        button(
-            on_click(Increment(count + 1)).style("min-width:40px"),
-            text!("{}", count),
-        ),
+        button(text!("{}", count))
+            .on_click(Increment(count + 1))
+            .style("min-width:40px"),
         dialog(count, false),
     )
 }
@@ -24,23 +23,19 @@ async fn app() -> impl View {
 fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
     let open = event::<Toggle>().unwrap_or(Toggle(open)).0;
 
-    div(
-        style("display:inline;position:relative"),
-        (
-            button(on_click(Toggle(!open)), "open"),
-            open.then(|| {
-                ul(
-                    style(
-                        "position:absolute;top:20px;right:0;background:#ddd;\
-                     list-style-type:none;padding:4px;",
-                    ),
-                    (0..count)
-                        .keyed(|item| *item)
-                        .map(|item| li(style("white-space:nowrap;"), text!("Item {}", item))),
-                )
-            }),
-        ),
-    )
+    div((
+        button("open").on_click(Toggle(!open)),
+        open.then(|| {
+            ul((0..count)
+                .keyed(|item| *item)
+                .map(|item| li(text!("Item {}", item)).style("white-space:nowrap;")))
+            .style(
+                "position:absolute;top:20px;right:0;background:#ddd;\
+                 list-style-type:none;padding:4px;",
+            )
+        }),
+    ))
+    .style("display:inline;position:relative")
     .boundary((count, open))
 }
 

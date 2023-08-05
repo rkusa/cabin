@@ -20,16 +20,10 @@ async fn search() -> impl View {
         .unwrap_or(Cow::Borrowed("Ge"));
     let items = search_countries(&query).await;
 
-    div(
-        (),
-        (
-            div(
-                (),
-                input(input::on_input(|ev| Search(ev.value)).value(query)),
-            ),
-            div((), ul((), items.into_iter().map(|item| li((), item)))),
-        ),
-    )
+    div((
+        div(input().on_input(|ev| Search(ev.value)).value(query)),
+        div(ul(items.into_iter().map(li))),
+    ))
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {

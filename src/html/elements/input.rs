@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::fmt;
 
 pub use auto_complete::AutoComplete;
-use cabin_macros::{element, Attribute};
+use cabin_macros::Attribute;
 
 use super::button::{
     Disabled, Form, FormAction, FormEnctype, FormMethod, FormNovalidate, FormTarget, Name,
@@ -14,298 +14,316 @@ use super::common::Common;
 use super::global::Global;
 use super::SerializeEventFn;
 use crate::error::InternalError;
-use crate::html::attributes::Attributes;
+use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::events::InputEvent;
-use crate::html::Aria;
+use crate::html::{Aria, Html};
+
+pub fn input() -> Html<marker::Input, (), ()> {
+    Html::new("input", (), ())
+}
+
+pub mod marker {
+    pub struct Input;
+}
+
+impl<A: Attributes, V: 'static> Input for Html<marker::Input, A, V> {}
+impl<A: Attributes, V: 'static> Common for Html<marker::Input, A, V> {}
+impl<A: Attributes, V: 'static> Global for Html<marker::Input, A, V> {}
+impl<A: Attributes, V: 'static> Aria for Html<marker::Input, A, V> {}
 
 // TODO: typed inputs? (number, date, ...)
 /// TODO: doc comment
-#[element(void)]
-pub trait Input: Common + Global + Aria {
+pub trait Input: WithAttribute {
     /// Hint for expected file type in file upload controls.
-    fn accept(self, accept: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Accept(accept.into()))
+    fn accept(self, accept: impl Into<Cow<'static, str>>) -> Self::Output<Accept> {
+        self.with_attribute(Accept(accept.into()))
     }
 
     /// Replacement text for use when images (type=image) are not available.
-    fn alt(self, alt: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Alt(alt.into()))
+    fn alt(self, alt: impl Into<Cow<'static, str>>) -> Self::Output<Alt> {
+        self.with_attribute(Alt(alt.into()))
     }
 
     /// Hint for form autofill feature.
-    fn autocomplete(self, autocomplete: AutoComplete) -> impl Input {
-        self.with(autocomplete)
+    fn autocomplete(self, autocomplete: AutoComplete) -> Self::Output<AutoComplete> {
+        self.with_attribute(autocomplete)
     }
 
     /// Whether the control is checked.
-    fn checked(self) -> impl Input {
+    fn checked(self) -> Self::Output<Checked> {
         self.with_checked(true)
     }
 
     /// Whether the control is checked.
-    fn with_checked(self, checked: bool) -> impl Input {
-        self.with(Checked(checked))
+    fn with_checked(self, checked: bool) -> Self::Output<Checked> {
+        self.with_attribute(Checked(checked))
     }
 
     /// Name of form control to use for sending the element's directionality in form submission.
-    fn dirname(self, dirname: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Dirname(dirname.into()))
+    fn dirname(self, dirname: impl Into<Cow<'static, str>>) -> Self::Output<Dirname> {
+        self.with_attribute(Dirname(dirname.into()))
     }
 
     /// Whether the form control is disabled.
-    fn disabled(self) -> impl Input {
+    fn disabled(self) -> Self::Output<Disabled> {
         self.with_disabled(true)
     }
 
     /// Whether the form control is disabled.
-    fn with_disabled(self, disabled: bool) -> impl Input {
-        self.with(Disabled(disabled))
+    fn with_disabled(self, disabled: bool) -> Self::Output<Disabled> {
+        self.with_attribute(Disabled(disabled))
     }
 
     /// Associates the element with a form element.
-    fn form(self, form: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Form(form.into()))
+    fn form(self, form: impl Into<Cow<'static, str>>) -> Self::Output<Form> {
+        self.with_attribute(Form(form.into()))
     }
 
     /// URL to use for form submission.
-    fn form_action(self, form_action: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(FormAction(form_action.into()))
+    fn form_action(self, form_action: impl Into<Cow<'static, str>>) -> Self::Output<FormAction> {
+        self.with_attribute(FormAction(form_action.into()))
     }
 
     /// Entry list encoding type to use for form submission.
-    fn form_enctype(self, form_enctype: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(FormEnctype(form_enctype.into()))
+    fn form_enctype(self, form_enctype: impl Into<Cow<'static, str>>) -> Self::Output<FormEnctype> {
+        self.with_attribute(FormEnctype(form_enctype.into()))
     }
 
     /// Variant to use for form submission.
-    fn form_method(self, form_method: FormMethod) -> impl Input {
-        self.with(form_method)
+    fn form_method(self, form_method: FormMethod) -> Self::Output<FormMethod> {
+        self.with_attribute(form_method)
     }
 
     /// Bypass form control validation for form submission.
-    fn form_novalidate(self) -> impl Input {
+    fn form_novalidate(self) -> Self::Output<FormNovalidate> {
         self.with_form_novalidate(true)
     }
 
     /// Bypass form control validation for form submission.
-    fn with_form_novalidate(self, form_novalidate: bool) -> impl Input {
-        self.with(FormNovalidate(form_novalidate))
+    fn with_form_novalidate(self, form_novalidate: bool) -> Self::Output<FormNovalidate> {
+        self.with_attribute(FormNovalidate(form_novalidate))
     }
 
     /// Navigable for form submission.
-    fn form_target(self, form_target: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(FormTarget(form_target.into()))
+    fn form_target(self, form_target: impl Into<Cow<'static, str>>) -> Self::Output<FormTarget> {
+        self.with_attribute(FormTarget(form_target.into()))
     }
 
     /// Vertical dimension.
-    fn height(self, height: impl Into<u32>) -> impl Input {
-        self.with(Height(height.into()))
+    fn height(self, height: impl Into<u32>) -> Self::Output<Height> {
+        self.with_attribute(Height(height.into()))
     }
 
     /// List of autocomplete options.
-    fn list(self, list: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(List(list.into()))
+    fn list(self, list: impl Into<Cow<'static, str>>) -> Self::Output<List> {
+        self.with_attribute(List(list.into()))
     }
 
     /// Maximum value
-    fn max(self, max: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Max(max.into()))
+    fn max(self, max: impl Into<Cow<'static, str>>) -> Self::Output<Max> {
+        self.with_attribute(Max(max.into()))
     }
 
     /// Maximum length of value.
-    fn max_length(self, max_length: impl Into<i32>) -> impl Input {
-        self.with(MaxLength(max_length.into()))
+    fn max_length(self, max_length: impl Into<i32>) -> Self::Output<MaxLength> {
+        self.with_attribute(MaxLength(max_length.into()))
     }
 
     /// Minimum value
-    fn min(self, min: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Min(min.into()))
+    fn min(self, min: impl Into<Cow<'static, str>>) -> Self::Output<Min> {
+        self.with_attribute(Min(min.into()))
     }
 
     /// Minimum length of value
-    fn min_length(self, min_length: impl Into<i32>) -> impl Input {
-        self.with(MinLength(min_length.into()))
+    fn min_length(self, min_length: impl Into<i32>) -> Self::Output<MinLength> {
+        self.with_attribute(MinLength(min_length.into()))
     }
 
     /// Whether to allow multiple values.
-    fn multiple(self) -> impl Input {
+    fn multiple(self) -> Self::Output<Multiple> {
         self.with_multiple(true)
     }
 
     /// Whether to allow multiple values.
-    fn with_multiple(self, multiple: bool) -> impl Input {
-        self.with(Multiple(multiple))
+    fn with_multiple(self, multiple: bool) -> Self::Output<Multiple> {
+        self.with_attribute(Multiple(multiple))
     }
 
     /// Name of the element to use for form submission.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Name(name.into()))
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+        self.with_attribute(Name(name.into()))
     }
 
     /// Pattern to be matched by the form control's value.
-    fn pattern(self, pattern: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Pattern(pattern.into()))
+    fn pattern(self, pattern: impl Into<Cow<'static, str>>) -> Self::Output<Pattern> {
+        self.with_attribute(Pattern(pattern.into()))
     }
 
     /// User-visible label to be placed within the form control.
-    fn placeholder(self, placeholder: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Placeholder(placeholder.into()))
+    fn placeholder(self, placeholder: impl Into<Cow<'static, str>>) -> Self::Output<Placeholder> {
+        self.with_attribute(Placeholder(placeholder.into()))
     }
 
     /// Targets a popover element to toggle, show, or hide.
-    fn popover_target(self, popover_target: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(PopoverTarget(popover_target.into()))
+    fn popover_target(
+        self,
+        popover_target: impl Into<Cow<'static, str>>,
+    ) -> Self::Output<PopoverTarget> {
+        self.with_attribute(PopoverTarget(popover_target.into()))
     }
 
     /// Indicates whether a targeted popover element is to be toggled, shown, or hidden
-    fn popover_target_action(self, popover_target_action: PopoverTargetAction) -> impl Input {
-        self.with(popover_target_action)
+    fn popover_target_action(
+        self,
+        popover_target_action: PopoverTargetAction,
+    ) -> Self::Output<PopoverTargetAction> {
+        self.with_attribute(popover_target_action)
     }
 
     /// Whether to allow the value to be edited by the user
-    fn read_only(self) -> impl Input {
+    fn read_only(self) -> Self::Output<ReadOnly> {
         self.with_read_only(true)
     }
 
     /// Whether to allow the value to be edited by the user
-    fn with_read_only(self, read_only: bool) -> impl Input {
-        self.with(ReadOnly(read_only))
+    fn with_read_only(self, read_only: bool) -> Self::Output<ReadOnly> {
+        self.with_attribute(ReadOnly(read_only))
     }
 
     /// Whether the control is required for form submission
-    fn required(self) -> impl Input {
+    fn required(self) -> Self::Output<Required> {
         self.with_required(true)
     }
 
     /// Whether the control is required for form submission
-    fn with_required(self, required: bool) -> impl Input {
-        self.with(Required(required))
+    fn with_required(self, required: bool) -> Self::Output<Required> {
+        self.with_attribute(Required(required))
     }
 
     /// Size of the control
-    fn size(self, size: impl Into<u32>) -> impl Input {
-        self.with(Size(size.into()))
+    fn size(self, size: impl Into<u32>) -> Self::Output<Size> {
+        self.with_attribute(Size(size.into()))
     }
 
     /// Address of the resource
-    fn src(self, src: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Src(src.into()))
+    fn src(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Src> {
+        self.with_attribute(Src(src.into()))
     }
 
     /// Granularity to be matched by the form control's value
-    fn step(self, step: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Step(step.into()))
+    fn step(self, step: impl Into<Cow<'static, str>>) -> Self::Output<Step> {
+        self.with_attribute(Step(step.into()))
     }
 
     /// Type of form control.
-    fn r#type(self, r#type: Type) -> impl Input {
-        self.with(r#type)
+    fn r#type(self, r#type: Type) -> Self::Output<Type> {
+        self.with_attribute(r#type)
     }
 
-    fn type_hidden(self) -> impl Input {
+    fn type_hidden(self) -> Self::Output<Type> {
         self.r#type(Type::Hidden)
     }
 
-    fn type_text(self) -> impl Input {
+    fn type_text(self) -> Self::Output<Type> {
         self.r#type(Type::Text)
     }
 
-    fn type_search(self) -> impl Input {
+    fn type_search(self) -> Self::Output<Type> {
         self.r#type(Type::Search)
     }
 
-    fn type_tel(self) -> impl Input {
+    fn type_tel(self) -> Self::Output<Type> {
         self.r#type(Type::Tel)
     }
 
-    fn type_url(self) -> impl Input {
+    fn type_url(self) -> Self::Output<Type> {
         self.r#type(Type::Url)
     }
 
-    fn type_email(self) -> impl Input {
+    fn type_email(self) -> Self::Output<Type> {
         self.r#type(Type::Email)
     }
 
-    fn type_password(self) -> impl Input {
+    fn type_password(self) -> Self::Output<Type> {
         self.r#type(Type::Password)
     }
 
-    fn type_date(self) -> impl Input {
+    fn type_date(self) -> Self::Output<Type> {
         self.r#type(Type::Date)
     }
 
-    fn type_month(self) -> impl Input {
+    fn type_month(self) -> Self::Output<Type> {
         self.r#type(Type::Month)
     }
 
-    fn type_week(self) -> impl Input {
+    fn type_week(self) -> Self::Output<Type> {
         self.r#type(Type::Week)
     }
 
-    fn type_time(self) -> impl Input {
+    fn type_time(self) -> Self::Output<Type> {
         self.r#type(Type::Time)
     }
 
-    fn type_date_time_local(self) -> impl Input {
+    fn type_date_time_local(self) -> Self::Output<Type> {
         self.r#type(Type::DateTimeLocal)
     }
 
-    fn type_number(self) -> impl Input {
+    fn type_number(self) -> Self::Output<Type> {
         self.r#type(Type::Number)
     }
 
-    fn type_range(self) -> impl Input {
+    fn type_range(self) -> Self::Output<Type> {
         self.r#type(Type::Range)
     }
 
-    fn type_color(self) -> impl Input {
+    fn type_color(self) -> Self::Output<Type> {
         self.r#type(Type::Color)
     }
 
-    fn type_checkbox(self) -> impl Input {
+    fn type_checkbox(self) -> Self::Output<Type> {
         self.r#type(Type::Checkbox)
     }
 
-    fn type_radio(self) -> impl Input {
+    fn type_radio(self) -> Self::Output<Type> {
         self.r#type(Type::Radio)
     }
 
-    fn type_file(self) -> impl Input {
+    fn type_file(self) -> Self::Output<Type> {
         self.r#type(Type::File)
     }
 
-    fn type_submit(self) -> impl Input {
+    fn type_submit(self) -> Self::Output<Type> {
         self.r#type(Type::Submit)
     }
 
-    fn type_image(self) -> impl Input {
+    fn type_image(self) -> Self::Output<Type> {
         self.r#type(Type::Image)
     }
 
-    fn type_reset(self) -> impl Input {
+    fn type_reset(self) -> Self::Output<Type> {
         self.r#type(Type::Reset)
     }
 
-    fn type_button(self) -> impl Input {
+    fn type_button(self) -> Self::Output<Type> {
         self.r#type(Type::Button)
     }
 
     /// Value of the form control
-    fn value(self, value: impl Into<Cow<'static, str>>) -> impl Input {
-        self.with(Value(value.into()))
+    fn value(self, value: impl Into<Cow<'static, str>>) -> Self::Output<Value> {
+        self.with_attribute(Value(value.into()))
     }
 
     /// Horizontal dimension.
-    fn width(self, width: impl Into<u32>) -> impl Input {
-        self.with(Width(width.into()))
+    fn width(self, width: impl Into<u32>) -> Self::Output<Width> {
+        self.with_attribute(Width(width.into()))
     }
 
-    fn on_input<E>(self, event: impl FnOnce(InputEvent) -> E) -> impl Input
+    fn on_input<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnInput>
     where
         E: ::serde::Serialize + 'static,
     {
         let event = event(InputEvent::default());
-        self.with(OnInput(Box::new(move || {
+        self.with_attribute(OnInput(Box::new(move || {
             use std::hash::{Hash, Hasher};
 
             let mut hasher = twox_hash::XxHash32::default();
@@ -320,12 +338,12 @@ pub trait Input: Common + Global + Aria {
         })))
     }
 
-    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> impl Input
+    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnChange>
     where
         E: ::serde::Serialize + 'static,
     {
         let event = event(InputEvent::default());
-        self.with(OnChange(Box::new(move || {
+        self.with_attribute(OnChange(Box::new(move || {
             use std::hash::{Hash, Hasher};
 
             let mut hasher = twox_hash::XxHash32::default();

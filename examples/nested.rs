@@ -22,14 +22,11 @@ fn level(n: usize, count: usize, has_next_level: bool) -> Boundary<(usize, usize
         .map(|_| !has_next_level)
         .unwrap_or(has_next_level);
 
-    fieldset(
-        (),
-        (
-            button(on_click(Increment), text!("{}", count)),
-            button(on_click(ToggleChild), "toggle child"),
-            has_next_level.then(|| level(n + 1, n + 1, n < 3).boxed()),
-        ),
-    )
+    fieldset((
+        button(text!("{}", count)).on_click(Increment),
+        button("toggle child").on_click(ToggleChild),
+        has_next_level.then(|| level(n + 1, n + 1, n < 3).boxed()),
+    ))
     .boundary((n, count, has_next_level))
 }
 

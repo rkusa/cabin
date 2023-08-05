@@ -13,6 +13,7 @@ use http::{HeaderValue, Request, Response, StatusCode};
 use http_body::{Body, Full};
 use http_error::HttpError;
 use once_cell::race::OnceBox;
+use script::Script;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -201,14 +202,11 @@ where
                 };
 
                 templates.push(
-                    Html::new(
+                    Html::<(), _, _>::new(
                         "template",
                         ("event-id", Cow::Owned(event_id.to_string()))
                             .with(("event-payload", Cow::Owned(json?))),
-                        (
-                            script(script::r#type("application/json"), state),
-                            boundary.view,
-                        ),
+                        (script(state).r#type("application/json"), boundary.view),
                     )
                     .boxed(),
                 )
@@ -222,7 +220,7 @@ where
                 let templates = preprender.await?;
 
                 let body = (
-                    script(script::r#type("application/json"), state),
+                    script(state).r#type("application/json"),
                     self.view,
                     #[allow(clippy::map_identity)]
                     templates.into_iter().map(|t| t),
@@ -230,17 +228,17 @@ where
                 if self.is_update {
                     body.render(r, include_hash).await
                 } else {
-                    Html::new("cabin-boundary", boundary_ref, body)
+                    Html::<(), _, _>::new("cabin-boundary", boundary_ref, body)
                         .render(r, include_hash)
                         .await
                 }
             }))
         } else {
-            let body = (script(script::r#type("application/json"), state), self.view);
+            let body = (script(state).r#type("application/json"), self.view);
             if self.is_update {
                 body.render(r, include_hash)
             } else {
-                Html::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
+                Html::<(), _, _>::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
             }
         }
     }

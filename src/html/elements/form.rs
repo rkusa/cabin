@@ -1,36 +1,52 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::{element, Attribute};
+use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
-use crate::html::Aria;
+use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::{Aria, Html};
+use crate::View;
+
+pub fn form(content: impl View) -> Html<marker::Form, (), impl View> {
+    #[cfg(debug_assertions)]
+    let content = content.boxed();
+    Html::new("form", (), content)
+}
+
+pub mod marker {
+    pub struct Form;
+}
+
+impl<A: Attributes, V: 'static> Form for Html<marker::Form, A, V> {}
+impl<A: Attributes, V: 'static> Common for Html<marker::Form, A, V> {}
+impl<A: Attributes, V: 'static> Global for Html<marker::Form, A, V> {}
+impl<A: Attributes, V: 'static> Aria for Html<marker::Form, A, V> {}
 
 // TODO
-#[element]
-pub trait Form: Common + Global + Aria {
+pub trait Form: WithAttribute {
     /// URL to use for form submission.
-    fn action(self, action: impl Into<Cow<'static, str>>) -> impl Form {
-        self.with(Action(action.into()))
+    fn action(self, action: impl Into<Cow<'static, str>>) -> Self::Output<Action> {
+        self.with_attribute(Action(action.into()))
     }
 
     /// Variant used for form submission.
-    fn method(self, method: Method) -> impl Form {
-        self.with(method)
+    fn method(self, method: Method) -> Self::Output<Method> {
+        self.with_attribute(method)
     }
 
     /// Set the form's method to `get`.
-    fn method_get(self) -> impl Form {
+    fn method_get(self) -> Self::Output<Method> {
         self.method(Method::Get)
     }
 
     /// Set the form's method to `post`.
-    fn method_post(self) -> impl Form {
+    fn method_post(self) -> Self::Output<Method> {
         self.method(Method::Post)
     }
 
-    fn on_submit<E>(self) -> impl Form
+    fn on_submit<E>(self) -> Self::Output<OnSubmit>
     where
         E: 'static,
     {
@@ -40,7 +56,7 @@ pub trait Form: Common + Global + Aria {
         std::any::TypeId::of::<E>().hash(&mut hasher);
         let hash = hasher.finish() as u32;
 
-        self.with(OnSubmit(hash))
+        self.with_attribute(OnSubmit(hash))
     }
 }
 

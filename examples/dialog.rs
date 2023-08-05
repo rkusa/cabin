@@ -18,11 +18,10 @@ fn dialog(content: impl View) -> impl View {
     let open = event::<Toggle>().unwrap_or_default();
 
     (
-        open.0.then_some(html::dialog(
-            dialog::with_open(open.0),
-            (content, button(on_click(Toggle(false)), "close")),
-        )),
-        button(on_click(Toggle(true)), "open"),
+        open.0.then_some(
+            html::dialog((content, button("close").on_click(Toggle(false)))).with_open(open.0),
+        ),
+        button("open").on_click(Toggle(true)),
     )
 }
 

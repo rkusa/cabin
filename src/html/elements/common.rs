@@ -2,39 +2,37 @@ use std::borrow::Cow;
 use std::fmt;
 use std::ops::{Add, AddAssign};
 
-use cabin_macros::{element, Attribute};
+use cabin_macros::Attribute;
 
 use super::SerializeEventFn;
 use crate::error::InternalError;
-use crate::html::attributes::{Attributes, Pair};
+use crate::html::attributes::{Attributes, WithAttribute};
 
-#[element(tag = false)]
-pub trait Common: Attributes {
+pub trait Common: WithAttribute {
     /// Unique identifier across the document.
-    fn id(self, id: impl Into<Cow<'static, str>>) -> Pair<Id, Self> {
-        self.with(Id(id.into()))
+    fn id(self, id: impl Into<Cow<'static, str>>) -> Self::Output<Id> {
+        self.with_attribute(Id(id.into()))
     }
 
     /// The various classes that the element belongs to.
-    fn class(self, class: impl Into<Cow<'static, str>>) -> Pair<Class, Self> {
-        self.with(Class(class.into()))
-    }
-
-    #[element(skip)]
-    fn add_class(mut self, class: impl Into<Cow<'static, str>>) -> Pair<Class, Self> {
-        if let Some(existing) = self.get_mut::<Class>() {
-            *existing = Class(Cow::Owned(format!("{} {}", existing.0, class.into())));
-            Pair::with_fake(self)
+    fn class(mut self, class: impl Into<Cow<'static, str>>) -> Self::Output<Class> {
+        let class = if let Some(existing) = self.get_attribute_mut::<Class>() {
+            Class(Cow::Owned(format!("{} {}", existing.0, class.into())))
         } else {
-            self.with(Class(class.into()))
-        }
+            Class(class.into())
+        };
+        self.with_attribute(class)
     }
 
-    fn on_click<E>(self, event: E) -> Pair<OnClick, Self>
+    fn replace_class(self, class: impl Into<Cow<'static, str>>) -> Self::Output<Class> {
+        self.with_attribute(Class(class.into()))
+    }
+
+    fn on_click<E>(self, event: E) -> Self::Output<OnClick>
     where
         E: serde::Serialize + 'static,
     {
-        self.with(OnClick(Box::new(move || {
+        self.with_attribute(OnClick(Box::new(move || {
             use std::hash::{Hash, Hasher};
 
             let mut hasher = twox_hash::XxHash32::default();

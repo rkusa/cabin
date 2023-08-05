@@ -50,23 +50,14 @@ async fn list(mut items: Vec<Item>) -> Boundary<Vec<Item>> {
     }
 
     (
-        div((), button(on_click(ItemsEvent::AddAbove), "add above")),
-        ul(
-            (),
-            items.clone().into_iter().keyed(|item| item.id).map(|item| {
-                li(
-                    (),
-                    (
-                        button(
-                            on_click(ItemsEvent::Increment(item.id)),
-                            text!("{}", item.count),
-                        ),
-                        button(on_click(ItemsEvent::Delete(item.id)), "x"),
-                    ),
-                )
-            }),
-        ),
-        div((), button(on_click(ItemsEvent::AddBelow), "add below")),
+        div(button("add above").on_click(ItemsEvent::AddAbove)),
+        ul(items.clone().into_iter().keyed(|item| item.id).map(|item| {
+            li((
+                button(text!("{}", item.count)).on_click(ItemsEvent::Increment(item.id)),
+                button("x").on_click(ItemsEvent::Delete(item.id)),
+            ))
+        })),
+        div(button("add below").on_click(ItemsEvent::AddBelow)),
     )
         .boundary(items.clone())
 }

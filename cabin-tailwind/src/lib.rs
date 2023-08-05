@@ -241,6 +241,7 @@ impl Utility for StaticClass {
 pub fn cabin_stylesheets() -> impl View {
     use std::sync::OnceLock;
 
+    use cabin::html::Common;
     use cabin::{content_hash, html};
     use html::elements::link::Link;
 
@@ -250,9 +251,8 @@ pub fn cabin_stylesheets() -> impl View {
         format!("/styles.css?{hash}")
     });
 
-    html::link(
-        html::id("cabin-styles")
-            .rel(html::elements::link::Rel::StyleSheet)
-            .href(href),
-    )
+    html::link()
+        .id("cabin-styles")
+        .rel(html::elements::link::Rel::StyleSheet)
+        .href(href)
 }

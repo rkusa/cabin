@@ -10,35 +10,26 @@ use http::Request;
 async fn app() -> impl View {
     let count = event::<usize>().unwrap_or(0);
 
-    button(
-        on_click(count + 1).class(
-            // TODO: modifier groups?
-            // TODO: autocomplate after XZY. (for modifiers)
-            // TODO: autocomplete after text::
-            tw![
-                BLOCK,
-                text::BLACK,
-                text::SM,
-                bg::BLACK.hover(),
-                text::WHITE.hover(),
-                text::XS.hover().focus(),
-            ]
-            .append_when(count == 0, tw![text::color("red")]),
-        ),
-        text!("{}", count),
+    button(text!("{}", count)).on_click(count + 1).class(
+        // TODO: modifier groups?
+        // TODO: autocomplate after XZY. (for modifiers)
+        // TODO: autocomplete after text::
+        tw![
+            BLOCK,
+            text::BLACK,
+            text::SM,
+            bg::BLACK.hover(),
+            text::WHITE.hover(),
+            text::XS.hover().focus(),
+        ]
+        .append_when(count == 0, tw![text::color("red")]),
     )
 }
 
 fn document(content: impl View) -> impl View {
     (
         doctype(),
-        html(
-            (),
-            (
-                head((), (cabin_stylesheets(), cabin_scripts())),
-                body((), content),
-            ),
-        ),
+        html((head((cabin_stylesheets(), cabin_scripts())), body(content))),
     )
 }
 

@@ -1,95 +1,113 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::{element, Attribute};
+use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
-use crate::html::attributes::Pair;
+use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
-use crate::html::Aria;
+use crate::html::{Aria, Html};
+use crate::View;
+
+pub fn a(content: impl View) -> Html<marker::Anchor, (), impl View> {
+    #[cfg(debug_assertions)]
+    let content = content.boxed();
+    Html::new("a", (), content)
+}
+
+pub mod marker {
+    pub struct Anchor;
+}
+
+impl<A: Attributes, V: 'static> Anchor for Html<marker::Anchor, A, V> {}
+impl<A: Attributes, V: 'static> Common for Html<marker::Anchor, A, V> {}
+impl<A: Attributes, V: 'static> Global for Html<marker::Anchor, A, V> {}
+impl<A: Attributes, V: 'static> Aria for Html<marker::Anchor, A, V> {}
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
-#[element(tag = "a")]
-pub trait Anchor: Common + Global + Aria {
+pub trait Anchor: WithAttribute {
     /// Address of the hyperlink.
-    fn href(self, href: impl Into<Cow<'static, str>>) -> impl Anchor {
-        self.with(Href(href.into()))
+    fn href(self, href: impl Into<Cow<'static, str>>) -> Self::Output<Href> {
+        self.with_attribute(Href(href.into()))
     }
 
     /// The _browsing context_ the link should be opened in.
-    fn target(self, target: impl Into<Cow<'static, str>>) -> impl Anchor {
-        self.with(Target(target.into()))
+    fn target(self, target: impl Into<Cow<'static, str>>) -> Self::Output<Target> {
+        self.with_attribute(Target(target.into()))
     }
 
     /// Try to open the link in a new tab.
-    fn target_blank(self) -> impl Anchor {
-        self.with(Target(Cow::Borrowed("_blank")))
+    fn target_blank(self) -> Self::Output<Target> {
+        self.with_attribute(Target(Cow::Borrowed("_blank")))
     }
 
     /// Open the link in the parent browsing context.
-    fn target_parent(self) -> impl Anchor {
-        self.with(Target(Cow::Borrowed("_parent")))
+    fn target_parent(self) -> Self::Output<Target> {
+        self.with_attribute(Target(Cow::Borrowed("_parent")))
     }
 
     /// Open the link in the topmost browsing context.
-    fn target_top(self) -> impl Anchor {
-        self.with(Target(Cow::Borrowed("_top")))
+    fn target_top(self) -> Self::Output<Target> {
+        self.with_attribute(Target(Cow::Borrowed("_top")))
     }
 
     /// Treat the linked URL as a download with the specified filename.
-    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> impl Anchor {
-        self.with(Download(download.into()))
+    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> Self::Output<Download> {
+        self.with_attribute(Download(download.into()))
     }
 
     /// Treat the linked URL as a download and let the browser suggest a filename.
-    fn download(self) -> impl Anchor {
-        self.with(Download(Cow::Borrowed("")))
+    fn download(self) -> Self::Output<Download> {
+        self.with_attribute(Download(Cow::Borrowed("")))
     }
 
     /// A space-separated list of URLs the browser will send POST requests (with the body PING)
     /// when the link is followed (typically used for tracking).
-    fn ping(self, ping: impl Into<Cow<'static, str>>) -> impl Anchor {
-        self.with(Ping(ping.into()))
+    fn ping(self, ping: impl Into<Cow<'static, str>>) -> Self::Output<Ping> {
+        self.with_attribute(Ping(ping.into()))
     }
 
     /// Relationship between the location in the document containing the hyperlink and the
     /// destination resource.
-    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> impl Anchor {
-        self.with(RelList(rel.into()))
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self::Output<RelList> {
+        self.with_attribute(RelList(rel.into()))
     }
 
     /// Appends a [Rel] to the link.
-    #[element(skip)]
-    fn append_rel(mut self, rel: Rel) -> impl Anchor {
-        if let Some(list) = self.get_mut::<RelList>() {
-            list.0 = match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
-                SpaceSeparated::Single(existing) => SpaceSeparated::List([existing, rel].into()),
-                SpaceSeparated::List(mut list) => {
-                    list.insert(rel);
-                    SpaceSeparated::List(list)
-                }
-            };
-            Pair::with_fake(self)
+    fn append_rel(mut self, rel: Rel) -> Self::Output<RelList> {
+        let rel_list = if let Some(list) = self.get_attribute_mut::<RelList>() {
+            RelList(
+                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
+                    SpaceSeparated::Single(existing) => {
+                        SpaceSeparated::List([existing, rel].into())
+                    }
+                    SpaceSeparated::List(mut list) => {
+                        list.insert(rel);
+                        SpaceSeparated::List(list)
+                    }
+                },
+            )
         } else {
-            self.with(RelList(SpaceSeparated::Single(rel)))
-        }
+            RelList(SpaceSeparated::Single(rel))
+        };
+        self.with_attribute(rel_list)
     }
 
     /// Hint the language of the linked resource.
-    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> impl Anchor {
-        self.with(Hreflang(hreflang.into()))
+    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> Self::Output<Hreflang> {
+        self.with_attribute(Hreflang(hreflang.into()))
     }
 
     /// Hint for the type of the referenced resource.
-    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> impl Anchor {
-        self.with(Type(r#type.into()))
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self::Output<Type> {
+        self.with_attribute(Type(r#type.into()))
     }
 
     /// How much referrer information to send.
-    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> impl Anchor {
-        self.with(referrer_policy)
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self::Output<ReferrerPolicy> {
+        self.with_attribute(referrer_policy)
     }
 }
 

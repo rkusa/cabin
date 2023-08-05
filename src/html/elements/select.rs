@@ -1,21 +1,35 @@
-use cabin_macros::element;
-
 use super::common::Common;
 use super::global::Global;
 use super::input::OnChange;
 use crate::error::InternalError;
+use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::events::InputEvent;
-use crate::html::Aria;
+use crate::html::{Aria, Html};
+use crate::View;
+
+pub fn select(content: impl View) -> Html<marker::Select, (), impl View> {
+    #[cfg(debug_assertions)]
+    let content = content.boxed();
+    Html::new("select", (), content)
+}
+
+pub mod marker {
+    pub struct Select;
+}
+
+impl<A: Attributes, V: 'static> Select for Html<marker::Select, A, V> {}
+impl<A: Attributes, V: 'static> Common for Html<marker::Select, A, V> {}
+impl<A: Attributes, V: 'static> Global for Html<marker::Select, A, V> {}
+impl<A: Attributes, V: 'static> Aria for Html<marker::Select, A, V> {}
 
 // TODO:
-#[element]
-pub trait Select: Common + Global + Aria {
-    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> impl Select
+pub trait Select: WithAttribute {
+    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnChange>
     where
         E: ::serde::Serialize + 'static,
     {
         let event = event(InputEvent::default());
-        self.with(OnChange(Box::new(move || {
+        self.with_attribute(OnChange(Box::new(move || {
             use std::hash::{Hash, Hasher};
 
             let mut hasher = twox_hash::XxHash32::default();

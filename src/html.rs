@@ -4,11 +4,13 @@ pub mod events;
 pub mod list;
 mod raw;
 
+use std::marker::PhantomData;
+
 #[doc(inline)]
 pub use exports::*;
 pub use raw::{raw, Raw};
 
-use self::attributes::Attributes;
+use self::attributes::{Attributes, Pair, WithAttribute};
 use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
 
@@ -18,7 +20,7 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::aria::*;
     #[doc(inline)]
-    pub use super::elements::body::{body, Body};
+    pub use super::elements::body::body;
     #[doc(inline)]
     pub use super::elements::button::{self as button, button, Button};
     #[doc(inline)]
@@ -26,39 +28,39 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::dialog::{self as dialog, dialog, Dialog};
     #[doc(inline)]
-    pub use super::elements::div::{self as div, div, Div};
+    pub use super::elements::div::{self as div, div};
     #[doc(inline)]
-    pub use super::elements::fieldset::{self as fieldset, fieldset, Fieldset};
+    pub use super::elements::fieldset::{self as fieldset, fieldset};
     #[doc(inline)]
     pub use super::elements::form::{self as form, form, Form};
     #[doc(inline)]
     pub use super::elements::global::*;
     #[doc(inline)]
-    pub use super::elements::h1::{self as h1, h1, H1};
+    pub use super::elements::h1::{self as h1, h1};
     #[doc(inline)]
-    pub use super::elements::h2::{self as h2, h2, H2};
+    pub use super::elements::h2::{self as h2, h2};
     #[doc(inline)]
-    pub use super::elements::h3::{self as h3, h3, H3};
+    pub use super::elements::h3::{self as h3, h3};
     #[doc(inline)]
-    pub use super::elements::h4::{self as h4, h4, H4};
+    pub use super::elements::h4::{self as h4, h4};
     #[doc(inline)]
-    pub use super::elements::h5::{self as h5, h5, H5};
+    pub use super::elements::h5::{self as h5, h5};
     #[doc(inline)]
-    pub use super::elements::h6::{self as h6, h6, H6};
+    pub use super::elements::h6::{self as h6, h6};
     #[doc(inline)]
-    pub use super::elements::head::{self as head, head, Head};
+    pub use super::elements::head::{self as head, head};
     #[doc(inline)]
-    pub use super::elements::html::{self as html, html, Html};
+    pub use super::elements::html::{self as html, html};
     #[doc(inline)]
     pub use super::elements::input::{self as input, input, Input};
     #[doc(inline)]
     pub use super::elements::label::{self as label, label, Label};
     #[doc(inline)]
-    pub use super::elements::li::{self as li, li, Li};
+    pub use super::elements::li::{self as li, li};
     #[doc(inline)]
     pub use super::elements::link::{self as link, link, Link};
     #[doc(inline)]
-    pub use super::elements::nav::{self as nav, nav, Nav};
+    pub use super::elements::nav::{self as nav, nav};
     #[doc(inline)]
     pub use super::elements::optgroup::{self as optgroup, optgroup, OptGroup};
     #[doc(inline)]
@@ -68,11 +70,11 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::select::{self as select, select, Select};
     #[doc(inline)]
-    pub use super::elements::span::{self as span, span, Span};
+    pub use super::elements::span::{self as span, span};
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]
-    pub use super::elements::ul::{self as ul, ul, Ul};
+    pub use super::elements::ul::{self as ul, ul};
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
 
@@ -81,24 +83,26 @@ pub(crate) mod exports {
     }
 }
 
-pub struct Html<A, V> {
+pub struct Html<El, A, V> {
     tag: &'static str,
     is_void_element: bool,
     attributes: A,
     content: V,
+    marker: PhantomData<El>,
 }
 
-impl<A, V> Html<A, V>
+impl<El, A, V> Html<El, A, V>
 where
     A: Attributes,
     V: View,
 {
-    pub fn new(tag: &'static str, attributes: A, content: V) -> Html<A, V> {
+    pub fn new(tag: &'static str, attributes: A, content: V) -> Html<El, A, V> {
         Html {
             tag,
             is_void_element: false,
             attributes,
             content,
+            marker: PhantomData,
         }
     }
 
@@ -108,8 +112,9 @@ where
     }
 }
 
-impl<A, V> View for Html<A, V>
+impl<El, A, V> View for Html<El, A, V>
 where
+    El: 'static,
     A: Attributes,
     V: View,
 {
@@ -120,6 +125,7 @@ where
                 is_void_element,
                 attributes,
                 content,
+                marker: _,
             } = self;
 
             let mut el = r.element(tag, include_hash)?;
@@ -135,5 +141,30 @@ where
 
     fn prime(&mut self) {
         self.content.prime();
+    }
+}
+
+impl<El, A, V> WithAttribute for Html<El, A, V>
+where
+    A: Attributes,
+{
+    type Output<T> = Html<El, Pair<T, A>, V> where T: Attributes;
+
+    fn with_attribute<T: Attributes>(self, attr: T) -> Self::Output<T> {
+        Html {
+            tag: self.tag,
+            is_void_element: self.is_void_element,
+            attributes: self.attributes.with(attr),
+            content: self.content,
+            marker: PhantomData,
+        }
+    }
+
+    fn get_attribute<T: 'static>(&self) -> Option<&T> {
+        self.attributes.get()
+    }
+
+    fn get_attribute_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.attributes.get_mut()
     }
 }

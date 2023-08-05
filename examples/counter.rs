@@ -16,8 +16,8 @@ async fn counter(start_at: usize) -> impl View {
     let count = event::<Increment>().unwrap_or(Increment(start_at)).0;
 
     (
-        div((), text!("Count: {}", count)),
-        button(on_click(Increment(count + 1)), "inc"),
+        div(text!("Count: {}", count)),
+        button("inc").on_click(Increment(count + 1)),
     )
 }
 

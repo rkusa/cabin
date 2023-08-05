@@ -1,177 +1,172 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use cabin_macros::{element, Attribute};
+use cabin_macros::Attribute;
 
-use crate::html::attributes::{Attributes, Pair};
+use crate::html::attributes::WithAttribute;
 
-#[element(tag = false)]
-pub trait Global: Attributes {
+pub trait Global: WithAttribute {
     /// Used by the user agent as a guide for creating a keyboard shortcut that activates or
     /// focuses the element.
-    fn access_key(self, access_key: impl Into<Cow<'static, str>>) -> Pair<AccessKey, Self> {
-        self.with(AccessKey(access_key.into()))
+    fn access_key(self, access_key: impl Into<Cow<'static, str>>) -> Self::Output<AccessKey> {
+        self.with_attribute(AccessKey(access_key.into()))
     }
 
     /// Hints the user-agent of how to automatically capitalize input (from non-physical
-    fn auto_capitalize(self, auto_capitalize: AutoCapitalize) -> Pair<AutoCapitalize, Self> {
-        self.with(auto_capitalize)
+    fn auto_capitalize(self, auto_capitalize: AutoCapitalize) -> Self::Output<AutoCapitalize> {
+        self.with_attribute(auto_capitalize)
     }
 
     /// Indicate that the element is to be focused as soon as the page is loaded.
-    fn auto_focus(self) -> Pair<AutoFocus, Self> {
+    fn auto_focus(self) -> Self::Output<AutoFocus> {
         self.with_auto_focus(true)
     }
 
     /// Indicate that the element is to be focused as soon as the page is loaded.
-    fn with_auto_focus(self, auto_focus: bool) -> Pair<AutoFocus, Self> {
-        self.with(AutoFocus(auto_focus))
+    fn with_auto_focus(self, auto_focus: bool) -> Self::Output<AutoFocus> {
+        self.with_attribute(AutoFocus(auto_focus))
     }
 
     /// Indicating whether the element should be editable by the user.
-    fn content_editable(self) -> Pair<ContentEditable, Self> {
+    fn content_editable(self) -> Self::Output<ContentEditable> {
         self.with_content_editable(true)
     }
 
     /// Indicating whether the element should be editable by the user.
-    fn with_content_editable(self, content_editable: bool) -> Pair<ContentEditable, Self> {
-        self.with(ContentEditable(content_editable))
+    fn with_content_editable(self, content_editable: bool) -> Self::Output<ContentEditable> {
+        self.with_attribute(ContentEditable(content_editable))
     }
 
     /// The element's text directionality.
-    fn dir(self, dir: Dir) -> Pair<Dir, Self> {
-        self.with(dir)
+    fn dir(self, dir: Dir) -> Self::Output<Dir> {
+        self.with_attribute(dir)
     }
 
     /// Indicate whether the element can be dragged.
-    fn draggable(self) -> Pair<Draggable, Self> {
+    fn draggable(self) -> Self::Output<Draggable> {
         self.with_draggable(true)
     }
 
     /// Indicate whether the element can be dragged.
-    fn with_draggable(self, draggable: bool) -> Pair<Draggable, Self> {
-        self.with(Draggable(draggable))
+    fn with_draggable(self, draggable: bool) -> Self::Output<Draggable> {
+        self.with_attribute(Draggable(draggable))
     }
 
     /// Indicate the action label (or icon) to present for the enter key on virtual keyboards.
-    fn enter_key_hint(self, enter_key_hint: EnterKeyHint) -> Pair<EnterKeyHint, Self> {
-        self.with(enter_key_hint)
+    fn enter_key_hint(self, enter_key_hint: EnterKeyHint) -> Self::Output<EnterKeyHint> {
+        self.with_attribute(enter_key_hint)
     }
 
     /// Hide the element (visually and from screen-readers).
-    fn hidden(self, hidden: Hidden) -> Pair<Hidden, Self> {
-        self.with(hidden)
+    fn hidden(self, hidden: Hidden) -> Self::Output<Hidden> {
+        self.with_attribute(hidden)
     }
 
     /// Mark the element as not presently accessible (e.g. when overlayed by a loading state).
-    fn inert(self) -> Pair<Inert, Self> {
+    fn inert(self) -> Self::Output<Inert> {
         self.with_inert(true)
     }
 
     /// Mark the element as not presently accessible (e.g. when overlayed by a loading state).
-    fn with_inert(self, inert: bool) -> Pair<Inert, Self> {
-        self.with(Inert(inert))
+    fn with_inert(self, inert: bool) -> Self::Output<Inert> {
+        self.with_attribute(Inert(inert))
     }
 
     /// Hint an input mechanism that would be most helpful for users entering content.
-    fn input_mode(self, input_mode: InputMode) -> Pair<InputMode, Self> {
-        self.with(input_mode)
+    fn input_mode(self, input_mode: InputMode) -> Self::Output<InputMode> {
+        self.with_attribute(input_mode)
     }
 
     /// The element should behave like the defined custom element.
-    fn is(self, is: impl Into<Cow<'static, str>>) -> Pair<Is, Self> {
-        self.with(Is(is.into()))
+    fn is(self, is: impl Into<Cow<'static, str>>) -> Self::Output<Is> {
+        self.with_attribute(Is(is.into()))
     }
 
     /// Unique, global identifier of the item (`item_scope` and `item_type` must also be defined).
-    fn item_id(self, item_id: impl Into<Cow<'static, str>>) -> Pair<ItemId, Self> {
-        self.with(ItemId(item_id.into()))
+    fn item_id(self, item_id: impl Into<Cow<'static, str>>) -> Self::Output<ItemId> {
+        self.with_attribute(ItemId(item_id.into()))
     }
 
     /// A microdata name-value pair (this is the name – either a string or URL; the element's
     /// content is the value).
-    fn item_prop(self, item_prop: impl Into<Cow<'static, str>>) -> Pair<ItemProp, Self> {
-        self.with(ItemProp(item_prop.into()))
+    fn item_prop(self, item_prop: impl Into<Cow<'static, str>>) -> Self::Output<ItemProp> {
+        self.with_attribute(ItemProp(item_prop.into()))
     }
 
     /// List of element IDs elsewehre in the document with additional properties.
-    fn item_ref(self, item_ref: impl Into<Cow<'static, str>>) -> Pair<ItemRef, Self> {
-        self.with(ItemRef(item_ref.into()))
+    fn item_ref(self, item_ref: impl Into<Cow<'static, str>>) -> Self::Output<ItemRef> {
+        self.with_attribute(ItemRef(item_ref.into()))
     }
 
     /// Create a new item by scoping the the descendent properties together (`item_type` must also
     /// be defined).
-    fn item_scope(self) -> Pair<ItemScope, Self> {
+    fn item_scope(self) -> Self::Output<ItemScope> {
         self.with_item_scope(true)
     }
 
     /// Create a new item by scoping the the descendent properties together (`item_type` must also
     /// be defined).
-    fn with_item_scope(self, item_scope: bool) -> Pair<ItemScope, Self> {
-        self.with(ItemScope(item_scope))
+    fn with_item_scope(self, item_scope: bool) -> Self::Output<ItemScope> {
+        self.with_attribute(ItemScope(item_scope))
     }
 
     /// URL of the vocabulary that will be used to define item properties in the data structure.
-    fn item_type(self, item_type: impl Into<Cow<'static, str>>) -> Pair<ItemType, Self> {
-        self.with(ItemType(item_type.into()))
+    fn item_type(self, item_type: impl Into<Cow<'static, str>>) -> Self::Output<ItemType> {
+        self.with_attribute(ItemType(item_type.into()))
     }
 
     /// Primary language of the element's contents.
-    fn lang(self, lang: impl Into<Cow<'static, str>>) -> Pair<Lang, Self> {
-        self.with(Lang(lang.into()))
+    fn lang(self, lang: impl Into<Cow<'static, str>>) -> Self::Output<Lang> {
+        self.with_attribute(Lang(lang.into()))
     }
 
     /// Cryptographic nonce ("number used once") which can be used by Content Security Policy to
     /// determine whether or not a given fetch will be allowed to proceed.
-    fn nonce(self, nonce: impl Into<Cow<'static, str>>) -> Pair<Nonce, Self> {
-        self.with(Nonce(nonce.into()))
+    fn nonce(self, nonce: impl Into<Cow<'static, str>>) -> Self::Output<Nonce> {
+        self.with_attribute(Nonce(nonce.into()))
     }
 
     /// Don't render the element until it becomes shown, at which point it will be rendered on top
     /// of other page content.
-    fn popover(self) -> Pair<Popover, Self> {
+    fn popover(self) -> Self::Output<Popover> {
         self.with_popover(true)
     }
 
     /// Don't render the element until it becomes shown, at which point it will be rendered on top
     /// of other page content.
-    fn with_popover(self, popover: bool) -> Pair<Popover, Self> {
-        self.with(Popover(popover))
+    fn with_popover(self, popover: bool) -> Self::Output<Popover> {
+        self.with_attribute(Popover(popover))
     }
 
     /// The slot name this element is assigned to.
-    fn slot(self, slot: impl Into<Cow<'static, str>>) -> Pair<Slot, Self> {
-        self.with(Slot(slot.into()))
+    fn slot(self, slot: impl Into<Cow<'static, str>>) -> Self::Output<Slot> {
+        self.with_attribute(Slot(slot.into()))
     }
 
     /// Explicitly enable or disable spelling and grammar checking for the element's contents.
-    fn spellcheck(self, spellcheck: bool) -> Pair<Spellcheck, Self> {
-        self.with(Spellcheck(spellcheck))
+    fn spellcheck(self, spellcheck: bool) -> Self::Output<Spellcheck> {
+        self.with_attribute(Spellcheck(spellcheck))
     }
 
     /// Inline CSS.
-    fn style(self, style: impl Into<Cow<'static, str>>) -> Pair<Style, Self> {
-        self.with(Style(style.into()))
+    fn style(self, style: impl Into<Cow<'static, str>>) -> Self::Output<Style> {
+        self.with_attribute(Style(style.into()))
     }
 
     /// Specifify how and in which order the element can be focused.
-    fn tab_index(self, tab_index: TabIndex) -> Pair<TabIndex, Self> {
-        self.with(tab_index)
+    fn tab_index(self, tab_index: TabIndex) -> Self::Output<TabIndex> {
+        self.with_attribute(tab_index)
     }
 
     /// Advisory information for the element, such as would be appropriate for a tooltip.
-    fn title(self, title: impl Into<Cow<'static, str>>) -> Pair<Title, Self> {
-        self.with(Title(title.into()))
+    fn title(self, title: impl Into<Cow<'static, str>>) -> Self::Output<Title> {
+        self.with_attribute(Title(title.into()))
     }
 
     /// Indicate that the contents of this element should not be translated when the page is
     /// localized.
-    fn translate(self, translate: bool) -> Pair<Translate, Self> {
-        if !translate {
-            self.with(Translate(translate))
-        } else {
-            Pair::with_fake(self)
-        }
+    fn translate(self, translate: bool) -> Self::Output<Translate> {
+        self.with_attribute(Translate(translate))
     }
 }
 

@@ -10,18 +10,15 @@ async fn app() -> impl View {
 
     let values = data.clone().unwrap_or_default();
     (
-        form(
-            form::on_submit::<Data>(),
-            (
-                input(input::type_text().name("comment").value(values.comment)),
-                input(
-                    input::type_checkbox()
-                        .name("highlighted")
-                        .with_checked(values.highlighted),
-                ),
-                button(button::type_submit(), "submit"),
-            ),
-        ),
+        form((
+            input().type_text().name("comment").value(values.comment),
+            input()
+                .type_checkbox()
+                .name("highlighted")
+                .with_checked(values.highlighted),
+            button("submit").type_submit(),
+        ))
+        .on_submit::<Data>(),
         data.map(|data| {
             text!(
                 "Submitted: comment={}; highlighted={}",

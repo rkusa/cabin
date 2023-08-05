@@ -3,6 +3,17 @@ use std::borrow::Cow;
 
 use crate::render::ElementRenderer;
 
+pub trait WithAttribute: Sized {
+    type Output<T>
+    where
+        T: Attributes;
+    fn with_attribute<T: Attributes>(self, attr: T) -> Self::Output<T>;
+
+    fn get_attribute<T: 'static>(&self) -> Option<&T>;
+
+    fn get_attribute_mut<T: 'static>(&mut self) -> Option<&mut T>;
+}
+
 pub trait Attributes: Sized + 'static {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error>;
 

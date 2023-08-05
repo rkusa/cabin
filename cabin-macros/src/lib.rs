@@ -1,60 +1,12 @@
 mod boundary_attribute;
 mod derive_attribute;
-mod element_attribute;
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::{Comma, Dot, Eq, Paren};
-use syn::{
-    parse_macro_input, DeriveInput, Expr, ExprLit, Ident, ItemFn, ItemTrait, Path, TraitItem,
-    TraitItemFn, Type,
-};
-
-#[proc_macro_attribute]
-pub fn element(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(attr with Punctuated::<OptionExpr, Comma>::parse_terminated);
-    let input = parse_macro_input!(item as ItemTrait);
-    let mut original = input.clone();
-    let addition: proc_macro2::TokenStream =
-        match element_attribute::element_attribute(args, input, false) {
-            Ok(ts) => ts,
-            Err(err) => return err.into_compile_error().into(),
-        };
-    for item in &mut original.items {
-        if let TraitItem::Fn(TraitItemFn { attrs, .. }) = item {
-            attrs.retain(|attr| !attr.meta.path().is_ident("element"));
-        }
-    }
-    quote! {
-        #original
-        #addition
-    }
-    .into()
-}
-
-#[proc_macro_attribute]
-pub fn attributes(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(attr with Punctuated::<OptionExpr, Comma>::parse_terminated);
-    let input = parse_macro_input!(item as ItemTrait);
-    let mut original = input.clone();
-    let addition: proc_macro2::TokenStream =
-        match element_attribute::element_attribute(args, input, true) {
-            Ok(ts) => ts,
-            Err(err) => return err.into_compile_error().into(),
-        };
-    for item in &mut original.items {
-        if let TraitItem::Fn(TraitItemFn { attrs, .. }) = item {
-            attrs.retain(|attr| !attr.meta.path().is_ident("element"));
-        }
-    }
-    quote! {
-        #original
-        #addition
-    }
-    .into()
-}
+use syn::{parse_macro_input, DeriveInput, Expr, ExprLit, Ident, ItemFn, Path, Type};
 
 #[proc_macro_derive(Attribute, attributes(attribute))]
 pub fn derive_attribute(item: TokenStream) -> TokenStream {
