@@ -516,6 +516,12 @@ customElements.define("cabin-boundary", CabinBoundary);
 setupEventListeners(document);
 
 document.addEventListener("cabinRefresh", async function () {
+  // Force update all boundary content
+  for (let el of document.querySelectorAll("cabin-boundary")) {
+    do {
+      el.removeAttribute("hash");
+    } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
+  }
   await update(0, {}, document.body);
 });
 
