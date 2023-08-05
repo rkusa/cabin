@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+
+use super::button::Name;
 use super::common::Common;
 use super::global::Global;
 use super::input::OnChange;
@@ -24,6 +27,11 @@ impl<A: Attributes, V: 'static> Aria for Html<marker::Select, A, V> {}
 
 // TODO:
 pub trait Select: WithAttribute {
+    /// Name of the element to use for form submission.
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+        self.with_attribute(Name(name.into()))
+    }
+
     fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnChange>
     where
         E: ::serde::Serialize + 'static,
