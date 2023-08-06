@@ -6,7 +6,7 @@ use std::future::Future;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use bytes::Bytes;
 use http::{HeaderValue, Request, Response, StatusCode};
@@ -33,7 +33,7 @@ where
     Args: 'static,
 {
     id: &'static str,
-    events: &'static [TypeId],
+    events: &'static OnceLock<Box<[TypeId]>>,
     args: PhantomData<Args>,
     f: &'static BoundaryFn<Args>,
 }
@@ -49,7 +49,7 @@ where
 {
     pub const fn new(
         id: &'static str,
-        events: &'static [TypeId],
+        events: &'static OnceLock<Box<[TypeId]>>,
         f: &'static BoundaryFn<Args>,
     ) -> Self {
         Self {
@@ -63,10 +63,6 @@ where
     async fn with(&'static self, args: Args) -> Boundary<Args> {
         self::internal::Boundary::upgrade((self.f)(args).await, self).into_update()
     }
-}
-
-pub const fn type_id<T: 'static + ?Sized>() -> TypeId {
-    TypeId::of::<T>()
 }
 
 pub struct Boundary<Args>
@@ -156,6 +152,9 @@ where
     Args: 'static + Clone + Serialize,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+        // ensure register calls are already executed
+        BoundaryRegistry::global();
+
         let Some(args) = self.args else {
             return self.view.render(r, include_hash);
         };
@@ -247,7 +246,7 @@ where
 impl<Args> Attributes for &'static BoundaryRef<Args> {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         r.attribute("name", self.id).map_err(InternalError::from)?;
-        r.attribute("events", EventsList(self.events))
+        r.attribute("events", EventsList(self.events.get().unwrap()))
             .map_err(InternalError::from)?;
         Ok(())
     }

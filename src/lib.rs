@@ -1,6 +1,4 @@
 #![forbid(unsafe_code)]
-// TODO: get rid of const_type_id
-#![feature(const_type_id)]
 
 extern crate self as cabin;
 

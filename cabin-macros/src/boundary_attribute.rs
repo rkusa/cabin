@@ -85,15 +85,18 @@ pub fn boundary_attribute(
             }
 
             const ID: &str = concat!(module_path!(), "::", #name);
-            const BOUNDARY: ::cabin::view::boundary::BoundaryRef<(#args_types)> = ::cabin::view::boundary::BoundaryRef::new(
-                ID,
-                &[#(::cabin::view::boundary::type_id::<#events>(),)*],
-                &(move |(#args_idents)| Box::pin(#to_async)),
-            );
+            static EVENTS: ::std::sync::OnceLock<Box<[::std::any::TypeId]>> = ::std::sync::OnceLock::new();
+            static BOUNDARY: ::cabin::view::boundary::BoundaryRef<(#args_types)> =
+                ::cabin::view::boundary::BoundaryRef::new(
+                    ID,
+                    &EVENTS,
+                    &(move |(#args_idents)| Box::pin(#to_async)),
+                );
 
             #[::cabin::private::linkme::distributed_slice(::cabin::view::boundary::BOUNDARIES)]
             #[linkme(crate = ::cabin::private::linkme)]
             fn __register(r: &mut ::cabin::view::boundary::BoundaryRegistry) {
+                EVENTS.set(vec![#(::std::any::TypeId::of::<#events>(),)*].into_boxed_slice()).unwrap();
                 r.register(&BOUNDARY)
             }
 
