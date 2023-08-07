@@ -3,7 +3,7 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
-use super::anchor::ReferrerPolicy;
+use super::anchor::{Href, ReferrerPolicy};
 use super::button::Disabled;
 use super::common::Common;
 use super::global::Global;
@@ -11,6 +11,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
+/// A `link` element allows to link to other resources.
 pub fn link() -> Html<marker::Link, (), ()> {
     Html::new("link", (), ())
 }
@@ -134,9 +135,6 @@ pub trait Link: WithAttribute {
         self.with_attribute(fetch_priority)
     }
 }
-/// Address of the hyperlink.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct Href(pub Cow<'static, str>);
 
 /// Relationship between the document and the linked resource.
 #[derive(Debug, Clone, Hash, Attribute)]

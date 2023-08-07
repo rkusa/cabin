@@ -13,7 +13,7 @@ use crate::render::{Escape, Renderer};
 use crate::view::RenderFuture;
 use crate::View;
 
-// TODO: take str and not View
+/// A `script` element allows to include dynamic script and data blocks in their documents.
 pub fn script(content: impl Into<Cow<'static, str>>) -> Html<marker::Script, (), impl View> {
     Html::new("script", (), ScriptEscape(content.into()))
 }

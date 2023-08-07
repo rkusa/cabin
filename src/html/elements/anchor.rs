@@ -10,6 +10,8 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 use crate::View;
 
+/// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
+/// address.
 pub fn a(content: impl View) -> Html<marker::Anchor, (), impl View> {
     #[cfg(debug_assertions)]
     let content = content.boxed();

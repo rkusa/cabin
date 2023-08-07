@@ -110,8 +110,8 @@ pub trait Input: WithAttribute {
     }
 
     /// Vertical dimension.
-    fn height(self, height: impl Into<u32>) -> Self::Output<Height> {
-        self.with_attribute(Height(height.into()))
+    fn height(self, height: u32) -> Self::Output<Height> {
+        self.with_attribute(Height(height))
     }
 
     /// List of autocomplete options.
@@ -125,8 +125,8 @@ pub trait Input: WithAttribute {
     }
 
     /// Maximum length of value.
-    fn max_length(self, max_length: impl Into<i32>) -> Self::Output<MaxLength> {
-        self.with_attribute(MaxLength(max_length.into()))
+    fn max_length(self, max_length: i32) -> Self::Output<MaxLength> {
+        self.with_attribute(MaxLength(max_length))
     }
 
     /// Minimum value
@@ -135,8 +135,8 @@ pub trait Input: WithAttribute {
     }
 
     /// Minimum length of value
-    fn min_length(self, min_length: impl Into<i32>) -> Self::Output<MinLength> {
-        self.with_attribute(MinLength(min_length.into()))
+    fn min_length(self, min_length: i32) -> Self::Output<MinLength> {
+        self.with_attribute(MinLength(min_length))
     }
 
     /// Whether to allow multiple values.
@@ -201,8 +201,8 @@ pub trait Input: WithAttribute {
     }
 
     /// Size of the control
-    fn size(self, size: impl Into<u32>) -> Self::Output<Size> {
-        self.with_attribute(Size(size.into()))
+    fn size(self, size: u32) -> Self::Output<Size> {
+        self.with_attribute(Size(size))
     }
 
     /// Address of the resource
@@ -314,8 +314,8 @@ pub trait Input: WithAttribute {
     }
 
     /// Horizontal dimension.
-    fn width(self, width: impl Into<u32>) -> Self::Output<Width> {
-        self.with_attribute(Width(width.into()))
+    fn width(self, width: u32) -> Self::Output<Width> {
+        self.with_attribute(Width(width))
     }
 
     fn on_input<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnInput>

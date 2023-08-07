@@ -16,9 +16,21 @@ use crate::view::{RenderFuture, View};
 
 pub(crate) mod exports {
     #[doc(inline)]
+    pub use super::elements::abbr::abbr;
+    #[doc(inline)]
+    pub use super::elements::address::address;
+    #[doc(inline)]
     pub use super::elements::anchor::{self as a, a, Anchor};
     #[doc(inline)]
+    pub use super::elements::area::{self as area, area};
+    #[doc(inline)]
     pub use super::elements::aria::*;
+    #[doc(inline)]
+    pub use super::elements::article::article;
+    #[doc(inline)]
+    pub use super::elements::aside::aside;
+    #[doc(inline)]
+    pub use super::elements::b::b;
     #[doc(inline)]
     pub use super::elements::body::body;
     #[doc(inline)]
@@ -28,7 +40,7 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::dialog::{self as dialog, dialog, Dialog};
     #[doc(inline)]
-    pub use super::elements::div::{self as div, div};
+    pub use super::elements::div::div;
     #[doc(inline)]
     pub use super::elements::fieldset::{self as fieldset, fieldset};
     #[doc(inline)]
@@ -36,17 +48,17 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::global::*;
     #[doc(inline)]
-    pub use super::elements::h1::{self as h1, h1};
+    pub use super::elements::h1::h1;
     #[doc(inline)]
-    pub use super::elements::h2::{self as h2, h2};
+    pub use super::elements::h2::h2;
     #[doc(inline)]
-    pub use super::elements::h3::{self as h3, h3};
+    pub use super::elements::h3::h3;
     #[doc(inline)]
-    pub use super::elements::h4::{self as h4, h4};
+    pub use super::elements::h4::h4;
     #[doc(inline)]
-    pub use super::elements::h5::{self as h5, h5};
+    pub use super::elements::h5::h5;
     #[doc(inline)]
-    pub use super::elements::h6::{self as h6, h6};
+    pub use super::elements::h6::h6;
     #[doc(inline)]
     pub use super::elements::head::{self as head, head};
     #[doc(inline)]
@@ -55,6 +67,8 @@ pub(crate) mod exports {
     pub use super::elements::input::{self as input, input, Input};
     #[doc(inline)]
     pub use super::elements::label::{self as label, label, Label};
+    #[doc(inline)]
+    pub use super::elements::legend::legend;
     #[doc(inline)]
     pub use super::elements::li::{self as li, li};
     #[doc(inline)]
@@ -66,11 +80,15 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::option::{self as option, option, SelectOption};
     #[doc(inline)]
+    pub use super::elements::pre::pre;
+    #[doc(inline)]
     pub use super::elements::script::{self as script, script, Script};
     #[doc(inline)]
     pub use super::elements::select::{self as select, select, Select};
     #[doc(inline)]
     pub use super::elements::span::{self as span, span};
+    #[doc(inline)]
+    pub use super::elements::textarea::{self as textarea, textarea, Textarea};
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]

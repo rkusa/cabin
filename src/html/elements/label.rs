@@ -8,6 +8,8 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 use crate::View;
 
+/// A `label` element that represents a caption that can be associated with a specific form
+/// control.
 pub fn label(content: impl View) -> Html<marker::Label, (), impl View> {
     #[cfg(debug_assertions)]
     let content = content.boxed();

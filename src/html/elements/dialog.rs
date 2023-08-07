@@ -6,6 +6,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 use crate::View;
 
+/// A `dialog` element represents a transitory part of an application (e.g. dialog box).
 pub fn dialog(content: impl View) -> Html<marker::Dialog, (), impl View> {
     #[cfg(debug_assertions)]
     let content = content.boxed();

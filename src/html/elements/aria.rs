@@ -104,8 +104,8 @@ pub trait Aria: WithAttribute {
     /// aria-colindex.
     ///
     /// <https://w3c.github.io/aria/#aria-colcount>
-    fn aria_col_count(self, aria_col_count: impl Into<i32>) -> Self::Output<AriaColCount> {
-        self.with_attribute(AriaColCount(aria_col_count.into()))
+    fn aria_col_count(self, aria_col_count: i32) -> Self::Output<AriaColCount> {
+        self.with_attribute(AriaColCount(aria_col_count))
     }
 
     /// Defines an element's column index or position with respect to the total number of columns
@@ -113,8 +113,8 @@ pub trait Aria: WithAttribute {
     /// aria-colspan.
     ///
     /// <https://w3c.github.io/aria/#aria-colindex>
-    fn aria_col_index(self, aria_col_index: impl Into<u32>) -> Self::Output<AriaColIndex> {
-        self.with_attribute(AriaColIndex(aria_col_index.into()))
+    fn aria_col_index(self, aria_col_index: u32) -> Self::Output<AriaColIndex> {
+        self.with_attribute(AriaColIndex(aria_col_index))
     }
 
     /// Defines a human readable text alternative of aria-colindex. See related aria-rowindextext.
@@ -131,8 +131,8 @@ pub trait Aria: WithAttribute {
     /// treegrid. See related aria-colindex and aria-rowspan.
     ///
     /// <https://w3c.github.io/aria/#aria-colspan>
-    fn aria_col_span(self, aria_col_span: impl Into<u32>) -> Self::Output<AriaColSpan> {
-        self.with_attribute(AriaColSpan(aria_col_span.into()))
+    fn aria_col_span(self, aria_col_span: u32) -> Self::Output<AriaColSpan> {
+        self.with_attribute(AriaColSpan(aria_col_span))
     }
 
     /// Identifies the element (or elements) whose contents or presence are controlled by the
@@ -292,8 +292,8 @@ pub trait Aria: WithAttribute {
     /// Defines the hierarchical level of an element within a structure.
     ///
     /// <https://w3c.github.io/aria/#aria-level>
-    fn aria_level(self, aria_level: impl Into<u32>) -> Self::Output<AriaLevel> {
-        self.with_attribute(AriaLevel(aria_level.into()))
+    fn aria_level(self, aria_level: u32) -> Self::Output<AriaLevel> {
+        self.with_attribute(AriaLevel(aria_level))
     }
 
     /// Indicates that an element will be updated, and describes the types of updates the user
@@ -383,8 +383,8 @@ pub trait Aria: WithAttribute {
     /// required if all elements in the set are present in the DOM. See related aria-setsize.
     ///
     /// <https://w3c.github.io/aria/#aria-posinset>
-    fn aria_pos_inset(self, aria_pos_inset: impl Into<u32>) -> Self::Output<AriaPosInset> {
-        self.with_attribute(AriaPosInset(aria_pos_inset.into()))
+    fn aria_pos_inset(self, aria_pos_inset: u32) -> Self::Output<AriaPosInset> {
+        self.with_attribute(AriaPosInset(aria_pos_inset))
     }
 
     /// Indicates the current "pressed" state of toggle buttons. See related aria-checked and
@@ -446,16 +446,16 @@ pub trait Aria: WithAttribute {
     /// Defines the total number of rows in a table, grid, or treegrid. See related aria-rowindex.
     ///
     /// <https://w3c.github.io/aria/#aria-rowcount>
-    fn aria_row_count(self, aria_row_count: impl Into<i32>) -> Self::Output<AriaRowCount> {
-        self.with_attribute(AriaRowCount(aria_row_count.into()))
+    fn aria_row_count(self, aria_row_count: i32) -> Self::Output<AriaRowCount> {
+        self.with_attribute(AriaRowCount(aria_row_count))
     }
 
     /// Defines an element's row index or position with respect to the total number of rows within
     /// a table, grid, or treegrid. See related aria-rowindextext, aria-rowcount, and aria-rowspan.
     ///
     /// <https://w3c.github.io/aria/#aria-rowindex>
-    fn aria_row_index(self, aria_row_index: impl Into<u32>) -> Self::Output<AriaRowIndex> {
-        self.with_attribute(AriaRowIndex(aria_row_index.into()))
+    fn aria_row_index(self, aria_row_index: u32) -> Self::Output<AriaRowIndex> {
+        self.with_attribute(AriaRowIndex(aria_row_index))
     }
 
     /// Defines a human readable text alternative of aria-rowindex. See related aria-colindextext.
@@ -472,8 +472,8 @@ pub trait Aria: WithAttribute {
     /// See related aria-rowindex and aria-colspan.
     ///
     /// <https://w3c.github.io/aria/#aria-rowspan>
-    fn aria_row_span(self, aria_row_span: impl Into<u32>) -> Self::Output<AriaRowSpan> {
-        self.with_attribute(AriaRowSpan(aria_row_span.into()))
+    fn aria_row_span(self, aria_row_span: u32) -> Self::Output<AriaRowSpan> {
+        self.with_attribute(AriaRowSpan(aria_row_span))
     }
 
     /// Indicates the current "selected" state of various widgets. See related aria-checked and
@@ -496,8 +496,8 @@ pub trait Aria: WithAttribute {
     /// all elements in the set are present in the DOM. See related aria-posinset.
     ///
     /// <https://w3c.github.io/aria/#aria-setsize>
-    fn aria_set_size(self, aria_set_size: impl Into<i32>) -> Self::Output<AriaSetSize> {
-        self.with_attribute(AriaSetSize(aria_set_size.into()))
+    fn aria_set_size(self, aria_set_size: i32) -> Self::Output<AriaSetSize> {
+        self.with_attribute(AriaSetSize(aria_set_size))
     }
 
     /// Indicates if items in a table or grid are sorted in ascending or descending order.

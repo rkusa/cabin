@@ -8,6 +8,8 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 use crate::View;
 
+/// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
+/// and in human-readable form as its content.
 pub fn time(content: impl View) -> Html<marker::Time, (), impl View> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
