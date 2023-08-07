@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::fmt::Write;
 
 use cabin_macros::Attribute;
 
@@ -8,13 +9,13 @@ use super::global::Global;
 use super::link::{Blocking, CrossOrigin, FetchPriority};
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
+use crate::render::{Escape, Renderer};
+use crate::view::RenderFuture;
 use crate::View;
 
 // TODO: take str and not View
-pub fn script(content: impl View) -> Html<marker::Script, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("script", (), content)
+pub fn script(content: impl Into<Cow<'static, str>>) -> Html<marker::Script, (), impl View> {
+    Html::new("script", (), ScriptEscape(content.into()))
 }
 
 pub mod marker {
@@ -119,3 +120,54 @@ pub struct Defer(pub bool);
 /// Integrity metadata used in _Subresource Integrity_ checks.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Integrity(pub Cow<'static, str>);
+
+struct ScriptEscape(Cow<'static, str>);
+
+impl View for ScriptEscape {
+    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+        let mut txt = r.text();
+        RenderFuture::ready(
+            Escape::script(&mut txt)
+                .write_str(&self.0)
+                .map_err(crate::error::InternalError::from)
+                .map_err(crate::error::Error::from)
+                .and_then(|_| txt.end()),
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_script_escape() {
+        assert_eq!(
+            script("asd</script>")
+                .render(Renderer::new(), false)
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<script>asd<\/script></script>"#
+        );
+        assert_eq!(
+            script("asd<!--")
+                .render(Renderer::new(), false)
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<script>asd<\!--</script>"#
+        );
+        assert_eq!(
+            script(r#"if (1<2) alert("</script>")"#)
+                .render(Renderer::new(), false)
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<script>if (1<2) alert("<\/script>")</script>"#
+        );
+    }
+}

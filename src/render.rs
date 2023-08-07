@@ -176,7 +176,7 @@ impl TextRenderer {
 
 pub struct Escape<W> {
     wr: W,
-    escape_fn: fn(char) -> Option<&'static str>,
+    escape_fn: fn(char, Option<char>) -> Option<&'static str>,
 }
 
 impl<W> Escape<W> {
@@ -193,6 +193,13 @@ impl<W> Escape<W> {
             escape_fn: escape_content_char,
         }
     }
+
+    pub fn script(wr: W) -> Self {
+        Escape {
+            wr,
+            escape_fn: escape_script_char,
+        }
+    }
 }
 
 impl<W> fmt::Write for Escape<W>
@@ -200,9 +207,11 @@ where
     W: fmt::Write,
 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
+        let mut next = s.chars();
+        next.next();
         let mut replacements = s
             .char_indices()
-            .filter_map(|(i, ch)| (self.escape_fn)(ch).map(|s| (i, s)))
+            .filter_map(|(i, ch)| (self.escape_fn)(ch, next.next()).map(|s| (i, s)))
             .peekable();
         if replacements.peek().is_none() {
             return self.wr.write_str(s);
@@ -268,7 +277,7 @@ impl Write for Renderer {
     }
 }
 
-fn escape_attribute_value_char(ch: char) -> Option<&'static str> {
+fn escape_attribute_value_char(ch: char, _next: Option<char>) -> Option<&'static str> {
     // Not escaping ' -> because cabin always warps attribute values in double-quotes
     match ch {
         '"' => Some("&quot;"),
@@ -277,10 +286,18 @@ fn escape_attribute_value_char(ch: char) -> Option<&'static str> {
     }
 }
 
-fn escape_content_char(ch: char) -> Option<&'static str> {
+fn escape_content_char(ch: char, _next: Option<char>) -> Option<&'static str> {
     match ch {
         '<' => Some("&lt;"),
         '&' => Some("&amp;"),
+        _ => None,
+    }
+}
+
+fn escape_script_char(ch: char, next: Option<char>) -> Option<&'static str> {
+    match (ch, next) {
+        ('<', Some('/')) => Some("<\\"),
+        ('<', Some('!')) => Some("<\\"),
         _ => None,
     }
 }

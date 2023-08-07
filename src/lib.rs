@@ -56,9 +56,9 @@ pub fn cabin_scripts() -> impl View {
     };
 
     (
-        html::script(()).src(src_sc).defer(),
+        html::script("").src(src_sc).defer(),
         #[cfg(feature = "livereload")]
-        html::script(()).src(src_lr).defer(),
+        html::script("").src(src_lr).defer(),
     )
 }
 
