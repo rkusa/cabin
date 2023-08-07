@@ -17,21 +17,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # - name: Install stable toolchain
-      #   uses: actions-rs/toolchain@v1
-      #   with:
-      #     profile: minimal
-      #     toolchain: stable
-      #     override: true
-      #     components: clippy
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
 
       - name: Install nightly toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: nightly
-          override: true # false
-          components: rustfmt, clippy
+          override: false
+          components: rustfmt
 
       - name: Build
         run: cargo build --workspace --all-features
