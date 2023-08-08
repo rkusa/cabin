@@ -22,7 +22,7 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::anchor::{self as a, a, Anchor};
     #[doc(inline)]
-    pub use super::elements::area::{self as area, area};
+    pub use super::elements::area::{self as area, area, Area};
     #[doc(inline)]
     pub use super::elements::aria::*;
     #[doc(inline)]
@@ -30,9 +30,21 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::aside::aside;
     #[doc(inline)]
+    pub use super::elements::audio::{self as audio, audio, Audio};
+    #[doc(inline)]
     pub use super::elements::b::b;
     #[doc(inline)]
+    pub use super::elements::base::{self as base, base, Base};
+    #[doc(inline)]
+    pub use super::elements::bdi::bdi;
+    #[doc(inline)]
+    pub use super::elements::bdo::bdo;
+    #[doc(inline)]
+    pub use super::elements::blockquote::{self as blockquote, blockquote, Blockquote};
+    #[doc(inline)]
     pub use super::elements::body::body;
+    #[doc(inline)]
+    pub use super::elements::br::br;
     #[doc(inline)]
     pub use super::elements::button::{self as button, button, Button};
     #[doc(inline)]
@@ -42,7 +54,7 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::div::div;
     #[doc(inline)]
-    pub use super::elements::fieldset::{self as fieldset, fieldset};
+    pub use super::elements::fieldset::fieldset;
     #[doc(inline)]
     pub use super::elements::form::{self as form, form, Form};
     #[doc(inline)]
@@ -60,9 +72,9 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::h6::h6;
     #[doc(inline)]
-    pub use super::elements::head::{self as head, head};
+    pub use super::elements::head::head;
     #[doc(inline)]
-    pub use super::elements::html::{self as html, html};
+    pub use super::elements::html::html;
     #[doc(inline)]
     pub use super::elements::input::{self as input, input, Input};
     #[doc(inline)]
@@ -70,11 +82,11 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::legend::legend;
     #[doc(inline)]
-    pub use super::elements::li::{self as li, li};
+    pub use super::elements::li::li;
     #[doc(inline)]
     pub use super::elements::link::{self as link, link, Link};
     #[doc(inline)]
-    pub use super::elements::nav::{self as nav, nav};
+    pub use super::elements::nav::nav;
     #[doc(inline)]
     pub use super::elements::optgroup::{self as optgroup, optgroup, OptGroup};
     #[doc(inline)]
@@ -86,13 +98,13 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::select::{self as select, select, Select};
     #[doc(inline)]
-    pub use super::elements::span::{self as span, span};
+    pub use super::elements::span::span;
     #[doc(inline)]
     pub use super::elements::textarea::{self as textarea, textarea, Textarea};
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]
-    pub use super::elements::ul::{self as ul, ul};
+    pub use super::elements::ul::ul;
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
 

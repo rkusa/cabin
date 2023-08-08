@@ -97,6 +97,7 @@ pub trait Script: WithAttribute {
         self.with_attribute(fetch_priority)
     }
 }
+
 /// Address of the resource.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Src(pub Cow<'static, str>);
@@ -149,7 +150,7 @@ mod tests {
                 .unwrap()
                 .end()
                 .html,
-            r#"<script>asd<\/script></script>"#
+            r"<script>asd<\/script></script>"
         );
         assert_eq!(
             script("asd<!--")
@@ -158,7 +159,7 @@ mod tests {
                 .unwrap()
                 .end()
                 .html,
-            r#"<script>asd<\!--</script>"#
+            r"<script>asd<\!--</script>"
         );
         assert_eq!(
             script(r#"if (1<2) alert("</script>")"#)

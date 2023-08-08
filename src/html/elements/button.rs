@@ -9,6 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 use crate::View;
 
+/// The `button` element represents a button labeled by its contents.
 pub fn button(content: impl View) -> Html<marker::Button, (), impl View> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
@@ -24,7 +25,7 @@ impl<A: Attributes, V: 'static> Common for Html<marker::Button, A, V> {}
 impl<A: Attributes, V: 'static> Global for Html<marker::Button, A, V> {}
 impl<A: Attributes, V: 'static> Aria for Html<marker::Button, A, V> {}
 
-// TODO: doc comment
+/// The `button` element represents a button labeled by its contents.
 pub trait Button: WithAttribute {
     /// Whether the button is disabled.
     fn disabled(self) -> Self::Output<Disabled> {
