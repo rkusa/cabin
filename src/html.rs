@@ -48,6 +48,16 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::button::{self as button, button, Button};
     #[doc(inline)]
+    pub use super::elements::canvas::{self as canvas, canvas, Canvas};
+    #[doc(inline)]
+    pub use super::elements::caption::caption;
+    #[doc(inline)]
+    pub use super::elements::cite::cite;
+    #[doc(inline)]
+    pub use super::elements::code::code;
+    #[doc(inline)]
+    pub use super::elements::col::{self as col, col, Col};
+    #[doc(inline)]
     pub use super::elements::common::*;
     #[doc(inline)]
     pub use super::elements::dialog::{self as dialog, dialog, Dialog};

@@ -7,6 +7,8 @@ pub mod audio;
 pub mod base;
 pub mod blockquote;
 pub mod button;
+pub mod canvas;
+pub mod col;
 pub mod common;
 pub mod dialog;
 pub mod fieldset;
@@ -168,6 +170,22 @@ vanilla_element!(
     "The `body` element represents the body of an HTML document."
 );
 vanilla_void_element!(br, Br, "The `br` element represents a line break.");
+vanilla_element!(
+    caption,
+    Caption,
+    "The `caption` element represents the title of the [Table] that is its parent, if it has a
+    parent and that is a [Table] element."
+);
+vanilla_element!(
+    cite,
+    Cite,
+    "The `cite` element represents the title of a work"
+);
+vanilla_element!(
+    code,
+    Code,
+    "The `code` element represents a fragment of computer code."
+);
 
 vanilla_element!(
     div,
