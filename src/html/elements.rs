@@ -9,7 +9,10 @@ pub mod blockquote;
 pub mod button;
 pub mod canvas;
 pub mod col;
+pub mod colgroup;
 pub mod common;
+pub mod data;
+pub mod del;
 pub mod dialog;
 pub mod fieldset;
 pub mod form;
@@ -185,6 +188,19 @@ vanilla_element!(
     code,
     Code,
     "The `code` element represents a fragment of computer code."
+);
+vanilla_element!(
+    datalist,
+    Datalist,
+    "The `datalist` element represents a set of [Option] elements that represent predefined \
+    options for other controls. In the rendering, the `datalist` element represents nothing and \
+    it, along with its children, should be hidden."
+);
+vanilla_element!(
+    dd,
+    Dd,
+    "The `dd` element represents the description, definition, or value, part of a term-description \
+    group in a description list ([dl] element)."
 );
 
 vanilla_element!(

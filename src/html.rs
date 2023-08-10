@@ -58,7 +58,17 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::col::{self as col, col, Col};
     #[doc(inline)]
+    pub use super::elements::colgroup::{self as colgroup, colgroup, Colgroup};
+    #[doc(inline)]
     pub use super::elements::common::*;
+    #[doc(inline)]
+    pub use super::elements::data::{self as data, data, Data};
+    #[doc(inline)]
+    pub use super::elements::datalist::datalist;
+    #[doc(inline)]
+    pub use super::elements::dd::dd;
+    #[doc(inline)]
+    pub use super::elements::del::{self as del, del, Del};
     #[doc(inline)]
     pub use super::elements::dialog::{self as dialog, dialog, Dialog};
     #[doc(inline)]
