@@ -6,7 +6,7 @@ use cabin_macros::Attribute;
 use super::anchor::ReferrerPolicy;
 use super::common::Common;
 use super::global::Global;
-use super::link::{Blocking, CrossOrigin, FetchPriority};
+use super::link::{Blocking, CrossOrigin, FetchPriority, Type};
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 use crate::render::{Escape, Renderer};
@@ -101,10 +101,6 @@ pub trait Script: WithAttribute {
 /// Address of the resource.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Src(pub Cow<'static, str>);
-
-/// The type of the script.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct Type(pub Cow<'static, str>);
 
 /// Whether to prevent execution in user agents that support module scripts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]

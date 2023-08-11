@@ -58,13 +58,13 @@ pub trait Button: WithAttribute {
     }
 
     /// Bypass form control validation for form submission.
-    fn form_novalidate(self) -> Self::Output<FormNovalidate> {
+    fn form_novalidate(self) -> Self::Output<FormNoValidate> {
         self.with_form_novalidate(true)
     }
 
     /// Bypass form control validation for form submission.
-    fn with_form_novalidate(self, form_novalidate: bool) -> Self::Output<FormNovalidate> {
-        self.with_attribute(FormNovalidate(form_novalidate))
+    fn with_form_novalidate(self, form_novalidate: bool) -> Self::Output<FormNoValidate> {
+        self.with_attribute(FormNoValidate(form_novalidate))
     }
 
     /// Navigable for form submission
@@ -134,7 +134,7 @@ pub struct FormEnctype(pub Cow<'static, str>);
 
 /// Bypass form control validation for form submission.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct FormNovalidate(pub bool);
+pub struct FormNoValidate(pub bool);
 
 /// Navigable for form submission
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]

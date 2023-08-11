@@ -5,6 +5,7 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use super::link::Type;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
@@ -139,10 +140,6 @@ pub struct RelList(pub SpaceSeparated<Rel>);
 /// Hint the language of the linked resource.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Hreflang(pub Cow<'static, str>);
-
-/// Hint for the type of the referenced resource.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct Type(pub Cow<'static, str>);
 
 /// Relationship between the document and the linked resource.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -15,6 +15,7 @@ pub mod data;
 pub mod del;
 pub mod details;
 pub mod dialog;
+pub mod embed;
 pub mod fieldset;
 pub mod form;
 pub mod global;
@@ -231,6 +232,27 @@ vanilla_element!(
     em,
     Em,
     "The `em` element represents stress emphasis of its contents."
+);
+vanilla_element!(
+    figcaption,
+    FigCaption,
+    "The `figcaption` element represents a caption or legend for the rest of the contents of the \
+    `figcaption` element's parent [figure] element, if any."
+);
+vanilla_element!(
+    figure,
+    Figure,
+    "The `figure` element represents some flow content, optionally with a caption, that is \
+    self-contained (like a complete sentence) and is typically referenced as a single unit from \
+    the main flow of the document."
+);
+vanilla_element!(
+    footer,
+    Footer,
+    "The `footer` element represents a footer for its nearest ancestor sectioning content element, \
+    or for the body element if there is no such ancestor. A footer typically contains information \
+    about its section such as who wrote it, links to related documents, copyright data, and the \
+    like."
 );
 
 vanilla_element!(h1, H1, "A `h1` heading.");

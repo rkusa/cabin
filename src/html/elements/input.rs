@@ -7,11 +7,12 @@ pub use auto_complete::AutoComplete;
 use cabin_macros::Attribute;
 
 use super::button::{
-    Disabled, Form, FormAction, FormEnctype, FormMethod, FormNovalidate, FormTarget, Name,
+    Disabled, Form, FormAction, FormEnctype, FormMethod, FormNoValidate, FormTarget, Name,
     PopoverTarget, PopoverTargetAction,
 };
 use super::common::Common;
 use super::global::Global;
+use super::script::Src;
 use super::SerializeEventFn;
 use crate::error::InternalError;
 use crate::html::attributes::{Attributes, WithAttribute};
@@ -74,7 +75,7 @@ pub trait Input: WithAttribute {
         self.with_attribute(Disabled(disabled))
     }
 
-    /// Associates the element with a form element.
+    /// Associates the element with a [super::form] element.
     fn form(self, form: impl Into<Cow<'static, str>>) -> Self::Output<Form> {
         self.with_attribute(Form(form.into()))
     }
@@ -95,13 +96,13 @@ pub trait Input: WithAttribute {
     }
 
     /// Bypass form control validation for form submission.
-    fn form_novalidate(self) -> Self::Output<FormNovalidate> {
+    fn form_novalidate(self) -> Self::Output<FormNoValidate> {
         self.with_form_novalidate(true)
     }
 
     /// Bypass form control validation for form submission.
-    fn with_form_novalidate(self, form_novalidate: bool) -> Self::Output<FormNovalidate> {
-        self.with_attribute(FormNovalidate(form_novalidate))
+    fn with_form_novalidate(self, form_novalidate: bool) -> Self::Output<FormNoValidate> {
+        self.with_attribute(FormNoValidate(form_novalidate))
     }
 
     /// Navigable for form submission.
@@ -422,10 +423,6 @@ pub struct Required(pub bool);
 /// Size of the control
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Size(pub u32);
-
-/// Address of the resource
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct Src(pub Cow<'static, str>);
 
 /// Granularity to be matched by the form control's value
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]

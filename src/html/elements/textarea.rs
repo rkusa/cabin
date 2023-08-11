@@ -54,7 +54,7 @@ pub trait Textarea: WithAttribute {
         self.with_attribute(Disabled(disabled))
     }
 
-    /// Associates the element with a form element.
+    /// Associates the element with a [super::form] element.
     fn form(self, form: impl Into<Cow<'static, str>>) -> Self::Output<Form> {
         self.with_attribute(Form(form.into()))
     }

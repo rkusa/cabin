@@ -84,7 +84,15 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::em::em;
     #[doc(inline)]
-    pub use super::elements::fieldset::fieldset;
+    pub use super::elements::embed::{self as embed, embed, Embed};
+    #[doc(inline)]
+    pub use super::elements::fieldset::{self as fieldset, fieldset, Fieldset};
+    #[doc(inline)]
+    pub use super::elements::figcaption::figcaption;
+    #[doc(inline)]
+    pub use super::elements::figure::figure;
+    #[doc(inline)]
+    pub use super::elements::footer::footer;
     #[doc(inline)]
     pub use super::elements::form::{self as form, form, Form};
     #[doc(inline)]
