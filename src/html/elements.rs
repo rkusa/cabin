@@ -13,6 +13,7 @@ pub mod colgroup;
 pub mod common;
 pub mod data;
 pub mod del;
+pub mod details;
 pub mod dialog;
 pub mod fieldset;
 pub mod form;
@@ -202,12 +203,36 @@ vanilla_element!(
     "The `dd` element represents the description, definition, or value, part of a term-description \
     group in a description list ([dl] element)."
 );
-
+vanilla_element!(
+    dfn,
+    Dfn,
+    "The `dfn` element represents the defining instance of a term. The paragraph, description list \
+    group, or section that is the nearest ancestor of the `dfn` element must also contain the \
+    definition(s) for the term given by the `dfn` element."
+);
 vanilla_element!(
     div,
     Div,
     "The `div` element represents a generic container for flow content."
 );
+vanilla_element!(
+    dl,
+    Dl,
+    "The `dl` element represents an association list consisting of zero or more name-value groups \
+    (a description list)."
+);
+vanilla_element!(
+    dt,
+    Dt,
+    "The `dt` element represents the term, or name, part of a term-description group in a \
+    description list ([dl] element)."
+);
+vanilla_element!(
+    em,
+    Em,
+    "The `em` element represents stress emphasis of its contents."
+);
+
 vanilla_element!(h1, H1, "A `h1` heading.");
 vanilla_element!(h2, H2, "A `h2` heading.");
 vanilla_element!(h3, H3, "A `h3` heading.");

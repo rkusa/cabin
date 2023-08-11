@@ -70,9 +70,19 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::del::{self as del, del, Del};
     #[doc(inline)]
+    pub use super::elements::details::{self as details, details, Details};
+    #[doc(inline)]
+    pub use super::elements::dfn::dfn;
+    #[doc(inline)]
     pub use super::elements::dialog::{self as dialog, dialog, Dialog};
     #[doc(inline)]
     pub use super::elements::div::div;
+    #[doc(inline)]
+    pub use super::elements::dl::dl;
+    #[doc(inline)]
+    pub use super::elements::dt::dt;
+    #[doc(inline)]
+    pub use super::elements::em::em;
     #[doc(inline)]
     pub use super::elements::fieldset::fieldset;
     #[doc(inline)]
