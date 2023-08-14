@@ -118,7 +118,17 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::html::html;
     #[doc(inline)]
+    pub use super::elements::i::i;
+    #[doc(inline)]
+    pub use super::elements::iframe::{self as iframe, iframe, IFrame};
+    #[doc(inline)]
+    pub use super::elements::img::{self as img, img, Img};
+    #[doc(inline)]
     pub use super::elements::input::{self as input, input, Input};
+    #[doc(inline)]
+    pub use super::elements::ins::{self as ins, ins, Ins};
+    #[doc(inline)]
+    pub use super::elements::kbd::kbd;
     #[doc(inline)]
     pub use super::elements::label::{self as label, label, Label};
     #[doc(inline)]

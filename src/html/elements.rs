@@ -19,7 +19,10 @@ pub mod embed;
 pub mod fieldset;
 pub mod form;
 pub mod global;
+pub mod iframe;
+pub mod img;
 pub mod input;
+pub mod ins;
 pub mod label;
 pub mod li;
 pub mod link;
@@ -286,6 +289,20 @@ vanilla_element!(
     html,
     Html,
     "The `html` element represents the root of an HTML document."
+);
+vanilla_element!(
+    i,
+    I,
+    "The `i` element represents a span of text in an alternate voice or mood, or otherwise offset \
+    from the normal prose in a manner indicating a different quality of text, such as a taxonomic \
+    designation, a technical term, an idiomatic phrase from another language, transliteration, a \
+    thought, or a ship name in Western texts."
+);
+vanilla_element!(
+    kbd,
+    Kbd,
+    "The `kbd` element represents user input (typically keyboard input, although it may also be \
+    used to represent other input, such as voice commands)."
 );
 
 vanilla_element!(

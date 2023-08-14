@@ -7,6 +7,7 @@ use super::anchor::{Href, ReferrerPolicy};
 use super::button::Disabled;
 use super::common::Common;
 use super::global::Global;
+use super::img::Sizes;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
@@ -158,10 +159,6 @@ pub struct Hreflang(pub Cow<'static, str>);
 /// Hint for the type of the referenced resource.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Type(pub Cow<'static, str>);
-
-/// Sizes of the icons ([Rel::Icon]).
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct Sizes(pub Cow<'static, str>);
 
 /// Images to use in different situations.
 /// For [Rel::Preload] and [As::Image] only.

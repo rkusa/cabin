@@ -6,7 +6,7 @@ use cabin_macros::Attribute;
 use super::anchor::{Download, Href, Ping, ReferrerPolicy, Rel, RelList, Target};
 use super::common::Common;
 use super::global::Global;
-use super::input::Alt;
+use super::img::Alt;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};

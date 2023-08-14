@@ -12,6 +12,7 @@ use super::button::{
 };
 use super::common::Common;
 use super::global::Global;
+use super::img::Alt;
 use super::script::Src;
 use super::SerializeEventFn;
 use crate::error::InternalError;
@@ -363,10 +364,6 @@ pub trait Input: WithAttribute {
 /// Hint for expected file type in file upload controls.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Accept(pub Cow<'static, str>);
-
-/// Replacement text for use when images (type=image) are not available.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-pub struct Alt(pub Cow<'static, str>);
 
 /// Whether the control is checked.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
