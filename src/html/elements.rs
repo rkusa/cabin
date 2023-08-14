@@ -19,8 +19,6 @@ pub mod embed;
 pub mod fieldset;
 pub mod form;
 pub mod global;
-pub mod head;
-pub mod html;
 pub mod input;
 pub mod label;
 pub mod li;
@@ -254,13 +252,41 @@ vanilla_element!(
     about its section such as who wrote it, links to related documents, copyright data, and the \
     like."
 );
-
 vanilla_element!(h1, H1, "A `h1` heading.");
 vanilla_element!(h2, H2, "A `h2` heading.");
 vanilla_element!(h3, H3, "A `h3` heading.");
 vanilla_element!(h4, H4, "A `h4` heading.");
 vanilla_element!(h5, H5, "A `h5` heading.");
 vanilla_element!(h6, H6, "A `h6` heading.");
+vanilla_element!(
+    head,
+    Head,
+    "The `head` element represents a collection of metadata for the document."
+);
+vanilla_element!(
+    header,
+    Header,
+    "The `header` element represents a group of introductory or navigational aids."
+);
+vanilla_element!(
+    hgroup,
+    HGroup,
+    "The `hgroup` element represents a heading and related content. The element may be used to \
+    group an [h1]–[h6] element with one or more [p] elements containing content representing a \
+    subheading, alternative title, or tagline."
+);
+vanilla_void_element!(
+    hr,
+    Hr,
+    "The `hr` element represents a paragraph-level thematic break, e.g., a scene change in a \
+    story, or a transition to another topic within a section of a reference book; alternatively, \
+    it represents a separator between a set of options of a [select] element."
+);
+vanilla_element!(
+    html,
+    Html,
+    "The `html` element represents the root of an HTML document."
+);
 
 vanilla_element!(
     legend,

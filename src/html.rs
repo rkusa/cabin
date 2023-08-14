@@ -112,6 +112,10 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::head::head;
     #[doc(inline)]
+    pub use super::elements::header::header;
+    #[doc(inline)]
+    pub use super::elements::hgroup::hgroup;
+    #[doc(inline)]
     pub use super::elements::html::html;
     #[doc(inline)]
     pub use super::elements::input::{self as input, input, Input};
