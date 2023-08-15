@@ -146,17 +146,17 @@ function setUpEventListener(el, eventName, opts) {
       const abortController = new AbortController();
       abortControllers.set(node, abortController);
 
+      e.stopPropagation();
+
+      if (opts.preventDefault) {
+        e.preventDefault();
+      }
+
       if (opts.debounce) {
         await new Promise((resolve) => setTimeout(resolve, opts.debounce));
         if (abortController.signal.aborted) {
           return;
         }
-      }
-
-      e.stopPropagation();
-
-      if (opts.preventDefault) {
-        e.preventDefault();
       }
 
       if (opts.disable) {
