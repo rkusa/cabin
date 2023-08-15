@@ -3,6 +3,7 @@ mod boxed;
 mod future;
 mod iter;
 pub mod text;
+mod update;
 
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -15,6 +16,7 @@ pub use boxed::BoxedView;
 pub use future::FutureExt;
 use http_error::HttpError;
 pub use iter::IteratorExt;
+pub use update::UpdateView;
 
 use crate::render::{Escape, Renderer};
 

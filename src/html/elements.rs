@@ -6,6 +6,7 @@ pub mod aria;
 pub mod audio;
 pub mod base;
 pub mod blockquote;
+pub mod body;
 pub mod button;
 pub mod canvas;
 pub mod col;
@@ -19,6 +20,8 @@ pub mod embed;
 pub mod fieldset;
 pub mod form;
 pub mod global;
+pub mod head;
+pub mod html;
 pub mod iframe;
 pub mod img;
 pub mod input;
@@ -171,11 +174,6 @@ vanilla_element!(
 // Potential events to implement: onafterprint, onbeforeprint, onbeforeunload, onhashchange,
 // onlanguagechange, onmessage, onmessageerror, onoffline, ononline, onpagehide, onpageshow,
 // onpopstate, onrejectionhandled, onstorage, onunhandledrejection, onunload
-vanilla_element!(
-    body,
-    Body,
-    "The `body` element represents the body of an HTML document."
-);
 vanilla_void_element!(br, Br, "The `br` element represents a line break.");
 vanilla_element!(
     caption,
@@ -263,11 +261,6 @@ vanilla_element!(h4, H4, "A `h4` heading.");
 vanilla_element!(h5, H5, "A `h5` heading.");
 vanilla_element!(h6, H6, "A `h6` heading.");
 vanilla_element!(
-    head,
-    Head,
-    "The `head` element represents a collection of metadata for the document."
-);
-vanilla_element!(
     header,
     Header,
     "The `header` element represents a group of introductory or navigational aids."
@@ -285,11 +278,6 @@ vanilla_void_element!(
     "The `hr` element represents a paragraph-level thematic break, e.g., a scene change in a \
     story, or a transition to another topic within a section of a reference book; alternatively, \
     it represents a separator between a set of options of a [fn@select] element."
-);
-vanilla_element!(
-    html,
-    Html,
-    "The `html` element represents the root of an HTML document."
 );
 vanilla_element!(
     i,
@@ -350,3 +338,5 @@ vanilla_element!(
     "The pre element represents a block of preformatted text, in which structure is represented \
     by typographic conventions rather than by elements."
 );
+
+vanilla_element!(title, Title, "TODO");

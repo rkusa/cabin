@@ -14,6 +14,7 @@ pub struct Renderer {
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
     skip_hash: bool,
+    is_update: bool,
 }
 
 pub(crate) struct Out {
@@ -28,6 +29,17 @@ impl Renderer {
             headers: Default::default(),
             hasher: XxHash32::default(),
             skip_hash: false,
+            is_update: false,
+        }
+    }
+
+    pub(crate) fn new_update() -> Self {
+        Renderer {
+            out: String::with_capacity(256),
+            headers: Default::default(),
+            hasher: XxHash32::default(),
+            skip_hash: false,
+            is_update: true,
         }
     }
 
@@ -36,6 +48,10 @@ impl Renderer {
             html: self.out,
             headers: self.headers,
         }
+    }
+
+    pub fn is_update(&self) -> bool {
+        self.is_update
     }
 
     pub fn element(

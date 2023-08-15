@@ -75,31 +75,25 @@ pub struct Event {
     pub(crate) payload: Payload,
 }
 
-fn default_document(content: impl View) -> impl View {
+pub fn basic_document(content: impl View) -> impl View {
     (
         html::doctype(),
         html::html((html::head(cabin_scripts()), html::body(content))),
     )
 }
 
-pub async fn get_page_with<F, V, D>(
+pub async fn get_page<F, V>(
     render_fn: impl FnOnce() -> F + Send + Sync + 'static,
-    document: impl FnOnce((V,)) -> D + Send + Sync + 'static,
 ) -> Response<Full<Bytes>>
 where
     F: Future<Output = V>,
     V: View + 'static,
-    D: View,
 {
     let result = local_pool::spawn(move || {
         let scope = Scope::new();
         scope.run(async move {
             let r = Renderer::new();
-            let body = render_fn().await;
-            let doc = (document)((
-                body,
-                // tuple to force `include_hash`
-            ));
+            let doc = render_fn().await;
             doc.render(r, false).await
         })
     })
@@ -122,12 +116,6 @@ where
     res.body(Full::new(Bytes::from(html))).unwrap()
 }
 
-pub async fn get_page<F: Future<Output = V>, V: View + 'static>(
-    render_fn: impl FnOnce() -> F + Send + Sync + 'static,
-) -> Response<Full<Bytes>> {
-    get_page_with(render_fn, default_document).await
-}
-
 pub async fn put_page<F: Future<Output = V>, V: View, B>(
     req: Request<B>,
     render_fn: impl FnOnce() -> F + Send + 'static,
@@ -143,7 +131,7 @@ where
     let result = local_pool::spawn(move || {
         let scope = Scope::new().with_event(event.event_id, event.payload);
         scope.run(async move {
-            let r = Renderer::new();
+            let r = Renderer::new_update();
             render_fn().await.render(r, true).await
         })
     })

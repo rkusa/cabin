@@ -1,17 +1,17 @@
 use std::net::SocketAddr;
 
-use cabin::prelude::*;
 use cabin::scope::event;
 use cabin::view::boundary::Boundary;
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    (
+    basic_document((
         counter(1),
         counter(2),
         button("triger whole page update").on_click(()),
-    )
+    ))
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

@@ -1,18 +1,18 @@
 use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
-use cabin::prelude::*;
 use cabin::view::FutureExt;
+use cabin::{basic_document, prelude::*};
 use http::Request;
 
 async fn app() -> impl View {
     let start = Instant::now();
-    ul((
+    basic_document(ul((
         delayed(start, Duration::from_secs(1)).into_view(),
         delayed(start, Duration::from_secs(2)).into_view(),
         delayed(start, Duration::from_secs(3)).into_view(),
         text!("page finished after {:.2}", start.elapsed().as_secs_f64()),
-    ))
+    )))
 }
 
 async fn delayed(start: Instant, delay: Duration) -> impl View {

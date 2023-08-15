@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use cabin::basic_document;
 use cabin::html;
 use cabin::prelude::*;
 use cabin::scope::event;
@@ -7,8 +8,7 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    // Dialog::new("Hello World").opened(true)
-    dialog("Hello World")
+    basic_document(dialog("Hello World"))
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

@@ -1,22 +1,22 @@
 use std::net::SocketAddr;
 
-use cabin::prelude::*;
 use cabin::scope::event;
 use cabin::view::{Boundary, IteratorExt};
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
     let count = event::<Increment>().unwrap_or(Increment(3)).0;
 
-    (
+    basic_document((
         // Incrementing the counter will cause the dialog to change outside of its boundary, which
         // causes its internal state to revert to its default (closed). This is intentional.
         button(text!("{}", count))
             .on_click(Increment(count + 1))
             .style("min-width:40px"),
         dialog(count, false),
-    )
+    ))
 }
 
 #[cabin::boundary]

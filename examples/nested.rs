@@ -1,14 +1,14 @@
 use std::net::SocketAddr;
 
-use cabin::prelude::*;
 use cabin::scope::take_event;
 use cabin::view::Boundary;
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 // FIXME: restore example
 async fn app() -> impl View {
-    level(1, 1, true)
+    basic_document(level(1, 1, true))
 }
 
 #[cabin::boundary]

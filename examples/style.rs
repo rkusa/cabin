@@ -10,19 +10,21 @@ use http::Request;
 async fn app() -> impl View {
     let count = event::<usize>().unwrap_or(0);
 
-    button(text!("{}", count)).on_click(count + 1).class(
-        // TODO: modifier groups?
-        // TODO: autocomplate after XZY. (for modifiers)
-        // TODO: autocomplete after text::
-        tw![
-            BLOCK,
-            text::BLACK,
-            text::SM,
-            bg::BLACK.hover(),
-            text::WHITE.hover(),
-            text::XS.hover().focus(),
-        ]
-        .append_when(count == 0, tw![text::color("red")]),
+    document(
+        button(text!("{}", count)).on_click(count + 1).class(
+            // TODO: modifier groups?
+            // TODO: autocomplate after XZY. (for modifiers)
+            // TODO: autocomplete after text::
+            tw![
+                BLOCK,
+                text::BLACK,
+                text::SM,
+                bg::BLACK.hover(),
+                text::WHITE.hover(),
+                text::XS.hover().focus(),
+            ]
+            .append_when(count == 0, tw![text::color("red")]),
+        ),
     )
 }
 
@@ -47,7 +49,7 @@ async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| cabin::get_page_with(app, document))
+            axum::routing::get(|| cabin::get_page(app))
                 .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
         .layer(cabin_service::framework());

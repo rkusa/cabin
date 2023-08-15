@@ -1,12 +1,12 @@
 use std::net::SocketAddr;
 
-use cabin::prelude::*;
 use cabin::scope::event;
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    counter(0).await
+    basic_document(counter(0).await)
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

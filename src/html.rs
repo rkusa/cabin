@@ -166,12 +166,14 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]
+    pub use super::elements::title::title;
+    #[doc(inline)]
     pub use super::elements::ul::ul;
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
 
     pub fn doctype() -> impl crate::View {
-        super::raw("<!DOCTYPE html>")
+        crate::view::UpdateView::hidden_on_update(super::raw("<!DOCTYPE html>"))
     }
 }
 
@@ -179,7 +181,7 @@ pub struct Html<El, A, V> {
     tag: &'static str,
     is_void_element: bool,
     attributes: A,
-    content: V,
+    pub(crate) content: V,
     marker: PhantomData<El>,
 }
 

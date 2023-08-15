@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
-use cabin::prelude::*;
 use cabin::scope::take_event;
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +9,7 @@ async fn app() -> impl View {
     let data = take_event::<Data>();
 
     let values = data.clone().unwrap_or_default();
-    (
+    basic_document((
         form((
             input().type_text().name("comment").value(values.comment),
             input()
@@ -26,7 +26,7 @@ async fn app() -> impl View {
                 data.highlighted
             )
         }),
-    )
+    ))
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]

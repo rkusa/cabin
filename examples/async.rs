@@ -2,13 +2,13 @@ use std::borrow::Cow;
 use std::net::SocketAddr;
 
 use cabin::html::events::InputValue;
-use cabin::prelude::*;
 use cabin::scope::take_event;
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    search().await
+    basic_document(search().await)
 }
 
 #[derive(Hash, Serialize, Deserialize)]

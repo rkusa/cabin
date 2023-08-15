@@ -1,13 +1,13 @@
 use std::net::SocketAddr;
 
-use cabin::prelude::*;
 use cabin::scope::take_event;
 use cabin::view::{Boundary, IteratorExt};
+use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 
 async fn app() -> impl View {
-    list(vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await
+    basic_document(list(vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await)
 }
 
 #[derive(Clone, Hash, Serialize, Deserialize)]
