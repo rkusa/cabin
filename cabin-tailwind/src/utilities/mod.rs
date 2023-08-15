@@ -73,6 +73,7 @@ pub use decoration::{LINE_THROUGH, NO_UNDERLINE, OVERLINE, UNDERLINE};
 pub use display::*;
 pub use end::unit as end;
 pub use flex::{NO_SHRINK, SHRINK};
+pub use font::{ITALIC, NOT_ITALIC};
 pub use from::percent as from;
 pub use gap::unit as gap;
 pub use gap_x::unit as gap_x;

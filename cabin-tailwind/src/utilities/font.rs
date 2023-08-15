@@ -53,3 +53,15 @@ pub const EXTRABOLD: Property<u16> = Property(FONT_WEIGHT, 800);
 /// font-weight: 900;
 /// ```
 pub const BLACK: Property<u16> = Property(FONT_WEIGHT, 900);
+
+const FONT_STYLE: &str = "font-style";
+
+/// ```css
+/// font-style: italic;
+/// ```
+pub const ITALIC: Property = Property(FONT_STYLE, "italic");
+
+/// ```css
+/// font-style: normal;
+/// ```
+pub const NOT_ITALIC: Property = Property(FONT_STYLE, "normal");
