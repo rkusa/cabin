@@ -24,8 +24,9 @@ pub mod img;
 pub mod input;
 pub mod ins;
 pub mod label;
-pub mod li;
 pub mod link;
+pub mod map;
+pub mod meta;
 pub mod nav;
 pub mod optgroup;
 pub mod option;
@@ -84,7 +85,7 @@ macro_rules! vanilla_void_element {
 
             #[doc = $doc]
             pub fn $method_name() -> $crate::html::Html<marker::$marker_name, (), ()> {
-                $crate::html::Html::new(stringify!($method_name), (), ())
+                $crate::html::Html::new(stringify!($method_name), (), ()).into_void_element()
             }
 
             pub mod marker {
@@ -283,7 +284,7 @@ vanilla_void_element!(
     Hr,
     "The `hr` element represents a paragraph-level thematic break, e.g., a scene change in a \
     story, or a transition to another topic within a section of a reference book; alternatively, \
-    it represents a separator between a set of options of a [select] element."
+    it represents a separator between a set of options of a [fn@select] element."
 );
 vanilla_element!(
     html,
@@ -304,12 +305,43 @@ vanilla_element!(
     "The `kbd` element represents user input (typically keyboard input, although it may also be \
     used to represent other input, such as voice commands)."
 );
-
 vanilla_element!(
     legend,
     Leged,
     "The `legend` element represents a caption for the rest of the contents of the legend \
-    element's parent [fieldset] element, if any."
+    element's parent [fn@fieldset] element, if any."
+);
+vanilla_element!(
+    li,
+    Li,
+    "The `li` element represents a list item. If its parent element is an [ol], [ul], or [menu] \
+    element, then the element is an item of the parent element's list, as defined for those \
+    elements. Otherwise, the list item has no defined list-related relationship to any other `li` \
+    element."
+);
+vanilla_element!(
+    main,
+    Main,
+    "The `main` element represents the dominant contents of the document."
+);
+vanilla_element!(
+    mark,
+    Mark,
+    "The `mark` element represents a run of text in one document marked or highlighted for \
+    reference purposes, due to its relevance in another context. When used in a quotation or other \
+    block of text referred to from the prose, it indicates a highlight that was not originally \
+    present but which has been added to bring the reader's attention to a part of the text that \
+    might not have been considered important by the original author when the block was originally \
+    written, but which is now under previously unexpected scrutiny. When used in the main prose of \
+    a document, it indicates a part of the document that has been highlighted due to its likely \
+    relevance to the user's current activity."
+);
+vanilla_element!(
+    menu,
+    Menu,
+    "The `menu` element represents a toolbar consisting of its contents, in the form of an \
+    unordered list of items (represented by [li] elements), each of which represents a command \
+    that the user can perform or activate."
 );
 
 vanilla_element!(

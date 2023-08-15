@@ -20,7 +20,7 @@ cabin-macros = { path = "./cabin-macros", version = "0.1" }
 futures-util = "0.3"
 http = "0.2"
 http-body = "0.4"
-http-error = { git = "https://github.com/rkusa/http-error.git", rev = "2ff8d58" } # path = "../http-error" }
+http-error = { git = "https://github.com/rkusa/http-error.git", rev = "1f0630c" } # path = "../http-error" }
 linkme = "0.3"
 mime = "0.3"
 multer = { version = "2.1.0", features = ["json"] }

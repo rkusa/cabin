@@ -138,6 +138,16 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::link::{self as link, link, Link};
     #[doc(inline)]
+    pub use super::elements::main::main;
+    #[doc(inline)]
+    pub use super::elements::map::{self as map, map, Map};
+    #[doc(inline)]
+    pub use super::elements::mark::mark;
+    #[doc(inline)]
+    pub use super::elements::menu::menu;
+    #[doc(inline)]
+    pub use super::elements::meta::{self as meta, meta, Meta};
+    #[doc(inline)]
     pub use super::elements::nav::nav;
     #[doc(inline)]
     pub use super::elements::optgroup::{self as optgroup, optgroup, OptGroup};
