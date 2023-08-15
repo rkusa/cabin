@@ -6,8 +6,12 @@ use cabin_macros::Attribute;
 use super::button::{Disabled, Form, Name};
 use super::common::Common;
 use super::global::Global;
-use super::input::{AutoComplete, Dirname, MaxLength, MinLength, Placeholder, ReadOnly, Required};
+use super::input::{
+    AutoComplete, Dirname, MaxLength, MinLength, OnChange, OnInput, Placeholder, ReadOnly, Required,
+};
+use crate::error::InternalError;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::InputEvent;
 use crate::html::{Aria, Html};
 use crate::View;
 
@@ -112,6 +116,46 @@ pub trait Textarea: WithAttribute {
     /// How the value of the form control is to be wrapped for form submission.
     fn wrap_hard(self) -> Self::Output<Wrap> {
         self.with_attribute(Wrap::Hard)
+    }
+
+    fn on_input<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnInput>
+    where
+        E: ::serde::Serialize + 'static,
+    {
+        let event = event(InputEvent::default());
+        self.with_attribute(OnInput(Box::new(move || {
+            use std::hash::{Hash, Hasher};
+
+            let mut hasher = twox_hash::XxHash32::default();
+            std::any::TypeId::of::<E>().hash(&mut hasher);
+            let hash = hasher.finish() as u32;
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "on_input event",
+                    err,
+                })
+                .map(|json| (hash, json))
+        })))
+    }
+
+    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnChange>
+    where
+        E: ::serde::Serialize + 'static,
+    {
+        let event = event(InputEvent::default());
+        self.with_attribute(OnChange(Box::new(move || {
+            use std::hash::{Hash, Hasher};
+
+            let mut hasher = twox_hash::XxHash32::default();
+            std::any::TypeId::of::<E>().hash(&mut hasher);
+            let hash = hasher.finish() as u32;
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "on_change event",
+                    err,
+                })
+                .map(|json| (hash, json))
+        })))
     }
 }
 
