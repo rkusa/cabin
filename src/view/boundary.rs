@@ -349,7 +349,7 @@ impl BoundaryRegistry {
         let result = local_pool::spawn(move || {
             let scope = Scope::new().with_event(event.event_id, event.payload);
             scope.run(async move {
-                let r = Renderer::new();
+                let r = Renderer::new_update();
                 handler(state_json.get(), r).await
             })
         })

@@ -1,8 +1,9 @@
 use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
+use cabin::basic_document;
+use cabin::prelude::*;
 use cabin::view::FutureExt;
-use cabin::{basic_document, prelude::*};
 use http::Request;
 
 async fn app() -> impl View {

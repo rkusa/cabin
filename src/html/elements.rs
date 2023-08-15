@@ -38,6 +38,7 @@ pub mod select;
 pub mod span;
 pub mod textarea;
 pub mod time;
+pub mod title;
 pub mod ul;
 
 pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
@@ -338,5 +339,3 @@ vanilla_element!(
     "The pre element represents a block of preformatted text, in which structure is represented \
     by typographic conventions rather than by elements."
 );
-
-vanilla_element!(title, Title, "TODO");

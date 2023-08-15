@@ -1,9 +1,8 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
-use cabin::html;
 use cabin::prelude::*;
 use cabin::scope::event;
+use cabin::{basic_document, html};
 use http::Request;
 use serde::{Deserialize, Serialize};
 

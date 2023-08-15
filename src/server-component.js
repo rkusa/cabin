@@ -94,6 +94,11 @@ async function update(eventId, payload, target, abortController) {
     if (rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
       history.pushState(null, undefined, rewriteUrl);
     }
+
+    const newTitle = res.headers.get("x-cabin-title");
+    if (newTitle) {
+      document.title = newTitle;
+    }
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       // ignore

@@ -166,7 +166,7 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]
-    pub use super::elements::title::title;
+    pub use super::elements::title::{title, title_update};
     #[doc(inline)]
     pub use super::elements::ul::ul;
     #[doc(inline)]

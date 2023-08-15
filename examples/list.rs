@@ -1,8 +1,9 @@
 use std::net::SocketAddr;
 
+use cabin::basic_document;
+use cabin::prelude::*;
 use cabin::scope::take_event;
 use cabin::view::{Boundary, IteratorExt};
-use cabin::{basic_document, prelude::*};
 use http::Request;
 use serde::{Deserialize, Serialize};
 

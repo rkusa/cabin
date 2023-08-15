@@ -1,9 +1,8 @@
+use super::RenderFuture;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Html, Raw};
 use crate::render::Renderer;
 use crate::View;
-
-use super::RenderFuture;
 
 pub struct UpdateView<V> {
     view: V,
