@@ -162,7 +162,17 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::option::{self as option, option, SelectOption};
     #[doc(inline)]
+    pub use super::elements::output::{self as output, output, Output};
+    #[doc(inline)]
+    pub use super::elements::p::p;
+    #[doc(inline)]
+    pub use super::elements::picture::picture;
+    #[doc(inline)]
     pub use super::elements::pre::pre;
+    #[doc(inline)]
+    pub use super::elements::progress::{self as progress, progress, Progress};
+    #[doc(inline)]
+    pub use super::elements::q::{self as q, q, Q};
     #[doc(inline)]
     pub use super::elements::script::{self as script, script, Script};
     #[doc(inline)]

@@ -35,6 +35,9 @@ pub mod object;
 pub mod ol;
 pub mod optgroup;
 pub mod option;
+pub mod output;
+pub mod progress;
+pub mod q;
 pub mod script;
 pub mod select;
 pub mod span;
@@ -305,10 +308,10 @@ vanilla_element!(
 vanilla_element!(
     li,
     Li,
-    "The `li` element represents a list item. If its parent element is an [ol], [ul], or [menu] \
-    element, then the element is an item of the parent element's list, as defined for those \
-    elements. Otherwise, the list item has no defined list-related relationship to any other `li` \
-    element."
+    "The `li` element represents a list item. If its parent element is an [fn@ol], [fn@ul], or \
+    [fn@menu] element, then the element is an item of the parent element's list, as defined for \
+    those elements. Otherwise, the list item has no defined list-related relationship to any other \
+    `li` element."
 );
 vanilla_element!(
     main,
@@ -348,7 +351,15 @@ vanilla_element!(
     support scripting and those that don't support scripting, by affecting how the document is \
     parsed."
 );
-
+vanilla_element!(p, P, "The p element represents a paragraph.");
+vanilla_element!(
+    picture,
+    Picture,
+    "The `picture` element is a container which provides multiple sources to its contained [fn@img] \
+    element to allow authors to declaratively control or give hints to the user agent about which \
+    image resource to use, based on the screen pixel density, viewport size, image format, and \
+    other factors. It represents its children."
+);
 vanilla_element!(
     pre,
     Pre,
