@@ -148,7 +148,15 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::meta::{self as meta, meta, Meta};
     #[doc(inline)]
+    pub use super::elements::meter::{self as meter, meter, Meter};
+    #[doc(inline)]
     pub use super::elements::nav::nav;
+    #[doc(inline)]
+    pub use super::elements::noscript::noscript;
+    #[doc(inline)]
+    pub use super::elements::object::{self as object, object, Object};
+    #[doc(inline)]
+    pub use super::elements::ol::{self as ol, ol, Ol};
     #[doc(inline)]
     pub use super::elements::optgroup::{self as optgroup, optgroup, OptGroup};
     #[doc(inline)]

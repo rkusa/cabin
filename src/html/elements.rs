@@ -30,7 +30,9 @@ pub mod label;
 pub mod link;
 pub mod map;
 pub mod meta;
-pub mod nav;
+pub mod meter;
+pub mod object;
+pub mod ol;
 pub mod optgroup;
 pub mod option;
 pub mod script;
@@ -331,6 +333,20 @@ vanilla_element!(
     "The `menu` element represents a toolbar consisting of its contents, in the form of an \
     unordered list of items (represented by [li] elements), each of which represents a command \
     that the user can perform or activate."
+);
+vanilla_element!(
+    nav,
+    Nav,
+    "The `nav` element represents a section of a page that links to other pages or to parts within \
+    the page: a section with navigation links."
+);
+vanilla_element!(
+    noscript,
+    NoScript,
+    "The `noscript` element represents nothing if scripting is enabled, and represents its \
+    children if scripting is disabled. It is used to present different markup to user agents that \
+    support scripting and those that don't support scripting, by affecting how the document is \
+    parsed."
 );
 
 vanilla_element!(
