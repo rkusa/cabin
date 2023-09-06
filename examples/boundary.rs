@@ -11,7 +11,7 @@ async fn app() -> impl View {
     basic_document((
         counter(1),
         counter(2),
-        button("triger whole page update").on_click(()),
+        h::button("triger whole page update").on_click(()),
     ))
 }
 
@@ -22,7 +22,7 @@ struct Increment(usize);
 fn counter(count: usize) -> Boundary<usize> {
     let count = event::<Increment>().unwrap_or(Increment(count)).0;
 
-    button(text!("{}", count))
+    h::button(h::text!("{}", count))
         .on_click(Increment(count + 1))
         .boundary(count)
         .prerender(Increment(count + 1))

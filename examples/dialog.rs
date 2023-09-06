@@ -18,9 +18,9 @@ fn dialog(content: impl View) -> impl View {
 
     (
         open.0.then_some(
-            html::dialog((content, button("close").on_click(Toggle(false)))).with_open(open.0),
+            html::dialog((content, h::button("close").on_click(Toggle(false)))).with_open(open.0),
         ),
-        button("open").on_click(Toggle(true)),
+        h::button("open").on_click(Toggle(true)),
     )
 }
 

@@ -11,17 +11,17 @@ async fn app() -> impl View {
 
     let values = data.clone().unwrap_or_default();
     basic_document((
-        form((
-            input().type_text().name("comment").value(values.comment),
-            input()
+        h::form((
+            h::input().type_text().name("comment").value(values.comment),
+            h::input()
                 .type_checkbox()
                 .name("highlighted")
                 .with_checked(values.highlighted),
-            button("submit").type_submit(),
+            h::button("submit").type_submit(),
         ))
         .on_submit::<Data>(),
         data.map(|data| {
-            text!(
+            h::text!(
                 "Submitted: comment={}; highlighted={}",
                 data.comment,
                 data.highlighted

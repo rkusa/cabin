@@ -21,9 +21,9 @@ async fn search() -> impl View {
         .unwrap_or(Cow::Borrowed("Ge"));
     let items = search_countries(&query).await;
 
-    div((
-        div(input().on_input(|ev| Search(ev.value)).value(query)),
-        div(ul(items.into_iter().map(li))),
+    h::div((
+        h::div(h::input().on_input(|ev| Search(ev.value)).value(query)),
+        h::div(h::ul(items.into_iter().map(h::li))),
     ))
 }
 

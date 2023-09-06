@@ -7,14 +7,20 @@ mod raw;
 use std::marker::PhantomData;
 
 #[doc(inline)]
-pub use exports::*;
+pub use elements::aria::Aria;
+#[doc(inline)]
+pub use elements::common::Common;
+#[doc(inline)]
+pub use elements::global::Global;
+#[doc(inline)]
+pub use h::*;
 pub use raw::{raw, Raw};
 
 use self::attributes::{Attributes, Pair, WithAttribute};
 use crate::render::Renderer;
 use crate::view::{RenderFuture, View};
 
-pub(crate) mod exports {
+pub mod h {
     #[doc(inline)]
     pub use super::elements::abbr::abbr;
     #[doc(inline)]
@@ -23,8 +29,6 @@ pub(crate) mod exports {
     pub use super::elements::anchor::{self as a, a, Anchor};
     #[doc(inline)]
     pub use super::elements::area::{self as area, area, Area};
-    #[doc(inline)]
-    pub use super::elements::aria::*;
     #[doc(inline)]
     pub use super::elements::article::article;
     #[doc(inline)]
@@ -60,8 +64,6 @@ pub(crate) mod exports {
     #[doc(inline)]
     pub use super::elements::colgroup::{self as colgroup, colgroup, Colgroup};
     #[doc(inline)]
-    pub use super::elements::common::*;
-    #[doc(inline)]
     pub use super::elements::data::{self as data, data, Data};
     #[doc(inline)]
     pub use super::elements::datalist::datalist;
@@ -95,8 +97,6 @@ pub(crate) mod exports {
     pub use super::elements::footer::footer;
     #[doc(inline)]
     pub use super::elements::form::{self as form, form, Form};
-    #[doc(inline)]
-    pub use super::elements::global::*;
     #[doc(inline)]
     pub use super::elements::h1::h1;
     #[doc(inline)]
@@ -187,6 +187,7 @@ pub(crate) mod exports {
     pub use super::elements::title::{title, title_update};
     #[doc(inline)]
     pub use super::elements::ul::ul;
+    pub use crate::html::raw;
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
 

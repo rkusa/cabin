@@ -10,6 +10,7 @@ use bytes::Bytes;
 pub use cabin_macros::{boundary, Attribute};
 pub use error::Error;
 use futures_util::stream::TryStreamExt;
+pub use html::h;
 pub use http::StatusCode;
 use http::{HeaderValue, Request, Response};
 use http_body::{Body, Full};
