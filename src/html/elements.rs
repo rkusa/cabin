@@ -40,6 +40,8 @@ pub mod progress;
 pub mod q;
 pub mod script;
 pub mod select;
+pub mod slot;
+pub mod source;
 pub mod span;
 pub mod textarea;
 pub mod time;
@@ -398,4 +400,23 @@ vanilla_element!(
     Samp,
     "The `samp` element represents sample or quoted output from another program or computing \
     system."
+);
+vanilla_element!(
+    search,
+    Search,
+    "The `search` element represents a part of a document or application that contains a set of \
+    form controls or other content related to performing a search or filtering operation. This \
+    could be a search of the web site or application; a way of searching or filtering search \
+    results on the current web page; or a global or Internet-wide search function."
+);
+vanilla_element!(
+    section,
+    Section,
+    "The section element represents a generic section of a document or application. A section, in \
+    this context, is a thematic grouping of content, typically with a heading."
+);
+vanilla_element!(
+    small,
+    Small,
+    "The `small` element represents side comments such as small print."
 );

@@ -170,8 +170,6 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::pre::pre;
     #[doc(inline)]
-    pub use super::elements::samp::samp;
-    #[doc(inline)]
     pub use super::elements::progress::{self as progress, progress, Progress};
     #[doc(inline)]
     pub use super::elements::q::{self as q, q, Q};
@@ -184,9 +182,21 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::s::s;
     #[doc(inline)]
+    pub use super::elements::samp::samp;
+    #[doc(inline)]
     pub use super::elements::script::{self as script, script, Script};
     #[doc(inline)]
+    pub use super::elements::search::search;
+    #[doc(inline)]
+    pub use super::elements::section::section;
+    #[doc(inline)]
     pub use super::elements::select::{self as select, select, Select};
+    #[doc(inline)]
+    pub use super::elements::slot::{self as slot, slot, Slot};
+    #[doc(inline)]
+    pub use super::elements::small::small;
+    #[doc(inline)]
+    pub use super::elements::source::{self as source, source, Source};
     #[doc(inline)]
     pub use super::elements::span::span;
     #[doc(inline)]
