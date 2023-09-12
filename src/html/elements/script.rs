@@ -118,7 +118,7 @@ pub struct Defer(pub bool);
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Integrity(pub Cow<'static, str>);
 
-struct ScriptEscape(Cow<'static, str>);
+pub struct ScriptEscape(pub Cow<'static, str>);
 
 impl View for ScriptEscape {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {

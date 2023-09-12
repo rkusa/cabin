@@ -43,6 +43,7 @@ pub mod select;
 pub mod slot;
 pub mod source;
 pub mod span;
+pub mod style;
 pub mod textarea;
 pub mod time;
 pub mod title;
@@ -419,4 +420,17 @@ vanilla_element!(
     small,
     Small,
     "The `small` element represents side comments such as small print."
+);
+vanilla_element!(
+    strong,
+    Strong,
+    "The `strong` element represents strong importance, seriousness, or urgency for its contents."
+);
+vanilla_element!(sup, Sup, "The `sup` element represents a superscript.");
+vanilla_element!(sub, Sub, "The `sub` element represents a subscript.");
+vanilla_element!(
+    summary,
+    Summary,
+    "The `summary` element represents a summary, caption, or legend for the rest of the contents \
+    of the `summary` element's parent [fn@h::details] element, if any."
 );

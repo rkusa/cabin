@@ -200,6 +200,16 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::span::span;
     #[doc(inline)]
+    pub use super::elements::strong::strong;
+    #[doc(inline)]
+    pub use super::elements::style::{self as style, style, Style};
+    #[doc(inline)]
+    pub use super::elements::sub::sub;
+    #[doc(inline)]
+    pub use super::elements::summary::summary;
+    #[doc(inline)]
+    pub use super::elements::sup::sup;
+    #[doc(inline)]
     pub use super::elements::textarea::{self as textarea, textarea, Textarea};
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
