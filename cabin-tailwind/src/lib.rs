@@ -11,8 +11,7 @@ pub use cabin_macros::tw;
 pub use utilities as css;
 
 pub mod prelude {
-    pub use crate::utilities as tw;
-    pub use crate::{tw, Responsive, Utility};
+    pub use crate::{tw, utilities as tw, Responsive, Utility};
 }
 
 pub trait Utility {

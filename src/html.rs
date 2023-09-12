@@ -170,9 +170,19 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::pre::pre;
     #[doc(inline)]
+    pub use super::elements::samp::samp;
+    #[doc(inline)]
     pub use super::elements::progress::{self as progress, progress, Progress};
     #[doc(inline)]
     pub use super::elements::q::{self as q, q, Q};
+    #[doc(inline)]
+    pub use super::elements::rp::rp;
+    #[doc(inline)]
+    pub use super::elements::rt::rt;
+    #[doc(inline)]
+    pub use super::elements::ruby::ruby;
+    #[doc(inline)]
+    pub use super::elements::s::s;
     #[doc(inline)]
     pub use super::elements::script::{self as script, script, Script};
     #[doc(inline)]

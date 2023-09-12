@@ -130,9 +130,9 @@ vanilla_element!(
 vanilla_element!(
     address,
     Address,
-    "The address element represents the contact information for its nearest [article] or [body] \
-    element ancestor. If that is the [body] element, then the contact information applies to the \
-    document as a whole."
+    "The address element represents the contact information for its nearest [h::article] or \
+    [h::body] element ancestor. If that is the [h::body] element, then the contact information \
+    applies to the document as a whole."
 );
 vanilla_element!(
     article,
@@ -164,8 +164,8 @@ vanilla_element!(
     Bdi,
     "The `bdi` element represents a span of text that is to be isolated from its surroundings for \
     the purposes of bidirectional text formatting.\n\
-    The [Global::dir] attribute defaults to [Dir::Auto] on this element (it never inherits from \
-    the parent element like with other elements)."
+    The [Global::dir] attribute defaults to [cabin::html::elements::global::Dir::Auto] on this \
+    element (it never inherits from the parent element like with other elements)."
 );
 vanilla_element!(
     bdo,
@@ -173,9 +173,10 @@ vanilla_element!(
     "The `bdo` element represents explicit text directionality formatting control for its \
     children. It allows authors to override the Unicode bidirectional algorithm by explicitly \
     specifying a direction override.\n\
-    Authors must specify the [Global::dir] attribute on this element, with the value [Dir::Ltr] to \
-    specify a left-to-right override and with the value [Dir::Rtl] to specify a right-to-left \
-    override. The [Dir::Auto] value must not be specified."
+    Authors must specify the [Global::dir] attribute on this element, with the value \
+    [cabin::html::elements::global::Dir::Ltr] to specify a left-to-right override and with the \
+    value [cabin::html::elements::global::Dir::Rtl] to specify a right-to-left override. The \
+    [cabin::html::elements::global::Dir::Auto] value must not be specified."
 );
 // Potential events to implement: onafterprint, onbeforeprint, onbeforeunload, onhashchange,
 // onlanguagechange, onmessage, onmessageerror, onoffline, ononline, onpagehide, onpageshow,
@@ -184,8 +185,8 @@ vanilla_void_element!(br, Br, "The `br` element represents a line break.");
 vanilla_element!(
     caption,
     Caption,
-    "The `caption` element represents the title of the [Table] that is its parent, if it has a
-    parent and that is a [Table] element."
+    "The `caption` element represents the title of the [h::table] that is its parent, if it has a
+    parent and that is a [h::table] element."
 );
 vanilla_element!(
     cite,
@@ -200,7 +201,7 @@ vanilla_element!(
 vanilla_element!(
     datalist,
     Datalist,
-    "The `datalist` element represents a set of [Option] elements that represent predefined \
+    "The `datalist` element represents a set of [fn@h::option] elements that represent predefined \
     options for other controls. In the rendering, the `datalist` element represents nothing and \
     it, along with its children, should be hidden."
 );
@@ -208,7 +209,7 @@ vanilla_element!(
     dd,
     Dd,
     "The `dd` element represents the description, definition, or value, part of a term-description \
-    group in a description list ([dl] element)."
+    group in a description list ([h::dl] element)."
 );
 vanilla_element!(
     dfn,
@@ -232,7 +233,7 @@ vanilla_element!(
     dt,
     Dt,
     "The `dt` element represents the term, or name, part of a term-description group in a \
-    description list ([dl] element)."
+    description list ([h::dl] element)."
 );
 vanilla_element!(
     em,
@@ -243,7 +244,7 @@ vanilla_element!(
     figcaption,
     FigCaption,
     "The `figcaption` element represents a caption or legend for the rest of the contents of the \
-    `figcaption` element's parent [figure] element, if any."
+    `figcaption` element's parent [h::figure] element, if any."
 );
 vanilla_element!(
     figure,
@@ -275,15 +276,15 @@ vanilla_element!(
     hgroup,
     HGroup,
     "The `hgroup` element represents a heading and related content. The element may be used to \
-    group an [h1]–[h6] element with one or more [p] elements containing content representing a \
-    subheading, alternative title, or tagline."
+    group an [h::h1]–[h::h6] element with one or more [h::p] elements containing content \
+    representing a subheading, alternative title, or tagline."
 );
 vanilla_void_element!(
     hr,
     Hr,
     "The `hr` element represents a paragraph-level thematic break, e.g., a scene change in a \
     story, or a transition to another topic within a section of a reference book; alternatively, \
-    it represents a separator between a set of options of a [fn@select] element."
+    it represents a separator between a set of options of a [fn@h::select] element."
 );
 vanilla_element!(
     i,
@@ -303,13 +304,13 @@ vanilla_element!(
     legend,
     Leged,
     "The `legend` element represents a caption for the rest of the contents of the legend \
-    element's parent [fn@fieldset] element, if any."
+    element's parent [fn@h::fieldset] element, if any."
 );
 vanilla_element!(
     li,
     Li,
-    "The `li` element represents a list item. If its parent element is an [fn@ol], [fn@ul], or \
-    [fn@menu] element, then the element is an item of the parent element's list, as defined for \
+    "The `li` element represents a list item. If its parent element is an [fn@h::ol], [fn@h::ul], \
+    or [h::menu] element, then the element is an item of the parent element's list, as defined for \
     those elements. Otherwise, the list item has no defined list-related relationship to any other \
     `li` element."
 );
@@ -334,7 +335,7 @@ vanilla_element!(
     menu,
     Menu,
     "The `menu` element represents a toolbar consisting of its contents, in the form of an \
-    unordered list of items (represented by [li] elements), each of which represents a command \
+    unordered list of items (represented by [h::li] elements), each of which represents a command \
     that the user can perform or activate."
 );
 vanilla_element!(
@@ -355,14 +356,46 @@ vanilla_element!(p, P, "The p element represents a paragraph.");
 vanilla_element!(
     picture,
     Picture,
-    "The `picture` element is a container which provides multiple sources to its contained [fn@img] \
-    element to allow authors to declaratively control or give hints to the user agent about which \
-    image resource to use, based on the screen pixel density, viewport size, image format, and \
-    other factors. It represents its children."
+    "The `picture` element is a container which provides multiple sources to its contained \
+    [fn@h::img] element to allow authors to declaratively control or give hints to the user agent \
+    about which image resource to use, based on the screen pixel density, viewport size, image \
+    format, and other factors. It represents its children."
 );
 vanilla_element!(
     pre,
     Pre,
-    "The pre element represents a block of preformatted text, in which structure is represented \
+    "The `pre` element represents a block of preformatted text, in which structure is represented \
     by typographic conventions rather than by elements."
+);
+vanilla_element!(
+    rp,
+    Rp,
+    "The `rp` element can be used to provide parentheses or other content around a [h::ruby] text \
+    component of a ruby annotation, to be shown by user agents that don't support ruby annotations."
+);
+vanilla_element!(
+    rt,
+    Rt,
+    "The `rt` element marks the ruby text component of a ruby annotation. When it is the child of \
+    a [h::ruby] element, it doesn't represent anything itself, but the [h::ruby] element uses it \
+    as part of determining what it represents."
+);
+vanilla_element!(
+    ruby,
+    Ruby,
+    "The `ruby` element allows one or more spans of phrasing content to be marked with ruby \
+    annotations. Ruby annotations are short runs of text presented alongside base text, primarily \
+    used in East Asian typography as a guide for pronunciation or to include other annotations. In \
+    Japanese, this form of typography is also known as furigana."
+);
+vanilla_element!(
+    s,
+    S,
+    "The `s` element represents contents that are no longer accurate or no longer relevant."
+);
+vanilla_element!(
+    samp,
+    Samp,
+    "The `samp` element represents sample or quoted output from another program or computing \
+    system."
 );
