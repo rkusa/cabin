@@ -15,8 +15,8 @@ use crate::html::events::InputEvent;
 use crate::html::{Aria, Html};
 use crate::View;
 
-/// The textarea element represents a multiline plain text edit control for the element's raw value.
-/// The contents of the control represent the control's default value.
+/// The `textarea` element represents a multiline plain text edit control for the element's raw
+/// value. The contents of the control represent the control's default value.
 pub fn textarea(content: impl Into<Cow<'static, str>>) -> Html<marker::Textarea, (), impl View> {
     Html::new("textarea", (), content.into())
 }
@@ -30,8 +30,8 @@ impl<A: Attributes, V: 'static> Common for Html<marker::Textarea, A, V> {}
 impl<A: Attributes, V: 'static> Global for Html<marker::Textarea, A, V> {}
 impl<A: Attributes, V: 'static> Aria for Html<marker::Textarea, A, V> {}
 
-/// The textarea element represents a multiline plain text edit control for the element's raw value.
-/// The contents of the control represent the control's default value.
+/// The `textarea` element represents a multiline plain text edit control for the element's raw
+/// value. The contents of the control represent the control's default value.
 pub trait Textarea: WithAttribute {
     /// Hint for form autofill feature.
     fn autocomplete(self, autocomplete: AutoComplete) -> Self::Output<AutoComplete> {

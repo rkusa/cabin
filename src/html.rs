@@ -210,7 +210,17 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::sup::sup;
     #[doc(inline)]
+    pub use super::elements::table::table;
+    #[doc(inline)]
+    pub use super::elements::tbody::tbody;
+    #[doc(inline)]
+    pub use super::elements::td::{self as td, td, Td};
+    #[doc(inline)]
+    pub use super::elements::template::template;
+    #[doc(inline)]
     pub use super::elements::textarea::{self as textarea, textarea, Textarea};
+    #[doc(inline)]
+    pub use super::elements::tfoot::tfoot;
     #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]

@@ -44,6 +44,7 @@ pub mod slot;
 pub mod source;
 pub mod span;
 pub mod style;
+pub mod td;
 pub mod textarea;
 pub mod time;
 pub mod title;
@@ -433,4 +434,28 @@ vanilla_element!(
     Summary,
     "The `summary` element represents a summary, caption, or legend for the rest of the contents \
     of the `summary` element's parent [fn@h::details] element, if any."
+);
+vanilla_element!(
+    table,
+    Table,
+    "The `table` element represents data with more than one dimension, in the form of a table."
+);
+vanilla_element!(
+    tbody,
+    TBody,
+    "The `tbody` element represents a block of rows that consist of a body of data for the parent \
+    [h::table] element, if the `tbody` element has a parent and it is a table."
+);
+vanilla_element!(
+    template,
+    Template,
+    "The `template` element is used to declare fragments of HTML that can be cloned and inserted \
+    in the document by script."
+);
+vanilla_element!(
+    tfoot,
+    TFoot,
+    "The `tfoot` element represents the block of rows that consist of the column summaries \
+    (footers) for the parent [h::table] element, if the `tfoot` element has a parent and it is a \
+    table."
 );
