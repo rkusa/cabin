@@ -222,9 +222,19 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::tfoot::tfoot;
     #[doc(inline)]
+    pub use super::elements::th::{self as th, th, Th};
+    #[doc(inline)]
+    pub use super::elements::thead::thead;
+    #[doc(inline)]
     pub use super::elements::time::{self as time, time, Time};
     #[doc(inline)]
     pub use super::elements::title::{title, title_update};
+    #[doc(inline)]
+    pub use super::elements::tr::tr;
+    #[doc(inline)]
+    pub use super::elements::track::{self as track, track, Track};
+    #[doc(inline)]
+    pub use super::elements::u::u;
     #[doc(inline)]
     pub use super::elements::ul::ul;
     pub use crate::html::raw;

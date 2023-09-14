@@ -8,7 +8,10 @@ use crate::render::Renderer;
 use crate::view::RenderFuture;
 use crate::View;
 
-/// TODO
+/// The `title` element represents the document's title or name. Authors should use titles that
+/// identify their documents even when they are used out of context, for example in a user's history
+/// or bookmarks, or in search results. The document's title is often different from its first
+/// heading, since the first heading does not have to stand alone when taken out of context.
 pub fn title(title: impl Into<Cow<'static, str>>) -> Html<marker::Title, (), Cow<'static, str>> {
     Html::new("title", (), title.into())
 }

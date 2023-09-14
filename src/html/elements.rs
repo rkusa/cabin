@@ -46,8 +46,10 @@ pub mod span;
 pub mod style;
 pub mod td;
 pub mod textarea;
+pub mod th;
 pub mod time;
 pub mod title;
+pub mod track;
 pub mod ul;
 
 pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
@@ -458,4 +460,23 @@ vanilla_element!(
     "The `tfoot` element represents the block of rows that consist of the column summaries \
     (footers) for the parent [h::table] element, if the `tfoot` element has a parent and it is a \
     table."
+);
+vanilla_element!(
+    thead,
+    THead,
+    "The `thead` element represents the block of rows that consist of the column labels (headers) \
+    and any ancillary non-header cells for the parent [h::table] element, if the `thead` element \
+    has a parent and it is a table."
+);
+vanilla_element!(
+    tr,
+    Tr,
+    "The `tr` element represents a row of cells in a table."
+);
+vanilla_element!(
+    u,
+    U,
+    "The `u` element represents a span of text with an unarticulated, though explicitly rendered, \
+    non-textual annotation, such as labeling the text as being a proper name in Chinese text (a \
+    Chinese proper name mark), or labeling the text as being misspelt."
 );
