@@ -50,7 +50,7 @@ pub mod th;
 pub mod time;
 pub mod title;
 pub mod track;
-pub mod ul;
+pub mod video;
 
 pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
 
@@ -479,4 +479,22 @@ vanilla_element!(
     "The `u` element represents a span of text with an unarticulated, though explicitly rendered, \
     non-textual annotation, such as labeling the text as being a proper name in Chinese text (a \
     Chinese proper name mark), or labeling the text as being misspelt."
+);
+vanilla_element!(
+    ul,
+    Ul,
+    "The `ul` element represents a list of items, where the order of the items is not important — \
+    that is, where changing the order would not materially change the meaning of the document."
+);
+vanilla_element!(
+    var,
+    Var,
+    "The `var` element represents a variable. This could be an actual variable in a mathematical \
+    expression or programming context, an identifier representing a constant, a symbol identifying \
+    a physical quantity, a function parameter, or just be a term used as a placeholder in prose."
+);
+vanilla_void_element!(
+    wbr,
+    Wbr,
+    "The `wbr` element represents a line break opportunity."
 );

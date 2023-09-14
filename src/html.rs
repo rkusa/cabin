@@ -237,6 +237,12 @@ pub mod h {
     pub use super::elements::u::u;
     #[doc(inline)]
     pub use super::elements::ul::ul;
+    #[doc(inline)]
+    pub use super::elements::var::var;
+    #[doc(inline)]
+    pub use super::elements::video::{self as video, video, Video};
+    #[doc(inline)]
+    pub use super::elements::wbr::wbr;
     pub use crate::html::raw;
     #[doc(inline)]
     pub use crate::view::text::{text, Text};
