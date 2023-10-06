@@ -175,6 +175,7 @@ pub enum Length {
     Vw(u16),
     Vh(u16),
     Px(f32),
+    Em(f32),
     Rem(f32),
     Percent(f32),
 }
@@ -184,7 +185,9 @@ impl Length {
         match self {
             Length::Auto | Length::MinContent | Length::MaxContent | Length::FitContent => false,
             Length::Vw(v) | Length::Vh(v) => *v == 0,
-            Length::Px(v) | Length::Rem(v) | Length::Percent(v) => v.abs() < f32::EPSILON,
+            Length::Px(v) | Length::Em(v) | Length::Rem(v) | Length::Percent(v) => {
+                v.abs() < f32::EPSILON
+            }
         }
     }
 }
@@ -203,6 +206,7 @@ impl fmt::Display for Length {
             Length::Vw(v) => write!(f, "{v}vw"),
             Length::Vh(v) => write!(f, "{v}vh"),
             Length::Px(v) => write!(f, "{v}px"),
+            Length::Em(v) => write!(f, "{v}em"),
             Length::Rem(v) => write!(f, "{v}rem"),
             Length::Percent(v) => write!(f, "{v}%"),
         }
