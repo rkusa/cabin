@@ -38,6 +38,7 @@ pub mod ms;
 pub mod mt;
 pub mod mx;
 pub mod my;
+pub mod object;
 pub mod order;
 pub mod outline;
 pub mod overflow;
