@@ -25,6 +25,7 @@ pub mod justify;
 pub mod leading;
 pub mod left;
 pub mod line;
+pub mod list;
 pub mod m;
 pub mod max_h;
 pub mod max_w;
