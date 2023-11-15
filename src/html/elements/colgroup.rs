@@ -3,11 +3,14 @@ use super::common::Common;
 use super::global::Global;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::Html;
+use crate::View;
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.
-pub fn colgroup() -> Html<marker::Colgroup, (), ()> {
-    Html::new("colgroup", (), ())
+pub fn colgroup(content: impl View) -> Html<marker::Colgroup, (), impl View> {
+    #[cfg(debug_assertions)]
+    let content = content.boxed();
+    Html::new("colgroup", (), content)
 }
 
 pub mod marker {
