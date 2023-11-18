@@ -12,6 +12,14 @@ pub mod tl;
 pub mod tr;
 
 use crate::{Length, Property};
+pub use b::DEFAULT as B;
+pub use bl::DEFAULT as BL;
+pub use br::DEFAULT as BR;
+pub use l::DEFAULT as L;
+pub use r::DEFAULT as R;
+pub use t::DEFAULT as T;
+pub use tl::DEFAULT as TL;
+pub use tr::DEFAULT as TR;
 
 const BORDER_RADIUS: &str = "border-radius";
 
