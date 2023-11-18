@@ -53,6 +53,7 @@ pub trait Common: WithAttribute {
 pub struct Id(pub Cow<'static, str>);
 
 /// The various classes that the element belongs to.
+// FIXME: make it Copy
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Class(pub Cow<'static, str>);
 
