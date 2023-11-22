@@ -131,10 +131,19 @@ function setUpEventListener(el, eventName, opts) {
         continue;
       }
 
+      // The boundary only intercepts certain events
       if (opts.events && !opts.events.has(eventId)) {
-        // force update upon parent boundary update
-        this.removeAttribute("hash");
         return;
+      }
+
+      // The internal state/view of the boundary is possibly going to change due to this event. To
+      // force an update for the boundary if its parent view changes, remove all hash attributes
+      // from ascendents up until the next cabin boundary.
+      if (el !== document) {
+        let el = this;
+        do {
+          el.removeAttribute("hash");
+        } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
       }
 
       if (opts.disable && node.disabled) {
@@ -151,9 +160,9 @@ function setUpEventListener(el, eventName, opts) {
       const abortController = new AbortController();
       abortControllers.set(node, abortController);
 
+      const isSubmitEvent = eventName === "submit";
       e.stopPropagation();
-
-      if (opts.preventDefault) {
+      if (opts.preventDefault || isSubmitEvent) {
         e.preventDefault();
       }
 
@@ -164,20 +173,38 @@ function setUpEventListener(el, eventName, opts) {
         }
       }
 
-      if (opts.disable) {
-        node.disabled = true;
-      }
+      /** @type {WeakMap<HTMLElement, bool>} */
+      const disabledBefore = new WeakMap();
 
       try {
-        const payload = opts?.eventPayload
-          ? Object.entries(opts.eventPayload(e)).reduce(
+        let payload;
+        if (isSubmitEvent) {
+          payload = new URLSearchParams(new FormData(node));
+          console.log(node, Object.fromEntries(payload.entries()));
+        } else if (opts?.eventPayload) {
+          payload = JSON.parse(
+            Object.entries(opts.eventPayload(e)).reduce(
               (result, [placeholder, value]) =>
                 result.replace(placeholder, value),
               node.getAttribute(`${attrName}-payload`),
-            )
-          : node.getAttribute(`${attrName}-payload`);
+            ),
+          );
+        } else {
+          payload = JSON.parse(node.getAttribute(`${attrName}-payload`));
+        }
 
-        if (this instanceof CabinBoundary) {
+        if (isSubmitEvent) {
+          // disable whole form
+          for (const el of node.elements) {
+            disabledBefore.set(el, el.disabled);
+            el.disabled = true;
+          }
+        } else if (opts.disable) {
+          node.disabled = true;
+        }
+
+        // Check for, and if exists apply, pre-rendered instances of this boundary
+        if (!isSubmitEvent && this instanceof CabinBoundary) {
           let templates = [];
           let template = this.lastElementChild;
           while (
@@ -208,17 +235,27 @@ function setUpEventListener(el, eventName, opts) {
 
         await update(
           parseInt(eventId),
-          JSON.parse(payload),
+          payload,
           el == document ? document.body : el,
           abortController,
         );
       } catch (err) {
         throw err;
       } finally {
-        if (opts.disable) {
+        if (isSubmitEvent) {
+          // restore disabled state
+          for (const el of node.elements) {
+            const before = disabledBefore.get(el);
+            if (before !== undefined) {
+              el.disabled = before;
+            }
+          }
+        } else if (opts.disable) {
           node.disabled = false;
         }
       }
+
+      break;
     } while ((node = node.parentElement));
   }
 
@@ -270,8 +307,8 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
       while (node) {
         let next = node.nextSibling;
         if (isKeyedElement(node)) {
-          const previous =
-            document.getElementById(node.id) ?? orphanKeyed[node.id];
+          // Only checking orphan nodes as there are no siblings remaining to check anyway
+          const previous = orphanKeyed[node.id];
           if (previous) {
             // console.log(`found existing ${node.id} and moved it into place`);
             fragment.appendChild(previous);
@@ -288,7 +325,7 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
       return;
     }
 
-    // re-use if found somewhere else in the three
+    // re-use if found somewhere else in the tree
     if (
       isKeyedElement(nodeAfter) &&
       (!isKeyedElement(nodeBefore) || nodeBefore.id !== nodeAfter.id)
@@ -297,10 +334,14 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
         document.getElementById(nodeAfter.id) ?? orphanKeyed[nodeAfter.id];
       nextBefore = nodeBefore;
       nextAfter = nodeAfter.nextSibling;
-      if (previous) {
+      if (
+        previous &&
+        (!previous.parentNode || previous.parentNode == nodeBefore.parentNode)
+      ) {
         // console.log(`found existing ${nodeAfter.id} and moved it into place`);
         rootBefore.insertBefore(previous, nodeBefore);
         delete orphanKeyed[nodeAfter.id];
+        nodeBefore = previous;
       } else {
         // console.log("new iter item, move new into place");
         rootBefore.insertBefore(nodeAfter, nodeBefore);
@@ -406,7 +447,7 @@ function patchAttributes(childBefore, childAfter) {
   }
 
   // delete attributes that are not set anymore
-  for (const name in oldAttributeNames) {
+  for (const name of oldAttributeNames) {
     if (ignoreAttribute(childBefore, name)) {
       continue;
     }
@@ -464,47 +505,9 @@ function setupEventListeners(el) {
     events,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
   });
-  el.addEventListener("submit", async function handleEvent(e) {
-    /** @type {HTMLFormElement} */
-    let form = e.target;
-    do {
-      const eventId = form.getAttribute("cabin-submit");
-      if (!eventId) {
-        return;
-      }
-      if (events && !events.has(eventId)) {
-        // force update upon parent boundary update
-        this.removeAttribute("hash");
-        return;
-      }
-
-      e.stopPropagation();
-      e.preventDefault();
-
-      const payload = new URLSearchParams(new FormData(form));
-
-      // disable whole form
-      /** @type {WeakMap<HTMLElement, bool>} */
-      const disabledBefore = new WeakMap();
-      for (const el of form.elements) {
-        disabledBefore.set(el, el.disabled);
-        el.disabled = true;
-      }
-
-      try {
-        await update(parseInt(eventId), payload, document.body);
-      } finally {
-        // restore disabled state
-        for (const el of form.elements) {
-          const before = disabledBefore.get(el);
-          if (before !== undefined) {
-            el.disabled = before;
-          }
-        }
-      }
-
-      break;
-    } while ((form = form.parentElement));
+  setUpEventListener(el, "submit", {
+    events,
+    preventDefault: true,
   });
 }
 

@@ -43,9 +43,8 @@ pub fn start(n: u16) -> Property<u16> {
 }
 
 pub mod start {
-    use crate::Property;
-
     use super::GRID_COLUMN_START;
+    use crate::Property;
 
     /// ```css
     /// grid-column-start: auto;
@@ -61,9 +60,8 @@ pub fn end(n: u16) -> Property<u16> {
 }
 
 pub mod end {
-    use crate::Property;
-
     use super::GRID_COLUMN_END;
+    use crate::Property;
 
     /// ```css
     /// grid-column-end: auto;
