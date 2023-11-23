@@ -75,6 +75,31 @@ impl StyleRegistry {
             styles.sort_by_key(|s| s.order());
 
             let pos = self.out.len();
+
+            writeln!(&mut self.out, "@keyframes ").unwrap();
+            let animation_name_offset1 = self.out.len();
+            write!(&mut self.out, "          {{").unwrap();
+            writeln!(&mut self.out, "  from {{").unwrap();
+            let before_animate_from = self.out.len();
+            for style in &styles {
+                style.write_animate_from(&mut self.out).unwrap();
+            }
+            let has_animate_from = self.out.len() > before_animate_from;
+            writeln!(&mut self.out, "  }}").unwrap();
+            writeln!(&mut self.out, "  to {{").unwrap();
+            let before_animate_to = self.out.len();
+            for style in &styles {
+                style.write_animate_to(&mut self.out).unwrap();
+            }
+            let has_animate_to = self.out.len() > before_animate_to;
+            writeln!(&mut self.out, "  }}").unwrap();
+            writeln!(&mut self.out, "}}").unwrap();
+
+            let has_animation = has_animate_from || has_animate_to;
+            if !has_animation {
+                self.out.truncate(pos);
+            }
+
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.get(0) {
                 style.selector_prefix(&mut self.out).unwrap();
@@ -86,6 +111,13 @@ impl StyleRegistry {
                 style.selector_suffix(&mut self.out).unwrap();
             }
             writeln!(&mut self.out, " {{").unwrap();
+            let mut animation_name_offset2 = 0;
+            if has_animation {
+                // TODO: make easing function, delay, duration, etc. customizable
+                write!(&mut self.out, "animation: 250ms ease-in-out 2 alternate ").unwrap();
+                animation_name_offset2 = self.out.len();
+                writeln!(&mut self.out, "         ;").unwrap();
+            }
             for style in &styles {
                 style.declarations(&mut self.out).unwrap();
             }
@@ -113,6 +145,13 @@ impl StyleRegistry {
                 self.out.replace_range(offset..offset + 1, ".");
                 self.out
                     .replace_range(offset + 1..offset + 1 + name.len(), &name);
+
+                if has_animation {
+                    let offset = animation_name_offset1 + 9 - name.len();
+                    self.out.replace_range(offset..offset + name.len(), &name);
+                    let offset = animation_name_offset2 + 9 - name.len();
+                    self.out.replace_range(offset..offset + name.len(), &name);
+                }
             }
 
             if !all_names.is_empty() {

@@ -29,6 +29,14 @@ pub trait Utility {
         Ok(())
     }
 
+    fn write_animate_from(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
+        Ok(())
+    }
+
+    fn write_animate_to(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
+        Ok(())
+    }
+
     fn hash_modifier(&self, _hasher: &mut dyn Hasher) {}
 
     fn override_class_name(&self) -> Option<&str> {
@@ -55,6 +63,20 @@ pub trait Utility {
         Self: Sized,
     {
         pseudo::after::After(self)
+    }
+
+    fn animate_from(self) -> pseudo::animate_from::AnimateFrom<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::animate_from::AnimateFrom(self)
+    }
+
+    fn animate_to(self) -> pseudo::animate_to::AnimateTo<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::animate_to::AnimateTo(self)
     }
 
     /// Apply style to all direct children (`> *`).

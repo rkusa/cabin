@@ -1,5 +1,7 @@
 pub mod active;
 pub mod after;
+pub mod animate_from;
+pub mod animate_to;
 pub mod apply_to_children;
 pub mod before;
 pub mod disabled;
