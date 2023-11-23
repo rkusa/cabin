@@ -99,6 +99,20 @@ async function update(eventId, payload, target, abortController) {
     if (newTitle) {
       document.title = newTitle;
     }
+
+    // TODO: prevent endless event loops
+    {
+      const eventId = res.headers.get("x-cabin-event");
+      const payload = res.headers.get("x-cabin-payload");
+      if (eventId && payload) {
+        target.dispatchEvent(
+          new CustomEvent("cabinFire", {
+            detail: { eventId, payload: JSON.parse(payload) },
+            bubbles: true,
+          }),
+        );
+      }
+    }
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       // ignore
@@ -126,7 +140,7 @@ function setUpEventListener(el, eventName, opts) {
     let node = e.target;
 
     do {
-      const eventId = node.getAttribute(attrName);
+      const eventId = e.detail?.eventId ?? node.getAttribute(attrName);
       if (!eventId) {
         continue;
       }
@@ -180,7 +194,6 @@ function setUpEventListener(el, eventName, opts) {
         let payload;
         if (isSubmitEvent) {
           payload = new URLSearchParams(new FormData(node));
-          console.log(node, Object.fromEntries(payload.entries()));
         } else if (opts?.eventPayload) {
           payload = JSON.parse(
             Object.entries(opts.eventPayload(e)).reduce(
@@ -190,7 +203,10 @@ function setUpEventListener(el, eventName, opts) {
             ),
           );
         } else {
-          payload = JSON.parse(node.getAttribute(`${attrName}-payload`));
+          payload =
+            e.detail && typeof e.detail === "object" && "payload" in e.detail
+              ? e.detail.payload
+              : JSON.parse(node.getAttribute(`${attrName}-payload`));
         }
 
         if (isSubmitEvent) {
@@ -509,6 +525,9 @@ function setupEventListeners(el) {
     events,
     preventDefault: true,
   });
+  setUpEventListener(el, "cabinFire", {
+    events,
+  });
 }
 
 class CabinBoundary extends HTMLElement {
@@ -531,6 +550,10 @@ document.addEventListener("cabinRefresh", async function () {
     } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
   }
   await update(0, {}, document.body);
+});
+
+document.addEventListener("cabinFire", async function (e) {
+  await update(e.detail?.eventId, e.detail?.payload, document.body);
 });
 
 window.addEventListener("popstate", () => {
