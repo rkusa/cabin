@@ -1,11 +1,10 @@
 use http::{HeaderName, HeaderValue};
 
+use super::SerializeEventFn;
 use crate::error::InternalError;
 use crate::render::Renderer;
 use crate::view::RenderFuture;
 use crate::View;
-
-use super::SerializeEventFn;
 
 pub struct FireEvent(pub Box<SerializeEventFn>);
 
