@@ -1,7 +1,11 @@
 [package]
 name = "cabin-macros"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+authors = ["Markus Ast <m@rkusa.st>"]
+license = "MIT OR Apache-2.0"
+description = "Macros for cabin crate"
+repository = "https://github.com/rkusa/cabin"
 
 [lib]
 proc-macro = true

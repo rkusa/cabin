@@ -1,7 +1,11 @@
 [package]
 name = "cabin"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+authors = ["Markus Ast <m@rkusa.st>"]
+license = "MIT OR Apache-2.0"
+description = "Server-first toolkit to build web apps"
+repository = "https://github.com/rkusa/cabin"
 
 [workspace]
 members = [
@@ -16,11 +20,11 @@ livereload = []
 
 [dependencies]
 bytes = "1.2"
-cabin-macros = { path = "./cabin-macros", version = "0.1" }
+cabin-macros = { path = "./cabin-macros", version = "0.2" }
 futures-util = "0.3"
 http = "0.2"
 http-body = "0.4"
-http-error = { git = "https://github.com/rkusa/http-error.git", rev = "1f0630c" } # path = "../http-error" }
+http-error = { version = "0.1" } # git = "https://github.com/rkusa/http-error.git", rev = "1f0630c" } # path = "../http-error" }
 linkme = "0.3"
 mime = "0.3"
 multer = { version = "2.1.0", features = ["json"] }

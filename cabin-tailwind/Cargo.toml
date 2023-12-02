@@ -1,7 +1,11 @@
 [package]
 name = "cabin-tailwind"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+authors = ["Markus Ast <m@rkusa.st>"]
+license = "MIT OR Apache-2.0"
+description = "Tailwind-alike styling for cabin"
+repository = "https://github.com/rkusa/cabin"
 
 [features]
 default = ["preflight"]
@@ -11,8 +15,8 @@ forms = []
 [dependencies]
 linkme = "0.3"
 once_cell = "1.15"
-cabin = { version = "0.1", path = "../", default-features = false }
-cabin-macros = { path = "../cabin-macros", version = "0.1" }
+cabin = { version = "0.2", path = "../", default-features = false }
+cabin-macros = { path = "../cabin-macros", version = "0.2" }
 twox-hash = "1.6"
 
 [dev-dependencies]
