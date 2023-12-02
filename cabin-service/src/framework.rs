@@ -72,6 +72,14 @@ where
             match (method, &segments[..len]) {
                 (&Method::GET, &["server-component.js"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/javascript")
+                    .header(
+                        header::CACHE_CONTROL,
+                        if req.uri().query().is_some() {
+                            "public,max-age=31536000,immutable"
+                        } else {
+                            "no-cache"
+                        },
+                    )
                     .body(UnsyncBoxBody::new(
                         Full::new(Bytes::from(SERVER_COMPONENT_JS)).map_err(|_| unreachable!()),
                     ))
@@ -80,6 +88,14 @@ where
                 #[cfg(feature = "cabin-tailwind")]
                 (&Method::GET, &["styles.css"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/css")
+                    .header(
+                        header::CACHE_CONTROL,
+                        if req.uri().query().is_some() {
+                            "public,max-age=31536000,immutable"
+                        } else {
+                            "no-cache"
+                        },
+                    )
                     .body(UnsyncBoxBody::new(
                         Full::new(Bytes::from(
                             cabin_tailwind::registry::StyleRegistry::global().style_sheet(),
