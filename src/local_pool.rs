@@ -2,6 +2,7 @@ use std::future::Future;
 
 use once_cell::race::OnceBox;
 use tokio_util::task::LocalPoolHandle;
+use tracing::Instrument;
 
 static LOCAL_POOL: OnceBox<LocalPoolHandle> = OnceBox::new();
 
@@ -16,5 +17,8 @@ where
         Box::new(LocalPoolHandle::new(cpus * 2))
     });
 
-    pool.spawn_pinned(create_task).await.unwrap()
+    let span = tracing::trace_span!("local_pool_spawn");
+    pool.spawn_pinned(|| create_task().instrument(span))
+        .await
+        .unwrap()
 }

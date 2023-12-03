@@ -7,6 +7,7 @@ use std::rc::Rc;
 use serde::de::DeserializeOwned;
 use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
+use tracing::Instrument;
 use twox_hash::XxHash32;
 
 use crate::error::InternalError;
@@ -213,7 +214,8 @@ impl Scope {
         let scope = SCOPE
             .try_with(|scope| scope.clone())
             .expect("not called within scope");
-        tokio::task::spawn_local(SCOPE.scope(scope, future))
+        let span = tracing::trace_span!("spawn_local_scope");
+        tokio::task::spawn_local(SCOPE.scope(scope, future.instrument(span)))
     }
 }
 
