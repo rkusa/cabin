@@ -135,8 +135,14 @@ where
                     ))
                 }
 
+                // TODO: error to help debugging (or redirect again?)
                 (&Method::GET, &["client_redirect"]) => Ok(Response::builder()
-                    .status(StatusCode::NO_CONTENT)
+                    .status(StatusCode::SEE_OTHER)
+                    // TODO: handle missing query?
+                    // TODO: validate same host for redirect?
+                    // TODO: be smarter about client_redirect and not have the extra step for full
+                    //       page navigations?
+                    .header(header::LOCATION, req.uri().query().unwrap_or(""))
                     .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
                     .unwrap()),
 
