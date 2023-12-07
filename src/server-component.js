@@ -219,7 +219,7 @@ function setUpEventListener(el, eventName, opts) {
           node.disabled = true;
         }
 
-        // Check for, and if exists apply, pre-rendered instances of this boundary
+        // Check for, and if exists, apply pre-rendered instances of this boundary
         if (!isSubmitEvent && this instanceof CabinBoundary) {
           let templates = [];
           let template = this.lastElementChild;
@@ -232,10 +232,13 @@ function setUpEventListener(el, eventName, opts) {
             templates.push(template);
             template = template.previousElementSibling;
           }
+          // TODO: might not always be the same, somehow use same string representation of the
+          // payload as the server?
+          const payloadStr = JSON.stringify(payload);
           for (const template of templates) {
             if (
               template.getAttribute("event-id") === eventId &&
-              template.getAttribute("event-payload") === payload
+              template.getAttribute("event-payload") === payloadStr
             ) {
               console.time("patch");
               patchChildren(el, template.content, {});
