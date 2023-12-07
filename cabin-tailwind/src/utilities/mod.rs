@@ -48,6 +48,7 @@ pub mod p;
 pub mod pb;
 pub mod pl;
 pub mod place;
+pub mod pointer_events;
 pub mod position;
 pub mod pr;
 pub mod pt;
