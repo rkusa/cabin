@@ -3,8 +3,15 @@
  * @param {object | URLSearchParams} payload
  * @param {Node} target
  * @param {AbortController | undefined} abortController
+ * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
  */
-async function update(eventId, payload, target, abortController) {
+async function update(
+  eventId,
+  payload,
+  target,
+  abortController,
+  disabledBefore,
+) {
   if (this.abortController) {
     this.abortController.abort();
   }
@@ -87,7 +94,7 @@ async function update(eventId, payload, target, abortController) {
     console.time("patch");
     const template = document.createElement("template");
     template.innerHTML = html;
-    patchChildren(target, template.content, {});
+    patchChildren(target, template.content, {}, disabledBefore);
     console.timeEnd("patch");
 
     const rewriteUrl = res.headers.get("location");
@@ -216,6 +223,7 @@ function setUpEventListener(el, eventName, opts) {
             el.disabled = true;
           }
         } else if (opts.disable) {
+          disabledBefore.set(node, node.disabled);
           node.disabled = true;
         }
 
@@ -241,7 +249,7 @@ function setUpEventListener(el, eventName, opts) {
               template.getAttribute("event-payload") === payloadStr
             ) {
               console.time("patch");
-              patchChildren(el, template.content, {});
+              patchChildren(el, template.content, {}, disabledBefore);
               // put back prerendered templates
               for (const template of templates) {
                 this.appendChild(template);
@@ -257,6 +265,7 @@ function setUpEventListener(el, eventName, opts) {
           payload,
           el == document ? document.body : el,
           abortController,
+          disabledBefore,
         );
       } catch (err) {
         throw err;
@@ -270,7 +279,7 @@ function setUpEventListener(el, eventName, opts) {
             }
           }
         } else if (opts.disable) {
-          node.disabled = false;
+          node.disabled = disabledBefore.get(node) ?? false;
         }
       }
 
@@ -289,8 +298,9 @@ function setUpEventListener(el, eventName, opts) {
  * @param {Node} rootBefore
  * @param {Node} rootAfter
  * @param {Record<string, Node>} orphanKeyed
+ * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
  */
-function patchChildren(rootBefore, rootAfter, orphanKeyed) {
+function patchChildren(rootBefore, rootAfter, orphanKeyed, disabledBefore) {
   // console.log("apply", rootBefore, rootAfter);
 
   let nodeBefore = rootBefore.firstChild;
@@ -402,8 +412,8 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
         }
 
         // console.log("patch attributes");
-        patchAttributes(nodeBefore, nodeAfter);
-        patchChildren(nodeBefore, nodeAfter, orphanKeyed);
+        patchAttributes(nodeBefore, nodeAfter, disabledBefore);
+        patchChildren(nodeBefore, nodeAfter, orphanKeyed, disabledBefore);
         break;
 
       case Node.TEXT_NODE:
@@ -427,8 +437,9 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed) {
 /**
  * @param {Element} childBefore
  * @param {Element} childAfter
+ * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
  */
-function patchAttributes(childBefore, childAfter) {
+function patchAttributes(childBefore, childAfter, disabledBefore) {
   // special handling for certain elements
   switch (childAfter.nodeName) {
     case "DIALOG":
@@ -456,6 +467,9 @@ function patchAttributes(childBefore, childAfter) {
           childBefore.value = newValue;
         }
         break;
+      case "disabled":
+        disabledBefore?.set(childBefore, childAfter.disabled);
+      // fallthrough
       default:
         if (childBefore.getAttribute(name) !== newValue) {
           // console.log("update attribute", name);
