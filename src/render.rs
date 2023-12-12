@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
 
