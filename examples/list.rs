@@ -6,6 +6,7 @@ use cabin::scope::take_event;
 use cabin::view::{Boundary, IteratorExt};
 use http::Request;
 use serde::{Deserialize, Serialize};
+use tokio::net::TcpListener;
 
 async fn app() -> impl View {
     basic_document(list(vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await)
@@ -84,8 +85,10 @@ async fn main() {
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");
-    axum::Server::bind(&addr)
-        .serve(server.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(
+        TcpListener::bind(addr).await.unwrap(),
+        server.into_make_service(),
+    )
+    .await
+    .unwrap();
 }

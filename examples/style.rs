@@ -6,6 +6,7 @@ use cabin::scope::event;
 use cabin_tailwind::cabin_stylesheets;
 use cabin_tailwind::prelude::*;
 use http::Request;
+use tokio::net::TcpListener;
 
 async fn app() -> impl View {
     let count = event::<usize>().unwrap_or(0);
@@ -59,8 +60,10 @@ async fn main() {
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");
-    axum::Server::bind(&addr)
-        .serve(server.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(
+        TcpListener::bind(addr).await.unwrap(),
+        server.into_make_service(),
+    )
+    .await
+    .unwrap();
 }

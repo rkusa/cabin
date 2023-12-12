@@ -13,7 +13,8 @@ use futures_util::stream::TryStreamExt;
 pub use html::h;
 pub use http::StatusCode;
 use http::{HeaderValue, Request, Response};
-use http_body::{Body, Full};
+use http_body::Body;
+use http_body_util::{BodyExt, Full};
 use http_error::HttpError;
 use mime::Mime;
 use multer::Multipart;
@@ -188,10 +189,13 @@ where
 
     let body = pin!(req.into_body());
     let body = futures_util::stream::try_unfold(body, |mut body| async move {
-        let Some(bytes) = body.data().await else {
+        let Some(bytes) = body.frame().await else {
             return Ok::<_, B::Error>(None);
         };
-        Ok(Some((bytes?, body)))
+        match bytes?.into_data() {
+            Ok(data) => Ok(Some((data, body))),
+            Err(_) => Ok(None),
+        }
     })
     .map_err(|err| {
         // `multer::Multipart::new` below requires the error to by Sync, to avoid requiring that

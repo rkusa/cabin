@@ -7,8 +7,9 @@ use bytes::Bytes;
 use cabin::view::boundary::BoundaryRegistry;
 use cabin::CABIN_JS;
 use http::{header, Method, Request, Response, StatusCode};
-use http_body::combinators::UnsyncBoxBody;
-use http_body::{Body as HttpBody, Empty, Full};
+use http_body::Body as HttpBody;
+use http_body_util::combinators::UnsyncBoxBody;
+use http_body_util::{BodyExt, Empty, Full};
 use tower_layer::Layer;
 use tower_service::Service;
 

@@ -4,6 +4,7 @@ use std::{error, fmt};
 use cabin::{basic_document, View};
 use http::{Request, StatusCode};
 use http_error::AnyHttpError;
+use tokio::net::TcpListener;
 
 async fn app() -> impl View {
     basic_document(health().await)
@@ -56,8 +57,10 @@ async fn main() {
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");
-    axum::Server::bind(&addr)
-        .serve(server.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(
+        TcpListener::bind(addr).await.unwrap(),
+        server.into_make_service(),
+    )
+    .await
+    .unwrap();
 }

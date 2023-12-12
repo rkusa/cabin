@@ -22,9 +22,10 @@ livereload = []
 bytes = "1.2"
 cabin-macros = { path = "./cabin-macros", version = "0.2" }
 futures-util = "0.3"
-http = "0.2"
-http-body = "0.4"
-http-error = { version = "0.1" } # git = "https://github.com/rkusa/http-error.git", rev = "1f0630c" } # path = "../http-error" }
+http = "1.0"
+http-body = "1.0"
+http-body-util = "0.1"
+http-error = { version = "0.2" } # git = "https://github.com/rkusa/http-error.git", rev = "1f0630c" } # path = "../http-error" }
 linkme = "0.3"
 mime = "0.3"
 multer = { version = "2.1.0", features = ["json"] }
@@ -40,7 +41,7 @@ tracing = "0.1"
 twox-hash = "1.6"
 
 [dev-dependencies]
-axum = "0.6"
+axum = "0.7"
 cabin-tailwind = { path = "./cabin-tailwind", default-features = false }
 cabin-service = { path = "./cabin-service" }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "fmt", "ansi"] }

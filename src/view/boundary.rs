@@ -10,7 +10,8 @@ use std::sync::{Arc, OnceLock};
 
 use bytes::Bytes;
 use http::{HeaderValue, Request, Response, StatusCode};
-use http_body::{Body, Full};
+use http_body::Body;
+use http_body_util::Full;
 use http_error::HttpError;
 use once_cell::race::OnceBox;
 use script::Script;
