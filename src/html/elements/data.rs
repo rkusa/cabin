@@ -9,7 +9,7 @@ use crate::html::Html;
 /// The `data` element represents a group of one or more columns in the [super::table] that is its
 /// parent, if it has a parent and that is a [super::table] element.
 pub fn data() -> Html<marker::Data, (), ()> {
-    Html::new("data", (), ())
+    Html::new("data", (), ()).into_void_element()
 }
 
 pub mod marker {

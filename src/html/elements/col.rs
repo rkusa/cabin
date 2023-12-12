@@ -9,7 +9,7 @@ use crate::html::{Aria, Html};
 /// has a parent that is a [super::table] element, then the `col` element represents one or more
 /// columns in the column group represented by that [super::colgroup::Colgroup].
 pub fn col() -> Html<marker::Col, (), ()> {
-    Html::new("col", (), ())
+    Html::new("col", (), ()).into_void_element()
 }
 
 pub mod marker {

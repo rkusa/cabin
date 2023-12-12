@@ -11,7 +11,7 @@ use crate::html::{Aria, Html};
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.
 pub fn embed() -> Html<marker::Embed, (), ()> {
-    Html::new("embed", (), ())
+    Html::new("embed", (), ()).into_void_element()
 }
 
 pub mod marker {

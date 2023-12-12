@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 /// URLs, and the name of the default navigable for the purposes of following hyperlinks. The
 /// element does not represent any content beyond this information.
 pub fn base() -> Html<marker::Base, (), ()> {
-    Html::new("base", (), ())
+    Html::new("base", (), ()).into_void_element()
 }
 
 pub mod marker {

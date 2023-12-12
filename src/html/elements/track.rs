@@ -12,7 +12,7 @@ use crate::html::Html;
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
 pub fn track() -> Html<marker::Track, (), ()> {
-    Html::new("track", (), ())
+    Html::new("track", (), ()).into_void_element()
 }
 
 pub mod marker {

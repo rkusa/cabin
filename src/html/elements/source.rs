@@ -13,7 +13,7 @@ use crate::html::Html;
 /// elements or multiple alternative media resources for media elements. It does not represent
 /// anything on its own.
 pub fn source() -> Html<marker::Source, (), ()> {
-    Html::new("source", (), ())
+    Html::new("source", (), ()).into_void_element()
 }
 
 pub mod marker {

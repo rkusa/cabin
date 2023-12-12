@@ -21,7 +21,7 @@ use crate::html::events::InputEvent;
 use crate::html::{Aria, Html};
 
 pub fn input() -> Html<marker::Input, (), ()> {
-    Html::new("input", (), ())
+    Html::new("input", (), ()).into_void_element()
 }
 
 pub mod marker {

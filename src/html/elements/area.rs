@@ -14,7 +14,7 @@ use crate::html::{Aria, Html};
 /// The `area` element represents either a hyperlink with some text and a corresponding area on an
 /// image map, or a dead area on an image map.
 pub fn area() -> Html<marker::Area, (), ()> {
-    Html::new("area", (), ())
+    Html::new("area", (), ()).into_void_element()
 }
 
 pub mod marker {

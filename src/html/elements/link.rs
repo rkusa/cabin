@@ -14,7 +14,7 @@ use crate::html::{Aria, Html};
 
 /// A `link` element allows to link to other resources.
 pub fn link() -> Html<marker::Link, (), ()> {
-    Html::new("link", (), ())
+    Html::new("link", (), ()).into_void_element()
 }
 
 pub mod marker {

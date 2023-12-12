@@ -15,7 +15,7 @@ use crate::html::{Aria, Html};
 
 /// An `img` element represents an image.
 pub fn img() -> Html<marker::Img, (), ()> {
-    Html::new("img", (), ())
+    Html::new("img", (), ()).into_void_element()
 }
 
 pub mod marker {
