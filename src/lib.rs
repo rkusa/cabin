@@ -34,7 +34,7 @@ pub mod scope;
 pub mod serde;
 pub mod view;
 
-pub const SERVER_COMPONENT_JS: &str = include_str!("./server-component.js");
+pub const CABIN_JS: &str = include_str!("./cabin.js");
 pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 pub fn cabin_scripts() -> impl View {
@@ -42,8 +42,8 @@ pub fn cabin_scripts() -> impl View {
 
     static SRC_SC: OnceLock<String> = OnceLock::new();
     let src_sc = SRC_SC.get_or_init(|| {
-        let hash = content_hash(SERVER_COMPONENT_JS.as_bytes());
-        format!("/server-component.js?{hash}")
+        let hash = content_hash(CABIN_JS.as_bytes());
+        format!("/cabin.js?{hash}")
     });
 
     #[cfg(feature = "livereload")]

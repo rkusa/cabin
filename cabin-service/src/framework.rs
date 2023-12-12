@@ -5,7 +5,7 @@ use std::task::{Context, Poll};
 
 use bytes::Bytes;
 use cabin::view::boundary::BoundaryRegistry;
-use cabin::SERVER_COMPONENT_JS;
+use cabin::CABIN_JS;
 use http::{header, Method, Request, Response, StatusCode};
 use http_body::combinators::UnsyncBoxBody;
 use http_body::{Body as HttpBody, Empty, Full};
@@ -70,7 +70,7 @@ where
             }
 
             match (method, &segments[..len]) {
-                (&Method::GET, &["server-component.js"]) => Ok(Response::builder()
+                (&Method::GET, &["cabin.js"]) => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/javascript")
                     .header(
                         header::CACHE_CONTROL,
@@ -81,7 +81,7 @@ where
                         },
                     )
                     .body(UnsyncBoxBody::new(
-                        Full::new(Bytes::from(SERVER_COMPONENT_JS)).map_err(|_| unreachable!()),
+                        Full::new(Bytes::from(CABIN_JS)).map_err(|_| unreachable!()),
                     ))
                     .unwrap()),
 

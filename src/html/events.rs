@@ -5,10 +5,9 @@ use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::InternalError;
-
 use super::attributes::Attributes;
 use super::elements::SerializeEventFn;
+use crate::error::InternalError;
 
 #[derive(Default)]
 #[non_exhaustive]
