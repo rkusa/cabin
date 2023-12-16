@@ -538,6 +538,10 @@ function setupEventListeners(el) {
     events,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
   });
+  setUpEventListener(el, "search", {
+    events,
+    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+  });
   setUpEventListener(el, "submit", {
     events,
     preventDefault: true,
