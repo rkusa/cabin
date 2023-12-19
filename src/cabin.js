@@ -580,3 +580,10 @@ document.addEventListener("cabinFire", async function (e) {
 window.addEventListener("popstate", () => {
   document.dispatchEvent(new CustomEvent("cabinRefresh"));
 });
+
+window.addEventListener("pageshow", function (e) {
+  // if loaded from cache, refresh page data
+  if (e.persisted) {
+    document.dispatchEvent(new CustomEvent("cabinRefresh"));
+  }
+});
