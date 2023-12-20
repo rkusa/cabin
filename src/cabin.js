@@ -136,7 +136,7 @@ async function update(
 function setUpEventListener(el, eventName, opts) {
   const attrName = `cabin-${eventName}`;
   /** @type {WeakMap<Element, AbortController>} */
-  const abortControllers = new WeakMap();
+  const abortControllers = opts.abortControllers ?? new WeakMap();
 
   /**
    * @this {HTMLElement}
@@ -529,16 +529,7 @@ function setupEventListeners(el) {
     preventDefault: true,
     disable: true,
   });
-  setUpEventListener(el, "input", {
-    events,
-    debounce: 500,
-    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-  });
   setUpEventListener(el, "change", {
-    events,
-    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-  });
-  setUpEventListener(el, "search", {
     events,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
   });
@@ -548,6 +539,20 @@ function setupEventListeners(el) {
   });
   setUpEventListener(el, "cabinFire", {
     events,
+  });
+
+  // shared debounce for `input` and `search` events
+  const abortControllers = new WeakMap();
+  setUpEventListener(el, "input", {
+    events,
+    debounce: 500,
+    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+    abortControllers,
+  });
+  setUpEventListener(el, "search", {
+    events,
+    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+    abortControllers,
   });
 }
 
