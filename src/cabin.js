@@ -38,6 +38,9 @@ async function update(
         ? {
             signal,
             method: "PUT",
+            headers: {
+              "x-cabin": "boundary",
+            },
             body: (() => {
               const formData = new FormData();
               formData.append(
@@ -61,6 +64,7 @@ async function update(
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
+              "x-cabin": "boundary",
             },
             body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}${
               state ? `,"state":${state}` : ""

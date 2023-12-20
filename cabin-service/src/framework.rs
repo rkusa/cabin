@@ -6,7 +6,7 @@ use std::task::{Context, Poll};
 use bytes::Bytes;
 use cabin::view::boundary::BoundaryRegistry;
 use cabin::CABIN_JS;
-use http::{header, Method, Request, Response, StatusCode};
+use http::{header, HeaderValue, Method, Request, Response, StatusCode};
 use http_body::Body as HttpBody;
 use http_body_util::combinators::UnsyncBoxBody;
 use http_body_util::{BodyExt, Empty, Full};
@@ -137,15 +137,29 @@ where
                 }
 
                 // TODO: error to help debugging (or redirect again?)
-                (&Method::GET, &["client_redirect"]) => Ok(Response::builder()
-                    .status(StatusCode::SEE_OTHER)
-                    // TODO: handle missing query?
-                    // TODO: validate same host for redirect?
-                    // TODO: be smarter about client_redirect and not have the extra step for full
-                    //       page navigations?
-                    .header(header::LOCATION, req.uri().query().unwrap_or(""))
-                    .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
-                    .unwrap()),
+                (&Method::GET, &["client_redirect"]) => {
+                    if req.headers().get("x-cabin") == Some(&HeaderValue::from_static("boundary")) {
+                        Ok(Response::builder()
+                            .status(StatusCode::NO_CONTENT)
+                            // TODO: handle missing query?
+                            // TODO: validate same host for redirect?
+                            // TODO: be smarter about client_redirect and not have the extra step for full
+                            //       page navigations?
+                            // .header(header::LOCATION, req.uri().query().unwrap_or(""))
+                            .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
+                            .unwrap())
+                    } else {
+                        Ok(Response::builder()
+                            .status(StatusCode::SEE_OTHER)
+                            // TODO: handle missing query?
+                            // TODO: validate same host for redirect?
+                            // TODO: be smarter about client_redirect and not have the extra step for full
+                            //       page navigations?
+                            .header(header::LOCATION, req.uri().query().unwrap_or(""))
+                            .body(UnsyncBoxBody::new(Empty::new().map_err(|_| unreachable!())))
+                            .unwrap())
+                    }
+                }
 
                 _ => service.call(req).await.map_err(Into::into).map(|r| {
                     let (parts, body) = r.into_parts();
