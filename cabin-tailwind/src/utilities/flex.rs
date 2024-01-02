@@ -7,6 +7,7 @@ use crate::Property;
 const FLEX_DIRECTION: &str = "flex-direction";
 const FLEX_SHRINK: &str = "flex-shrink";
 const FLEX_GROW: &str = "flex-grow";
+const FLEX_WRAP: &str = "flex-wrap";
 
 /// ```css
 /// flex-direction: row;
@@ -47,3 +48,18 @@ pub const GROW: Property = Property(FLEX_GROW, "1");
 /// flex-grow: 0;
 /// ```
 pub const NO_GROW: Property = Property(FLEX_GROW, "0");
+
+/// ```css
+/// flex-wrap: wrap;
+/// ```
+pub const WRAP: Property = Property(FLEX_WRAP, "wrap");
+
+/// ```css
+/// flex-wrap: wrap-reverse;
+/// ```
+pub const WRAP_REVERSE: Property = Property(FLEX_WRAP, "wrap-reverse");
+
+/// ```css
+/// flex-wrap: nowrap;
+/// ```
+pub const NOWRAP: Property = Property(FLEX_WRAP, "nowrap");
