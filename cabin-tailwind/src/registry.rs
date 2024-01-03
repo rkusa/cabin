@@ -101,13 +101,13 @@ impl StyleRegistry {
             }
 
             // already grouped by variants, so just writing it once (from the first), is enough
-            if let Some(style) = styles.get(0) {
+            if let Some(style) = styles.first() {
                 style.selector_prefix(&mut self.out).unwrap();
             }
             let class_name_offset = self.out.len();
             write!(&mut self.out, "          ").unwrap();
             // already grouped by variants, so just writing it once (from the first), is enough
-            if let Some(style) = styles.get(0) {
+            if let Some(style) = styles.first() {
                 style.selector_suffix(&mut self.out).unwrap();
             }
             writeln!(&mut self.out, " {{").unwrap();
@@ -122,7 +122,7 @@ impl StyleRegistry {
                 style.declarations(&mut self.out).unwrap();
             }
             write!(&mut self.out, "}}").unwrap();
-            if let Some(style) = styles.get(0) {
+            if let Some(style) = styles.first() {
                 style.suffix(&mut self.out).unwrap();
             }
             writeln!(&mut self.out).unwrap();
@@ -133,7 +133,7 @@ impl StyleRegistry {
 
             // write actual class name, prepend `_` as it class names must not start with a number
             let name = styles
-                .get(0)
+                .first()
                 .and_then(|s| s.override_class_name().map(Cow::Borrowed))
                 .unwrap_or_else(|| Cow::Owned(format!("_{hash:x}")));
 
