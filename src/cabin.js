@@ -471,6 +471,18 @@ function patchAttributes(childBefore, childAfter, disabledBefore) {
           childBefore.value = newValue;
         }
         break;
+      case "checked":
+        if (childBefore.checked !== childAfter.checked) {
+          // console.log("update attribute", name);
+          childBefore.checked = childAfter.checked;
+        }
+        break;
+      case "selected":
+        if (childBefore.selected !== childAfter.selected) {
+          // console.log("update attribute", name);
+          childBefore.selected = childAfter.selected;
+        }
+        break;
       case "disabled":
         disabledBefore?.set(childBefore, childAfter.disabled);
       // fallthrough
