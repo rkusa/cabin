@@ -187,7 +187,10 @@ function setUpEventListener(el, eventName, opts) {
 
       const isSubmitEvent = eventName === "submit";
       e.stopPropagation();
-      if (opts.preventDefault || isSubmitEvent) {
+      if (
+        (opts.preventDefault && !(node instanceof HTMLInputElement)) ||
+        isSubmitEvent
+      ) {
         e.preventDefault();
       }
 
