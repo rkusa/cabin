@@ -114,7 +114,7 @@ impl StyleRegistry {
             let mut animation_name_offset2 = 0;
             if has_animation {
                 // TODO: make easing function, delay, duration, etc. customizable
-                write!(&mut self.out, "animation: 250ms ease-in-out 2 alternate ").unwrap();
+                write!(&mut self.out, "animation: 250ms ease-in-out 1 forwards ").unwrap();
                 animation_name_offset2 = self.out.len();
                 writeln!(&mut self.out, "         ;").unwrap();
             }
