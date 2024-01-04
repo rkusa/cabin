@@ -1,3 +1,4 @@
+pub mod animation;
 pub mod aspect;
 pub mod auto_cols;
 pub mod auto_rows;
