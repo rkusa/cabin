@@ -536,6 +536,9 @@ function setupEventListeners(el) {
   setUpEventListener(el, "transitionend", {
     events,
   });
+  setUpEventListener(el, "animationend", {
+    events,
+  });
   setUpEventListener(el, "change", {
     events,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),

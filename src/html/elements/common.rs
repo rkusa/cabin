@@ -65,6 +65,25 @@ pub trait Common: WithAttribute {
                 .map(|json| (hash, json))
         })))
     }
+
+    fn on_animation_end<E>(self, event: E) -> Self::Output<OnAnimationEnd>
+    where
+        E: serde::Serialize + 'static,
+    {
+        self.with_attribute(OnAnimationEnd(Box::new(move || {
+            use std::hash::{Hash, Hasher};
+
+            let mut hasher = twox_hash::XxHash32::default();
+            std::any::TypeId::of::<E>().hash(&mut hasher);
+            let hash = hasher.finish() as u32;
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "on_animation_end event",
+                    err,
+                })
+                .map(|json| (hash, json))
+        })))
+    }
 }
 
 /// Unique identifier across the document.
@@ -100,6 +119,21 @@ impl Attributes for OnTransitionEnd {
         r.attribute("cabin-transitionend", id)
             .map_err(crate::error::InternalError::from)?;
         r.attribute("cabin-transitionend-payload", payload)
+            .map_err(crate::error::InternalError::from)?;
+
+        Ok(())
+    }
+}
+
+pub struct OnAnimationEnd(pub Box<SerializeEventFn>);
+
+impl Attributes for OnAnimationEnd {
+    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
+        // TODO: directly write into el?
+        let (id, payload) = &(self.0)()?;
+        r.attribute("cabin-animationend", id)
+            .map_err(crate::error::InternalError::from)?;
+        r.attribute("cabin-animationend-payload", payload)
             .map_err(crate::error::InternalError::from)?;
 
         Ok(())
