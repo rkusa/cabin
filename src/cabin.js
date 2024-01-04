@@ -533,6 +533,9 @@ function setupEventListeners(el) {
     preventDefault: true,
     disable: true,
   });
+  setUpEventListener(el, "transitionend", {
+    events,
+  });
   setUpEventListener(el, "change", {
     events,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
