@@ -359,26 +359,6 @@ pub trait Input: WithAttribute {
                 .map(|json| (hash, json))
         })))
     }
-
-    fn on_search<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnSearch>
-    where
-        E: ::serde::Serialize + 'static,
-    {
-        let event = event(InputEvent::default());
-        self.with_attribute(OnSearch(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_search event",
-                    err,
-                })
-                .map(|json| (hash, json))
-        })))
-    }
 }
 
 /// Hint for expected file type in file upload controls.
@@ -533,21 +513,6 @@ impl Attributes for OnChange {
         r.attribute("cabin-change", id)
             .map_err(crate::error::InternalError::from)?;
         r.attribute("cabin-change-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
-    }
-}
-
-pub struct OnSearch(pub Box<SerializeEventFn>);
-
-impl Attributes for OnSearch {
-    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-search", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-search-payload", payload)
             .map_err(crate::error::InternalError::from)?;
 
         Ok(())

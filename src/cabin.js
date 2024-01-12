@@ -574,11 +574,6 @@ function setupEventListeners(el) {
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
     abortControllers,
   });
-  setUpEventListener(el, "search", {
-    events,
-    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-    abortControllers,
-  });
 }
 
 class CabinBoundary extends HTMLElement {
