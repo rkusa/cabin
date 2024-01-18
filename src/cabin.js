@@ -288,6 +288,8 @@ function setUpEventListener(el, eventName, opts) {
         } else if (opts.disable) {
           node.disabled = disabledBefore.get(node) ?? false;
         }
+
+        abortControllers.delete(node);
       }
 
       break;
@@ -565,14 +567,10 @@ function setupEventListeners(el) {
   setUpEventListener(el, "cabinFire", {
     events,
   });
-
-  // shared debounce for `input` and `search` events
-  const abortControllers = new WeakMap();
   setUpEventListener(el, "input", {
     events,
     debounce: 500,
     eventPayload: (e) => ({ "_##InputValue": e.target.value }),
-    abortControllers,
   });
 }
 
