@@ -175,6 +175,15 @@ function setUpEventListener(el, eventName, opts) {
         return;
       }
 
+      // Force refresh everything from the target to its boundary to ensure that the server might
+      // override e.g. input states.
+      if (opts.dirty) {
+        let el = node;
+        do {
+          el.removeAttribute("hash");
+        } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
+      }
+
       {
         const abortController = abortControllers.get(node);
         if (abortController) {
@@ -558,7 +567,20 @@ function setupEventListeners(el) {
   });
   setUpEventListener(el, "change", {
     events,
-    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
+    eventPayload: (e) => ({
+      "_##InputValue": e.target.value,
+      '"_##InputChecked"': e.target.checked,
+    }),
+    dirty: true,
+  });
+  setUpEventListener(el, "input", {
+    events,
+    debounce: 500,
+    eventPayload: (e) => ({
+      "_##InputValue": e.target.value,
+      '"_##InputChecked"': e.target.checked,
+    }),
+    dirty: true,
   });
   setUpEventListener(el, "submit", {
     events,
@@ -566,11 +588,6 @@ function setupEventListeners(el) {
   });
   setUpEventListener(el, "cabinFire", {
     events,
-  });
-  setUpEventListener(el, "input", {
-    events,
-    debounce: 500,
-    eventPayload: (e) => ({ "_##InputValue": e.target.value }),
   });
 }
 
