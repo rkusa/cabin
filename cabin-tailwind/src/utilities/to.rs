@@ -8,6 +8,11 @@ pub struct ToColor(pub(crate) &'static str);
 
 include!(concat!(env!("OUT_DIR"), "/to-color.rs"));
 
+/// Set a custom to color.
+pub fn color(color: &'static str) -> ToColor {
+    ToColor(color)
+}
+
 /// ```css
 /// --tw-gradient-to-position: {x}%;
 /// ```

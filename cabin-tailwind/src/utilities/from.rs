@@ -8,6 +8,11 @@ pub struct FromColor(pub(crate) &'static str);
 
 include!(concat!(env!("OUT_DIR"), "/from-color.rs"));
 
+/// Set a custom from color.
+pub fn color(color: &'static str) -> FromColor {
+    FromColor(color)
+}
+
 /// ```css
 /// --tw-gradient-from-position: {x}%;
 /// ```
