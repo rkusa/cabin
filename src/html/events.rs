@@ -13,9 +13,10 @@ use crate::error::InternalError;
 #[non_exhaustive]
 pub struct InputEvent {
     pub value: InputValue,
+    pub checked: InputChecked,
 }
 
-#[derive(Default, Hash)]
+#[derive(Debug, Default, Hash)]
 pub struct InputValue(Cow<'static, str>);
 
 impl Serialize for InputValue {
@@ -66,6 +67,46 @@ impl From<InputValue> for Cow<'static, str> {
 impl fmt::Display for InputValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
+    }
+}
+
+#[derive(Debug, Default, Hash)]
+pub struct InputChecked(bool);
+
+impl Serialize for InputChecked {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str("_##InputChecked")
+    }
+}
+
+impl<'de> Deserialize<'de> for InputChecked {
+    fn deserialize<D>(deserializer: D) -> Result<InputChecked, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value: bool = Deserialize::deserialize(deserializer)?;
+        Ok(InputChecked(value))
+    }
+}
+
+impl InputChecked {
+    pub fn take(self) -> bool {
+        self.0
+    }
+}
+
+impl From<InputChecked> for bool {
+    fn from(v: InputChecked) -> Self {
+        v.0
+    }
+}
+
+impl fmt::Display for InputChecked {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
