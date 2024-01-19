@@ -470,6 +470,18 @@ function patchAttributes(childBefore, childAfter, disabledBefore) {
   }
 
   const oldAttributeNames = new Set(childBefore.getAttributeNames());
+  if (childBefore instanceof HTMLInputElement) {
+    oldAttributeNames.add("checked");
+    oldAttributeNames.add("selected");
+    oldAttributeNames.add("value");
+  }
+  if (
+    childBefore instanceof HTMLInputElement ||
+    childBefore instanceof HTMLTextAreaElement
+  ) {
+    oldAttributeNames.add("disabled");
+  }
+
   for (const name of childAfter.getAttributeNames()) {
     oldAttributeNames.delete(name);
 
@@ -515,7 +527,23 @@ function patchAttributes(childBefore, childAfter, disabledBefore) {
       continue;
     }
     // console.log("remove attribute", name);
-    childBefore.removeAttribute(name);
+    switch (name) {
+      case "value":
+        childBefore.value = "";
+        break;
+      case "checked":
+        childBefore.checked = false;
+        break;
+      case "selected":
+        childBefore.selected = false;
+        break;
+      case "disabled":
+        childBefore.disabled = false;
+        break;
+      default:
+        childBefore.removeAttribute(name);
+        break;
+    }
   }
 }
 
