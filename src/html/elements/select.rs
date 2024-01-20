@@ -6,7 +6,6 @@ use super::global::Global;
 use super::input::{AutoComplete, Multiple, OnChange, Required, Size};
 use crate::error::InternalError;
 use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::events::InputEvent;
 use crate::html::{Aria, Html};
 use crate::View;
 
@@ -78,11 +77,10 @@ pub trait Select: WithAttribute {
         self.with_attribute(Size(size))
     }
 
-    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnChange>
+    fn on_change<E>(self, event: E) -> Self::Output<OnChange>
     where
         E: ::serde::Serialize + 'static,
     {
-        let event = event(InputEvent::default());
         self.with_attribute(OnChange(Box::new(move || {
             use std::hash::{Hash, Hasher};
 

@@ -23,7 +23,11 @@ async fn search() -> impl View {
     let items = search_countries(&query).await;
 
     h::div((
-        h::div(h::input().on_input(|ev| Search(ev.value)).value(query)),
+        h::div(
+            h::input()
+                .on_input(Search(InputValue::placeholder()))
+                .value(query),
+        ),
         h::div(h::ul(items.into_iter().map(h::li))),
     ))
 }

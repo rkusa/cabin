@@ -17,7 +17,6 @@ use super::script::Src;
 use super::SerializeEventFn;
 use crate::error::InternalError;
 use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::events::InputEvent;
 use crate::html::{Aria, Html};
 
 pub fn input() -> Html<marker::Input, (), ()> {
@@ -320,11 +319,10 @@ pub trait Input: WithAttribute {
         self.with_attribute(Width(width))
     }
 
-    fn on_input<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnInput>
+    fn on_input<E>(self, event: E) -> Self::Output<OnInput>
     where
         E: ::serde::Serialize + 'static,
     {
-        let event = event(InputEvent::default());
         self.with_attribute(OnInput(Box::new(move || {
             use std::hash::{Hash, Hasher};
 
@@ -340,11 +338,10 @@ pub trait Input: WithAttribute {
         })))
     }
 
-    fn on_change<E>(self, event: impl FnOnce(InputEvent) -> E) -> Self::Output<OnChange>
+    fn on_change<E>(self, event: E) -> Self::Output<OnChange>
     where
         E: ::serde::Serialize + 'static,
     {
-        let event = event(InputEvent::default());
         self.with_attribute(OnChange(Box::new(move || {
             use std::hash::{Hash, Hasher};
 

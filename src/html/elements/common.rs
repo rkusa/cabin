@@ -40,7 +40,7 @@ pub trait Common: WithAttribute {
             let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
-                    what: "on_click event",
+                    what: "custom event",
                     err,
                 })
                 .map(|json| (hash, json))

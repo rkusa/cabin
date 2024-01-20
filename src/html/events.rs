@@ -9,14 +9,7 @@ use super::attributes::Attributes;
 use super::elements::SerializeEventFn;
 use crate::error::InternalError;
 
-#[derive(Default)]
-#[non_exhaustive]
-pub struct InputEvent {
-    pub value: InputValue,
-    pub checked: InputChecked,
-}
-
-#[derive(Debug, Default, Hash)]
+#[derive(Debug, Hash)]
 pub struct InputValue(Cow<'static, str>);
 
 impl Serialize for InputValue {
@@ -39,6 +32,10 @@ impl<'de> Deserialize<'de> for InputValue {
 }
 
 impl InputValue {
+    pub fn placeholder() -> Self {
+        Self(Cow::Borrowed(""))
+    }
+
     pub fn take(self) -> Cow<'static, str> {
         self.0
     }
@@ -70,7 +67,7 @@ impl fmt::Display for InputValue {
     }
 }
 
-#[derive(Debug, Default, Hash)]
+#[derive(Debug, Hash)]
 pub struct InputChecked(bool);
 
 impl Serialize for InputChecked {
@@ -93,6 +90,10 @@ impl<'de> Deserialize<'de> for InputChecked {
 }
 
 impl InputChecked {
+    pub fn placeholder() -> Self {
+        Self(false)
+    }
+
     pub fn take(self) -> bool {
         self.0
     }
