@@ -471,9 +471,13 @@ function patchAttributes(childBefore, childAfter, disabledBefore) {
 
   const oldAttributeNames = new Set(childBefore.getAttributeNames());
   if (childBefore instanceof HTMLInputElement) {
-    oldAttributeNames.add("checked");
+    if (childBefore.type === "checkbox" || childBefore.type === "radio") {
+      oldAttributeNames.add("checked");
+    } else {
+      oldAttributeNames.add("value");
+    }
+  } else if (childBefore instanceof HTMLOptionElement) {
     oldAttributeNames.add("selected");
-    oldAttributeNames.add("value");
   }
   if (
     childBefore instanceof HTMLInputElement ||
