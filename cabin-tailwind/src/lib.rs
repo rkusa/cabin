@@ -179,8 +179,11 @@ pub trait Utility {
 
 include!(concat!(env!("OUT_DIR"), "/responsive.rs"));
 
-pub struct Property<V = &'static str>(pub(crate) &'static str, pub(crate) V);
-pub struct PropertyTwice<V = &'static str>(
+pub struct Property<V = &'static str, const ORDER: usize = 0>(
+    pub(crate) &'static str,
+    pub(crate) V,
+);
+pub struct PropertyTwice<V = &'static str, const ORDER: usize = 0>(
     pub(crate) &'static str,
     pub(crate) &'static str,
     pub(crate) V,
@@ -235,17 +238,25 @@ impl fmt::Display for Length {
     }
 }
 
-impl<V: fmt::Display> Utility for Property<V> {
+impl<V: fmt::Display, const ORDER: usize> Utility for Property<V, ORDER> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.1)
     }
+
+    fn order(&self) -> usize {
+        ORDER
+    }
 }
 
-impl<V: fmt::Display> Utility for PropertyTwice<V> {
+impl<V: fmt::Display, const ORDER: usize> Utility for PropertyTwice<V, ORDER> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.2)?;
         writeln!(f, "{}: {};", self.1, self.2)?;
         Ok(())
+    }
+
+    fn order(&self) -> usize {
+        ORDER
     }
 }
 

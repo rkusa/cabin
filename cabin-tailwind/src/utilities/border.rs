@@ -111,7 +111,7 @@ pub fn px(x: i16) -> Property<Length> {
 /// border-left-width: {x}px;
 /// border-right-width: {x}px;
 /// ```
-pub fn x(x: i16) -> PropertyTwice<Length> {
+pub fn x(x: i16) -> PropertyTwice<Length, 1> {
     PropertyTwice(
         BORDER_LEFT_WIDTH,
         BORDER_RIGHT_WIDTH,
@@ -123,7 +123,7 @@ pub fn x(x: i16) -> PropertyTwice<Length> {
 /// border-top-width: {x}px;
 /// border-bottom-width: {x}px;
 /// ```
-pub fn y(x: i16) -> PropertyTwice<Length> {
+pub fn y(x: i16) -> PropertyTwice<Length, 1> {
     PropertyTwice(
         BORDER_TOP_WIDTH,
         BORDER_BOTTOM_WIDTH,
@@ -148,28 +148,28 @@ pub fn e(x: i16) -> Property<Length> {
 /// ```css
 /// border-top-width: {x}px;
 /// ```
-pub fn t(x: i16) -> Property<Length> {
+pub fn t(x: i16) -> Property<Length, 1> {
     Property(BORDER_TOP_WIDTH, Length::Px(f32::from(x)))
 }
 
 /// ```css
 /// border-bottom-width: {x}px;
 /// ```
-pub fn b(x: i16) -> Property<Length> {
+pub fn b(x: i16) -> Property<Length, 1> {
     Property(BORDER_BOTTOM_WIDTH, Length::Px(f32::from(x)))
 }
 
 /// ```css
 /// border-left-width: {x}px;
 /// ```
-pub fn l(x: i16) -> Property<Length> {
+pub fn l(x: i16) -> Property<Length, 1> {
     Property(BORDER_LEFT_WIDTH, Length::Px(f32::from(x)))
 }
 
 /// ```css
 /// border-right-width: {x}px;
 /// ```
-pub fn r(x: i16) -> Property<Length> {
+pub fn r(x: i16) -> Property<Length, 1> {
     Property(BORDER_RIGHT_WIDTH, Length::Px(f32::from(x)))
 }
 

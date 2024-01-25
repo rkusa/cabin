@@ -154,7 +154,7 @@ fn main() {
                         writeln!(out, r#"/// `{css_name}: {color};`"#).unwrap();
                         writeln!(
                             out,
-                            "pub const {ident}: Property = \
+                            "pub const {ident}: Property<&'static str, 1> = \
                             Property({rust_name}, {color:?});"
                         )
                         .unwrap();
@@ -167,7 +167,7 @@ fn main() {
                         writeln!(out, r#"/// ```"#).unwrap();
                         writeln!(
                             out,
-                            "pub const {ident}: PropertyTwice = \
+                            "pub const {ident}: PropertyTwice<&'static str, 2> = \
                                 PropertyTwice({rust_name1}, {rust_name2}, {color:?});"
                         )
                         .unwrap();
