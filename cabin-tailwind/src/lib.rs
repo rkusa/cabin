@@ -7,11 +7,11 @@ use std::hash::Hasher;
 
 pub use cabin::html::elements::common::Class;
 use cabin::View;
-pub use cabin_macros::tw;
+pub use cabin_macros::{tw, tw0, tw2, tw3};
 pub use utilities as css;
 
 pub mod prelude {
-    pub use crate::{tw, utilities as tw, Responsive, Utility};
+    pub use crate::{tw, tw0, tw2, tw3, utilities as tw, Responsive, Utility};
 }
 
 pub trait Utility {

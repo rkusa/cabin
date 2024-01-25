@@ -10,7 +10,7 @@ use twox_hash::XxHash32;
 use super::Utility;
 
 #[linkme::distributed_slice]
-pub static STYLES: [fn(&mut StyleRegistry)] = [..];
+pub static STYLES: [(usize, fn(&mut StyleRegistry))] = [..];
 
 static REGISTRY: OnceBox<StyleRegistry> = OnceBox::new();
 
@@ -39,7 +39,9 @@ impl StyleRegistry {
                 .out
                 .push_str(include_str!("./forms/forms-v0.5.3.css"));
 
-            for f in STYLES {
+            let mut styles = STYLES.to_vec();
+            styles.sort_by_key(|(order, _)| *order);
+            for (_, f) in styles {
                 (f)(&mut registry);
             }
             Box::new(registry)
