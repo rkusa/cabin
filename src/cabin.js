@@ -276,7 +276,8 @@ function setUpEventListener(el, eventName, opts) {
           }
         }
 
-        await update(
+        await update.call(
+          this,
           parseInt(eventId),
           payload,
           el == document ? document.body : el,
