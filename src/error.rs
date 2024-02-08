@@ -265,6 +265,13 @@ impl HttpError for Error {
         }
         Ok(())
     }
+
+    fn span(&self) -> Option<&tracing::Span> {
+        match &self.inner {
+            Inner::Http { source, .. } => source.span(),
+            Inner::Other { .. } => None,
+        }
+    }
 }
 
 impl From<Error> for Response<Bytes> {

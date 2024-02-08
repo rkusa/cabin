@@ -158,17 +158,35 @@ where
 
 fn err_to_response(err: Error) -> Response<Full<Bytes>> {
     if err.status_code().is_server_error() {
-        tracing::error!(
-            %err,
-            caused_by = format_caused_by(std::error::Error::source(&err)),
-            "server error",
-        );
+        if let Some(parent) = err.span() {
+            tracing::error!(
+                parent: parent,
+                %err,
+                caused_by = format_caused_by(std::error::Error::source(&err)),
+                "server error",
+            );
+        } else {
+            tracing::error!(
+                %err,
+                caused_by = format_caused_by(std::error::Error::source(&err)),
+                "server error",
+            );
+        }
     } else if err.status_code().is_client_error() {
-        tracing::debug!(
-            %err,
-            caused_by = format_caused_by(std::error::Error::source(&err)),
-            "client error",
-        );
+        if let Some(parent) = err.span() {
+            tracing::debug!(
+                parent: parent,
+                %err,
+                caused_by = format_caused_by(std::error::Error::source(&err)),
+                "client error",
+            );
+        } else {
+            tracing::debug!(
+                %err,
+                caused_by = format_caused_by(std::error::Error::source(&err)),
+                "client error",
+            );
+        }
     }
     let (parts, body) = Response::from(err).into_parts();
     Response::from_parts(parts, Full::new(body))
