@@ -215,7 +215,7 @@ function setUpEventListener(el, eventName, opts) {
 
       try {
         let payload;
-        if (isSubmitEvent) {
+        if (isSubmitEvent && !node.hasAttribute(`${attrName}-payload`)) {
           payload = new URLSearchParams(new FormData(node));
         } else if (opts?.eventPayload) {
           payload = JSON.parse(

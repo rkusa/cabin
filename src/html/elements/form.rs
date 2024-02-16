@@ -8,6 +8,8 @@ use super::button::Name;
 use super::common::Common;
 use super::global::Global;
 use super::input::AutoComplete;
+use super::SerializeEventFn;
+use crate::error::InternalError;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
@@ -144,6 +146,27 @@ pub trait Form: WithAttribute {
         let hash = hasher.finish() as u32;
 
         self.with_attribute(OnSubmit(hash))
+    }
+
+    /// Intercept form submissions, and submit the provided `event`, which can then be handled via
+    /// [crate::scope::take_event] or [crate::scope::event].
+    fn on_submit_with<E>(self, event: E) -> Self::Output<OnSubmitWith>
+    where
+        E: serde::Serialize + 'static,
+    {
+        self.with_attribute(OnSubmitWith(Box::new(move || {
+            use std::hash::{Hash, Hasher};
+
+            let mut hasher = twox_hash::XxHash32::default();
+            std::any::TypeId::of::<E>().hash(&mut hasher);
+            let hash = hasher.finish() as u32;
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "custom event",
+                    err,
+                })
+                .map(|json| (hash, json))
+        })))
     }
 }
 
@@ -283,3 +306,18 @@ impl fmt::Display for Rel {
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 #[attribute(name = "cabin-submit")]
 pub struct OnSubmit(pub u32);
+
+pub struct OnSubmitWith(pub Box<SerializeEventFn>);
+
+impl Attributes for OnSubmitWith {
+    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
+        // TODO: directly write into el?
+        let (id, payload) = &(self.0)()?;
+        r.attribute("cabin-submit", id)
+            .map_err(crate::error::InternalError::from)?;
+        r.attribute("cabin-submit-payload", payload)
+            .map_err(crate::error::InternalError::from)?;
+
+        Ok(())
+    }
+}
