@@ -118,6 +118,8 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::hgroup::hgroup;
     #[doc(inline)]
+    pub use super::elements::hr::hr;
+    #[doc(inline)]
     pub use super::elements::html::html;
     #[doc(inline)]
     pub use super::elements::i::i;
