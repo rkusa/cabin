@@ -27,7 +27,7 @@ pub mod cols {
     pub const NONE: Property = Property(GRID_TEMPLATE_COLUMNS, "none");
 
     /// ```css
-    /// grid-template-columns: repeat({n}, minmax(0, 1fr));
+    /// grid-template-columns:{template};
     /// ```
     pub fn custom(template: &'static str) -> Property<GridTemplateColumns> {
         Property(GRID_TEMPLATE_COLUMNS, GridTemplateColumns::Custom(template))

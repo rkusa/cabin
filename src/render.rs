@@ -14,13 +14,13 @@ pub struct Renderer {
     is_update: bool,
 }
 
-pub(crate) struct Out {
+pub struct Out {
     pub html: String,
     pub headers: HeaderMap<HeaderValue>,
 }
 
 impl Renderer {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Renderer {
             out: String::with_capacity(256),
             headers: Default::default(),
@@ -40,7 +40,7 @@ impl Renderer {
         }
     }
 
-    pub(crate) fn end(self) -> Out {
+    pub fn end(self) -> Out {
         Out {
             html: self.out,
             headers: self.headers,

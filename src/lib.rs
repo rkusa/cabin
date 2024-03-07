@@ -26,7 +26,7 @@ pub use view::View;
 
 pub mod error;
 pub mod html;
-mod local_pool;
+pub mod local_pool;
 pub mod prelude;
 pub mod private;
 mod redirect;
