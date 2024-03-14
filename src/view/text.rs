@@ -1,5 +1,3 @@
-use std::fmt;
-
 use super::{RenderFuture, View};
 use crate::render::Renderer;
 
@@ -55,14 +53,5 @@ where
 {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
         RenderFuture::ready((self.0)(r))
-    }
-}
-
-struct HashFmt<'a>(&'a mut dyn std::hash::Hasher);
-
-impl<'a> fmt::Write for HashFmt<'a> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.0.write(s.as_bytes());
-        Ok(())
     }
 }

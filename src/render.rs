@@ -21,13 +21,7 @@ pub struct Out {
 
 impl Renderer {
     pub fn new() -> Self {
-        Renderer {
-            out: String::with_capacity(256),
-            headers: Default::default(),
-            hasher: XxHash32::default(),
-            skip_hash: false,
-            is_update: false,
-        }
+        Default::default()
     }
 
     pub(crate) fn new_update() -> Self {
@@ -96,6 +90,18 @@ impl Renderer {
         TextRenderer {
             hasher: Default::default(),
             renderer: self,
+        }
+    }
+}
+
+impl Default for Renderer {
+    fn default() -> Self {
+        Self {
+            out: String::with_capacity(256),
+            headers: Default::default(),
+            hasher: XxHash32::default(),
+            skip_hash: false,
+            is_update: false,
         }
     }
 }
