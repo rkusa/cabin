@@ -20,4 +20,4 @@ cabin-macros = { path = "../cabin-macros", version = "0.2" }
 twox-hash = "1.6"
 
 [dev-dependencies]
-insta = "1.30"
+insta = "1.36"
