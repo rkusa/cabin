@@ -54,7 +54,7 @@ impl Renderer {
         self.write(tag.as_bytes());
 
         let should_write_id =
-            include_hash && !matches!(tag, "html" | "body" | "head") && !self.skip_hash;
+            include_hash && !matches!(tag, "html" | "body" | "head" | "option") && !self.skip_hash;
         let parent_skip_hash = self.skip_hash;
         if matches!(tag, "head") {
             self.skip_hash = true;
