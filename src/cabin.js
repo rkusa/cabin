@@ -12,13 +12,8 @@ async function update(
   abortController,
   disabledBefore,
 ) {
-  if (this.abortController) {
-    this.abortController.abort();
-  }
-  abortController = this.abortController =
-    abortController ?? new AbortController();
-  const signal = this.abortController.signal;
-  if (signal.aborted) {
+  const signal = abortController?.signal;
+  if (signal?.aborted) {
     return;
   }
 
@@ -75,7 +70,7 @@ async function update(
         ? `/__boundary/${target.getAttribute("name")}`
         : location.href;
     const res = await fetch(endpoint, req);
-    if (signal.aborted) {
+    if (signal?.aborted) {
       return;
     }
 
@@ -130,17 +125,25 @@ async function update(
     } else {
       throw err;
     }
-  } finally {
-    if (this.abortController === abortController) {
-      this.abortController = undefined;
-    }
   }
 }
 
+/**
+ * @param {HTMLElement} el
+ * @param {string} eventName
+ * @param {Object} opts
+ * @param {Set<string>?} opts.events - list of events the boundary should handle
+ * @param {bool?} opts.preventDefault - whether the default of the event should be prevented
+ * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
+ * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
+ * @param {bool?} opts.dirty - invalidate everything from the target up to the next boundary
+ * @param {bool?} opts.disableFormSubmit - whether to disable the target's form's submit button
+ * @param {(e: Event) => Record<string, any>} opts.eventPayload - custom event payload
+ * @param {number} opts.debounce - if set, the event execution is debounced by the given
+ * milliseconds
+ */
 function setUpEventListener(el, eventName, opts) {
   const attrName = `cabin-${eventName}`;
-  /** @type {WeakMap<Element, AbortController>} */
-  const abortControllers = opts.abortControllers ?? new WeakMap();
 
   /**
    * @this {HTMLElement}
@@ -184,15 +187,29 @@ function setUpEventListener(el, eventName, opts) {
         } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
       }
 
-      {
-        const abortController = abortControllers.get(node);
-        if (abortController) {
-          abortController.abort();
-        }
+      // Only one concurrent event execution per boundary
+      if (this.abortController) {
+        this.abortController.abort();
       }
 
-      const abortController = new AbortController();
-      abortControllers.set(node, abortController);
+      /** @type {Map<HTMLElement, bool>} */
+      const disabledBefore = new Map();
+
+      const abortController = (this.abortController = new AbortController());
+      abortController.abort = function () {
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        AbortController.prototype.abort.call(this);
+
+        // restore disabled states
+        for (const [el, before] of disabledBefore) {
+          if (el.parentNode && before !== undefined) {
+            el.disabled = before;
+          }
+        }
+      };
 
       const isSubmitEvent = eventName === "submit";
       e.stopPropagation();
@@ -209,9 +226,6 @@ function setUpEventListener(el, eventName, opts) {
           return;
         }
       }
-
-      /** @type {WeakMap<HTMLElement, bool>} */
-      const disabledBefore = new WeakMap();
 
       try {
         let payload;
@@ -237,6 +251,15 @@ function setUpEventListener(el, eventName, opts) {
           for (const el of node.elements) {
             disabledBefore.set(el, el.disabled);
             el.disabled = true;
+          }
+        } else if (opts.disableFormSubmit) {
+          /** @type {HTMLFormElement?} */
+          let form = isSubmitEvent ? node : node.form;
+          for (const el of form.elements) {
+            if (el.type === "submit") {
+              disabledBefore.set(el, el.disabled);
+              el.disabled = true;
+            }
           }
         } else if (opts.disable) {
           disabledBefore.set(node, node.disabled);
@@ -276,8 +299,7 @@ function setUpEventListener(el, eventName, opts) {
           }
         }
 
-        await update.call(
-          this,
+        await update(
           parseInt(eventId),
           payload,
           el == document ? document.body : el,
@@ -287,19 +309,7 @@ function setUpEventListener(el, eventName, opts) {
       } catch (err) {
         throw err;
       } finally {
-        if (isSubmitEvent) {
-          // restore disabled state
-          for (const el of node.elements) {
-            const before = disabledBefore.get(el);
-            if (before !== undefined) {
-              el.disabled = before;
-            }
-          }
-        } else if (opts.disable) {
-          node.disabled = disabledBefore.get(node) ?? false;
-        }
-
-        abortControllers.delete(node);
+        abortController.abort(); // restore disabled states
       }
 
       break;
@@ -573,6 +583,9 @@ function isKeyedElement(node) {
   return node.nodeType === Node.ELEMENT_NODE && node.nodeName === "CABIN-KEYED";
 }
 
+/**
+ * @param {HTMLElement} el
+ */
 function setupEventListeners(el) {
   let events =
     el instanceof CabinBoundary
@@ -605,6 +618,7 @@ function setupEventListeners(el) {
       '"_##InputChecked"': e.target.checked,
     }),
     dirty: true,
+    disableFormSubmit: true,
   });
   setUpEventListener(el, "input", {
     events,
@@ -618,6 +632,7 @@ function setupEventListeners(el) {
   setUpEventListener(el, "submit", {
     events,
     preventDefault: true,
+    disableFormSubmit: true,
   });
   setUpEventListener(el, "cabinFire", {
     events,
