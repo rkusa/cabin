@@ -137,7 +137,8 @@ async function update(
  * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
  * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
  * @param {bool?} opts.dirty - invalidate everything from the target up to the next boundary
- * @param {bool?} opts.disableFormSubmit - whether to disable the target's form's submit button
+ * @param {bool?} opts.disableForm - whether to disable the target's form (but only up to the next
+ * boundary)
  * @param {(e: Event) => Record<string, any>} opts.eventPayload - custom event payload
  * @param {number} opts.debounce - if set, the event execution is debounced by the given
  * milliseconds
@@ -252,11 +253,11 @@ function setUpEventListener(el, eventName, opts) {
             disabledBefore.set(el, el.disabled);
             el.disabled = true;
           }
-        } else if (opts.disableFormSubmit) {
+        } else if (opts.disableForm) {
           /** @type {HTMLFormElement?} */
           let form = isSubmitEvent ? node : node.form;
           for (const el of form.elements) {
-            if (el.type === "submit") {
+            if (this.contains(el)) {
               disabledBefore.set(el, el.disabled);
               el.disabled = true;
             }
@@ -618,7 +619,7 @@ function setupEventListeners(el) {
       '"_##InputChecked"': e.target.checked,
     }),
     dirty: true,
-    disableFormSubmit: true,
+    disableForm: true,
   });
   setUpEventListener(el, "input", {
     events,
@@ -632,7 +633,7 @@ function setupEventListeners(el) {
   setUpEventListener(el, "submit", {
     events,
     preventDefault: true,
-    disableFormSubmit: true,
+    disableForm: true,
   });
   setUpEventListener(el, "cabinFire", {
     events,
