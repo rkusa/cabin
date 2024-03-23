@@ -256,10 +256,12 @@ function setUpEventListener(el, eventName, opts) {
         } else if (opts.disableForm) {
           /** @type {HTMLFormElement?} */
           let form = isSubmitEvent ? node : node.form;
-          for (const el of form.elements) {
-            if (this.contains(el)) {
-              disabledBefore.set(el, el.disabled);
-              el.disabled = true;
+          if (form?.elements) {
+            for (const el of form.elements) {
+              if (this.contains(el)) {
+                disabledBefore.set(el, el.disabled);
+                el.disabled = true;
+              }
             }
           }
         } else if (opts.disable) {
