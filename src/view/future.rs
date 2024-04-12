@@ -1,5 +1,6 @@
 use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
+use std::pin::Pin;
 
 use tokio::task::JoinHandle;
 
@@ -25,7 +26,7 @@ where
     fn into_view(self) -> FutureView<F::IntoFuture, V> {
         FutureView {
             key: Scope::key(),
-            state: State::Stored(self.into_future()),
+            state: State::Stored(Box::pin(self.into_future())),
             marker: PhantomData,
         }
     }
@@ -44,7 +45,8 @@ enum State<F>
 where
     F: Future,
 {
-    Stored(F),
+    // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
+    Stored(Pin<Box<F>>),
     Primed(JoinHandle<F::Output>),
     Intermediate,
 }
