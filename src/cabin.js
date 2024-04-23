@@ -195,6 +195,8 @@ function setUpEventListener(el, eventName, opts) {
 
       /** @type {Map<HTMLElement, bool>} */
       const disabledBefore = new Map();
+      /** @type {Map<HTMLElement, bool>} */
+      const readOnlyBefore = new Map();
 
       const abortController = (this.abortController = new AbortController());
       abortController.abort = function () {
@@ -208,6 +210,13 @@ function setUpEventListener(el, eventName, opts) {
         for (const [el, before] of disabledBefore) {
           if (el.parentNode && before !== undefined) {
             el.disabled = before;
+          }
+        }
+
+        // restore readOnly states
+        for (const [el, before] of readOnlyBefore) {
+          if (el.parentNode && before !== undefined) {
+            el.readOnly = before;
           }
         }
       };
@@ -259,8 +268,13 @@ function setUpEventListener(el, eventName, opts) {
           if (form?.elements) {
             for (const el of form.elements) {
               if (this.contains(el)) {
-                disabledBefore.set(el, el.disabled);
-                el.disabled = true;
+                if ("readOnly" in el.constructor.prototype) {
+                  readOnlyBefore.set(el, el.readOnly);
+                  el.readOnly = true;
+                } else {
+                  disabledBefore.set(el, el.disabled);
+                  el.disabled = true;
+                }
               }
             }
           }
@@ -291,7 +305,13 @@ function setUpEventListener(el, eventName, opts) {
               template.getAttribute("event-payload") === payloadStr
             ) {
               console.time("patch");
-              patchChildren(el, template.content, {}, disabledBefore);
+              patchChildren(
+                el,
+                template.content,
+                {},
+                disabledBefore,
+                readOnlyBefore,
+              );
               // put back prerendered templates
               for (const template of templates) {
                 this.appendChild(template);
@@ -308,6 +328,7 @@ function setUpEventListener(el, eventName, opts) {
           el == document ? document.body : el,
           abortController,
           disabledBefore,
+          readOnlyBefore,
         );
       } catch (err) {
         throw err;
@@ -331,8 +352,15 @@ function setUpEventListener(el, eventName, opts) {
  * @param {Node} rootAfter
  * @param {Record<string, Node>} orphanKeyed
  * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
+ * @param {WeakMap<HTMLElement, bool> | undefined} readOnlyBefore
  */
-function patchChildren(rootBefore, rootAfter, orphanKeyed, disabledBefore) {
+function patchChildren(
+  rootBefore,
+  rootAfter,
+  orphanKeyed,
+  disabledBefore,
+  readOnlyBefore,
+) {
   // console.log("apply", rootBefore, rootAfter);
 
   let nodeBefore = rootBefore.firstChild;
@@ -444,8 +472,14 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed, disabledBefore) {
         }
 
         // console.log("patch attributes");
-        patchAttributes(nodeBefore, nodeAfter, disabledBefore);
-        patchChildren(nodeBefore, nodeAfter, orphanKeyed, disabledBefore);
+        patchAttributes(nodeBefore, nodeAfter, disabledBefore, readOnlyBefore);
+        patchChildren(
+          nodeBefore,
+          nodeAfter,
+          orphanKeyed,
+          disabledBefore,
+          readOnlyBefore,
+        );
         break;
 
       case Node.TEXT_NODE:
@@ -470,8 +504,14 @@ function patchChildren(rootBefore, rootAfter, orphanKeyed, disabledBefore) {
  * @param {Element} childBefore
  * @param {Element} childAfter
  * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
+ * @param {WeakMap<HTMLElement, bool> | undefined} readOnlyBefore
  */
-function patchAttributes(childBefore, childAfter, disabledBefore) {
+function patchAttributes(
+  childBefore,
+  childAfter,
+  disabledBefore,
+  readOnlyBefore,
+) {
   // special handling for certain elements
   switch (childAfter.nodeName) {
     case "DIALOG":
@@ -514,28 +554,32 @@ function patchAttributes(childBefore, childAfter, disabledBefore) {
           // console.log("update attribute", name);
           childBefore.value = newValue;
         }
-        break;
+        continue;
       case "checked":
         if (childBefore.checked !== childAfter.checked) {
           // console.log("update attribute", name);
           childBefore.checked = childAfter.checked;
         }
-        break;
+        continue;
       case "selected":
         if (childBefore.selected !== childAfter.selected) {
           // console.log("update attribute", name);
           childBefore.selected = childAfter.selected;
         }
-        break;
+        continue;
       case "disabled":
         disabledBefore?.set(childBefore, childAfter.disabled);
-      // fallthrough
-      default:
-        if (childBefore.getAttribute(name) !== newValue) {
-          // console.log("update attribute", name);
-          childBefore.setAttribute(name, newValue);
-        }
         break;
+      case "readonly":
+        readOnlyBefore?.set(childBefore, childAfter.readOnly);
+        break;
+      default:
+        break;
+    }
+
+    if (childBefore.getAttribute(name) !== newValue) {
+      // console.log("update attribute", name);
+      childBefore.setAttribute(name, newValue);
     }
   }
 
