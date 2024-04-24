@@ -538,6 +538,7 @@ function patchAttributes(
     childBefore instanceof HTMLTextAreaElement
   ) {
     oldAttributeNames.add("disabled");
+    oldAttributeNames.add("readonly");
   }
 
   for (const name of childAfter.getAttributeNames()) {
@@ -554,19 +555,19 @@ function patchAttributes(
           // console.log("update attribute", name);
           childBefore.value = newValue;
         }
-        continue;
+        break;
       case "checked":
         if (childBefore.checked !== childAfter.checked) {
           // console.log("update attribute", name);
           childBefore.checked = childAfter.checked;
         }
-        continue;
+        break;
       case "selected":
         if (childBefore.selected !== childAfter.selected) {
           // console.log("update attribute", name);
           childBefore.selected = childAfter.selected;
         }
-        continue;
+        break;
       case "disabled":
         disabledBefore?.set(childBefore, childAfter.disabled);
         break;
@@ -574,12 +575,10 @@ function patchAttributes(
         readOnlyBefore?.set(childBefore, childAfter.readOnly);
         break;
       default:
-        break;
-    }
-
-    if (childBefore.getAttribute(name) !== newValue) {
-      // console.log("update attribute", name);
-      childBefore.setAttribute(name, newValue);
+        if (childBefore.getAttribute(name) !== newValue) {
+          // console.log("update attribute", name);
+          childBefore.setAttribute(name, newValue);
+        }
     }
   }
 
@@ -601,6 +600,11 @@ function patchAttributes(
         break;
       case "disabled":
         childBefore.disabled = false;
+        disabledBefore?.set(childBefore, false);
+        break;
+      case "readonly":
+        childBefore.readOnly = false;
+        readOnlyBefore?.set(childBefore, false);
         break;
       default:
         childBefore.removeAttribute(name);
