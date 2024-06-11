@@ -1,4 +1,6 @@
-*, :after, :before {
+*,
+:after,
+:before {
     /* --tw-border-spacing-x: 0; */
     /* --tw-border-spacing-y: 0; */
     /* --tw-translate-x: 0; */
@@ -23,7 +25,7 @@
     --tw-ring-inset:;
     --tw-ring-offset-width: 0px;
     --tw-ring-offset-color: #fff;
-    --tw-ring-color: rgba(14, 165, 233, .5);
+    --tw-ring-color: rgba(14, 165, 233, 0.5);
     --tw-ring-offset-shadow: 0 0 #0000;
     --tw-ring-shadow: 0 0 #0000;
     --tw-shadow: 0 0 #0000;
@@ -48,10 +50,12 @@
     /* --tw-backdrop-sepia: */
 }
 
-:after, :before {
+:after,
+:before {
     --tw-content: "";
 }
 
-cabin-keyed, cabin-boundary {
+cabin-keyed,
+cabin-boundary {
     display: contents;
 }

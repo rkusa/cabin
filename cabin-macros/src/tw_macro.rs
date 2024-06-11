@@ -69,6 +69,7 @@ struct StyleMethodCall {
     dot_token: Dot,
     method: Option<Ident>,      // optional to allow incomplete inputs
     paren_token: Option<Paren>, // optional to allow incomplete inputs
+    args: Option<Punctuated<ExprLit, Comma>>, // optional to allow incomplete inputs
 }
 
 impl Parse for StyleExpr {
@@ -105,6 +106,8 @@ impl Parse for StyleMethodCalls {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut method_calls = Vec::with_capacity(1);
         while input.peek(Dot) {
+            let content;
+            let mut args = None;
             method_calls.push(StyleMethodCall {
                 dot_token: input.parse()?,
                 method: if input.peek(Ident) {
@@ -113,12 +116,13 @@ impl Parse for StyleMethodCalls {
                     None
                 },
                 paren_token: if input.peek(Paren) {
-                    #[allow(unused)]
-                    let content;
-                    Some(syn::parenthesized!(content in input))
+                    let paren_token = syn::parenthesized!(content in input);
+                    args = Some(content.parse_terminated(ExprLit::parse, Comma)?);
+                    Some(paren_token)
                 } else {
                     None
                 },
+                args,
             });
         }
 
@@ -171,11 +175,14 @@ impl ToTokens for StyleMethodCall {
             dot_token,
             method,
             paren_token,
+            args,
         } = self;
         dot_token.to_tokens(tokens);
         method.to_tokens(tokens);
         if let Some(paren_token) = paren_token {
-            paren_token.surround(tokens, |_| {});
+            paren_token.surround(tokens, |tokens| {
+                args.to_tokens(tokens);
+            });
         }
     }
 }

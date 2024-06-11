@@ -57,7 +57,7 @@ pub trait Utility {
         pseudo::active::Active(self)
     }
 
-    /// Apply style to `::after` pseude element.
+    /// Apply style to `::after` pseudo element.
     fn after(self) -> pseudo::after::After<Self>
     where
         Self: Sized,
@@ -87,12 +87,20 @@ pub trait Utility {
         pseudo::apply_to_children::ApplyToChildren(self)
     }
 
-    /// Apply style to `::before` pseude element.
+    /// Apply style to `::before` pseudo element.
     fn before(self) -> pseudo::before::Before<Self>
     where
         Self: Sized,
     {
         pseudo::before::Before(self)
+    }
+
+    /// Apply style to custom `::{pseudo}` pseudo element.
+    fn pseudo(self, pseudo: &'static str) -> pseudo::custom::Custom<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::custom::Custom(pseudo, self)
     }
 
     /// Apply style only when the element is disabled (`:disabled`).
