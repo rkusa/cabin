@@ -223,7 +223,9 @@ fn flatten_recursively(iter: impl Iterator<Item = StyleExpr>) -> impl Iterator<I
                 match &mut s {
                     StyleExpr::Call { method_calls, .. } | StyleExpr::Path { method_calls, .. } => {
                         if method_calls.method_calls.is_none() {
-                            method_calls.method_calls = parent_method_calls.method_calls.clone();
+                            method_calls
+                                .method_calls
+                                .clone_from(&parent_method_calls.method_calls);
                         } else {
                             method_calls
                                 .method_calls

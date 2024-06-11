@@ -1,6 +1,6 @@
 /**
  * @param {number} eventId
- * @param {object | URLSearchParams} payload
+ * @param {object | FormData} payload
  * @param {Node} target
  * @param {AbortController | undefined} abortController
  * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
@@ -28,43 +28,56 @@ async function update(
     }
 
     /** @type {RequestInit} */
-    const req =
-      payload instanceof URLSearchParams
-        ? {
-            signal,
-            method: "PUT",
-            headers: {
-              "x-cabin": "boundary",
+    const req = (() => {
+      if (payload instanceof FormData) {
+        const formData = new FormData();
+        formData.append("event_id", eventId);
+        formData.append(
+          "state",
+          new Blob([state ?? ""], { type: "application/json" }),
+        );
+        formData.append(
+          "payload",
+          new Blob(
+            [
+              new URLSearchParams(
+                Array.from(payload.entries()).filter(
+                  ([, v]) => !(v instanceof File),
+                ),
+              ).toString(),
+            ],
+            {
+              type: "application/x-www-form-urlencoded",
             },
-            body: (() => {
-              const formData = new FormData();
-              formData.append(
-                "payload",
-                new Blob([payload.toString()], {
-                  type: "application/x-www-form-urlencoded",
-                }),
-              );
-              formData.append("event_id", eventId);
-              if (state) {
-                formData.append(
-                  "state",
-                  new Blob([state], { type: "application/json" }),
-                );
-              }
-              return formData;
-            })(),
+          ),
+        );
+        for (const [k, v] of payload) {
+          if (v instanceof File) {
+            formData.append(k, v);
           }
-        : {
-            signal,
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "x-cabin": "boundary",
-            },
-            body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}${
-              state ? `,"state":${state}` : ""
-            }}`,
-          };
+        }
+        return {
+          signal,
+          method: "PUT",
+          headers: {
+            "x-cabin": "boundary",
+          },
+          body: formData,
+        };
+      } else {
+        return {
+          signal,
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-cabin": "boundary",
+          },
+          body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}${
+            state ? `,"state":${state}` : ""
+          }}`,
+        };
+      }
+    })();
     const endpoint =
       target instanceof CabinBoundary
         ? `/__boundary/${target.getAttribute("name")}`
@@ -243,7 +256,7 @@ function setUpEventListener(el, eventName, opts) {
       try {
         let payload;
         if (isSubmitEvent && !node.hasAttribute(`${attrName}-payload`)) {
-          payload = new URLSearchParams(new FormData(node));
+          payload = new FormData(node);
         } else if (opts?.eventPayload) {
           payload = JSON.parse(
             Object.entries(opts.eventPayload(e)).reduce(

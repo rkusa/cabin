@@ -4,6 +4,7 @@ use std::future::Future;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
+use multer::Multipart;
 use serde::de::DeserializeOwned;
 use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
@@ -24,6 +25,7 @@ pub struct Scope {
 
 struct Inner {
     event: Option<Event>,
+    multipart: Option<Multipart<'static>>,
     error: Option<InternalError>,
 }
 
@@ -148,11 +150,22 @@ where
         .flatten()
 }
 
+pub fn take_multipart() -> Option<Multipart<'static>> {
+    SCOPE
+        .try_with(|scope| {
+            let mut state = scope.inner.borrow_mut();
+            state.multipart.take()
+        })
+        .ok()
+        .flatten()
+}
+
 impl Scope {
     pub fn new() -> Self {
         Self {
             inner: Rc::new(RefCell::new(Inner {
                 event: None,
+                multipart: None,
                 error: None,
             })),
         }
@@ -162,6 +175,14 @@ impl Scope {
         {
             let mut state = self.inner.borrow_mut();
             state.event = Some(Event::Raw { id, payload });
+        }
+        self
+    }
+
+    pub(crate) fn with_multipart(self, multipart: Multipart<'static>) -> Self {
+        {
+            let mut state = self.inner.borrow_mut();
+            state.multipart = Some(multipart);
         }
         self
     }
