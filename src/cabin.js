@@ -155,7 +155,10 @@ function setUpEventListener(el, eventName, opts) {
     let node = e.target;
 
     do {
-      const eventId = e.detail?.eventId ?? node.getAttribute(attrName);
+      const eventId =
+        e.detail?.eventId ??
+        e.submitter?.getAttribute(attrName) ??
+        node.getAttribute(attrName);
       if (!eventId) {
         continue;
       }

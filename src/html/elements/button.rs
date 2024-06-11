@@ -6,6 +6,7 @@ use cabin_macros::Attribute;
 use super::common::Common;
 use super::global::Global;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::form::OnSubmit;
 use crate::html::{Aria, Html};
 use crate::View;
 
@@ -113,6 +114,21 @@ pub trait Button: WithAttribute {
     /// Value to be used for form submission
     fn value(self, value: impl Into<Cow<'static, str>>) -> Self::Output<Value> {
         self.with_attribute(Value(value.into()))
+    }
+
+    /// If a form is submitted with this button, the form elements are serialized into the `E`
+    /// event regardless of what is set for the forms `on_submit`.
+    fn on_submit<E>(self) -> Self::Output<OnSubmit>
+    where
+        E: 'static,
+    {
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = twox_hash::XxHash32::default();
+        std::any::TypeId::of::<E>().hash(&mut hasher);
+        let hash = hasher.finish() as u32;
+
+        self.with_attribute(OnSubmit(hash))
     }
 }
 
