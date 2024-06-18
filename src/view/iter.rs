@@ -1,5 +1,5 @@
 use std::hash::{Hash, Hasher};
-use std::iter::Map;
+use std::iter::{FilterMap, Map};
 use std::marker::PhantomData;
 
 use twox_hash::XxHash32;
@@ -89,6 +89,25 @@ impl<Iter, FV, V> View for Map<Iter, FV>
 where
     Iter: Iterator + 'static,
     FV: FnMut(Iter::Item) -> V + 'static,
+    V: View,
+{
+    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
+        RenderFuture::Future(Box::pin(async move {
+            for i in self {
+                let fut = i.render(r, true);
+                r = fut.await?;
+            }
+            Ok(r)
+        }))
+    }
+
+    // TODO: any way to prime without consuming the iterator?
+}
+
+impl<Iter, FV, V> View for FilterMap<Iter, FV>
+where
+    Iter: Iterator + 'static,
+    FV: FnMut(Iter::Item) -> Option<V> + 'static,
     V: View,
 {
     fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
