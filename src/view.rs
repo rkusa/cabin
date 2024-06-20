@@ -14,7 +14,7 @@ use std::task::{Context, Poll};
 pub use boundary::Boundary;
 pub use boxed::BoxedView;
 pub use future::FutureExt;
-use http_error::HttpError;
+use http_error::{AnyHttpError, HttpError};
 pub use iter::IteratorExt;
 pub use update::UpdateView;
 
@@ -42,6 +42,13 @@ where
         Self: Sized,
     {
         Boundary::new(self, args)
+    }
+}
+
+pub trait IntoView {
+    fn into_view(self) -> impl View;
+    fn should_render(&self) -> bool {
+        true
     }
 }
 
@@ -109,14 +116,20 @@ impl<V, E> View for Result<V, E>
 where
     V: View,
     Box<dyn HttpError + Send + 'static>: From<E>,
-    E: 'static,
+    E: IntoView + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
             Ok(v) => v.render(r, include_hash),
-            Err(err) => RenderFuture::ready(Err(crate::Error::from(Box::<
-                dyn HttpError + Send + 'static,
-            >::from(err)))),
+            Err(err) => {
+                if err.should_render() {
+                    err.into_view().render(r, include_hash)
+                } else {
+                    RenderFuture::ready(Err(crate::Error::from(Box::<
+                        dyn HttpError + Send + 'static,
+                    >::from(err))))
+                }
+            }
         }
     }
 
@@ -124,6 +137,14 @@ where
         if let Ok(inner) = self {
             inner.prime();
         }
+    }
+}
+
+impl IntoView for AnyHttpError {
+    fn into_view(self) -> impl View {}
+
+    fn should_render(&self) -> bool {
+        false
     }
 }
 

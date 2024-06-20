@@ -18,7 +18,7 @@ use script::Script;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use super::{BoxedView, RenderFuture};
+use super::{BoxedView, IntoView, RenderFuture};
 use crate::error::InternalError;
 use crate::html::attributes::Attributes;
 use crate::html::script::{self, script};
@@ -381,7 +381,7 @@ impl<Args, E> From<Result<Boundary<Args>, E>> for Boundary<Args>
 where
     Args: 'static + Clone + Serialize,
     Box<dyn HttpError + Send + 'static>: From<E>,
-    E: 'static,
+    E: IntoView + 'static,
 {
     fn from(result: Result<Boundary<Args>, E>) -> Self {
         match result {
