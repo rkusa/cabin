@@ -183,6 +183,30 @@ pub trait Utility {
     {
         pseudo::max_width::MaxWidth::new(max_width_px, self)
     }
+
+    /// Apply style only when container width is at least `min_width_px`.
+    /// `@container (min-width: {min_width_px}px)`
+    fn min_container_width_px(
+        self,
+        min_width_px: u32,
+    ) -> pseudo::min_container_width::MinContainerWidth<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::min_container_width::MinContainerWidth::new(min_width_px, self)
+    }
+
+    /// Apply style only when container width does not exceed `max_width_px`.
+    /// `@container (max-width: {max_width_px}px)`
+    fn max_container_width_px(
+        self,
+        max_width_px: u32,
+    ) -> pseudo::max_container_width::MaxContainerWidth<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::max_container_width::MaxContainerWidth::new(max_width_px, self)
+    }
 }
 
 include!(concat!(env!("OUT_DIR"), "/responsive.rs"));
