@@ -2,7 +2,7 @@
 //!
 //! <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns>
 
-use crate::Property;
+use crate::{Length, Property};
 
 const GRID_AUTO_COLUMNS: &str = "grid-auto-columns";
 
@@ -25,3 +25,45 @@ pub const MAX: Property = Property(GRID_AUTO_COLUMNS, "max-content");
 /// grid-auto-columns: minmax(0, 1fr);
 /// ```
 pub const FR: Property = Property(GRID_AUTO_COLUMNS, "minmax(0, 1fr");
+
+/// ```css
+/// grid-auto-columns: {auto_cols};
+/// ```
+pub fn custom(auto_cols: &'static str) -> Property {
+    Property(GRID_AUTO_COLUMNS, auto_cols)
+}
+
+/// ```css
+/// grid-auto-columns: {x}px;
+/// ```
+pub fn px(x: i16) -> Property<Length> {
+    Property(GRID_AUTO_COLUMNS, Length::Px(f32::from(x)))
+}
+
+/// ```css
+/// grid-auto-columns: {x}px;
+/// ```
+pub fn pxf(x: f32) -> Property<Length> {
+    Property(GRID_AUTO_COLUMNS, Length::Px(x))
+}
+
+/// ```css
+/// grid-auto-columns: {x}%;
+/// ```
+pub fn percent(x: i16) -> Property<Length> {
+    Property(GRID_AUTO_COLUMNS, Length::Percent(f32::from(x)))
+}
+
+/// ```css
+/// grid-auto-columns: {x}%;
+/// ```
+pub fn percentf(x: f32) -> Property<Length> {
+    Property(GRID_AUTO_COLUMNS, Length::Percent(x))
+}
+
+/// ```css
+/// grid-auto-columns: {x}vw;
+/// ```
+pub fn vw(x: u16) -> Property<Length> {
+    Property(GRID_AUTO_COLUMNS, Length::Vw(x))
+}
