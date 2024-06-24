@@ -9,16 +9,17 @@ use std::fmt;
 use crate::Property;
 
 const GRID_TEMPLATE_COLUMNS: &str = "grid-template-columns";
+const GRID_TEMPLATE_ROWS: &str = "grid-template-rows";
 
 /// ```css
 /// grid-template-columns: repeat({n}, minmax(0, 1fr));
 /// ```
-pub fn cols(n: u16) -> Property<GridTemplateColumns> {
-    Property(GRID_TEMPLATE_COLUMNS, GridTemplateColumns::Count(n))
+pub fn cols(n: u16) -> Property<GridTemplate> {
+    Property(GRID_TEMPLATE_COLUMNS, GridTemplate::Count(n))
 }
 
 pub mod cols {
-    use super::{GridTemplateColumns, GRID_TEMPLATE_COLUMNS};
+    use super::{GridTemplate, GRID_TEMPLATE_COLUMNS};
     use crate::Property;
 
     /// ```css
@@ -29,21 +30,45 @@ pub mod cols {
     /// ```css
     /// grid-template-columns:{template};
     /// ```
-    pub fn custom(template: &'static str) -> Property<GridTemplateColumns> {
-        Property(GRID_TEMPLATE_COLUMNS, GridTemplateColumns::Custom(template))
+    pub fn custom(template: &'static str) -> Property<GridTemplate> {
+        Property(GRID_TEMPLATE_COLUMNS, GridTemplate::Custom(template))
     }
 }
 
-pub enum GridTemplateColumns {
+/// ```css
+/// grid-template-rows: repeat({n}, minmax(0, 1fr));
+/// ```
+pub fn rows(n: u16) -> Property<GridTemplate> {
+    Property(GRID_TEMPLATE_ROWS, GridTemplate::Count(n))
+}
+
+pub mod rows {
+    use super::{GridTemplate, GRID_TEMPLATE_ROWS};
+    use crate::Property;
+
+    /// ```css
+    /// grid-template-rows: none;
+    /// ```
+    pub const NONE: Property = Property(GRID_TEMPLATE_ROWS, "none");
+
+    /// ```css
+    /// grid-template-rows:{template};
+    /// ```
+    pub fn custom(template: &'static str) -> Property<GridTemplate> {
+        Property(GRID_TEMPLATE_ROWS, GridTemplate::Custom(template))
+    }
+}
+
+pub enum GridTemplate {
     Count(u16),
     Custom(&'static str),
 }
 
-impl fmt::Display for GridTemplateColumns {
+impl fmt::Display for GridTemplate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            GridTemplateColumns::Count(n) => write!(f, "repeat({n}, minmax(0, 1fr))"),
-            GridTemplateColumns::Custom(t) => f.write_str(t),
+            GridTemplate::Count(n) => write!(f, "repeat({n}, minmax(0, 1fr))"),
+            GridTemplate::Custom(t) => f.write_str(t),
         }
     }
 }
