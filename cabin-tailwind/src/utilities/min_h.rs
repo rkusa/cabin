@@ -27,9 +27,24 @@ pub const PX: Property<Length> = Property(MIN_HEIGHT, Length::Px(1.0));
 pub const FULL: Property<Length> = Property(MIN_HEIGHT, Length::Percent(100.0));
 
 /// ```css
-/// min-height: 100vw;
+/// min-height: 100vh;
 /// ```
 pub const SCREEN: Property<Length> = Property(MIN_HEIGHT, Length::Vw(100));
+
+/// ```css
+/// min-height: 100svh;
+/// ```
+pub const SVH: Property<Length> = Property(MIN_HEIGHT, Length::Svh(100));
+
+/// ```css
+/// min-height: 100lvh;
+/// ```
+pub const LVH: Property<Length> = Property(MIN_HEIGHT, Length::Lvh(100));
+
+/// ```css
+/// min-height: 100dvh;
+/// ```
+pub const DVH: Property<Length> = Property(MIN_HEIGHT, Length::Dvh(100));
 
 /// ```css
 /// min-height: min-content;
@@ -105,15 +120,29 @@ pub fn percentf(x: f32) -> Property<Length> {
 }
 
 /// ```css
-/// min-height: {x}vw;
-/// ```
-pub fn vw(x: u16) -> Property<Length> {
-    Property(MIN_HEIGHT, Length::Vw(x))
-}
-
-/// ```css
 /// min-height: {x}vh;
 /// ```
 pub fn vh(x: u16) -> Property<Length> {
     Property(MIN_HEIGHT, Length::Vh(x))
+}
+
+/// ```css
+/// min-height: {x}svh;
+/// ```
+pub fn svh(x: u16) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Svh(x))
+}
+
+/// ```css
+/// min-height: {x}lvh;
+/// ```
+pub fn lvh(x: u16) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Lvh(x))
+}
+
+/// ```css
+/// min-height: {x}dvh;
+/// ```
+pub fn dvh(x: u16) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Dvh(x))
 }

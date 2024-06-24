@@ -230,7 +230,13 @@ pub enum Length {
     MaxContent,
     FitContent,
     Vw(u16),
+    Svw(u16),
+    Lvw(u16),
+    Dvw(u16),
     Vh(u16),
+    Svh(u16),
+    Lvh(u16),
+    Dvh(u16),
     Px(f32),
     Em(f32),
     Rem(f32),
@@ -241,7 +247,14 @@ impl Length {
     fn is_zero(&self) -> bool {
         match self {
             Length::Auto | Length::MinContent | Length::MaxContent | Length::FitContent => false,
-            Length::Vw(v) | Length::Vh(v) => *v == 0,
+            Length::Vw(v)
+            | Length::Svw(v)
+            | Length::Lvw(v)
+            | Length::Dvw(v)
+            | Length::Vh(v)
+            | Length::Svh(v)
+            | Length::Lvh(v)
+            | Length::Dvh(v) => *v == 0,
             Length::Px(v) | Length::Em(v) | Length::Rem(v) | Length::Percent(v) => {
                 v.abs() < f32::EPSILON
             }
@@ -261,7 +274,13 @@ impl fmt::Display for Length {
             Length::MaxContent => f.write_str("max-content"),
             Length::FitContent => f.write_str("fit-content"),
             Length::Vw(v) => write!(f, "{v}vw"),
+            Length::Svw(v) => write!(f, "{v}svw"),
+            Length::Lvw(v) => write!(f, "{v}lvw"),
+            Length::Dvw(v) => write!(f, "{v}dvw"),
             Length::Vh(v) => write!(f, "{v}vh"),
+            Length::Svh(v) => write!(f, "{v}svh"),
+            Length::Lvh(v) => write!(f, "{v}lvh"),
+            Length::Dvh(v) => write!(f, "{v}dvh"),
             Length::Px(v) => write!(f, "{v}px"),
             Length::Em(v) => write!(f, "{v}em"),
             Length::Rem(v) => write!(f, "{v}rem"),

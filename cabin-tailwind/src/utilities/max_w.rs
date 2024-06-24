@@ -32,6 +32,21 @@ pub const FULL: Property<Length> = Property(MAX_WIDTH, Length::Percent(100.0));
 pub const SCREEN: Property<Length> = Property(MAX_WIDTH, Length::Vw(100));
 
 /// ```css
+/// max-width: 100svw;
+/// ```
+pub const SVH: Property<Length> = Property(MAX_WIDTH, Length::Svw(100));
+
+/// ```css
+/// max-width: 100lvw;
+/// ```
+pub const LVH: Property<Length> = Property(MAX_WIDTH, Length::Lvw(100));
+
+/// ```css
+/// max-width: 100dvw;
+/// ```
+pub const DVH: Property<Length> = Property(MAX_WIDTH, Length::Dvw(100));
+
+/// ```css
 /// max-width: min-content;
 /// ```
 pub const MIN: Property<Length> = Property(MAX_WIDTH, Length::MinContent);
@@ -109,4 +124,25 @@ pub fn percentf(x: f32) -> Property<Length> {
 /// ```
 pub fn vw(x: u16) -> Property<Length> {
     Property(MAX_WIDTH, Length::Vw(x))
+}
+
+/// ```css
+/// max-width: {x}svw;
+/// ```
+pub fn svw(x: u16) -> Property<Length> {
+    Property(MAX_WIDTH, Length::Svw(x))
+}
+
+/// ```css
+/// max-width: {x}lvw;
+/// ```
+pub fn lvw(x: u16) -> Property<Length> {
+    Property(MAX_WIDTH, Length::Lvw(x))
+}
+
+/// ```css
+/// max-width: {x}dvw;
+/// ```
+pub fn dvw(x: u16) -> Property<Length> {
+    Property(MAX_WIDTH, Length::Dvw(x))
 }
