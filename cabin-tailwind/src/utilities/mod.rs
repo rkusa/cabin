@@ -72,6 +72,7 @@ pub mod tracking;
 pub mod transition;
 pub mod translate;
 pub mod via;
+pub mod visibility;
 pub mod w;
 pub mod whitespace;
 pub mod z;
@@ -129,6 +130,7 @@ pub use to::percent as to;
 pub use top::unit as top;
 pub use transition::{delay_ms, delay_s, duration_ms, duration_s, DEFAULT as TRANSITION};
 pub use via::percent as via;
+pub use visibility::*;
 pub use w::unit as w;
 pub use z::index as z;
 
