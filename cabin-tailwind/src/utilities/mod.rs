@@ -62,6 +62,7 @@ pub mod right;
 pub mod ring;
 pub mod rounded;
 pub mod row;
+pub mod select;
 pub mod shadow;
 pub mod space;
 pub mod start;
