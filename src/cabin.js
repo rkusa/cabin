@@ -567,7 +567,9 @@ function patchAttributes(
     const newValue = childAfter.getAttribute(name);
     switch (name) {
       case "value":
-        if (childBefore.value !== newValue) {
+        // Using `.getAttribute("value")` instead of `.value` to keep local state unless it is an
+        // intentional change from the server.
+        if (childBefore.getAttribute("value") !== newValue) {
           // console.log("update attribute", name);
           childBefore.value = newValue;
         }
