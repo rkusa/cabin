@@ -207,6 +207,14 @@ pub trait Utility {
     {
         pseudo::max_container_width::MaxContainerWidth::new(max_width_px, self)
     }
+
+    /// Apply style only when printing.
+    fn print(self) -> pseudo::print::Print<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::print::Print::new(self)
+    }
 }
 
 include!(concat!(env!("OUT_DIR"), "/responsive.rs"));
