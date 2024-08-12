@@ -146,3 +146,17 @@ pub fn lvh(x: u16) -> Property<Length> {
 pub fn dvh(x: u16) -> Property<Length> {
     Property(MAX_HEIGHT, Length::Dvh(x))
 }
+
+/// ```css
+/// max-height: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(MAX_HEIGHT, Length::Mm(x))
+}
+
+/// ```css
+/// max-height: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(MAX_HEIGHT, Length::Cm(x))
+}

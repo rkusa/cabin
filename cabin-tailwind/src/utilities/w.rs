@@ -146,3 +146,17 @@ pub fn lvw(x: u16) -> Property<Length> {
 pub fn dvw(x: u16) -> Property<Length> {
     Property(WIDTH, Length::Dvw(x))
 }
+
+/// ```css
+/// width: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(WIDTH, Length::Mm(x))
+}
+
+/// ```css
+/// width: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(WIDTH, Length::Cm(x))
+}

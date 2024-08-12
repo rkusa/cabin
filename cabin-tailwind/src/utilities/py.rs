@@ -91,3 +91,17 @@ pub fn percentf(x: f32) -> PropertyTwice<Length> {
 pub fn vh(x: u16) -> PropertyTwice<Length> {
     PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Vh(x))
 }
+
+/// ```css
+/// padding-top: {x}mm; padding-bottom: {x}mm;
+/// ```
+pub fn mm(x: f32) -> PropertyTwice<Length> {
+    PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Mm(x))
+}
+
+/// ```css
+/// padding-top: {x}cm padding-bottom: {x}cm;
+/// ```
+pub fn cm(x: f32) -> PropertyTwice<Length> {
+    PropertyTwice(PADDING_TOP, PADDING_BOTTOM, Length::Cm(x))
+}

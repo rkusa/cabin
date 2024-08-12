@@ -241,6 +241,8 @@ pub enum Length {
     Em(f32),
     Rem(f32),
     Percent(f32),
+    Mm(f32),
+    Cm(f32),
 }
 
 impl Length {
@@ -255,9 +257,12 @@ impl Length {
             | Length::Svh(v)
             | Length::Lvh(v)
             | Length::Dvh(v) => *v == 0,
-            Length::Px(v) | Length::Em(v) | Length::Rem(v) | Length::Percent(v) => {
-                v.abs() < f32::EPSILON
-            }
+            Length::Px(v)
+            | Length::Em(v)
+            | Length::Rem(v)
+            | Length::Percent(v)
+            | Length::Mm(v)
+            | Length::Cm(v) => v.abs() < f32::EPSILON,
         }
     }
 }
@@ -285,6 +290,8 @@ impl fmt::Display for Length {
             Length::Em(v) => write!(f, "{v}em"),
             Length::Rem(v) => write!(f, "{v}rem"),
             Length::Percent(v) => write!(f, "{v}%"),
+            Length::Mm(v) => write!(f, "{v}mm"),
+            Length::Cm(v) => write!(f, "{v}cm"),
         }
     }
 }

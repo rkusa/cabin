@@ -90,3 +90,17 @@ pub fn percentf(x: f32) -> Property<Length> {
 pub fn vh(x: u16) -> Property<Length> {
     Property(TOP, Length::Vh(x))
 }
+
+/// ```css
+/// top: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(TOP, Length::Mm(x))
+}
+
+/// ```css
+/// top: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(TOP, Length::Cm(x))
+}

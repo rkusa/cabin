@@ -89,3 +89,17 @@ pub fn percent(x: i16) -> Property<Length> {
 pub fn percentf(x: f32) -> Property<Length> {
     Property(INSET, Length::Percent(x))
 }
+
+/// ```css
+/// inset: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(INSET, Length::Mm(x))
+}
+
+/// ```css
+/// inset: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(INSET, Length::Cm(x))
+}

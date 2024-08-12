@@ -87,3 +87,17 @@ pub fn percentf(x: f32) -> PropertyTwice<Length> {
 pub fn vw(x: u16) -> PropertyTwice<Length> {
     PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Vw(x))
 }
+
+/// ```css
+/// margin-left: {x}mm; margin-right: {x}mm;
+/// ```
+pub fn mm(x: f32) -> PropertyTwice<Length> {
+    PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Mm(x))
+}
+
+/// ```css
+/// margin-left: {x}cm; margin-right: {x}cm;
+/// ```
+pub fn cm(x: f32) -> PropertyTwice<Length> {
+    PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Cm(x))
+}

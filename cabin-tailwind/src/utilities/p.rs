@@ -78,3 +78,17 @@ pub fn percent(x: i16) -> Property<Length> {
 pub fn percentf(x: f32) -> Property<Length> {
     Property(PADDING, Length::Percent(x))
 }
+
+/// ```css
+/// padding: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(PADDING, Length::Mm(x))
+}
+
+/// ```css
+/// padding: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(PADDING, Length::Cm(x))
+}

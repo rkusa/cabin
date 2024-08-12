@@ -146,3 +146,17 @@ pub fn lvh(x: u16) -> Property<Length> {
 pub fn dvh(x: u16) -> Property<Length> {
     Property(MIN_HEIGHT, Length::Dvh(x))
 }
+
+/// ```css
+/// min-height: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Mm(x))
+}
+
+/// ```css
+/// min-height: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Cm(x))
+}

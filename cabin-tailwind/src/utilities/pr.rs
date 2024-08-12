@@ -85,3 +85,17 @@ pub fn percentf(x: f32) -> Property<Length> {
 pub fn vw(x: u16) -> Property<Length> {
     Property(PADDING_RIGHT, Length::Vw(x))
 }
+
+/// ```css
+/// padding-right: {x}mm;
+/// ```
+pub fn mm(x: f32) -> Property<Length> {
+    Property(PADDING_RIGHT, Length::Mm(x))
+}
+
+/// ```css
+/// padding-right: {x}cm;
+/// ```
+pub fn cm(x: f32) -> Property<Length> {
+    Property(PADDING_RIGHT, Length::Cm(x))
+}
