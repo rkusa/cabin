@@ -92,6 +92,20 @@ pub fn remf(x: f32) -> Property<Length> {
 }
 
 /// ```css
+/// max-width: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(MAX_WIDTH, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// max-width: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(MAX_WIDTH, Length::Em(x))
+}
+
+/// ```css
 /// max-width: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length> {

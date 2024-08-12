@@ -38,6 +38,14 @@ pub mod x {
         SpaceX(Length::Rem(x))
     }
 
+    pub fn em(x: i16) -> SpaceX {
+        SpaceX(Length::Em(f32::from(x)))
+    }
+
+    pub fn emf(x: f32) -> SpaceX {
+        SpaceX(Length::Em(x))
+    }
+
     pub fn px(x: i16) -> SpaceX {
         SpaceX(Length::Px(f32::from(x)))
     }
@@ -71,6 +79,14 @@ pub mod y {
 
     pub fn remf(x: f32) -> SpaceY {
         SpaceY(Length::Rem(x))
+    }
+
+    pub fn em(x: i16) -> SpaceY {
+        SpaceY(Length::Em(f32::from(x)))
+    }
+
+    pub fn emf(x: f32) -> SpaceY {
+        SpaceY(Length::Em(x))
     }
 
     pub fn px(x: i16) -> SpaceY {

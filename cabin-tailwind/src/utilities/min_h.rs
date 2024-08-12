@@ -92,6 +92,20 @@ pub fn remf(x: f32) -> Property<Length> {
 }
 
 /// ```css
+/// min-height: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// min-height: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(MIN_HEIGHT, Length::Em(x))
+}
+
+/// ```css
 /// min-height: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length> {

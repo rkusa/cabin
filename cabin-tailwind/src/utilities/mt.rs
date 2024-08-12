@@ -52,6 +52,20 @@ pub fn remf(x: f32) -> Property<Length> {
 }
 
 /// ```css
+/// margin-top: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(MARGIN_TOP, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// margin-top: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(MARGIN_TOP, Length::Em(x))
+}
+
+/// ```css
 /// margin-top: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length> {

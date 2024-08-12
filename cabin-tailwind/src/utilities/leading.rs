@@ -69,6 +69,20 @@ pub fn remf(x: f32) -> Property<Length, 1> {
 }
 
 /// ```css
+/// line-height: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length, 1> {
+    Property(LINE_HEIGHT, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// line-height: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length, 1> {
+    Property(LINE_HEIGHT, Length::Em(x))
+}
+
+/// ```css
 /// line-height: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length, 1> {

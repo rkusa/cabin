@@ -54,6 +54,20 @@ pub fn remf(x: f32) -> PropertyTwice<Length> {
 }
 
 /// ```css
+/// margin-left: {x}em; margin-right: {x}em;
+/// ```
+pub fn em(x: i16) -> PropertyTwice<Length> {
+    PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// margin-left: {x}em; margin-right: {x}em;
+/// ```
+pub fn emf(x: f32) -> PropertyTwice<Length> {
+    PropertyTwice(MARGIN_LEFT, MARGIN_RIGHT, Length::Em(x))
+}
+
+/// ```css
 /// margin-left: {x}px; margin-right: {x}px;
 /// ```
 pub fn px(x: i16) -> PropertyTwice<Length> {

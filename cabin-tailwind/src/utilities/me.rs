@@ -52,6 +52,20 @@ pub fn remf(x: f32) -> Property<Length> {
 }
 
 /// ```css
+/// margin-inline-end: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(MARGIN_INLINE_END, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// margin-inline-end: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(MARGIN_INLINE_END, Length::Em(x))
+}
+
+/// ```css
 /// margin-inline-end: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length> {

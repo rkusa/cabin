@@ -58,6 +58,20 @@ pub fn remf(x: f32) -> PropertyTwice<Length> {
 }
 
 /// ```css
+/// padding-left: {x}em; padding-right: {x}em;
+/// ```
+pub fn em(x: i16) -> PropertyTwice<Length> {
+    PropertyTwice(PADDING_LEFT, PADDING_RIGHT, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// padding-left: {x}em; padding-right: {x}em;
+/// ```
+pub fn emf(x: f32) -> PropertyTwice<Length> {
+    PropertyTwice(PADDING_LEFT, PADDING_RIGHT, Length::Em(x))
+}
+
+/// ```css
 /// padding-left: {x}px; padding-right: {x}px;
 /// ```
 pub fn px(x: i16) -> PropertyTwice<Length> {

@@ -45,6 +45,20 @@ pub fn rem(x: i16) -> Property<Length> {
 }
 
 /// ```css
+/// margin-left: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(MARGIN_LEFT, Length::Em(x))
+}
+
+/// ```css
+/// margin-left: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(MARGIN_LEFT, Length::Em(f32::from(x)))
+}
+
+/// ```css
 /// margin-left: {x}rem;
 /// ```
 pub fn remf(x: f32) -> Property<Length> {

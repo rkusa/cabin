@@ -55,6 +55,19 @@ pub fn rem(x: i16) -> Property<Length> {
 pub fn remf(x: f32) -> Property<Length> {
     Property(BOTTOM, Length::Rem(x))
 }
+/// ```css
+/// bottom: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(BOTTOM, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// bottom: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(BOTTOM, Length::Em(x))
+}
 
 /// ```css
 /// bottom: {x}px;

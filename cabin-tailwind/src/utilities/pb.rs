@@ -52,6 +52,20 @@ pub fn remf(x: f32) -> Property<Length> {
 }
 
 /// ```css
+/// padding-bottom: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(PADDING_BOTTOM, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// padding-bottom: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(PADDING_BOTTOM, Length::Em(x))
+}
+
+/// ```css
 /// padding-bottom: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length> {

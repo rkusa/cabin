@@ -47,6 +47,20 @@ pub fn remf(x: f32) -> Property<Length> {
 }
 
 /// ```css
+/// gap: {x}em;
+/// ```
+pub fn em(x: i16) -> Property<Length> {
+    Property(GAP, Length::Em(f32::from(x)))
+}
+
+/// ```css
+/// gap: {x}em;
+/// ```
+pub fn emf(x: f32) -> Property<Length> {
+    Property(GAP, Length::Em(x))
+}
+
+/// ```css
 /// gap: {x}px;
 /// ```
 pub fn px(x: i16) -> Property<Length> {
