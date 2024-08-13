@@ -96,7 +96,7 @@ pub fn boundary_attribute(
             #[::cabin::private::linkme::distributed_slice(::cabin::view::boundary::BOUNDARIES)]
             #[linkme(crate = ::cabin::private::linkme)]
             fn __register(r: &mut ::cabin::view::boundary::BoundaryRegistry) {
-                EVENTS.set(vec![#(::std::any::TypeId::of::<#events>(),)*].into_boxed_slice()).unwrap();
+                EVENTS.set(vec![#(::std::any::TypeId::of::<#events>(),)*].into_boxed_slice()).ok();
                 r.register(&BOUNDARY)
             }
 
