@@ -30,7 +30,7 @@ pub const FULL: Property<Length> = Property(BOTTOM, Length::Percent(100.0));
 /// ```css
 /// bottom: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(BOTTOM, Length::Rem(f32::from(x) * 0.25))
 }
 

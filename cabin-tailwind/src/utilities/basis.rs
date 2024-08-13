@@ -30,7 +30,7 @@ pub const FULL: Property<Length> = Property(FLEX_BASIS, Length::Percent(100.0));
 /// ```css
 /// flex-basis: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(FLEX_BASIS, Length::Rem(f32::from(x) * 0.25))
 }
 

@@ -25,7 +25,7 @@ pub const PX: Property<Length> = Property(PADDING_RIGHT, Length::Px(1.0));
 /// ```css
 /// padding-right: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(PADDING_RIGHT, Length::Rem(f32::from(x) * 0.25))
 }
 

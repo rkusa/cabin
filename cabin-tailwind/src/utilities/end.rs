@@ -30,7 +30,7 @@ pub const FULL: Property<Length> = Property(INSET_INLINE_END, Length::Percent(10
 /// ```css
 /// inset-inline-end: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(INSET_INLINE_END, Length::Rem(f32::from(x) * 0.25))
 }
 

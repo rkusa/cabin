@@ -42,7 +42,7 @@ pub const LOOSE: Property<f64, 1> = Property(LINE_HEIGHT, 2.0);
 /// ```css
 /// line-height: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length, 1> {
+pub fn unit(x: i16) -> Property<Length, 1> {
     Property(LINE_HEIGHT, Length::Rem(f32::from(x) * 0.25))
 }
 

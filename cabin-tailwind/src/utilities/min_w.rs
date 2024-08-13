@@ -65,7 +65,7 @@ pub const FIT: Property<Length> = Property(MIN_WIDTH, Length::FitContent);
 /// ```css
 /// min-width: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(MIN_WIDTH, Length::Rem(f32::from(x) * 0.25))
 }
 

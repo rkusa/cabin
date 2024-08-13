@@ -27,7 +27,7 @@ pub const PX: PropertyTwice<Length> = PropertyTwice(PADDING_TOP, PADDING_BOTTOM,
 /// ```css
 /// padding-top: {x * 0.25}rem; padding-bottom: {x * 0.25}rem
 /// ```
-pub fn unit(x: u16) -> PropertyTwice<Length> {
+pub fn unit(x: i16) -> PropertyTwice<Length> {
     PropertyTwice(
         PADDING_TOP,
         PADDING_BOTTOM,

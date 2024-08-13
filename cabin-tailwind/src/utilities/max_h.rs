@@ -65,7 +65,7 @@ pub const FIT: Property<Length> = Property(MAX_HEIGHT, Length::FitContent);
 /// ```css
 /// max-height: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(MAX_HEIGHT, Length::Rem(f32::from(x) * 0.25))
 }
 

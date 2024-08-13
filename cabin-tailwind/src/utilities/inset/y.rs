@@ -37,7 +37,7 @@ pub const FULL: PropertyTwice<Length> = PropertyTwice(TOP, BOTTOM, Length::Perce
 /// top: {x * 0.25}rem;
 /// bottom: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> PropertyTwice<Length> {
+pub fn unit(x: i16) -> PropertyTwice<Length> {
     PropertyTwice(TOP, BOTTOM, Length::Rem(f32::from(x) * 0.25))
 }
 

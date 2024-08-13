@@ -20,7 +20,7 @@ pub const PX: Property<Length> = Property(GAP, Length::Px(1.0));
 /// ```css
 /// gap: {x * 0.25}rem;
 /// ```
-pub fn unit(x: u16) -> Property<Length> {
+pub fn unit(x: i16) -> Property<Length> {
     Property(GAP, Length::Rem(f32::from(x) * 0.25))
 }
 
