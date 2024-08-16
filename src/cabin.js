@@ -215,9 +215,9 @@ function setUpEventListener(el, eventName, opts) {
     }
 
     // Only one concurrent event execution per boundary
-      if (this.abortController) {
-        this.abortController.abort();
-      }
+    if (this.abortController) {
+      this.abortController.abort();
+    }
 
     /** @type {Map<HTMLElement, bool>} */
     const disabledBefore = new Map();
@@ -300,6 +300,15 @@ function setUpEventListener(el, eventName, opts) {
       } else if (opts.disable) {
         disabledBefore.set(node, node.disabled);
         node.disabled = true;
+      }
+
+      // Don't change checkbox/radio inputs right away, as the server is going to decide the
+      // outcome
+      if (
+        node instanceof HTMLInputElement &&
+        (node.type === "checkbox" || node.type === "radio")
+      ) {
+        node.checked = !node.checked;
       }
 
       // Check for, and if exists, apply pre-rendered instances of this boundary
