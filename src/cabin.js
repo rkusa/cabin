@@ -149,7 +149,6 @@ async function update(
  * @param {bool?} opts.preventDefault - whether the default of the event should be prevented
  * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
  * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
- * @param {bool?} opts.dirty - invalidate everything from the target up to the next boundary
  * @param {bool?} opts.disableForm - whether to disable the target's form (but only up to the next
  * boundary)
  * @param {(e: Event) => Record<string, any>} opts.eventPayload - custom event payload
@@ -166,194 +165,195 @@ function setUpEventListener(el, eventName, opts) {
   async function handleEvent(e) {
     /** @type {Element} */
     let node = e.target;
+    /** @type {string | undefined} */
+    let eventId = undefined;
 
+    // Find first ascendant that defines the event
     do {
-      const eventId =
+      eventId =
         e.detail?.eventId ??
         e.submitter?.getAttribute(attrName) ??
         node.getAttribute(attrName);
       if (!eventId) {
         continue;
+      } else {
+        break;
       }
+    } while ((node = node.parentElement));
+    if (!node) {
+      return;
+    }
 
-      // The boundary only intercepts certain events
-      if (opts.events && !opts.events.has(eventId)) {
-        return;
-      }
+    // The boundary only intercepts certain events
+    if (opts.events && !opts.events.has(eventId)) {
+      return;
+    }
 
-      // The internal state/view of the boundary is possibly going to change due to this event. To
-      // force an update for the boundary if its parent view changes, remove all hash attributes
-      // from ascendents up until the next cabin boundary.
-      if (el !== document) {
-        let el = this;
-        do {
-          el.removeAttribute("hash");
-        } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
-      }
+    if (opts.disable && node.disabled) {
+      return;
+    }
 
-      if (opts.disable && node.disabled) {
-        return;
-      }
+    // The internal state/view of the boundary is possibly going to change due to this event. To
+    // force an update for the boundary if its parent view changes, remove all hash attributes
+    // from ascendents up until the next cabin boundary.
+    if (el !== document) {
+      let el = this;
+      do {
+        el.removeAttribute("hash");
+      } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
+    }
 
-      // Force refresh everything from the target to its boundary to ensure that the server might
-      // override e.g. input states.
-      if (opts.dirty) {
-        let el = node;
-        do {
-          el.removeAttribute("hash");
-        } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
-      }
+    // Note: `e.preventDefault()` doesn't seem to take full effect when called after
+    // `abortController.abort()`, so ensure it stays before that
+    e.stopPropagation();
+    const isSubmitEvent = eventName === "submit";
+    if (
+      (opts.preventDefault && !(node instanceof HTMLInputElement)) ||
+      isSubmitEvent
+    ) {
+      e.preventDefault();
+    }
 
-      // Only one concurrent event execution per boundary
+    // Only one concurrent event execution per boundary
       if (this.abortController) {
         this.abortController.abort();
       }
 
-      /** @type {Map<HTMLElement, bool>} */
-      const disabledBefore = new Map();
-      /** @type {Map<HTMLElement, bool>} */
-      const readOnlyBefore = new Map();
+    /** @type {Map<HTMLElement, bool>} */
+    const disabledBefore = new Map();
+    /** @type {Map<HTMLElement, bool>} */
+    const readOnlyBefore = new Map();
 
-      const abortController = (this.abortController = new AbortController());
-      abortController.abort = function () {
-        if (abortController.signal.aborted) {
-          return;
-        }
-
-        AbortController.prototype.abort.call(this);
-
-        // restore disabled states
-        for (const [el, before] of disabledBefore) {
-          if (el.parentNode && before !== undefined) {
-            el.disabled = before;
-          }
-        }
-
-        // restore readOnly states
-        for (const [el, before] of readOnlyBefore) {
-          if (el.parentNode && before !== undefined) {
-            el.readOnly = before;
-          }
-        }
-      };
-
-      const isSubmitEvent = eventName === "submit";
-      e.stopPropagation();
-      if (
-        (opts.preventDefault && !(node instanceof HTMLInputElement)) ||
-        isSubmitEvent
-      ) {
-        e.preventDefault();
+    const abortController = (this.abortController = new AbortController());
+    abortController.abort = function () {
+      if (abortController.signal.aborted) {
+        return;
       }
 
-      if (opts.debounce) {
-        await new Promise((resolve) => setTimeout(resolve, opts.debounce));
-        if (abortController.signal.aborted) {
-          return;
+      AbortController.prototype.abort.call(this);
+
+      // restore disabled states
+      for (const [el, before] of disabledBefore) {
+        if (el.parentNode && before !== undefined) {
+          el.disabled = before;
         }
       }
 
-      try {
-        let payload;
-        if (isSubmitEvent && !node.hasAttribute(`${attrName}-payload`)) {
-          payload = new FormData(node);
-        } else if (opts?.eventPayload) {
-          payload = JSON.parse(
-            Object.entries(opts.eventPayload(e)).reduce(
-              (result, [placeholder, value]) =>
-                result.replace(placeholder, value),
-              node.getAttribute(`${attrName}-payload`),
-            ),
-          );
-        } else {
-          payload =
-            e.detail && typeof e.detail === "object" && "payload" in e.detail
-              ? e.detail.payload
-              : JSON.parse(node.getAttribute(`${attrName}-payload`));
+      // restore readOnly states
+      for (const [el, before] of readOnlyBefore) {
+        if (el.parentNode && before !== undefined) {
+          el.readOnly = before;
         }
+      }
+    };
 
-        if (isSubmitEvent) {
-          // disable whole form
-          for (const el of node.elements) {
-            disabledBefore.set(el, el.disabled);
-            el.disabled = true;
-          }
-        } else if (opts.disableForm) {
-          /** @type {HTMLFormElement?} */
-          let form = isSubmitEvent ? node : node.form;
-          if (form?.elements) {
-            for (const el of form.elements) {
-              if (this.contains(el)) {
-                if ("readOnly" in el.constructor.prototype) {
-                  readOnlyBefore.set(el, el.readOnly);
-                  el.readOnly = true;
-                } else {
-                  disabledBefore.set(el, el.disabled);
-                  el.disabled = true;
-                }
-              }
-            }
-          }
-        } else if (opts.disable) {
-          disabledBefore.set(node, node.disabled);
-          node.disabled = true;
-        }
+    // Do not make the parent function async to ensure e.preventDefault() and e.stopPropagation()
+    // are not postponed by the promise.
+    if (opts.debounce) {
+      await new Promise((resolve) => setTimeout(resolve, opts.debounce));
+      if (abortController.signal.aborted) {
+        return;
+      }
+    }
 
-        // Check for, and if exists, apply pre-rendered instances of this boundary
-        if (!isSubmitEvent && this instanceof CabinBoundary) {
-          let templates = [];
-          let template = this.lastElementChild;
-          while (
-            template &&
-            template instanceof HTMLTemplateElement &&
-            template.hasAttribute("event-id") &&
-            template.hasAttribute("event-payload")
-          ) {
-            templates.push(template);
-            template = template.previousElementSibling;
-          }
-          // TODO: might not always be the same, somehow use same string representation of the
-          // payload as the server?
-          const payloadStr = JSON.stringify(payload);
-          for (const template of templates) {
-            if (
-              template.getAttribute("event-id") === eventId &&
-              template.getAttribute("event-payload") === payloadStr
-            ) {
-              console.time("patch");
-              patchChildren(
-                el,
-                template.content,
-                {},
-                disabledBefore,
-                readOnlyBefore,
-              );
-              // put back prerendered templates
-              for (const template of templates) {
-                this.appendChild(template);
-              }
-              console.timeEnd("patch");
-              return;
-            }
-          }
-        }
-
-        await update(
-          parseInt(eventId),
-          payload,
-          el == document ? document.body : el,
-          abortController,
-          disabledBefore,
-          readOnlyBefore,
+    try {
+      let payload;
+      if (isSubmitEvent && !node.hasAttribute(`${attrName}-payload`)) {
+        payload = new FormData(node);
+      } else if (opts?.eventPayload) {
+        payload = JSON.parse(
+          Object.entries(opts.eventPayload(e)).reduce(
+            (result, [placeholder, value]) =>
+              result.replace(placeholder, value),
+            node.getAttribute(`${attrName}-payload`),
+          ),
         );
-      } catch (err) {
-        throw err;
-      } finally {
-        abortController.abort(); // restore disabled states
+      } else {
+        payload =
+          e.detail && typeof e.detail === "object" && "payload" in e.detail
+            ? e.detail.payload
+            : JSON.parse(node.getAttribute(`${attrName}-payload`));
       }
 
-      break;
-    } while ((node = node.parentElement));
+      if (isSubmitEvent) {
+        // disable whole form
+        for (const el of node.elements) {
+          disabledBefore.set(el, el.disabled);
+          el.disabled = true;
+        }
+      } else if (opts.disableForm) {
+        /** @type {HTMLFormElement?} */
+        let form = isSubmitEvent ? node : node.form;
+        if (form?.elements) {
+          for (const el of form.elements) {
+            if (this.contains(el)) {
+              if ("readOnly" in el.constructor.prototype) {
+                readOnlyBefore.set(el, el.readOnly);
+                el.readOnly = true;
+              } else {
+                disabledBefore.set(el, el.disabled);
+                el.disabled = true;
+              }
+            }
+          }
+        }
+      } else if (opts.disable) {
+        disabledBefore.set(node, node.disabled);
+        node.disabled = true;
+      }
+
+      // Check for, and if exists, apply pre-rendered instances of this boundary
+      if (!isSubmitEvent && this instanceof CabinBoundary) {
+        let templates = [];
+        let template = this.lastElementChild;
+        while (
+          template &&
+          template instanceof HTMLTemplateElement &&
+          template.hasAttribute("event-id") &&
+          template.hasAttribute("event-payload")
+        ) {
+          templates.push(template);
+          template = template.previousElementSibling;
+        }
+        // TODO: might not always be the same, somehow use same string representation of the
+        // payload as the server?
+        const payloadStr = JSON.stringify(payload);
+        for (const template of templates) {
+          if (
+            template.getAttribute("event-id") === eventId &&
+            template.getAttribute("event-payload") === payloadStr
+          ) {
+            console.time("patch");
+            patchChildren(
+              el,
+              template.content,
+              {},
+              disabledBefore,
+              readOnlyBefore,
+            );
+            // put back prerendered templates
+            for (const template of templates) {
+              this.appendChild(template);
+            }
+            console.timeEnd("patch");
+            return;
+          }
+        }
+      }
+
+      await update(
+        parseInt(eventId),
+        payload,
+        el == document ? document.body : el,
+        abortController,
+        disabledBefore,
+        readOnlyBefore,
+      );
+    } catch (err) {
+      throw err;
+    } finally {
+      abortController.abort(); // restore disabled states
+    }
   }
 
   el.addEventListener(eventName, function (e) {
@@ -686,7 +686,6 @@ function setupEventListeners(el) {
       "_##InputValue": e.target.value,
       '"_##InputChecked"': e.target.checked,
     }),
-    dirty: true,
     disableForm: true,
   });
   setUpEventListener(el, "input", {
@@ -696,7 +695,6 @@ function setupEventListeners(el) {
       "_##InputValue": e.target.value,
       '"_##InputChecked"': e.target.checked,
     }),
-    dirty: true,
   });
   setUpEventListener(el, "submit", {
     events,
