@@ -9,6 +9,11 @@ const FONT_WEIGHT: &str = "font-weight";
 
 include!(concat!(env!("OUT_DIR"), "/font-family.rs"));
 
+/// Set a custom font family.
+pub fn family(family: &'static str) -> Property {
+    Property(FONT_FAMILY, family)
+}
+
 /// ```css
 /// font-weight: 100;
 /// ```
