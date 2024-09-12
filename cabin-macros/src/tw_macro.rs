@@ -17,15 +17,12 @@ pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
         {
             static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-            fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
-                let name = r.add(&[#(&#styles,)*]);
-                NAME.set(name).ok();
-            }
-
             #[::cabin::private::linkme::distributed_slice(::cabin_tailwind::registry::STYLES)]
             #[linkme(crate = ::cabin::private::linkme)]
-            static __STYLE: (usize, fn(&mut ::cabin_tailwind::registry::StyleRegistry))
-                = (#pos, __register);
+            fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
+                let name = r.add(#pos, &[#(&#styles,)*]);
+                NAME.set(name).ok();
+            }
 
             ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
                 NAME.get().map(|s| s.as_str()).unwrap_or_default()

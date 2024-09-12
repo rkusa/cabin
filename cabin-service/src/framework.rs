@@ -51,7 +51,7 @@ where
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         #[cfg(feature = "cabin-tailwind")]
-        let _ = cabin_tailwind::registry::StyleRegistry::global();
+        let _ = cabin_tailwind::registry::StyleRegistry::style_sheet();
 
         let mut service = self.service.clone();
         Box::pin(async move {
@@ -99,7 +99,7 @@ where
                     )
                     .body(UnsyncBoxBody::new(
                         Full::new(Bytes::from(
-                            cabin_tailwind::registry::StyleRegistry::global().style_sheet(),
+                            cabin_tailwind::registry::StyleRegistry::style_sheet(),
                         ))
                         .map_err(|_| unreachable!()),
                     ))

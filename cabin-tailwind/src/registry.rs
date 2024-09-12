@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
@@ -10,45 +10,32 @@ use twox_hash::XxHash32;
 use super::Utility;
 
 #[linkme::distributed_slice]
-pub static STYLES: [(usize, fn(&mut StyleRegistry))] = [..];
+pub static STYLES: [fn(&mut StyleRegistry)] = [..];
 
-static REGISTRY: OnceBox<StyleRegistry> = OnceBox::new();
+static STYLE_SHEET: OnceBox<String> = OnceBox::new();
+
+type Order = (usize, usize, u32);
 
 pub struct StyleRegistry {
-    out: String,
-    hashes: HashSet<u32>,
+    classes: HashMap<String, Order>,
 }
 
 impl StyleRegistry {
-    pub fn global() -> &'static Self {
-        REGISTRY.get_or_init(|| {
+    pub fn style_sheet() -> &'static str {
+        STYLE_SHEET.get_or_init(|| {
             let mut registry = Self {
-                out: Default::default(),
-                hashes: Default::default(),
+                classes: HashMap::with_capacity(256),
             };
 
-            registry.out.push_str(include_str!("./base.css"));
-
-            #[cfg(feature = "preflight")]
-            registry
-                .out
-                .push_str(include_str!("./preflight/preflight-v3.2.4.css"));
-
-            #[cfg(feature = "forms")]
-            registry
-                .out
-                .push_str(include_str!("./forms/forms-v0.5.3.css"));
-
-            let mut styles = STYLES.to_vec();
-            styles.sort_by_key(|(order, _)| *order);
-            for (_, f) in styles {
+            for f in STYLES {
                 (f)(&mut registry);
             }
-            Box::new(registry)
+
+            Box::new(registry.build())
         })
     }
 
-    pub fn add(&mut self, styles: &[&dyn Utility]) -> String {
+    pub fn add(&mut self, major_order: usize, styles: &[&dyn Utility]) -> String {
         let mut sorted = styles
             .iter()
             .map(|s| (hash_style(*s), *s))
@@ -65,72 +52,68 @@ impl StyleRegistry {
                 grouped
             },
         );
-        let mut grouped = grouped
-            .into_values()
-            .map(|styles| (styles.iter().map(|s| s.order()).max().unwrap_or(0), styles))
-            .collect::<Vec<_>>();
-        grouped.sort_by_key(|(order, _)| *order);
 
         // As everything is written to a string, all unwraps below are fine.
         let mut all_names = String::with_capacity(8);
         for (_, mut styles) in grouped {
             styles.sort_by_key(|s| s.order());
 
-            let pos = self.out.len();
+            let mut out = String::with_capacity(256);
+            let pos = out.len();
 
-            writeln!(&mut self.out, "@keyframes ").unwrap();
-            let animation_name_offset1 = self.out.len();
-            write!(&mut self.out, "          {{").unwrap();
-            writeln!(&mut self.out, "  from {{").unwrap();
-            let before_animate_from = self.out.len();
+            writeln!(&mut out, "@keyframes ").unwrap();
+            let animation_name_offset1 = out.len();
+            write!(&mut out, "          {{").unwrap();
+            writeln!(&mut out, "  from {{").unwrap();
+            let before_animate_from = out.len();
             for style in &styles {
-                style.write_animate_from(&mut self.out).unwrap();
+                style.write_animate_from(&mut out).unwrap();
             }
-            let has_animate_from = self.out.len() > before_animate_from;
-            writeln!(&mut self.out, "  }}").unwrap();
-            writeln!(&mut self.out, "  to {{").unwrap();
-            let before_animate_to = self.out.len();
+            let has_animate_from = out.len() > before_animate_from;
+            writeln!(&mut out, "  }}").unwrap();
+            writeln!(&mut out, "  to {{").unwrap();
+            let before_animate_to = out.len();
             for style in &styles {
-                style.write_animate_to(&mut self.out).unwrap();
+                style.write_animate_to(&mut out).unwrap();
             }
-            let has_animate_to = self.out.len() > before_animate_to;
-            writeln!(&mut self.out, "  }}").unwrap();
-            writeln!(&mut self.out, "}}").unwrap();
+            let has_animate_to = out.len() > before_animate_to;
+            writeln!(&mut out, "  }}").unwrap();
+            writeln!(&mut out, "}}").unwrap();
 
             let has_animation = has_animate_from || has_animate_to;
             if !has_animation {
-                self.out.truncate(pos);
+                out.truncate(pos);
             }
 
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.first() {
-                style.selector_prefix(&mut self.out).unwrap();
+                style.selector_prefix(&mut out).unwrap();
             }
-            let class_name_offset = self.out.len();
-            write!(&mut self.out, "          ").unwrap();
+            let class_name_offset = out.len();
+            write!(&mut out, "          ").unwrap();
             // already grouped by variants, so just writing it once (from the first), is enough
             if let Some(style) = styles.first() {
-                style.selector_suffix(&mut self.out).unwrap();
+                style.selector_suffix(&mut out).unwrap();
             }
-            writeln!(&mut self.out, " {{").unwrap();
+            writeln!(&mut out, " {{").unwrap();
             let mut animation_name_offset2 = 0;
             if has_animation {
                 // TODO: make easing function, delay, duration, etc. customizable
-                write!(&mut self.out, "animation: 250ms ease-in-out 1 forwards ").unwrap();
-                animation_name_offset2 = self.out.len();
-                writeln!(&mut self.out, "         ;").unwrap();
+                write!(&mut out, "animation: 250ms ease-in-out 1 forwards ").unwrap();
+                animation_name_offset2 = out.len();
+                writeln!(&mut out, "         ;").unwrap();
             }
             for style in &styles {
-                style.declarations(&mut self.out).unwrap();
+                style.declarations(&mut out).unwrap();
             }
-            write!(&mut self.out, "}}").unwrap();
+            write!(&mut out, "}}").unwrap();
             if let Some(style) = styles.first() {
-                style.suffix(&mut self.out).unwrap();
+                style.suffix(&mut out).unwrap();
             }
-            writeln!(&mut self.out).unwrap();
+            writeln!(&mut out).unwrap();
 
             let mut hasher = XxHash32::default();
-            hasher.write(self.out[pos..].as_bytes());
+            hasher.write(out[pos..].as_bytes());
             let hash = hasher.finish() as u32;
 
             // write actual class name, prepend `_` as it class names must not start with a number
@@ -139,22 +122,19 @@ impl StyleRegistry {
                 .and_then(|s| s.override_class_name().map(Cow::Borrowed))
                 .unwrap_or_else(|| Cow::Owned(format!("_{hash:x}")));
 
-            if !self.hashes.insert(hash) {
-                // already known, remove just written stuff from output
-                self.out.truncate(pos);
-            } else {
-                let offset = class_name_offset + 9 - name.len();
-                self.out.replace_range(offset..offset + 1, ".");
-                self.out
-                    .replace_range(offset + 1..offset + 1 + name.len(), &name);
+            let offset = class_name_offset + 9 - name.len();
+            out.replace_range(offset..offset + 1, ".");
+            out.replace_range(offset + 1..offset + 1 + name.len(), &name);
 
-                if has_animation {
-                    let offset = animation_name_offset1 + 9 - name.len();
-                    self.out.replace_range(offset..offset + name.len(), &name);
-                    let offset = animation_name_offset2 + 9 - name.len();
-                    self.out.replace_range(offset..offset + name.len(), &name);
-                }
+            if has_animation {
+                let offset = animation_name_offset1 + 9 - name.len();
+                out.replace_range(offset..offset + name.len(), &name);
+                let offset = animation_name_offset2 + 9 - name.len();
+                out.replace_range(offset..offset + name.len(), &name);
             }
+
+            let minor_order = styles.iter().map(|s| s.order()).max().unwrap_or_default();
+            self.classes.insert(out, (major_order, minor_order, hash));
 
             if !all_names.is_empty() {
                 all_names.push(' ');
@@ -165,8 +145,24 @@ impl StyleRegistry {
         all_names
     }
 
-    pub fn style_sheet(&self) -> &str {
-        &self.out
+    pub fn build(self) -> String {
+        let mut style_sheet = self.classes.into_iter().collect::<Vec<_>>();
+        style_sheet.sort_by_key(|(_, (o1, o2, h))| (*o1, *o2, *h));
+
+        let other = [
+            #[cfg(not(test))]
+            include_str!("./base.css"),
+            #[cfg(all(feature = "preflight", not(test)))]
+            include_str!("./preflight/preflight-v3.2.4.css"),
+            #[cfg(all(feature = "forms", not(test)))]
+            include_str!("./forms/forms-v0.5.3.css"),
+        ];
+
+        other
+            .into_iter()
+            .map(Cow::Borrowed)
+            .chain(style_sheet.into_iter().map(|(s, _)| Cow::Owned(s)))
+            .collect()
     }
 }
 
@@ -193,13 +189,12 @@ fn test_deduplication() {
     use crate::utilities::{p, BLOCK};
 
     let mut r = StyleRegistry {
-        out: Default::default(),
-        hashes: Default::default(),
+        classes: Default::default(),
     };
-    let a = r.add(&[&BLOCK, &p(4)]);
-    let b = r.add(&[&p(4), &BLOCK]);
+    let a = r.add(0, &[&BLOCK, &p(4)]);
+    let b = r.add(0, &[&p(4), &BLOCK]);
     assert_eq!(a, b);
-    insta::assert_snapshot!(r.out);
+    insta::assert_snapshot!(r.build());
 }
 
 #[test]
@@ -210,15 +205,17 @@ fn test_order() {
     use crate::utilities::BLOCK;
 
     let mut r = StyleRegistry {
-        out: Default::default(),
-        hashes: Default::default(),
+        classes: Default::default(),
     };
-    r.add(&[
-        &BLOCK.sm().max_md(),
-        &BLOCK.md(),
-        &BLOCK.max_sm(),
-        &BLOCK.max_md(),
-        &BLOCK.sm(),
-    ]);
-    insta::assert_snapshot!(r.out);
+    r.add(
+        0,
+        &[
+            &BLOCK.sm().max_md(),
+            &BLOCK.md(),
+            &BLOCK.max_sm(),
+            &BLOCK.max_md(),
+            &BLOCK.sm(),
+        ],
+    );
+    insta::assert_snapshot!(r.build());
 }

@@ -1,6 +1,6 @@
 ---
 source: cabin-tailwind/src/registry.rs
-expression: r.out
+expression: r.build()
 ---
 @media (min-width: 640px) { ._893db909 {
 display: block;
@@ -16,5 +16,4 @@ display: block;
 }} 
 @media (max-width: 1023px) { @media (min-width: 640px) { ._8e474869 {
 display: block;
-}} } 
-
+}} }

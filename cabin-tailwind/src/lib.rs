@@ -349,7 +349,7 @@ pub fn cabin_stylesheets() -> impl View {
 
     static HREF: OnceLock<String> = OnceLock::new();
     let href = HREF.get_or_init(|| {
-        let hash = content_hash(registry::StyleRegistry::global().style_sheet().as_bytes());
+        let hash = content_hash(registry::StyleRegistry::style_sheet().as_bytes());
         format!("/styles.css?{hash}")
     });
 
