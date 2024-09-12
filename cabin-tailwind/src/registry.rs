@@ -103,6 +103,11 @@ impl StyleRegistry {
                 animation_name_offset2 = out.len();
                 writeln!(&mut out, "         ;").unwrap();
             }
+
+            // already grouped by variants, so just writing it once (from the first), is enough
+            if let Some(style) = styles.first() {
+                style.selector_declarations(&mut out).unwrap();
+            }
             for style in &styles {
                 style.declarations(&mut out).unwrap();
             }

@@ -6,8 +6,6 @@ pub struct Custom<S>(pub &'static str, pub S);
 
 impl<S: Utility> Utility for Custom<S> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        // TODO: only once for multiple after/before styles
-        writeln!(f, "content: var(--tw-content);")?;
         self.1.declarations(f)
     }
 
@@ -16,8 +14,12 @@ impl<S: Utility> Utility for Custom<S> {
         self.1.selector_suffix(f)
     }
 
+    fn selector_declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.1.selector_declarations(f)
+    }
+
     fn hash_modifier(&self, hasher: &mut dyn std::hash::Hasher) {
-        hasher.write(b"after");
+        hasher.write(self.0.as_bytes());
         self.1.hash_modifier(hasher);
     }
 

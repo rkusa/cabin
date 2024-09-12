@@ -25,6 +25,10 @@ pub trait Utility {
         Ok(())
     }
 
+    fn selector_declarations(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
+        Ok(())
+    }
+
     fn suffix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
         Ok(())
     }

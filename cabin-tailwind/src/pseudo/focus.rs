@@ -14,6 +14,10 @@ impl<S: Utility> Utility for Focus<S> {
         self.0.selector_suffix(f)
     }
 
+    fn selector_declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.0.selector_declarations(f)
+    }
+
     fn hash_modifier(&self, hasher: &mut dyn std::hash::Hasher) {
         hasher.write(b"focus");
         self.0.hash_modifier(hasher);

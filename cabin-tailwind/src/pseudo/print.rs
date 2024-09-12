@@ -23,6 +23,10 @@ impl<S: Utility> Utility for Print<S> {
         Ok(())
     }
 
+    fn selector_declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.style.selector_declarations(f)
+    }
+
     fn suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         f.write_str("} ")?;
         self.style.suffix(f)?;
