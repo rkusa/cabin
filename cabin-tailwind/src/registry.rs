@@ -139,24 +139,22 @@ impl StyleRegistry {
                 .and_then(|s| s.override_class_name().map(Cow::Borrowed))
                 .unwrap_or_else(|| Cow::Owned(format!("_{hash:x}")));
 
-            // TODO: re-add deduplication but that works on all styles (dedup below does not take
-            // .order() into account e.g. for @media print styles)
-            // if !self.hashes.insert(hash) {
-            //     // already known, remove just written stuff from output
-            //     self.out.truncate(pos);
-            // } else {
-            let offset = class_name_offset + 9 - name.len();
-            self.out.replace_range(offset..offset + 1, ".");
-            self.out
-                .replace_range(offset + 1..offset + 1 + name.len(), &name);
+            if !self.hashes.insert(hash) {
+                // already known, remove just written stuff from output
+                self.out.truncate(pos);
+            } else {
+                let offset = class_name_offset + 9 - name.len();
+                self.out.replace_range(offset..offset + 1, ".");
+                self.out
+                    .replace_range(offset + 1..offset + 1 + name.len(), &name);
 
-            if has_animation {
-                let offset = animation_name_offset1 + 9 - name.len();
-                self.out.replace_range(offset..offset + name.len(), &name);
-                let offset = animation_name_offset2 + 9 - name.len();
-                self.out.replace_range(offset..offset + name.len(), &name);
+                if has_animation {
+                    let offset = animation_name_offset1 + 9 - name.len();
+                    self.out.replace_range(offset..offset + name.len(), &name);
+                    let offset = animation_name_offset2 + 9 - name.len();
+                    self.out.replace_range(offset..offset + name.len(), &name);
+                }
             }
-            // }
 
             if !all_names.is_empty() {
                 all_names.push(' ');
