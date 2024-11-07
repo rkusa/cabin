@@ -1,21 +1,11 @@
-use std::any::{Any, TypeId};
-use std::borrow::Cow;
-use std::collections::HashMap;
 use std::fmt;
 use std::future::Future;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::pin::Pin;
-use std::sync::{Arc, OnceLock};
 
-use bytes::Bytes;
-use http::{HeaderValue, Request, Response, StatusCode};
-use http_body::Body;
-use http_body_util::Full;
 use http_error::HttpError;
-use once_cell::race::OnceBox;
 use script::Script;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use super::{BoxedView, IntoView, RenderFuture};
@@ -23,9 +13,8 @@ use crate::error::InternalError;
 use crate::html::attributes::Attributes;
 use crate::html::script::{self, script};
 use crate::html::Html;
-use crate::render::{ElementRenderer, Out, Renderer};
-use crate::scope::Scope;
-use crate::{err_to_response, local_pool, parse_body, View};
+use crate::render::{ElementRenderer, Renderer};
+use crate::View;
 
 type BoundaryFn<Args> = dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = Boundary<Args>>>>;
 
@@ -33,8 +22,8 @@ pub struct BoundaryRef<Args>
 where
     Args: 'static,
 {
-    id: &'static str,
-    events: &'static OnceLock<Box<[TypeId]>>,
+    pub id: &'static str,
+    events: &'static [&'static str],
     args: PhantomData<Args>,
     f: &'static BoundaryFn<Args>,
 }
@@ -50,7 +39,7 @@ where
 {
     pub const fn new(
         id: &'static str,
-        events: &'static OnceLock<Box<[TypeId]>>,
+        events: &'static [&'static str],
         f: &'static BoundaryFn<Args>,
     ) -> Self {
         Self {
@@ -61,8 +50,95 @@ where
         }
     }
 
-    async fn with(&'static self, args: Args) -> Boundary<Args> {
+    pub async fn with(&'static self, args: Args) -> Boundary<Args> {
         self::internal::Boundary::upgrade((self.f)(args).await, self).into_update()
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub unsafe fn wasm(
+        &'static self,
+        event: *const u8,
+        event_len: usize,
+        out: *mut *const u8,
+    ) -> usize
+    where
+        Args: 'static + Clone + Serialize + serde::de::DeserializeOwned + Send + Sync,
+    {
+        use serde_json::value::RawValue;
+
+        use crate::scope::Scope;
+
+        let event = core::slice::from_raw_parts(event, event_len);
+        let event = match core::str::from_utf8(event) {
+            Ok(event) => event,
+            Err(err) => {
+                crate::wasm_exports::fail(format!("failed to parse event as utf8: {err}"));
+                return 0;
+            }
+        };
+
+        #[derive(::serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct JsonEvent {
+            event_id: String,
+            state: Option<Box<RawValue>>,
+            payload: Box<RawValue>,
+        }
+
+        let mut event = match serde_json::from_str::<JsonEvent>(event) {
+            Ok(event) => event,
+            Err(err) => {
+                crate::wasm_exports::fail(format!("failed to parse event as json: {err}"));
+                return 0;
+            }
+        };
+        let Some(state_json) = event.state.take() else {
+            crate::wasm_exports::fail("missing state in event");
+            return 0;
+        };
+        let args = match serde_json::from_str::<Args>(state_json.get()) {
+            Ok(event) => event,
+            Err(err) => {
+                crate::wasm_exports::fail(format!("failed to parse state as json: {err}"));
+                return 0;
+            }
+        };
+
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
+        let scope =
+            Scope::new().with_event(event.event_id, crate::scope::Payload::Json(event.payload));
+        let result = runtime.block_on(scope.run(async move {
+            let r = Renderer::new_update();
+            crate::view::FutureExt::into_view(self.with(args))
+                .render(r, true)
+                .await
+        }));
+        let crate::render::Out { html, headers } = match result {
+            Ok(result) => result.end(),
+            Err(err) => {
+                crate::wasm_exports::fail(format!("failed to render boundary: {err}"));
+                return 0;
+            }
+        };
+
+        if !headers.is_empty() {
+            crate::wasm_exports::fail(format!(
+                "headers are unsupported in wasm components, received headers: {}",
+                headers
+                    .keys()
+                    .map(|k| k.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+            return 0;
+        }
+
+        let len = html.len();
+        let html = Box::into_raw(html.into_boxed_str());
+        *out = html as *const u8;
+        len
     }
 }
 
@@ -74,8 +150,6 @@ where
     // TODO: take reference to args to avoid cloning them?
     args: Option<Args>,
     view: BoxedView,
-    #[allow(clippy::type_complexity)]
-    prerender: Option<Vec<(u32, Result<String, InternalError>, Box<dyn Any>)>>,
     is_update: bool,
 }
 
@@ -85,32 +159,8 @@ impl<Args> Boundary<Args> {
             boundary_ref: None,
             args: Some(args),
             view: view.boxed(),
-            prerender: None,
             is_update: false,
         }
-    }
-
-    pub fn prerender<E: Serialize + 'static>(mut self, event: E) -> Self {
-        let mut hasher = twox_hash::XxHash32::default();
-        std::any::TypeId::of::<E>().hash(&mut hasher);
-        let event_id = hasher.finish() as u32;
-
-        let json = serde_json::to_string(&event).map_err(|err| InternalError::Serialize {
-            what: "on_click event",
-            err,
-        });
-
-        // TODO: use `get_or_insert_default` once stable
-        if self.prerender.is_none() {
-            self.prerender = Some(vec![(event_id, json, Box::new(event))]);
-        } else {
-            self.prerender
-                .as_mut()
-                .unwrap()
-                .push((event_id, json, Box::new(event)));
-        }
-
-        self
     }
 }
 
@@ -154,7 +204,8 @@ where
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         // ensure register calls are already executed
-        BoundaryRegistry::global();
+        #[cfg(not(target_arch = "wasm32"))]
+        crate::boundary_registry::BoundaryRegistry::global();
 
         let Some(args) = self.args else {
             return self.view.render(r, include_hash);
@@ -176,70 +227,11 @@ where
             }
         };
 
-        let preprender = self.prerender.map(move |prerender| async move {
-            let mut templates = Vec::with_capacity(prerender.len());
-            for (event_id, json, event) in prerender {
-                let scope = Scope::new().with_deserialized_event(event);
-
-                let args = args.clone();
-                let boundary = scope
-                    .run(async move { Ok(boundary_ref.with(args).await) })
-                    .await?;
-
-                let Some(args) = boundary.args else {
-                    continue;
-                };
-
-                let state = match serde_json::to_string(&args) {
-                    Ok(state) => state,
-                    Err(err) => {
-                        return Err(InternalError::Serialize {
-                            what: "boundary state",
-                            err,
-                        }
-                        .into())
-                    }
-                };
-
-                templates.push(
-                    Html::<(), _, _>::new(
-                        "template",
-                        ("event-id", Cow::Owned(event_id.to_string()))
-                            .with(("event-payload", Cow::Owned(json?))),
-                        (script(state).r#type("application/json"), boundary.view),
-                    )
-                    .boxed(),
-                )
-            }
-
-            Ok::<Vec<BoxedView>, crate::Error>(templates)
-        });
-
-        if let Some(preprender) = preprender {
-            RenderFuture::Future(Box::pin(async move {
-                let templates = preprender.await?;
-
-                let body = (
-                    script(state).r#type("application/json"),
-                    self.view,
-                    #[allow(clippy::map_identity)]
-                    templates.into_iter().map(|t| t),
-                );
-                if self.is_update {
-                    body.render(r, include_hash).await
-                } else {
-                    Html::<(), _, _>::new("cabin-boundary", boundary_ref, body)
-                        .render(r, include_hash)
-                        .await
-                }
-            }))
+        let body = (script(state).r#type("application/json"), self.view);
+        if self.is_update {
+            body.render(r, include_hash)
         } else {
-            let body = (script(state).r#type("application/json"), self.view);
-            if self.is_update {
-                body.render(r, include_hash)
-            } else {
-                Html::<(), _, _>::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
-            }
+            Html::<(), _, _>::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
         }
     }
 }
@@ -247,14 +239,14 @@ where
 impl<Args> Attributes for &'static BoundaryRef<Args> {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
         r.attribute("name", self.id).map_err(InternalError::from)?;
-        r.attribute("events", EventsList(self.events.get().unwrap()))
+        r.attribute("events", EventsList(self.events))
             .map_err(InternalError::from)?;
         Ok(())
     }
 }
 
 #[derive(Hash)]
-struct EventsList(&'static [TypeId]);
+struct EventsList(&'static [&'static str]);
 
 impl fmt::Display for EventsList {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -262,118 +254,10 @@ impl fmt::Display for EventsList {
             if i > 0 {
                 f.write_str(",")?;
             }
-
-            let mut hasher = twox_hash::XxHash32::default();
-            ev.hash(&mut hasher);
-            let hash = hasher.finish() as u32;
-            write!(f, "{}", hash)?;
+            write!(f, "{}", ev)?;
         }
 
         Ok(())
-    }
-}
-
-#[linkme::distributed_slice]
-pub static BOUNDARIES: [fn(&mut BoundaryRegistry)] = [..];
-
-static REGISTRY: OnceBox<BoundaryRegistry> = OnceBox::new();
-
-type BoundaryHandler = dyn Send + Sync + Fn(&str, Renderer) -> RenderFuture;
-
-pub struct BoundaryRegistry {
-    handler: HashMap<&'static str, Arc<BoundaryHandler>>,
-}
-
-impl BoundaryRegistry {
-    pub fn global() -> &'static Self {
-        REGISTRY.get_or_init(|| {
-            let mut registry = Self {
-                handler: Default::default(),
-            };
-            for f in BOUNDARIES {
-                (f)(&mut registry);
-            }
-            Box::new(registry)
-        })
-    }
-
-    pub fn register<Args>(&mut self, boundary: &'static BoundaryRef<Args>)
-    where
-        Args: 'static + Clone + Serialize + DeserializeOwned + Send + Sync,
-    {
-        self.handler.insert(
-            boundary.id,
-            Arc::new(
-                |args_json: &str, r: Renderer| match serde_json::from_str(args_json) {
-                    Ok(args) => crate::view::future::FutureExt::into_view(boundary.with(args))
-                        .render(r, true),
-                    Err(err) => RenderFuture::Ready(Some(Err(InternalError::Deserialize {
-                        what: "boundary state json",
-                        err: Box::new(err),
-                    }
-                    .into()))),
-                },
-            ),
-        );
-    }
-
-    pub async fn handle<B>(&self, id: &str, req: Request<B>) -> Response<Full<Bytes>>
-    where
-        B: Body<Data = Bytes> + Send + 'static,
-        B::Error: std::error::Error + Send + 'static,
-    {
-        let Some(handler) = self.handler.get(id) else {
-            return Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Full::new(Bytes::new()))
-                .unwrap();
-        };
-        let handler = Arc::clone(handler);
-
-        let mut event = match parse_body(req).await {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
-
-        let result = event
-            .state
-            .take()
-            .ok_or_else(|| InternalError::Deserialize {
-                what: "boundary state json",
-                err: Box::from("missing boundary state"),
-            });
-        let state_json = match result {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err.into()),
-        };
-
-        let result = local_pool::spawn(move || {
-            let mut scope = Scope::new().with_event(event.event_id, event.payload);
-            if let Some(multipart) = event.multipart {
-                scope = scope.with_multipart(multipart);
-            }
-            scope.run(async move {
-                let r = Renderer::new_update();
-                handler(state_json.get(), r).await
-            })
-        })
-        .await;
-        let result = match result {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
-
-        let Out { html, headers } = result.end();
-        let mut res = Response::builder().header(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        for (key, value) in headers {
-            if let Some(key) = key {
-                res = res.header(key, value);
-            }
-        }
-        res.body(Full::new(Bytes::from(html))).unwrap()
     }
 }
 
@@ -390,7 +274,6 @@ where
                 boundary_ref: None,
                 args: None,
                 view: View::boxed(Err::<Boundary<Args>, _>(err)),
-                prerender: None,
                 is_update: false,
             },
         }

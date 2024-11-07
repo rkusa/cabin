@@ -8,6 +8,7 @@ use syn::{Error, FnArg, ItemFn, Pat, PatType, Signature, Type};
 pub fn boundary_attribute(
     item: ItemFn,
     events: Punctuated<Type, Comma>,
+    wasm_enabled: bool,
 ) -> syn::Result<TokenStream> {
     let ItemFn {
         attrs,
@@ -77,6 +78,16 @@ pub fn boundary_attribute(
     };
     let events = events.into_iter().collect::<Vec<Type>>();
 
+    let wasm = wasm_enabled.then(|| {
+        quote! {
+            #[cfg(target_arch = "wasm32")]
+            #[export_name = concat!(module_path!(), "::", #name)]
+            unsafe extern "C" fn __wasm(event: *const u8, event_len: usize, out: *mut *const u8) -> usize {
+                BOUNDARY.wasm(event, event_len, out)
+            }
+        }
+    });
+
     Ok(quote! {
         #(#attrs)*
         #vis #constness #asyncness #unsafety #abi fn #ident #generics(#inputs_no_mut #variadic) #output {
@@ -85,7 +96,7 @@ pub fn boundary_attribute(
             }
 
             const ID: &str = concat!(module_path!(), "::", #name);
-            static EVENTS: ::std::sync::OnceLock<Box<[::std::any::TypeId]>> = ::std::sync::OnceLock::new();
+            static EVENTS: &'static [&'static str] = &[#(::cabin::event::event_id::<#events>(),)*];
             static BOUNDARY: ::cabin::view::boundary::BoundaryRef<(#args_types)> =
                 ::cabin::view::boundary::BoundaryRef::new(
                     ID,
@@ -93,12 +104,14 @@ pub fn boundary_attribute(
                     &(move |(#args_idents)| Box::pin(#to_async)),
                 );
 
-            #[::cabin::private::linkme::distributed_slice(::cabin::view::boundary::BOUNDARIES)]
+            #[cfg(not(target_arch = "wasm32"))]
+            #[::cabin::private::linkme::distributed_slice(::cabin::boundary_registry::BOUNDARIES)]
             #[linkme(crate = ::cabin::private::linkme)]
-            fn __register(r: &mut ::cabin::view::boundary::BoundaryRegistry) {
-                EVENTS.set(vec![#(::std::any::TypeId::of::<#events>(),)*].into_boxed_slice()).ok();
+            fn __register(r: &mut ::cabin::boundary_registry::BoundaryRegistry) {
                 r.register(&BOUNDARY)
             }
+
+            #wasm
 
             ::cabin::view::boundary::internal::Boundary::upgrade(
                 #inner_ident(#args_idents) #async_await,

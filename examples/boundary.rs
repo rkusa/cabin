@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::event;
 use cabin::view::boundary::Boundary;
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -16,7 +16,7 @@ async fn app() -> impl View {
     ))
 }
 
-#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
 #[cabin::boundary(Increment)]
@@ -26,7 +26,6 @@ fn counter(count: usize) -> Boundary<usize> {
     h::button(h::text!("{}", count))
         .on_click(Increment(count + 1))
         .boundary(count)
-        .prerender(Increment(count + 1))
 }
 
 #[tokio::main]

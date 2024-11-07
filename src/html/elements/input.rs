@@ -16,6 +16,7 @@ use super::img::Alt;
 use super::script::Src;
 use super::SerializeEventFn;
 use crate::error::InternalError;
+use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
@@ -321,39 +322,29 @@ pub trait Input: WithAttribute {
 
     fn on_input<E>(self, event: E) -> Self::Output<OnInput>
     where
-        E: ::serde::Serialize + 'static,
+        E: ::serde::Serialize + Event + 'static,
     {
         self.with_attribute(OnInput(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
                     what: "on_input event",
                     err,
                 })
-                .map(|json| (hash, json))
+                .map(|json| (E::ID, json))
         })))
     }
 
     fn on_change<E>(self, event: E) -> Self::Output<OnChange>
     where
-        E: ::serde::Serialize + 'static,
+        E: ::serde::Serialize + Event + 'static,
     {
         self.with_attribute(OnChange(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
                     what: "on_change event",
                     err,
                 })
-                .map(|json| (hash, json))
+                .map(|json| (E::ID, json))
         })))
     }
 }

@@ -1,0 +1,123 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use bytes::Bytes;
+use http::{HeaderValue, Request, Response, StatusCode};
+use http_body::Body;
+use http_body_util::Full;
+use once_cell::race::OnceBox;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+
+use crate::error::InternalError;
+use crate::render::{Out, Renderer};
+use crate::scope::Scope;
+use crate::server::{err_to_response, parse_body};
+use crate::view::boundary::BoundaryRef;
+use crate::view::RenderFuture;
+use crate::{local_pool, View};
+
+#[linkme::distributed_slice]
+pub static BOUNDARIES: [fn(&mut BoundaryRegistry)] = [..];
+
+static REGISTRY: OnceBox<BoundaryRegistry> = OnceBox::new();
+
+type BoundaryHandler = dyn Send + Sync + Fn(&str, Renderer) -> RenderFuture;
+
+pub struct BoundaryRegistry {
+    handler: HashMap<&'static str, Arc<BoundaryHandler>>,
+}
+
+impl BoundaryRegistry {
+    pub fn global() -> &'static Self {
+        REGISTRY.get_or_init(|| {
+            let mut registry = Self {
+                handler: Default::default(),
+            };
+            for f in BOUNDARIES {
+                (f)(&mut registry);
+            }
+            Box::new(registry)
+        })
+    }
+
+    pub fn register<Args>(&mut self, boundary: &'static BoundaryRef<Args>)
+    where
+        Args: 'static + Clone + Serialize + DeserializeOwned + Send + Sync,
+    {
+        self.handler.insert(
+            boundary.id,
+            Arc::new(
+                |args_json: &str, r: Renderer| match serde_json::from_str(args_json) {
+                    Ok(args) => {
+                        crate::view::FutureExt::into_view(boundary.with(args)).render(r, true)
+                    }
+                    Err(err) => RenderFuture::Ready(Some(Err(InternalError::Deserialize {
+                        what: "boundary state json",
+                        err: Box::new(err),
+                    }
+                    .into()))),
+                },
+            ),
+        );
+    }
+
+    pub async fn handle<B>(&self, id: &str, req: Request<B>) -> Response<Full<Bytes>>
+    where
+        B: Body<Data = Bytes> + Send + 'static,
+        B::Error: std::error::Error + Send + 'static,
+    {
+        let Some(handler) = self.handler.get(id) else {
+            return Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body(Full::new(Bytes::new()))
+                .unwrap();
+        };
+        let handler = Arc::clone(handler);
+
+        let mut event = match parse_body(req).await {
+            Ok(result) => result,
+            Err(err) => return err_to_response(err),
+        };
+
+        let result = event
+            .state
+            .take()
+            .ok_or_else(|| InternalError::Deserialize {
+                what: "boundary state json",
+                err: Box::from("missing boundary state"),
+            });
+        let state_json = match result {
+            Ok(result) => result,
+            Err(err) => return err_to_response(err.into()),
+        };
+
+        let result = local_pool::spawn(move || {
+            let mut scope = Scope::new().with_event(event.event_id, event.payload);
+            if let Some(multipart) = event.multipart {
+                scope = scope.with_multipart(multipart);
+            }
+            scope.run(async move {
+                let r = Renderer::new_update();
+                handler(state_json.get(), r).await
+            })
+        })
+        .await;
+        let result = match result {
+            Ok(result) => result,
+            Err(err) => return err_to_response(err),
+        };
+
+        let Out { html, headers } = result.end();
+        let mut res = Response::builder().header(
+            http::header::CONTENT_TYPE,
+            HeaderValue::from_static("text/html; charset=utf-8"),
+        );
+        for (key, value) in headers {
+            if let Some(key) = key {
+                res = res.header(key, value);
+            }
+        }
+        res.body(Full::new(Bytes::from(html))).unwrap()
+    }
+}

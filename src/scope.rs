@@ -1,7 +1,6 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::cell::RefCell;
 use std::future::Future;
-use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 use multer::Multipart;
@@ -9,7 +8,6 @@ use serde::de::DeserializeOwned;
 use serde_json::value::RawValue;
 use tokio::task::JoinHandle;
 use tracing::Instrument;
-use twox_hash::XxHash32;
 
 use crate::error::InternalError;
 
@@ -31,17 +29,18 @@ struct Inner {
 
 pub(crate) enum Payload {
     Json(Box<RawValue>),
+    #[cfg(not(target_arch = "wasm32"))]
     UrlEncoded(String),
 }
 
 enum Event {
-    Raw { id: u32, payload: Payload },
+    Raw { id: String, payload: Payload },
     Deserialized(Box<dyn Any>),
 }
 
 pub fn event<E>() -> Option<E>
 where
-    E: DeserializeOwned + Copy + 'static,
+    E: DeserializeOwned + Copy + crate::event::Event + 'static,
 {
     SCOPE
         .try_with(|scope| {
@@ -49,11 +48,8 @@ where
             let event = state.event.as_mut()?;
             match event {
                 Event::Raw { id, payload } => {
-                    let mut hasher = XxHash32::default();
-                    TypeId::of::<E>().hash(&mut hasher);
-                    let type_id = hasher.finish() as u32;
-
-                    if *id != type_id {
+                    let event_id = E::ID;
+                    if *id != event_id {
                         return None;
                     }
 
@@ -71,6 +67,7 @@ where
                                 None
                             }
                         },
+                        #[cfg(not(target_arch = "wasm32"))]
                         Payload::UrlEncoded(payload) => match serde_urlencoded::from_str(payload) {
                             Ok(payload) => {
                                 *event = Event::Deserialized(Box::new(payload));
@@ -95,7 +92,7 @@ where
 
 pub fn take_event<E>() -> Option<E>
 where
-    E: DeserializeOwned + 'static,
+    E: DeserializeOwned + crate::event::Event + 'static,
 {
     SCOPE
         .try_with(|scope| {
@@ -103,11 +100,8 @@ where
             let event = state.event.take()?;
             match event {
                 Event::Raw { id, payload } => {
-                    let mut hasher = XxHash32::default();
-                    TypeId::of::<E>().hash(&mut hasher);
-                    let type_id = hasher.finish() as u32;
-
-                    if id != type_id {
+                    let event_id = E::ID;
+                    if id != event_id {
                         state.event = Some(Event::Raw { id, payload });
                         return None;
                     }
@@ -123,6 +117,7 @@ where
                                 None
                             }
                         },
+                        #[cfg(not(target_arch = "wasm32"))]
                         Payload::UrlEncoded(payload) => {
                             match serde_urlencoded::from_str(&payload) {
                                 Ok(payload) => Some(payload),
@@ -171,7 +166,7 @@ impl Scope {
         }
     }
 
-    pub(crate) fn with_event(self, id: u32, payload: Payload) -> Self {
+    pub(crate) fn with_event(self, id: String, payload: Payload) -> Self {
         {
             let mut state = self.inner.borrow_mut();
             state.event = Some(Event::Raw { id, payload });
@@ -179,18 +174,11 @@ impl Scope {
         self
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn with_multipart(self, multipart: Multipart<'static>) -> Self {
         {
             let mut state = self.inner.borrow_mut();
             state.multipart = Some(multipart);
-        }
-        self
-    }
-
-    pub(crate) fn with_deserialized_event(self, event: Box<dyn Any>) -> Self {
-        {
-            let mut state = self.inner.borrow_mut();
-            state.event = Some(Event::Deserialized(event));
         }
         self
     }

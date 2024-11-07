@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::event;
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -11,7 +11,7 @@ async fn app() -> impl View {
     basic_document(counter(0).await)
 }
 
-#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
 async fn counter(start_at: usize) -> impl View {

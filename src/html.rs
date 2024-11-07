@@ -321,7 +321,10 @@ impl<El, A, V> WithAttribute for Html<El, A, V>
 where
     A: Attributes,
 {
-    type Output<T> = Html<El, Pair<T, A>, V> where T: Attributes;
+    type Output<T>
+        = Html<El, Pair<T, A>, V>
+    where
+        T: Attributes;
 
     fn with_attribute<T: Attributes>(self, attr: T) -> Self::Output<T> {
         Html {

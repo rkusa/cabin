@@ -10,6 +10,7 @@ use super::global::Global;
 use super::input::AutoComplete;
 use super::SerializeEventFn;
 use crate::error::InternalError;
+use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
@@ -137,35 +138,24 @@ pub trait Form: WithAttribute {
     /// then be handled via [crate::scope::take_event] or [crate::scope::event].
     fn on_submit<E>(self) -> Self::Output<OnSubmit>
     where
-        E: 'static,
+        E: Event + 'static,
     {
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = twox_hash::XxHash32::default();
-        std::any::TypeId::of::<E>().hash(&mut hasher);
-        let hash = hasher.finish() as u32;
-
-        self.with_attribute(OnSubmit(hash))
+        self.with_attribute(OnSubmit(E::ID))
     }
 
     /// Intercept form submissions, and submit the provided `event`, which can then be handled via
     /// [crate::scope::take_event] or [crate::scope::event].
     fn on_submit_with<E>(self, event: E) -> Self::Output<OnSubmitWith>
     where
-        E: serde::Serialize + 'static,
+        E: serde::Serialize + Event + 'static,
     {
         self.with_attribute(OnSubmitWith(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
                     what: "custom event",
                     err,
                 })
-                .map(|json| (hash, json))
+                .map(|json| (E::ID, json))
         })))
     }
 }
@@ -305,7 +295,7 @@ impl fmt::Display for Rel {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 #[attribute(name = "cabin-submit")]
-pub struct OnSubmit(pub u32);
+pub struct OnSubmit(pub &'static str);
 
 pub struct OnSubmitWith(pub Box<SerializeEventFn>);
 

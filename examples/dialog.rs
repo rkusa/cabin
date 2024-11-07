@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use cabin::prelude::*;
 use cabin::scope::event;
-use cabin::{basic_document, html};
+use cabin::{basic_document, html, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -11,7 +11,7 @@ async fn app() -> impl View {
     basic_document(dialog("Hello World"))
 }
 
-#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Toggle(bool);
 
 fn dialog(content: impl View) -> impl View {

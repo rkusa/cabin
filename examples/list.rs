@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::take_event;
 use cabin::view::{Boundary, IteratorExt};
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -18,7 +18,7 @@ struct Item {
     count: usize,
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Event, Serialize, Deserialize)]
 enum ItemsEvent {
     AddAbove,
     AddBelow,

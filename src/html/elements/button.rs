@@ -5,6 +5,7 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::form::OnSubmit;
 use crate::html::{Aria, Html};
@@ -120,15 +121,9 @@ pub trait Button: WithAttribute {
     /// event regardless of what is set for the forms `on_submit`.
     fn on_submit<E>(self) -> Self::Output<OnSubmit>
     where
-        E: 'static,
+        E: Event + 'static,
     {
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = twox_hash::XxHash32::default();
-        std::any::TypeId::of::<E>().hash(&mut hasher);
-        let hash = hasher.finish() as u32;
-
-        self.with_attribute(OnSubmit(hash))
+        self.with_attribute(OnSubmit(E::ID))
     }
 }
 

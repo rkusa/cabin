@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::take_event;
 use cabin::view::Boundary;
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -32,10 +32,10 @@ fn level(n: usize, count: usize, has_next_level: bool) -> Boundary<(usize, usize
     .boundary((n, count, has_next_level))
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Event, Serialize, Deserialize)]
 struct ToggleChild;
 
 #[tokio::main]

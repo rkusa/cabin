@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::take_event;
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -31,7 +31,7 @@ async fn app() -> impl View {
     ))
 }
 
-#[derive(Default, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Event, Serialize, Deserialize)]
 struct Data {
     comment: String,
     #[serde(default, deserialize_with = "cabin::serde::de::checkbox")]

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use super::attributes::Attributes;
 use super::elements::SerializeEventFn;
 use crate::error::InternalError;
+use crate::event::Event;
 
 #[derive(Debug, Hash)]
 pub struct InputValue(Cow<'static, str>);
@@ -120,22 +121,17 @@ pub struct CustomEvent<E> {
 impl<E> CustomEvent<E> {
     pub fn new(name: impl Into<Cow<'static, str>>, event: E) -> Self
     where
-        E: serde::Serialize + 'static,
+        E: serde::Serialize + Event + 'static,
     {
         Self {
             name: name.into(),
             event: Box::new(move || {
-                use std::hash::{Hash, Hasher};
-
-                let mut hasher = twox_hash::XxHash32::default();
-                std::any::TypeId::of::<E>().hash(&mut hasher);
-                let hash = hasher.finish() as u32;
                 serde_json::to_string(&event)
                     .map_err(|err| InternalError::Serialize {
                         what: "on_click event",
                         err,
                     })
-                    .map(|json| (hash, json))
+                    .map(|json| (E::ID, json))
             }),
             marker: PhantomData,
         }

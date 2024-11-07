@@ -53,7 +53,7 @@ pub mod title;
 pub mod track;
 pub mod video;
 
-pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(u32, String), InternalError>;
+pub(crate) type SerializeEventFn = dyn FnOnce() -> Result<(&'static str, String), InternalError>;
 
 macro_rules! vanilla_element {
     ($method_name:ident, $marker_name:ident, $doc:literal) => {

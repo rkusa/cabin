@@ -1,5 +1,32 @@
+const ENCODER = new TextEncoder();
+const DECODER = new TextDecoder();
+const WASM = WebAssembly.instantiateStreaming(fetch("/components.wasm"), {
+  env: {
+    error(msgPtr, msgLen) {
+      WASM.then((wasm) => {
+        const data = new Uint8Array(
+          wasm.instance.exports.memory.buffer,
+          msgPtr,
+          msgLen,
+        );
+        const msg = DECODER.decode(data);
+        wasm.instance.exports.dealloc(msgPtr, msgLen);
+        throw new Error(msg);
+      });
+    },
+  },
+})
+  .then((wasm) => {
+    wasm.instance.exports.init_panic_hook();
+    return wasm;
+  })
+  .catch((err) => {
+    console.error("failed to load components.wasm: ", err);
+    return null;
+  });
+
 /**
- * @param {number} eventId
+ * @param {string} eventId
  * @param {object | FormData} payload
  * @param {Node} target
  * @param {AbortController | undefined} abortController
@@ -25,6 +52,62 @@ async function update(
       target.firstChild.getAttribute("type") === "application/json"
     ) {
       state = target.firstChild.innerText;
+    }
+
+    if (target instanceof CabinBoundary) {
+      const name = target.getAttribute("name");
+      const wasm = await WASM;
+      if (
+        wasm &&
+        wasm.instance.exports[name] &&
+        !(payload instanceof FormData)
+      ) {
+        console.log("using wasm component");
+
+        const event = `{"eventId":${JSON.stringify(eventId)},"payload":${JSON.stringify(payload)}${
+          state ? `,"state":${state}` : ""
+        }}`;
+        const eventPtr = wasm.instance.exports.alloc(event.length);
+        ENCODER.encodeInto(
+          event,
+          new Uint8Array(
+            wasm.instance.exports.memory.buffer,
+            eventPtr,
+            event.length,
+          ),
+        );
+        const outPtr = wasm.instance.exports.alloc(4);
+        const len = wasm.instance.exports[name](eventPtr, event.length, outPtr);
+        wasm.instance.exports.dealloc(eventPtr, event.length);
+        if (len > 0) {
+          const view = new DataView(wasm.instance.exports.memory.buffer);
+          const ptr = view.getInt32(outPtr, true);
+          wasm.instance.exports.dealloc(outPtr, 4);
+
+          const html = DECODER.decode(
+            wasm.instance.exports.memory.buffer.slice(ptr, ptr + len),
+          );
+          wasm.instance.exports.dealloc(ptr, len);
+
+          console.time("patch");
+          const template = document.createElement("template");
+          template.innerHTML = html;
+          patchChildren(target, template.content, {}, disabledBefore);
+          console.timeEnd("patch");
+
+          return;
+        } else {
+          console.warn(
+            "using wasm component failed, falling back to using serveer component",
+          );
+        }
+      } else if (
+        wasm &&
+        wasm.instance.exports[name] &&
+        payload instanceof FormData
+      ) {
+        console.warn("cannot use wasm components for form submissions (yet)");
+      }
     }
 
     /** @type {RequestInit} */
@@ -72,7 +155,7 @@ async function update(
             "Content-Type": "application/json",
             "x-cabin": "boundary",
           },
-          body: `{"eventId":${eventId},"payload":${JSON.stringify(payload)}${
+          body: `{"eventId":${JSON.stringify(eventId)},"payload":${JSON.stringify(payload)}${
             state ? `,"state":${state}` : ""
           }}`,
         };
@@ -351,7 +434,7 @@ function setUpEventListener(el, eventName, opts) {
       }
 
       await update(
-        parseInt(eventId),
+        eventId,
         payload,
         el == document ? document.body : el,
         abortController,
@@ -734,7 +817,7 @@ document.addEventListener("cabinRefresh", async function () {
       el.removeAttribute("hash");
     } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
   }
-  await update(0, {}, document.body);
+  await update("", {}, document.body);
 });
 
 document.addEventListener("cabinFire", async function (e) {

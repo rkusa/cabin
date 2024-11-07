@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::event;
 use cabin::view::{Boundary, IteratorExt};
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -43,10 +43,10 @@ fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
     .boundary((count, open))
 }
 
-#[derive(Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Toggle(bool);
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
 #[tokio::main]

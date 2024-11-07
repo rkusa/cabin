@@ -4,23 +4,26 @@ use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
-use once_cell::race::OnceBox;
 use twox_hash::XxHash32;
 
 use super::Utility;
 
+#[cfg(not(target_arch = "wasm32"))]
 #[linkme::distributed_slice]
 pub static STYLES: [fn(&mut StyleRegistry)] = [..];
 
-static STYLE_SHEET: OnceBox<String> = OnceBox::new();
+#[cfg(not(target_arch = "wasm32"))]
+static STYLE_SHEET: once_cell::race::OnceBox<String> = once_cell::race::OnceBox::new();
 
 type Order = (usize, usize, u32);
 
+#[derive(Default)]
 pub struct StyleRegistry {
     classes: HashMap<String, Order>,
 }
 
 impl StyleRegistry {
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn style_sheet() -> &'static str {
         STYLE_SHEET.get_or_init(|| {
             let mut registry = Self {
@@ -117,9 +120,7 @@ impl StyleRegistry {
             }
             writeln!(&mut out).unwrap();
 
-            let mut hasher = XxHash32::default();
-            hasher.write(out[pos..].as_bytes());
-            let hash = hasher.finish() as u32;
+            let hash = XxHash32::oneshot(0, out[pos..].as_bytes());
 
             // write actual class name, prepend `_` as it class names must not start with a number
             let name = styles

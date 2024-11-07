@@ -18,7 +18,7 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
     } = input;
 
     if !generics.params.is_empty() {
-        return Err(Error::new(ident.span(), "Attribute can not have generics"));
+        return Err(Error::new(ident.span(), "Attribute cannot have generics"));
     }
 
     let opts = extract_options(&attrs)?;

@@ -1,5 +1,6 @@
 mod boundary_attribute;
 mod derive_attribute;
+mod derive_event;
 mod tw_macro;
 
 use proc_macro::TokenStream;
@@ -17,11 +18,30 @@ pub fn derive_attribute(item: TokenStream) -> TokenStream {
     }
 }
 
+#[proc_macro_derive(Event)]
+pub fn derive_event(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    match derive_event::derive_event(input) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
+
 #[proc_macro_attribute]
 pub fn boundary(attr: TokenStream, item: TokenStream) -> TokenStream {
     let events = parse_macro_input!(attr with Punctuated::<Type, Comma>::parse_terminated);
     let input = parse_macro_input!(item as ItemFn);
-    match boundary_attribute::boundary_attribute(input, events) {
+    match boundary_attribute::boundary_attribute(input, events, false) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
+
+#[proc_macro_attribute]
+pub fn wasm_boundary(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let events = parse_macro_input!(attr with Punctuated::<Type, Comma>::parse_terminated);
+    let input = parse_macro_input!(item as ItemFn);
+    match boundary_attribute::boundary_attribute(input, events, true) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

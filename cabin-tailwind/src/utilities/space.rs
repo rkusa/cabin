@@ -100,13 +100,13 @@ pub mod y {
 
 impl Utility for SpaceX {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        f.write_str("--tw-space-x-reverse: 0;")?;
-        write!(
+        f.write_str("--tw-space-x-reverse: 0;\n")?;
+        writeln!(
             f,
             "margin-inline-end: calc({} * var(--tw-space-x-reverse));",
             self.0
         )?;
-        write!(
+        writeln!(
             f,
             "margin-inline-start: calc({} * calc(1 - var(--tw-space-x-reverse)));",
             self.0
@@ -125,7 +125,7 @@ impl Utility for SpaceX {
 
 impl Utility for SpaceReverseX {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        f.write_str("--tw-space-x-reverse: 1;")
+        f.write_str("--tw-space-x-reverse: 1;\n")
     }
 
     fn selector_suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
@@ -139,13 +139,13 @@ impl Utility for SpaceReverseX {
 
 impl Utility for SpaceY {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        f.write_str("--tw-space-y-reverse: 0;")?;
-        write!(
+        f.write_str("--tw-space-y-reverse: 0;\n")?;
+        writeln!(
             f,
             "margin-top: calc({} * calc(1 - var(--tw-space-y-reverse)));",
             self.0
         )?;
-        write!(
+        writeln!(
             f,
             "margin-bottom: calc({} * var(--tw-space-y-reverse));",
             self.0
@@ -164,7 +164,7 @@ impl Utility for SpaceY {
 
 impl Utility for SpaceReverseY {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        f.write_str("--tw-space-y-reverse: 1;")
+        f.write_str("--tw-space-y-reverse: 1;\n")
     }
 
     fn selector_suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {

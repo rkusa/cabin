@@ -4,7 +4,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
-use cabin::view::boundary::BoundaryRegistry;
 use cabin::CABIN_JS;
 use http::{header, HeaderValue, Method, Request, Response, StatusCode};
 use http_body::Body as HttpBody;
@@ -128,7 +127,9 @@ where
 
                 (&Method::PUT, &["__boundary", id]) => {
                     let id = id.to_string();
-                    let res = BoundaryRegistry::global().handle(&id, req).await;
+                    let res = cabin::boundary_registry::BoundaryRegistry::global()
+                        .handle(&id, req)
+                        .await;
                     let (parts, body) = res.into_parts();
                     Ok(Response::from_parts(
                         parts,

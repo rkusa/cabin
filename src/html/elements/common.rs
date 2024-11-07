@@ -6,6 +6,7 @@ use cabin_macros::Attribute;
 
 use super::SerializeEventFn;
 use crate::error::InternalError;
+use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 
 pub trait Common: WithAttribute {
@@ -30,58 +31,43 @@ pub trait Common: WithAttribute {
 
     fn on_click<E>(self, event: E) -> Self::Output<OnClick>
     where
-        E: serde::Serialize + 'static,
+        E: serde::Serialize + Event + 'static,
     {
         self.with_attribute(OnClick(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
                     what: "custom event",
                     err,
                 })
-                .map(|json| (hash, json))
+                .map(|json| (E::ID, json))
         })))
     }
 
     fn on_transition_end<E>(self, event: E) -> Self::Output<OnTransitionEnd>
     where
-        E: serde::Serialize + 'static,
+        E: serde::Serialize + Event + 'static,
     {
         self.with_attribute(OnTransitionEnd(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
                     what: "on_transition_end event",
                     err,
                 })
-                .map(|json| (hash, json))
+                .map(|json| (E::ID, json))
         })))
     }
 
     fn on_animation_end<E>(self, event: E) -> Self::Output<OnAnimationEnd>
     where
-        E: serde::Serialize + 'static,
+        E: serde::Serialize + Event + 'static,
     {
         self.with_attribute(OnAnimationEnd(Box::new(move || {
-            use std::hash::{Hash, Hasher};
-
-            let mut hasher = twox_hash::XxHash32::default();
-            std::any::TypeId::of::<E>().hash(&mut hasher);
-            let hash = hasher.finish() as u32;
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
                     what: "on_animation_end event",
                     err,
                 })
-                .map(|json| (hash, json))
+                .map(|json| (E::ID, json))
         })))
     }
 }

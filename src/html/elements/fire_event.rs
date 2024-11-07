@@ -2,6 +2,7 @@ use http::{HeaderName, HeaderValue};
 
 use super::SerializeEventFn;
 use crate::error::InternalError;
+use crate::event::Event;
 use crate::render::Renderer;
 use crate::view::RenderFuture;
 use crate::View;
@@ -10,20 +11,15 @@ pub struct FireEvent(pub Box<SerializeEventFn>);
 
 pub fn fire_event<E>(event: E) -> FireEvent
 where
-    E: serde::Serialize + 'static,
+    E: serde::Serialize + Event + 'static,
 {
     FireEvent(Box::new(move || {
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = twox_hash::XxHash32::default();
-        std::any::TypeId::of::<E>().hash(&mut hasher);
-        let hash = hasher.finish() as u32;
         serde_json::to_string(&event)
             .map_err(|err| InternalError::Serialize {
                 what: "fire_event",
                 err,
             })
-            .map(|json| (hash, json))
+            .map(|json| (E::ID, json))
     }))
 }
 
@@ -34,7 +30,7 @@ impl View for FireEvent {
                 Ok(ok) => ok,
                 Err(err) => return RenderFuture::Ready(Some(Err(err.into()))),
             };
-            let id_header = match HeaderValue::from_str(&id.to_string()) {
+            let id_header = match HeaderValue::from_str(id) {
                 Ok(v) => v,
                 Err(err) => {
                     tracing::error!(%err, "invalid header value for X-CABIN-EVENT");

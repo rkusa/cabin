@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 use std::net::SocketAddr;
 
-use cabin::basic_document;
 use cabin::html::events::InputValue;
 use cabin::prelude::*;
 use cabin::scope::take_event;
+use cabin::{basic_document, Event};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -13,7 +13,7 @@ async fn app() -> impl View {
     basic_document(search().await)
 }
 
-#[derive(Hash, Serialize, Deserialize)]
+#[derive(Hash, Event, Serialize, Deserialize)]
 struct Search(InputValue);
 
 async fn search() -> impl View {

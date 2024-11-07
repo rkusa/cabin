@@ -11,22 +11,37 @@ pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
 
     // TODO: Partition here into ones without any modifier, and the ones with modifieres?
     // Flatten tuples out
-    let styles = flatten_recursively(input.styles.into_iter());
+    let styles = flatten_recursively(input.styles.into_iter()).collect::<Vec<_>>();
 
+    // TODO: StyleRegistry::add below generates the style unnecessarily for wasm target
     quote! {
         {
-            static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-            #[::cabin::private::linkme::distributed_slice(::cabin_tailwind::registry::STYLES)]
-            #[linkme(crate = ::cabin::private::linkme)]
-            fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
-                let name = r.add(#pos, &[#(&#styles,)*]);
-                NAME.set(name).ok();
+                #[::cabin::private::linkme::distributed_slice(::cabin_tailwind::registry::STYLES)]
+                #[linkme(crate = ::cabin::private::linkme)]
+                fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
+                    let name = r.add(#pos, &[#(&#styles,)*]);
+                    NAME.set(name).ok();
+                }
+
+                ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
+                    NAME.get().map(|s| s.as_str()).unwrap_or_default()
+                ))
             }
+            #[cfg(target_arch = "wasm32")]
+            {
+                static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-            ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
-                NAME.get().map(|s| s.as_str()).unwrap_or_default()
-            ))
+                ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
+                    NAME.get_or_init(|| {
+                        let mut r = ::cabin_tailwind::registry::StyleRegistry::default();
+                        r.add(#pos, &[#(&#styles,)*])
+                    }).as_str()
+                ))
+            }
         }
     }
     .into()

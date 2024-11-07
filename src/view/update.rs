@@ -67,7 +67,10 @@ impl View for UpdateView<Raw> {
 }
 
 impl<V: WithAttribute> WithAttribute for UpdateView<V> {
-    type Output<T> = UpdateView<V::Output<T>> where T: Attributes;
+    type Output<T>
+        = UpdateView<V::Output<T>>
+    where
+        T: Attributes;
 
     fn with_attribute<T: Attributes>(self, attr: T) -> Self::Output<T> {
         UpdateView {
