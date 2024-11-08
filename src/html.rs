@@ -94,8 +94,6 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::figure::figure;
     #[doc(inline)]
-    pub use super::elements::fire_event::fire_event;
-    #[doc(inline)]
     pub use super::elements::footer::footer;
     #[doc(inline)]
     pub use super::elements::form::{self as form, form, Form};

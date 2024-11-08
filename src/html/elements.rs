@@ -18,7 +18,6 @@ pub mod details;
 pub mod dialog;
 pub mod embed;
 pub mod fieldset;
-pub mod fire_event;
 pub mod form;
 pub mod global;
 pub mod head;

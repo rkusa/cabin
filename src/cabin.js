@@ -201,20 +201,6 @@ async function update(
     if (newTitle) {
       document.title = newTitle;
     }
-
-    // TODO: prevent endless event loops
-    {
-      const eventId = res.headers.get("x-cabin-event");
-      const payload = res.headers.get("x-cabin-payload");
-      if (eventId && payload) {
-        target.dispatchEvent(
-          new CustomEvent("cabinFire", {
-            detail: { eventId, payload: JSON.parse(payload) },
-            bubbles: true,
-          }),
-        );
-      }
-    }
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       // ignore
