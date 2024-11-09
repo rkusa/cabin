@@ -1,5 +1,5 @@
 use std::future::Future;
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 use bytes::Bytes;
 use futures_util::stream::TryStreamExt;
@@ -18,32 +18,32 @@ use crate::render::{Out, Renderer};
 use crate::scope::{Payload, Scope};
 pub use crate::view::View;
 
-pub const CABIN_JS: &str = include_str!("./cabin.js");
-pub const LIVERELOAD_JS: &str = include_str!("./livereload.js");
+pub static CABIN_JS: &str = include_str!("./cabin.js");
+pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 pub fn cabin_scripts() -> impl View {
     use html::elements::script::Script;
 
-    static SRC_SC: OnceLock<String> = OnceLock::new();
-    let src_sc = SRC_SC.get_or_init(|| {
-        let hash = content_hash(CABIN_JS.as_bytes());
-        format!("/cabin.js?{hash}")
-    });
-
-    #[cfg(feature = "livereload")]
-    let src_lr = {
-        static SRC_LR: OnceLock<String> = OnceLock::new();
-        let src_lr = SRC_LR.get_or_init(|| {
-            let hash = content_hash(LIVERELOAD_JS.as_bytes());
-            format!("/livereload.js?{hash}")
-        });
-        src_lr
-    };
-
     (
-        html::script("").src(src_sc).defer(),
+        html::script("")
+            .src({
+                static PATH: LazyLock<&'static str> = LazyLock::new(|| {
+                    let hash = content_hash(CABIN_JS.as_bytes());
+                    Box::leak(format!("/cabin.js?{hash}").into_boxed_str())
+                });
+                *PATH
+            })
+            .defer(),
         #[cfg(feature = "livereload")]
-        html::script("").src(src_lr).defer(),
+        html::script("")
+            .src({
+                static PATH: LazyLock<&'static str> = LazyLock::new(|| {
+                    let hash = content_hash(LIVERELOAD_JS.as_bytes());
+                    Box::leak(format!("/livereload.js?{hash}").into_boxed_str())
+                });
+                *PATH
+            })
+            .defer(),
     )
 }
 

@@ -1,29 +1,40 @@
 const ENCODER = new TextEncoder();
 const DECODER = new TextDecoder();
-const WASM = WebAssembly.instantiateStreaming(fetch("/components.wasm"), {
-  env: {
-    error(msgPtr, msgLen) {
-      WASM.then((wasm) => {
-        const data = new Uint8Array(
-          wasm.instance.exports.memory.buffer,
-          msgPtr,
-          msgLen,
-        );
-        const msg = DECODER.decode(data);
-        wasm.instance.exports.dealloc(msgPtr, msgLen);
-        throw new Error(msg);
-      });
-    },
-  },
-})
-  .then((wasm) => {
-    wasm.instance.exports.init_panic_hook();
-    return wasm;
-  })
-  .catch((err) => {
-    console.error("failed to load components.wasm: ", err);
-    return null;
-  });
+const WASM = new Promise((resolve) => {
+  const path = document.querySelector(
+    "link[rel='cabin-components'][type='application/wasm']",
+  );
+  if (path && path.href) {
+    resolve(
+      WebAssembly.instantiateStreaming(fetch(path.href), {
+        env: {
+          error(msgPtr, msgLen) {
+            WASM.then((wasm) => {
+              const data = new Uint8Array(
+                wasm.instance.exports.memory.buffer,
+                msgPtr,
+                msgLen,
+              );
+              const msg = DECODER.decode(data);
+              wasm.instance.exports.dealloc(msgPtr, msgLen);
+              throw new Error(msg);
+            });
+          },
+        },
+      })
+        .then((wasm) => {
+          wasm.instance.exports.init_panic_hook();
+          return wasm;
+        })
+        .catch((err) => {
+          console.error("failed to load components.wasm: ", err);
+          return null;
+        }),
+    );
+  } else {
+    resolve(null);
+  }
+});
 
 /**
  * @param {string} eventId
@@ -39,6 +50,10 @@ async function update(
   abortController,
   disabledBefore,
 ) {
+  if (typeof eventId !== "string") {
+    throw new TypeError("event id must be a string");
+  }
+
   const signal = abortController?.signal;
   if (signal?.aborted) {
     return;

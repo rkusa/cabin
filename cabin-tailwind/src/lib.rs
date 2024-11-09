@@ -345,20 +345,20 @@ impl Utility for StaticClass {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn cabin_stylesheets() -> impl cabin::View {
-    use std::sync::OnceLock;
+    use std::sync::LazyLock;
 
     use cabin::html;
     use cabin::html::Common;
     use html::elements::link::Link;
 
-    static HREF: OnceLock<String> = OnceLock::new();
-    let href = HREF.get_or_init(|| {
-        let hash = cabin::content_hash(registry::StyleRegistry::style_sheet().as_bytes());
-        format!("/styles.css?{hash}")
-    });
-
     html::link()
         .id("cabin-styles")
         .rel(html::elements::link::Rel::StyleSheet)
-        .href(href)
+        .href({
+            static PATH: LazyLock<&'static str> = LazyLock::new(|| {
+                let hash = cabin::content_hash(registry::StyleRegistry::style_sheet().as_bytes());
+                Box::leak(format!("/styles.css?{hash}").into_boxed_str())
+            });
+            *PATH
+        })
 }

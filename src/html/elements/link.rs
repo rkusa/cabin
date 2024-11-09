@@ -253,6 +253,9 @@ pub enum Rel {
 
     /// Imports a style sheet.
     StyleSheet,
+
+    /// A custom non-standard relation.
+    Custom(&'static str),
 }
 
 impl fmt::Display for Rel {
@@ -275,6 +278,7 @@ impl fmt::Display for Rel {
             Self::Prev => f.write_str("prev"),
             Self::Search => f.write_str("search"),
             Self::StyleSheet => f.write_str("stylesheet"),
+            Self::Custom(rel) => f.write_str(rel),
         }
     }
 }
