@@ -821,10 +821,6 @@ document.addEventListener("cabinRefresh", async function () {
   await update("", {}, document.body);
 });
 
-document.addEventListener("cabinFire", async function (e) {
-  await update(e.detail?.eventId, e.detail?.payload, document.body);
-});
-
 window.addEventListener("popstate", () => {
   document.dispatchEvent(new CustomEvent("cabinRefresh"));
 });
