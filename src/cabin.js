@@ -403,6 +403,10 @@ function setUpEventListener(el, eventName, opts) {
         disabledBefore,
         readOnlyBefore,
       );
+
+      if (isSubmitEvent && node.parentNode) {
+        node.reportValidity();
+      }
     } catch (err) {
       throw err;
     } finally {
