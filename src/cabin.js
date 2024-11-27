@@ -395,45 +395,6 @@ function setUpEventListener(el, eventName, opts) {
         node.checked = !node.checked;
       }
 
-      // Check for, and if exists, apply pre-rendered instances of this boundary
-      if (!isSubmitEvent && this instanceof CabinBoundary) {
-        let templates = [];
-        let template = this.lastElementChild;
-        while (
-          template &&
-          template instanceof HTMLTemplateElement &&
-          template.hasAttribute("event-id") &&
-          template.hasAttribute("event-payload")
-        ) {
-          templates.push(template);
-          template = template.previousElementSibling;
-        }
-        // TODO: might not always be the same, somehow use same string representation of the
-        // payload as the server?
-        const payloadStr = JSON.stringify(payload);
-        for (const template of templates) {
-          if (
-            template.getAttribute("event-id") === eventId &&
-            template.getAttribute("event-payload") === payloadStr
-          ) {
-            console.time("patch");
-            patchChildren(
-              el,
-              template.content,
-              {},
-              disabledBefore,
-              readOnlyBefore,
-            );
-            // put back prerendered templates
-            for (const template of templates) {
-              this.appendChild(template);
-            }
-            console.timeEnd("patch");
-            return;
-          }
-        }
-      }
-
       await update(
         eventId,
         payload,
