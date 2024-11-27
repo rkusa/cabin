@@ -68,7 +68,7 @@ where
                             }
                         },
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) => match serde_urlencoded::from_str(payload) {
+                        Payload::UrlEncoded(payload) => match serde_html_form::from_str(payload) {
                             Ok(payload) => {
                                 *event = Event::Deserialized(Box::new(payload));
                                 Some(payload)
@@ -118,18 +118,16 @@ where
                             }
                         },
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) => {
-                            match serde_urlencoded::from_str(&payload) {
-                                Ok(payload) => Some(payload),
-                                Err(err) => {
-                                    state.error = Some(InternalError::Deserialize {
-                                        what: "event urlencoded payload",
-                                        err: Box::new(err),
-                                    });
-                                    None
-                                }
+                        Payload::UrlEncoded(payload) => match serde_html_form::from_str(&payload) {
+                            Ok(payload) => Some(payload),
+                            Err(err) => {
+                                state.error = Some(InternalError::Deserialize {
+                                    what: "event urlencoded payload",
+                                    err: Box::new(err),
+                                });
+                                None
                             }
-                        }
+                        },
                     }
                 }
                 Event::Deserialized(payload) => match payload.downcast::<E>() {
