@@ -12,7 +12,7 @@ pub mod de {
 
     struct CheckboxVisitor;
 
-    impl<'de> Visitor<'de> for CheckboxVisitor {
+    impl Visitor<'_> for CheckboxVisitor {
         type Value = bool;
 
         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
