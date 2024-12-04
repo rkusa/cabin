@@ -5,8 +5,7 @@ use cabin::cabin_scripts;
 use cabin::prelude::*;
 use cabin::scope::event;
 use cabin_tailwind::prelude::*;
-use cabin_tailwind::registry::StyleRegistry;
-use cabin_tailwind::registry::StyleSheet;
+use cabin_tailwind::registry::{StyleRegistry, StyleSheet};
 use http::Request;
 use tokio::net::TcpListener;
 
@@ -43,7 +42,7 @@ fn document(content: impl View) -> impl View {
 
 cabin_tailwind::STYLES!();
 static STYLE_SHEET: LazyLock<StyleSheet> =
-    LazyLock::new(|| StyleRegistry::default().with(&STYLES).build());
+    LazyLock::new(|| StyleRegistry::default().with(&STYLES).build(true));
 
 #[tokio::main]
 async fn main() {

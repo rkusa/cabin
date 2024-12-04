@@ -138,7 +138,7 @@ impl StyleRegistry {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn build(self) -> StyleSheet {
+    pub fn build(self, include_base: bool) -> StyleSheet {
         let mut style_sheet = self.classes.into_iter().collect::<Vec<_>>();
         style_sheet.sort_by_key(|(_, (o1, o2, h))| (*o1, *o2, *h));
 
@@ -151,11 +151,15 @@ impl StyleRegistry {
             include_str!("./forms/forms-v0.5.3.css"),
         ];
 
-        let css: String = other
-            .into_iter()
-            .map(Cow::Borrowed)
-            .chain(style_sheet.into_iter().map(|(s, _)| Cow::Owned(s)))
-            .collect();
+        let css: String = if include_base {
+            other
+                .into_iter()
+                .map(Cow::Borrowed)
+                .chain(style_sheet.into_iter().map(|(s, _)| Cow::Owned(s)))
+                .collect()
+        } else {
+            style_sheet.into_iter().map(|(s, _)| s).collect()
+        };
         let hash = cabin::content_hash(css.as_bytes());
         StyleSheet {
             content: Bytes::from(css),
@@ -218,7 +222,7 @@ fn test_deduplication() {
     let a = r.add(0, &[&BLOCK, &p(4)]);
     let b = r.add(0, &[&p(4), &BLOCK]);
     assert_eq!(a, b);
-    insta::assert_snapshot!(std::str::from_utf8(&r.build().content).unwrap());
+    insta::assert_snapshot!(std::str::from_utf8(&r.build(true).content).unwrap());
 }
 
 #[test]
@@ -241,5 +245,5 @@ fn test_order() {
             &BLOCK.sm(),
         ],
     );
-    insta::assert_snapshot!(std::str::from_utf8(&r.build().content).unwrap());
+    insta::assert_snapshot!(std::str::from_utf8(&r.build(true).content).unwrap());
 }
