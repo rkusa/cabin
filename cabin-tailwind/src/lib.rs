@@ -106,6 +106,15 @@ pub trait Utility {
         pseudo::custom::Custom(pseudo, self)
     }
 
+    /// Apply style only when the user agent requested a dark color theme.
+    /// `@media (prefers-color-scheme: dark)`
+    fn dark(self) -> pseudo::dark::Dark<Self>
+    where
+        Self: Sized,
+    {
+        pseudo::dark::Dark::new(self)
+    }
+
     /// Apply style only when the element is disabled (`:disabled`).
     fn disabled(self) -> pseudo::disabled::Disabled<Self>
     where
