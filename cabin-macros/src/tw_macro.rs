@@ -20,7 +20,7 @@ pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
             {
                 static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-                #[::cabin::private::linkme::distributed_slice(::cabin_tailwind::registry::STYLES)]
+                #[::cabin::private::linkme::distributed_slice(crate::STYLES)]
                 #[linkme(crate = ::cabin::private::linkme)]
                 fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
                     let name = r.add(#pos, &[#(&#styles,)*]);

@@ -5,6 +5,7 @@ use std::task::{Context, Poll};
 
 use bytes::Bytes;
 use cabin::CABIN_JS;
+use cabin_tailwind::registry::StyleSheet;
 use http::{header, HeaderValue, Method, Request, Response, StatusCode};
 use http_body::Body as HttpBody;
 use http_body_util::combinators::UnsyncBoxBody;
@@ -14,11 +15,14 @@ use tower_service::Service;
 
 /// Layer to handle framework specific requests.
 #[derive(Clone)]
-pub struct FrameworkLayer;
+pub struct FrameworkLayer {
+    pub(crate) stylesheet: Option<&'static StyleSheet>,
+}
 
 /// Service to handle framework specific requests.
 #[derive(Clone)]
 pub struct FrameworkService<S> {
+    stylesheet: Option<&'static StyleSheet>,
     service: S,
 }
 
@@ -26,7 +30,10 @@ impl<S> Layer<S> for FrameworkLayer {
     type Service = FrameworkService<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        FrameworkService { service: inner }
+        FrameworkService {
+            stylesheet: self.stylesheet,
+            service: inner,
+        }
     }
 }
 
@@ -49,10 +56,8 @@ where
     }
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
-        #[cfg(feature = "cabin-tailwind")]
-        let _ = cabin_tailwind::registry::StyleRegistry::style_sheet();
-
         let mut service = self.service.clone();
+        let stylesheet = self.stylesheet;
         Box::pin(async move {
             let path = cleanup_path(req.uri().path());
             let method = req.method();
@@ -85,8 +90,7 @@ where
                     ))
                     .unwrap()),
 
-                #[cfg(feature = "cabin-tailwind")]
-                (&Method::GET, &["styles.css"]) => Ok(Response::builder()
+                (&Method::GET, &["styles.css"]) if stylesheet.is_some() => Ok(Response::builder()
                     .header(header::CONTENT_TYPE, "text/css")
                     .header(
                         header::CACHE_CONTROL,
@@ -97,10 +101,7 @@ where
                         },
                     )
                     .body(UnsyncBoxBody::new(
-                        Full::new(Bytes::from(
-                            cabin_tailwind::registry::StyleRegistry::style_sheet(),
-                        ))
-                        .map_err(|_| unreachable!()),
+                        Full::new(stylesheet.unwrap().content.clone()).map_err(|_| unreachable!()),
                     ))
                     .unwrap()),
 

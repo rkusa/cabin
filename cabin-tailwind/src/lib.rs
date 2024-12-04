@@ -6,7 +6,7 @@ use std::fmt;
 use std::hash::Hasher;
 
 pub use cabin::html::elements::common::Class;
-pub use cabin_macros::{tw, tw0, tw2, tw3};
+pub use cabin_macros::{tw, tw0, tw2, tw3, STYLES};
 pub use utilities as css;
 
 pub mod prelude {
@@ -341,24 +341,4 @@ impl Utility for StaticClass {
     fn override_class_name(&self) -> Option<&str> {
         Some("group")
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn cabin_stylesheets() -> impl cabin::View {
-    use std::sync::LazyLock;
-
-    use cabin::html;
-    use cabin::html::Common;
-    use html::elements::link::Link;
-
-    html::link()
-        .id("cabin-styles")
-        .rel(html::elements::link::Rel::StyleSheet)
-        .href({
-            static PATH: LazyLock<&'static str> = LazyLock::new(|| {
-                let hash = cabin::content_hash(registry::StyleRegistry::style_sheet().as_bytes());
-                Box::leak(format!("/styles.css?{hash}").into_boxed_str())
-            });
-            *PATH
-        })
 }

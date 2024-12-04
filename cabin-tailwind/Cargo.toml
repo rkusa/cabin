@@ -13,6 +13,7 @@ preflight = []
 forms = []
 
 [dependencies]
+bytes = "1.2"
 linkme = "0.3"
 once_cell = "1.15"
 cabin = { version = "0.2", path = "../", default-features = false }

@@ -1,10 +1,12 @@
 use std::net::SocketAddr;
+use std::sync::LazyLock;
 
 use cabin::cabin_scripts;
 use cabin::prelude::*;
 use cabin::scope::event;
-use cabin_tailwind::cabin_stylesheets;
 use cabin_tailwind::prelude::*;
+use cabin_tailwind::registry::StyleRegistry;
+use cabin_tailwind::registry::StyleSheet;
 use http::Request;
 use tokio::net::TcpListener;
 
@@ -33,11 +35,15 @@ fn document(content: impl View) -> impl View {
     (
         h::doctype(),
         h::html((
-            h::head((cabin_stylesheets(), cabin_scripts())),
+            h::head((STYLE_SHEET.link(), cabin_scripts())),
             h::body(content),
         )),
     )
 }
+
+cabin_tailwind::STYLES!();
+static STYLE_SHEET: LazyLock<StyleSheet> =
+    LazyLock::new(|| StyleRegistry::default().with(&STYLES).build());
 
 #[tokio::main]
 async fn main() {
@@ -56,7 +62,7 @@ async fn main() {
             axum::routing::get(|| cabin::get_page(app))
                 .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
-        .layer(cabin_service::framework());
+        .layer(cabin_service::framework_with_stylesheet(&STYLE_SHEET));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");

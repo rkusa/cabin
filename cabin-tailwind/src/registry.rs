@@ -4,38 +4,24 @@ use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
+use bytes::Bytes;
+use cabin::View;
 use twox_hash::XxHash32;
 
 use super::Utility;
 
-#[cfg(not(target_arch = "wasm32"))]
-#[linkme::distributed_slice]
-pub static STYLES: [fn(&mut StyleRegistry)] = [..];
-
-#[cfg(not(target_arch = "wasm32"))]
-static STYLE_SHEET: once_cell::race::OnceBox<String> = once_cell::race::OnceBox::new();
-
 type Order = (usize, usize, u32);
 
-#[derive(Default)]
 pub struct StyleRegistry {
     classes: HashMap<String, Order>,
 }
 
 impl StyleRegistry {
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn style_sheet() -> &'static str {
-        STYLE_SHEET.get_or_init(|| {
-            let mut registry = Self {
-                classes: HashMap::with_capacity(256),
-            };
-
-            for f in STYLES {
-                (f)(&mut registry);
-            }
-
-            Box::new(registry.build())
-        })
+    pub fn with(mut self, styles: &[fn(&mut StyleRegistry)]) -> Self {
+        for f in styles {
+            (f)(&mut self);
+        }
+        self
     }
 
     pub fn add(&mut self, major_order: usize, styles: &[&dyn Utility]) -> String {
@@ -151,7 +137,8 @@ impl StyleRegistry {
         all_names
     }
 
-    pub fn build(self) -> String {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn build(self) -> StyleSheet {
         let mut style_sheet = self.classes.into_iter().collect::<Vec<_>>();
         style_sheet.sort_by_key(|(_, (o1, o2, h))| (*o1, *o2, *h));
 
@@ -164,11 +151,42 @@ impl StyleRegistry {
             include_str!("./forms/forms-v0.5.3.css"),
         ];
 
-        other
+        let css: String = other
             .into_iter()
             .map(Cow::Borrowed)
             .chain(style_sheet.into_iter().map(|(s, _)| Cow::Owned(s)))
-            .collect()
+            .collect();
+        let hash = cabin::content_hash(css.as_bytes());
+        StyleSheet {
+            content: Bytes::from(css),
+            path: format!("/styles.css?{hash}"),
+        }
+    }
+}
+
+impl Default for StyleRegistry {
+    fn default() -> Self {
+        Self {
+            classes: HashMap::with_capacity(256),
+        }
+    }
+}
+
+pub struct StyleSheet {
+    pub content: Bytes,
+    pub path: String,
+}
+
+impl StyleSheet {
+    pub fn link(&'static self) -> impl View {
+        use cabin::html;
+        use cabin::html::Common;
+        use html::elements::link::Link;
+
+        html::link()
+            .id("cabin-styles")
+            .rel(html::elements::link::Rel::StyleSheet)
+            .href(&self.path)
     }
 }
 
@@ -200,7 +218,7 @@ fn test_deduplication() {
     let a = r.add(0, &[&BLOCK, &p(4)]);
     let b = r.add(0, &[&p(4), &BLOCK]);
     assert_eq!(a, b);
-    insta::assert_snapshot!(r.build());
+    insta::assert_snapshot!(std::str::from_utf8(&r.build().content).unwrap());
 }
 
 #[test]
@@ -223,5 +241,5 @@ fn test_order() {
             &BLOCK.sm(),
         ],
     );
-    insta::assert_snapshot!(r.build());
+    insta::assert_snapshot!(std::str::from_utf8(&r.build().content).unwrap());
 }

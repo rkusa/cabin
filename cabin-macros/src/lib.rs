@@ -1,6 +1,7 @@
 mod boundary_attribute;
 mod derive_attribute;
 mod derive_event;
+mod styles_macro;
 mod tw_macro;
 
 use proc_macro::TokenStream;
@@ -83,4 +84,13 @@ pub fn tw2(item: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn tw3(item: TokenStream) -> TokenStream {
     tw_macro::tw_macro(item, 2)
+}
+
+#[proc_macro]
+#[allow(non_snake_case)]
+pub fn STYLES(item: TokenStream) -> TokenStream {
+    if !item.is_empty() {
+        panic!("no arguments expected");
+    }
+    styles_macro::styles_macro()
 }
