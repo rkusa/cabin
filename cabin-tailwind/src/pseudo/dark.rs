@@ -39,6 +39,7 @@ impl<S: Utility> Utility for Dark<S> {
     }
 
     fn order(&self) -> usize {
-        self.style.order()
+        // Move to the end of the stylesheet to take precedence (but above print)
+        self.style.order().max(4999)
     }
 }
