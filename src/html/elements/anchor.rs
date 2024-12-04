@@ -153,7 +153,8 @@ pub enum Rel {
     /// Gives the permalink for the nearest ancestor section.
     Bookmark,
 
-    /// Indicates that the referenced document is not part of the same site as the current document.
+    /// Indicates that the referenced document is not part of the same site as the current
+    /// document.
     External,
 
     /// Link to context-sensitive help.

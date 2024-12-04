@@ -97,9 +97,9 @@ pub enum Preload {
     /// resource, or that the server wants to minimize unnecessary traffic.
     None,
 
-    /// Hints to the user agent that the author does not expect the user to need the media resource,
-    /// but that fetching the resource metadata (dimensions, track list, duration, etc.), and maybe
-    /// even the first few frames, is reasonable.
+    /// Hints to the user agent that the author does not expect the user to need the media
+    /// resource, but that fetching the resource metadata (dimensions, track list, duration,
+    /// etc.), and maybe even the first few frames, is reasonable.
     Metadata,
 
     /// Hints to the user agent that the user agent can put the user's needs first without risk to

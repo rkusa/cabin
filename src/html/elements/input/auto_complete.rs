@@ -574,8 +574,8 @@ impl<Step> AutoCompleteBuilder<Step> {
         }
     }
 
-    /// Family name given on the payment instrument (in some Western cultures, also known as the last
-    /// name or surname).
+    /// Family name given on the payment instrument (in some Western cultures, also known as the
+    /// last name or surname).
     pub fn cc_family_name(self) -> AutoComplete {
         AutoComplete {
             a: self.a,

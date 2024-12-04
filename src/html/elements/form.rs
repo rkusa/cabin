@@ -238,7 +238,8 @@ pub struct RelList(pub SpaceSeparated<Rel>);
 /// Relationship between the document and the linked resource.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Rel {
-    /// Indicates that the referenced document is not part of the same site as the current document.
+    /// Indicates that the referenced document is not part of the same site as the current
+    /// document.
     External,
 
     /// Link to context-sensitive help.

@@ -1,4 +1,5 @@
-//! Rounds the corners of an element's bottom right outer border edge (`border-bottom-right-radius`).
+//! Rounds the corners of an element's bottom right outer border edge
+//! (`border-bottom-right-radius`).
 //!
 //! <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius>
 

@@ -88,8 +88,8 @@ pub enum Scope {
     Col,
 
     /// The header cell applies to all the remaining cells in the row group. A [th] element's
-    /// [Th::scope] attribute must not be in the row group state if the element is not anchored in a
-    /// row group.
+    /// [Th::scope] attribute must not be in the row group state if the element is not anchored in
+    /// a row group.
     RowGroup,
 
     /// The header cell applies to all the remaining cells in the column group. A [th] element's

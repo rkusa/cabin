@@ -124,12 +124,12 @@ pub struct IsMap(pub bool);
 /// Decoding hint to use when processing this image for presentation.
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub enum Decoding {
-    /// Indicates a preference to decode this image synchronously for atomic presentation with other
-    /// content.
+    /// Indicates a preference to decode this image synchronously for atomic presentation with
+    /// other content.
     Sync,
 
-    /// Indicates a preference to decode this image asynchronously to avoid delaying presentation of
-    /// other content.
+    /// Indicates a preference to decode this image asynchronously to avoid delaying presentation
+    /// of other content.
     Async,
 
     /// Indicates no preference in decoding mode.

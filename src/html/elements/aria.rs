@@ -552,16 +552,17 @@ pub enum Role {
     /// within the dialog. See related [Role::Alert] and [Role::Dialog].
     AlertDialog,
 
-    /// A structure containing one or more focusable elements requiring user input, such as keyboard
-    /// or gesture events, that do not follow a standard interaction pattern supported by a [Role::Widget]
-    /// role.
+    /// A structure containing one or more focusable elements requiring user input, such as
+    /// keyboard or gesture events, that do not follow a standard interaction pattern supported
+    /// by a [Role::Widget] role.
     Application,
 
     /// A section of a page that consists of a composition that forms an independent part of a
     /// document, page, or site.
     Article,
 
-    /// A section containing [Role::AssociationListItemKey] and [Role::AssociationListItemValue] elements.
+    /// A section containing [Role::AssociationListItemKey] and [Role::AssociationListItemValue]
+    /// elements.
     AssociationList,
 
     /// A single key item in an association list.
@@ -576,11 +577,12 @@ pub enum Role {
     /// A section of content that is quoted from another source.
     Blockquote,
 
-    /// An input that allows for user-triggered actions when clicked or pressed. See related [Role::Link].
+    /// An input that allows for user-triggered actions when clicked or pressed. See related
+    /// [Role::Link].
     Button,
 
-    /// Visible content that names, or describes a [Role::Group], [Role::Figure], [Role::Table], [Role::Grid], [Role::RadioGroup],
-    /// or [Role::TreeGrid].
+    /// Visible content that names, or describes a [Role::Group], [Role::Figure], [Role::Table],
+    /// [Role::Grid], [Role::RadioGroup], or [Role::TreeGrid].
     Caption,
 
     /// A cell in a tabular container. See related [Role::GridCell].
@@ -595,8 +597,8 @@ pub enum Role {
     /// A cell containing header information for a column.
     ColumnHeader,
 
-    /// An input that controls another element, such as a [Role::Listbox] or [Role::Grid], that can dynamically
-    /// pop up to help the user set the value of the [Role::Input].
+    /// An input that controls another element, such as a [Role::Listbox] or [Role::Grid], that can
+    /// dynamically pop up to help the user set the value of the [Role::Input].
     Combobox,
 
     /// A form of [Role::Widget] that performs an action but does not receive input data.
@@ -605,9 +607,10 @@ pub enum Role {
     /// A comment contains content expressing reaction to other content.
     Comment,
 
-    /// A [Role::Landmark] that is designed to be complementary to the main content that it is a sibling
-    /// to, or a direct descendant of. The contents of a complementary landmark would be expected to
-    /// remain meaningful if it were to be separated from the main content it is relevant to.
+    /// A [Role::Landmark] that is designed to be complementary to the main content that it is a
+    /// sibling to, or a direct descendant of. The contents of a complementary landmark would
+    /// be expected to remain meaningful if it were to be separated from the main content it is
+    /// relevant to.
     Complementary,
 
     /// A [Role::Widget] that can contain navigable descendants or owned children.
@@ -619,9 +622,9 @@ pub enum Role {
     /// A definition of a term or concept. See related [Role::Term].
     Definition,
 
-    /// A deletion represents content that is marked as removed, content that is being suggested for
-    /// removal, or content that is no longer relevant in the context of its accompanying content.
-    /// See related [Role::Insertion].
+    /// A deletion represents content that is marked as removed, content that is being suggested
+    /// for removal, or content that is no longer relevant in the context of its accompanying
+    /// content. See related [Role::Insertion].
     Deletion,
 
     /// A dialog is a descendant window of the primary window of a web application. For HTML pages,
@@ -635,12 +638,13 @@ pub enum Role {
     /// One or more emphasized characters. See related [Role::Strong].
     Emphasis,
 
-    /// A scrollable [Role::List] of [Role::Article]s where scrolling might cause [Role::Article]s to be added to or
-    /// removed from either end of the list.
+    /// A scrollable [Role::List] of [Role::Article]s where scrolling might cause [Role::Article]s
+    /// to be added to or removed from either end of the list.
     Feed,
 
-    /// A perceivable [Role::Section] of content that typically contains a graphical document, images,
-    /// media player, code snippets, or example text. The parts of a figure MAY be user-navigable.
+    /// A perceivable [Role::Section] of content that typically contains a graphical document,
+    /// images, media player, code snippets, or example text. The parts of a figure MAY be
+    /// user-navigable.
     Figure,
 
     /// A [Role::Landmark] region that contains a collection of items and objects that, as a whole,
@@ -650,9 +654,9 @@ pub enum Role {
     /// A nameless container element that has no semantic meaning on its own.
     Generic,
 
-    /// A composite [Role::Widget] containing a collection of one or more rows with one or more cells where
-    /// some or all cells in the grid are focusable by using methods of two-dimensional navigation,
-    /// such as directional arrow keys.
+    /// A composite [Role::Widget] containing a collection of one or more rows with one or more
+    /// cells where some or all cells in the grid are focusable by using methods of
+    /// two-dimensional navigation, such as directional arrow keys.
     Grid,
 
     /// A [Role::Cell] in a [Role::Grid] or [Role::TreeGrid].
@@ -674,14 +678,15 @@ pub enum Role {
     /// A generic type of [Role::Widget] that allows user input.
     Input,
 
-    /// An insertion contains content that is marked as added or content that is being suggested for
-    /// addition. See related [Role::Deletion].
+    /// An insertion contains content that is marked as added or content that is being suggested
+    /// for addition. See related [Role::Deletion].
     Insertion,
 
-    /// A perceivable [Role::Section] containing content that is relevant to a specific, author-specified
-    /// purpose and sufficiently important that users will likely want to be able to navigate to the
-    /// section easily and to have it listed in a summary of the page. Such a page summary could be
-    /// generated dynamically by a user agent or assistive technology.
+    /// A perceivable [Role::Section] containing content that is relevant to a specific,
+    /// author-specified purpose and sufficiently important that users will likely want to be
+    /// able to navigate to the section easily and to have it listed in a summary of the page.
+    /// Such a page summary could be generated dynamically by a user agent or assistive
+    /// technology.
     Landmark,
 
     /// An interactive reference to an internal or external resource that, when activated, causes
@@ -691,15 +696,15 @@ pub enum Role {
     /// A [Role::Section] containing [Role::ListItem] elements. See related [Role::Listbox].
     List,
 
-    /// A [Role::Widget] that allows the user to select one or more items from a list of choices. See
-    /// related [Role::Combobox] and list.
+    /// A [Role::Widget] that allows the user to select one or more items from a list of choices.
+    /// See related [Role::Combobox] and list.
     Listbox,
 
     /// A single item in a list or directory.
     ListItem,
 
-    /// A type of live region where new information is added in meaningful order and old information
-    /// can disappear. See related [Role::Marquee].
+    /// A type of live region where new information is added in meaningful order and old
+    /// information can disappear. See related [Role::Marquee].
     Log,
 
     /// A [Role::Landmark] containing the main content of a document.
@@ -709,7 +714,8 @@ pub enum Role {
     /// content's relevance in the enclosing context.
     Mark,
 
-    /// A type of live region where non-essential information changes frequently. See related [Role::Log].
+    /// A type of live region where non-essential information changes frequently. See related
+    /// [Role::Log].
     Marquee,
 
     /// Content that represents a mathematical expression.
@@ -718,7 +724,8 @@ pub enum Role {
     /// A type of [Role::Widget] that offers a list of choices to the user.
     Menu,
 
-    /// A presentation of [Role::Menu] that usually remains visible and is usually presented horizontally.
+    /// A presentation of [Role::Menu] that usually remains visible and is usually presented
+    /// horizontally.
     Menubar,
 
     /// An option in a set of choices contained by a [Role::Menu] or [Role::Menubar].
@@ -727,24 +734,24 @@ pub enum Role {
     /// A [Role::MenuItem] with a checkable state whose possible values are true, false, or mixed.
     MenuItemCheckbox,
 
-    /// A checkable [Role::MenuItem] in a set of elements with the same role, only one of which can be
-    /// checked at a time.
+    /// A checkable [Role::MenuItem] in a set of elements with the same role, only one of which can
+    /// be checked at a time.
     MenuItemRadio,
 
-    /// An element that represents a scalar measurement within a known range, or a fractional value.
-    /// See related [Role::Progressbar].
+    /// An element that represents a scalar measurement within a known range, or a fractional
+    /// value. See related [Role::Progressbar].
     Meter,
 
-    /// A [Role::Landmark] containing a collection of navigational elements (usually links) for navigating
-    /// the document or related documents.
+    /// A [Role::Landmark] containing a collection of navigational elements (usually links) for
+    /// navigating the document or related documents.
     Navigation,
 
-    /// An element whose implicit native role semantics will not be mapped to the accessibility API.
-    /// See synonym [Role::Presentation].
+    /// An element whose implicit native role semantics will not be mapped to the accessibility
+    /// API. See synonym [Role::Presentation].
     None,
 
-    /// A [Role::Section] whose content represents additional information or parenthetical context to the
-    /// primary content it supplements.
+    /// A [Role::Section] whose content represents additional information or parenthetical context
+    /// to the primary content it supplements.
     Note,
 
     /// An item in a [Role::Listbox].
@@ -753,8 +760,8 @@ pub enum Role {
     /// A paragraph of content.
     Paragraph,
 
-    /// An element whose implicit native role semantics will not be mapped to the accessibility API.
-    /// See synonym [Role::None].
+    /// An element whose implicit native role semantics will not be mapped to the accessibility
+    /// API. See synonym [Role::None].
     Presentation,
 
     /// An element that displays the progress status for tasks that take a long time.
@@ -770,10 +777,10 @@ pub enum Role {
     /// An element representing a range of values.
     Range,
 
-    /// A [Role::Landmark] containing content that is relevant to a specific, author-specified purpose and
-    /// sufficiently important that users will likely want to be able to navigate to the section
-    /// easily and to have it listed in a summary of the page. Such a page summary could be
-    /// generated dynamically by a user agent or assistive technology.
+    /// A [Role::Landmark] containing content that is relevant to a specific, author-specified
+    /// purpose and sufficiently important that users will likely want to be able to navigate
+    /// to the section easily and to have it listed in a summary of the page. Such a page
+    /// summary could be generated dynamically by a user agent or assistive technology.
     Region,
 
     /// The base role from which all other roles inherit.
@@ -809,7 +816,8 @@ pub enum Role {
     /// A form [Role::Widget] that allows the user to make selections from a set of choices.
     Select,
 
-    /// A divider that separates and distinguishes sections of content or groups of [Role::MenuItem]s.
+    /// A divider that separates and distinguishes sections of content or groups of
+    /// [Role::MenuItem]s.
     Separator,
 
     /// An input where the user selects a value from within a given range.
@@ -819,7 +827,8 @@ pub enum Role {
     SpinButton,
 
     /// A type of live region whose content is advisory information for the user but is not
-    /// important enough to justify an [Role::Alert], often but not necessarily presented as a status bar.
+    /// important enough to justify an [Role::Alert], often but not necessarily presented as a
+    /// status bar.
     Status,
 
     /// Content that is important, serious, or urgent. See related [Role::Emphasis].
@@ -851,8 +860,8 @@ pub enum Role {
     /// A list of [Role::Tab] elements, which are references to [Role::TabPanel] elements.
     TabList,
 
-    /// A container for the resources associated with a [Role::Tab], where each tab is contained in a
-    /// [Role::TabList].
+    /// A container for the resources associated with a [Role::Tab], where each tab is contained in
+    /// a [Role::TabList].
     TabPanel,
 
     /// A word or phrase with an optional corresponding definition. See related [Role::Definition].
@@ -875,8 +884,8 @@ pub enum Role {
     /// A contextual popup that displays a description for an element.
     Tooltip,
 
-    /// A [Role::Widget] that allows the user to select one or more items from a hierarchically organized
-    /// collection.
+    /// A [Role::Widget] that allows the user to select one or more items from a hierarchically
+    /// organized collection.
     Tree,
 
     /// A grid whose rows can be expanded and collapsed in the same manner as for a [Role::Tree].

@@ -169,20 +169,20 @@ vanilla_element!(
     bdi,
     Bdi,
     "The `bdi` element represents a span of text that is to be isolated from its surroundings for \
-     the purposes of bidirectional text formatting.\n
-     The [Global::dir] attribute defaults to [cabin::html::elements::global::Dir::Auto] on this \
-     element (it never inherits from the parent element like with other elements)."
+     the purposes of bidirectional text formatting.\nThe [Global::dir] attribute defaults to \
+     [cabin::html::elements::global::Dir::Auto] on this element (it never inherits from the \
+     parent element like with other elements)."
 );
 vanilla_element!(
     bdo,
     Bdo,
     "The `bdo` element represents explicit text directionality formatting control for its \
      children. It allows authors to override the Unicode bidirectional algorithm by explicitly \
-     specifying a direction override.\n
-     Authors must specify the [Global::dir] attribute on this element, with the value \
-     [cabin::html::elements::global::Dir::Ltr] to specify a left-to-right override and with the \
-     value [cabin::html::elements::global::Dir::Rtl] to specify a right-to-left override. The \
-     [cabin::html::elements::global::Dir::Auto] value must not be specified."
+     specifying a direction override.\nAuthors must specify the [Global::dir] attribute on this \
+     element, with the value [cabin::html::elements::global::Dir::Ltr] to specify a left-to-right \
+     override and with the value [cabin::html::elements::global::Dir::Rtl] to specify a \
+     right-to-left override. The [cabin::html::elements::global::Dir::Auto] value must not be \
+     specified."
 );
 // Potential events to implement: onafterprint, onbeforeprint, onbeforeunload, onhashchange,
 // onlanguagechange, onmessage, onmessageerror, onoffline, ononline, onpagehide, onpageshow,
