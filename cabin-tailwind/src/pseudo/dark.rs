@@ -23,12 +23,17 @@ impl<S: Utility> Utility for Dark<S> {
         Ok(())
     }
 
+    fn selector_suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        f.write_str(":not(.force-light *)")?;
+        Ok(())
+    }
+
     fn selector_declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.style.selector_declarations(f)
     }
 
     fn suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        f.write_str("}")?;
+        f.write_str("} ")?;
         self.style.suffix(f)?;
         Ok(())
     }
