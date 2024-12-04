@@ -20,6 +20,11 @@ const BORDER_INLINE_END_COLOR: &str = "border-inline-end-color";
 
 include!(concat!(env!("OUT_DIR"), "/border-color.rs"));
 
+/// Set a custom border color.
+pub fn color(color: &'static str) -> Property {
+    Property(BORDER_COLOR, color)
+}
+
 /// Remove an existing border style.
 /// ```css
 /// border-style: none;
