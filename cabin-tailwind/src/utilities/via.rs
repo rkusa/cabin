@@ -36,7 +36,8 @@ impl Utility for ViaColor {
         )?;
         writeln!(
             f,
-            "--tw-gradient-stops: var(--tw-gradient-from), inherit var(--tw-gradient-via-position), var(--tw-gradient-to);"
+            "--tw-gradient-stops: var(--tw-gradient-from), inherit \
+             var(--tw-gradient-via-position), var(--tw-gradient-to);"
         )?;
         Ok(())
     }

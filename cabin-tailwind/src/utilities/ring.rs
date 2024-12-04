@@ -44,8 +44,8 @@ pub mod offset {
             write!(f, "--tw-ring-offset-width: {};", self.0)?;
             write!(
                 f,
-                "box-shadow: 0 0 0 var(--tw-ring-offset-width) \
-                var(--tw-ring-offset-color), var(--tw-ring-shadow);",
+                "box-shadow: 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color), \
+                 var(--tw-ring-shadow);",
             )?;
             Ok(())
         }
@@ -56,8 +56,8 @@ pub mod offset {
             writeln!(f, "--tw-ring-offset-color: {};", self.0)?;
             writeln!(
                 f,
-                "box-shadow: 0 0 0 var(--tw-ring-offset-width) \
-                 var(--tw-ring-offset-color), var(--tw-ring-shadow);"
+                "box-shadow: 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color), \
+                 var(--tw-ring-shadow);"
             )?;
             Ok(())
         }
@@ -90,9 +90,22 @@ pub struct RingWidth(pub Length);
 
 impl Utility for RingWidth {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
-        write!(f, "--tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);")?;
-        write!(f, "--tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc({} + var(--tw-ring-offset-width)) var(--tw-ring-color);", self.0)?;
-        write!(f, "box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);")?;
+        write!(
+            f,
+            "--tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) \
+             var(--tw-ring-offset-color);"
+        )?;
+        write!(
+            f,
+            "--tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc({} + var(--tw-ring-offset-width)) \
+             var(--tw-ring-color);",
+            self.0
+        )?;
+        write!(
+            f,
+            "box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 \
+             0 #0000);"
+        )?;
         Ok(())
     }
 }

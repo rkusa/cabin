@@ -154,8 +154,8 @@ fn main() {
                         writeln!(out, r#"/// `{css_name}: {color};`"#).unwrap();
                         writeln!(
                             out,
-                            "pub const {ident}: Property<&'static str, 1> = \
-                            Property({rust_name}, {color:?});"
+                            "pub const {ident}: Property<&'static str, 1> = Property({rust_name}, \
+                             {color:?});"
                         )
                         .unwrap();
                     }
@@ -168,7 +168,7 @@ fn main() {
                         writeln!(
                             out,
                             "pub const {ident}: PropertyTwice<&'static str, 2> = \
-                                PropertyTwice({rust_name1}, {rust_name2}, {color:?});"
+                             PropertyTwice({rust_name1}, {rust_name2}, {color:?});"
                         )
                         .unwrap();
                     }
@@ -353,8 +353,8 @@ fn main() {
                         writeln!(out, r#"/// `{css_name}: {size};`"#).unwrap();
                         writeln!(
                             out,
-                            "pub const {ident}: Property<Length> = \
-                            Property({rust_name}, {size:?});"
+                            "pub const {ident}: Property<Length> = Property({rust_name}, \
+                             {size:?});"
                         )
                         .unwrap();
                     }
@@ -364,7 +364,7 @@ fn main() {
                         writeln!(
                             out,
                             "pub const {ident}: PropertyTwice<Length> = \
-                                PropertyTwice({rust_name1}, {rust_name2}, {size:?});"
+                             PropertyTwice({rust_name1}, {rust_name2}, {size:?});"
                         )
                         .unwrap();
                     }

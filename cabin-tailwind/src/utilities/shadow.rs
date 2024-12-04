@@ -49,7 +49,11 @@ impl Utility for BoxShadow {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         write!(f, "--tw-shadow: {};", self.0)?;
         write!(f, "--tw-ring-shadow: {};", self.1)?;
-        write!(f, "box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);")?;
+        write!(
+            f,
+            "box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 \
+             #0000), var(--tw-shadow);"
+        )?;
         Ok(())
     }
 }

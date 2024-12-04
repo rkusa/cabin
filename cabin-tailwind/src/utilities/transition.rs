@@ -35,7 +35,10 @@ pub const ALL: Transition = Transition("all");
 /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 /// transition-duration: 150ms;
 /// ```
-pub const DEFAULT: Transition = Transition("color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter");
+pub const DEFAULT: Transition = Transition(
+    "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, \
+     box-shadow, transform, filter, backdrop-filter",
+);
 
 /// ```css
 /// transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
