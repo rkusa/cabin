@@ -21,6 +21,7 @@ pub mod html;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod local_pool;
 pub mod multipart;
+pub mod pack;
 pub mod prelude;
 pub mod private;
 mod redirect;

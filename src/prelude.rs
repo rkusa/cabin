@@ -38,4 +38,5 @@ pub use crate::html::elements::select::Select as _;
 pub use crate::html::elements::textarea::Textarea as _;
 pub use crate::html::elements::time::Time as _;
 pub use crate::html::h;
+pub use crate::pack::Pack as _;
 pub use crate::View;
