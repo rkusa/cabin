@@ -65,9 +65,7 @@ pub fn basic_document(content: impl View) -> impl View {
     )
 }
 
-pub async fn get_page<F, V>(
-    render_fn: impl FnOnce() -> F + Send + Sync + 'static,
-) -> Response<Full<Bytes>>
+pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<Full<Bytes>>
 where
     F: Future<Output = V>,
     V: View + 'static,
