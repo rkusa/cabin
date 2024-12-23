@@ -4,7 +4,6 @@ use std::sync::Arc;
 use bytes::Bytes;
 use http::{HeaderValue, Request, Response, StatusCode};
 use http_body::Body;
-use http_body_util::Full;
 use once_cell::race::OnceBox;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -62,7 +61,7 @@ impl BoundaryRegistry {
         );
     }
 
-    pub async fn handle<B>(&self, id: &str, req: Request<B>) -> Response<Full<Bytes>>
+    pub async fn handle<B>(&self, id: &str, req: Request<B>) -> Response<String>
     where
         B: Body<Data = Bytes> + Send + 'static,
         B::Error: std::error::Error + Send + 'static,
@@ -70,7 +69,7 @@ impl BoundaryRegistry {
         let Some(handler) = self.handler.get(id) else {
             return Response::builder()
                 .status(StatusCode::NOT_FOUND)
-                .body(Full::new(Bytes::new()))
+                .body(String::new())
                 .unwrap();
         };
         let handler = Arc::clone(handler);
@@ -118,6 +117,6 @@ impl BoundaryRegistry {
                 res = res.header(key, value);
             }
         }
-        res.body(Full::new(Bytes::from(html))).unwrap()
+        res.body(html).unwrap()
     }
 }

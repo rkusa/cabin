@@ -61,7 +61,9 @@ async fn main() {
             axum::routing::get(|| cabin::get_page(app))
                 .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
-        .layer(cabin_service::framework_with_stylesheet(&STYLE_SHEET));
+        .layer(cabin_service::boundaries::layer())
+        .layer(cabin_service::livereload::layer())
+        .layer(cabin_service::assets::layer_with_stylesheet(&STYLE_SHEET));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");

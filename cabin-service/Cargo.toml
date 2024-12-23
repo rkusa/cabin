@@ -11,6 +11,7 @@ repository = "https://github.com/rkusa/cabin"
 bytes = "1.2"
 cabin = { version = "0.2", path = "../", default-features = false }
 cabin-tailwind = { version = "0.2", path = "../cabin-tailwind", default-features = false }
+futures-util = "0.3"
 http = "1.0"
 http-body = "1.0"
 http-body-util = "0.1"
@@ -19,8 +20,9 @@ thiserror = "1.0"
 tokio = { version = "1.28", optional = true, default-features = false, features = [
     "time",
 ] }
-tower-service = "0.3"
+tokio-util = "0.7"
 tower-layer = "0.3"
+tower-service = "0.3"
 tracing = "0.1"
 
 [features]

@@ -1,7 +1,6 @@
 use std::convert::Infallible;
 use std::{error, fmt};
 
-use bytes::Bytes;
 use http::{Response, StatusCode};
 use http_error::HttpError;
 
@@ -274,11 +273,11 @@ impl HttpError for Error {
     }
 }
 
-impl From<Error> for Response<Bytes> {
+impl From<Error> for Response<String> {
     fn from(err: Error) -> Self {
         match err.inner {
             Inner::Http { status, source } => {
-                let mut res = Response::new(Bytes::default());
+                let mut res = Response::new(String::new());
                 *res.status_mut() = status.unwrap_or_else(|| source.status_code());
                 if let Some(headers) = source.headers() {
                     let h = res.headers_mut();
@@ -290,7 +289,7 @@ impl From<Error> for Response<Bytes> {
             }
             Inner::Other { status, .. } => Response::builder()
                 .status(status)
-                .body(Bytes::default())
+                .body(String::new())
                 .unwrap(),
         }
     }

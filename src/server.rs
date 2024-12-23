@@ -6,7 +6,7 @@ use futures_util::stream::TryStreamExt;
 pub use http::StatusCode;
 use http::{HeaderValue, Request, Response};
 use http_body::Body;
-use http_body_util::{BodyExt, Full};
+use http_body_util::BodyExt;
 use http_error::HttpError;
 use mime::Mime;
 use multer::Multipart;
@@ -65,7 +65,7 @@ pub fn basic_document(content: impl View) -> impl View {
     )
 }
 
-pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<Full<Bytes>>
+pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<String>
 where
     F: Future<Output = V>,
     V: View + 'static,
@@ -94,13 +94,13 @@ where
             res = res.header(key, value);
         }
     }
-    res.body(Full::new(Bytes::from(html))).unwrap()
+    res.body(html).unwrap()
 }
 
 pub async fn put_page<F: Future<Output = V>, V: View, B>(
     req: Request<B>,
     render_fn: impl FnOnce() -> F + Send + 'static,
-) -> Response<Full<Bytes>>
+) -> Response<String>
 where
     B: Body<Data = Bytes> + Send + 'static,
     B::Error: std::error::Error + Send + 'static,
@@ -135,10 +135,10 @@ where
             res = res.header(key, value);
         }
     }
-    res.body(Full::new(Bytes::from(html))).unwrap()
+    res.body(html).unwrap()
 }
 
-pub fn err_to_response(err: Error) -> Response<Full<Bytes>> {
+pub fn err_to_response(err: Error) -> Response<String> {
     if err.status_code().is_server_error() {
         if let Some(parent) = err.span() {
             tracing::error!(
@@ -170,8 +170,7 @@ pub fn err_to_response(err: Error) -> Response<Full<Bytes>> {
             );
         }
     }
-    let (parts, body) = Response::from(err).into_parts();
-    Response::from_parts(parts, Full::new(body))
+    Response::from(err)
 }
 
 pub async fn parse_body<B>(req: Request<B>) -> Result<Event, Error>
