@@ -87,8 +87,8 @@ where
 
 impl<Iter, FV, V> View for Map<Iter, FV>
 where
-    Iter: Iterator + 'static,
-    FV: FnMut(Iter::Item) -> V + 'static,
+    Iter: Iterator + Send + 'static,
+    FV: FnMut(Iter::Item) -> V + Send + 'static,
     V: View,
 {
     fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
@@ -106,8 +106,8 @@ where
 
 impl<Iter, FV, V> View for FilterMap<Iter, FV>
 where
-    Iter: Iterator + 'static,
-    FV: FnMut(Iter::Item) -> Option<V> + 'static,
+    Iter: Iterator + Send + 'static,
+    FV: FnMut(Iter::Item) -> Option<V> + Send + 'static,
     V: View,
 {
     fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
@@ -136,7 +136,7 @@ pub struct KeyedView<V> {
 
 impl<V> View for KeyedView<V>
 where
-    V: View + 'static,
+    V: View,
 {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
         RenderFuture::Future(Box::pin(async move {

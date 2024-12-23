@@ -147,7 +147,7 @@ pub trait Form: WithAttribute {
     /// [crate::scope::take_event] or [crate::scope::event].
     fn on_submit_with<E>(self, event: E) -> Self::Output<OnSubmitWith>
     where
-        E: serde::Serialize + Event + 'static,
+        E: serde::Serialize + Event + Send + 'static,
     {
         self.with_attribute(OnSubmitWith(Box::new(move || {
             serde_json::to_string(&event)

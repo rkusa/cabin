@@ -67,18 +67,18 @@ pub fn basic_document(content: impl View) -> impl View {
 
 pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<String>
 where
-    F: Future<Output = V>,
-    V: View + 'static,
+    F: Future<Output = V> + Send,
+    V: View,
 {
-    let result = crate::local_pool::spawn(move || {
-        let scope = Scope::new();
-        scope.run(async move {
+    let scope = Scope::new();
+    let result = scope
+        // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
+        .run(Box::pin(async move {
             let r = Renderer::new();
             let doc = render_fn().await;
             doc.render(r, false).await
-        })
-    })
-    .await;
+        }))
+        .await;
     let result = match result {
         Ok(result) => result,
         Err(err) => return err_to_response(err),
@@ -97,11 +97,13 @@ where
     res.body(html).unwrap()
 }
 
-pub async fn put_page<F: Future<Output = V>, V: View, B>(
+pub async fn put_page<F, V, B>(
     req: Request<B>,
     render_fn: impl FnOnce() -> F + Send + 'static,
 ) -> Response<String>
 where
+    F: Future<Output = V> + Send,
+    V: View,
     B: Body<Data = Bytes> + Send + 'static,
     B::Error: std::error::Error + Send + 'static,
 {
@@ -109,17 +111,17 @@ where
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
-    let result = crate::local_pool::spawn(move || {
-        let mut scope = Scope::new().with_event(event.event_id, event.payload);
-        if let Some(multipart) = event.multipart {
-            scope = scope.with_multipart(multipart);
-        }
-        scope.run(async move {
+    let mut scope = Scope::new().with_event(event.event_id, event.payload);
+    if let Some(multipart) = event.multipart {
+        scope = scope.with_multipart(multipart);
+    }
+    let result = scope
+        // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
+        .run(Box::pin(async move {
             let r = Renderer::new_update();
             render_fn().await.render(r, true).await
-        })
-    })
-    .await;
+        }))
+        .await;
     let result = match result {
         Ok(result) => result,
         Err(err) => return err_to_response(err),

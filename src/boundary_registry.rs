@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 
 use bytes::Bytes;
@@ -14,7 +15,7 @@ use crate::scope::Scope;
 use crate::server::{err_to_response, parse_body};
 use crate::view::boundary::BoundaryRef;
 use crate::view::RenderFuture;
-use crate::{local_pool, View};
+use crate::View;
 
 #[linkme::distributed_slice]
 pub static BOUNDARIES: [fn(&mut BoundaryRegistry)] = [..];
@@ -42,7 +43,7 @@ impl BoundaryRegistry {
 
     pub fn register<Args>(&mut self, boundary: &'static BoundaryRef<Args>)
     where
-        Args: 'static + Clone + Serialize + DeserializeOwned + Send + Sync,
+        Args: Clone + Serialize + DeserializeOwned + Send + Sync,
     {
         self.handler.insert(
             boundary.id,
@@ -61,62 +62,64 @@ impl BoundaryRegistry {
         );
     }
 
-    pub async fn handle<B>(&self, id: &str, req: Request<B>) -> Response<String>
+    pub fn handle<B>(&self, id: &str, req: Request<B>) -> impl Future<Output = Response<String>>
     where
         B: Body<Data = Bytes> + Send + 'static,
         B::Error: std::error::Error + Send + 'static,
     {
-        let Some(handler) = self.handler.get(id) else {
-            return Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(String::new())
-                .unwrap();
-        };
-        let handler = Arc::clone(handler);
+        let handler = self.handler.get(id).cloned();
 
-        let mut event = match parse_body(req).await {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
+        async move {
+            let Some(handler) = handler else {
+                return Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body(String::new())
+                    .unwrap();
+            };
 
-        let result = event
-            .state
-            .take()
-            .ok_or_else(|| InternalError::Deserialize {
-                what: "boundary state json",
-                err: Box::from("missing boundary state"),
-            });
-        let state_json = match result {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err.into()),
-        };
+            let mut event = match parse_body(req).await {
+                Ok(result) => result,
+                Err(err) => return err_to_response(err),
+            };
 
-        let result = local_pool::spawn(move || {
+            let result = event
+                .state
+                .take()
+                .ok_or_else(|| InternalError::Deserialize {
+                    what: "boundary state json",
+                    err: Box::from("missing boundary state"),
+                });
+            let state_json = match result {
+                Ok(result) => result,
+                Err(err) => return err_to_response(err.into()),
+            };
+
             let mut scope = Scope::new().with_event(event.event_id, event.payload);
             if let Some(multipart) = event.multipart {
                 scope = scope.with_multipart(multipart);
             }
-            scope.run(async move {
-                let r = Renderer::new_update();
-                handler(state_json.get(), r).await
-            })
-        })
-        .await;
-        let result = match result {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
+            let result = scope
+                .run(async move {
+                    let r = Renderer::new_update();
+                    handler(state_json.get(), r).await
+                })
+                .await;
+            let result = match result {
+                Ok(result) => result,
+                Err(err) => return err_to_response(err),
+            };
 
-        let Out { html, headers } = result.end();
-        let mut res = Response::builder().header(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        for (key, value) in headers {
-            if let Some(key) = key {
-                res = res.header(key, value);
+            let Out { html, headers } = result.end();
+            let mut res = Response::builder().header(
+                http::header::CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+            for (key, value) in headers {
+                if let Some(key) = key {
+                    res = res.header(key, value);
+                }
             }
+            res.body(html).unwrap()
         }
-        res.body(html).unwrap()
     }
 }

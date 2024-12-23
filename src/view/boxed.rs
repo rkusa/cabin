@@ -2,7 +2,7 @@ use super::RenderFuture;
 use crate::render::Renderer;
 use crate::View;
 
-type ViewBoxRenderer = dyn FnOnce(Renderer, bool) -> RenderFuture;
+type ViewBoxRenderer = dyn FnOnce(Renderer, bool) -> RenderFuture + Send;
 
 pub struct BoxedView {
     view: Box<ViewBoxRenderer>,
@@ -11,7 +11,7 @@ pub struct BoxedView {
 impl BoxedView {
     pub fn new<V>(view: V) -> Self
     where
-        V: View + 'static,
+        V: View,
     {
         BoxedView {
             view: Box::new(|r: Renderer, include_hash: bool| view.render(r, include_hash)),

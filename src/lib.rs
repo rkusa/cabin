@@ -18,8 +18,6 @@ pub mod boundary_registry;
 pub mod error;
 pub mod event;
 pub mod html;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod local_pool;
 pub mod multipart;
 pub mod pack;
 pub mod prelude;

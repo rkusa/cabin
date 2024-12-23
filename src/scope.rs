@@ -1,13 +1,10 @@
 use std::any::Any;
-use std::cell::RefCell;
 use std::future::Future;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use multer::Multipart;
 use serde::de::DeserializeOwned;
 use serde_json::value::RawValue;
-use tokio::task::JoinHandle;
-use tracing::Instrument;
 
 use crate::error::InternalError;
 
@@ -18,7 +15,7 @@ tokio::task_local! {
 
 #[derive(Clone)]
 pub struct Scope {
-    inner: Rc<RefCell<Inner>>,
+    inner: Arc<Mutex<Inner>>,
 }
 
 struct Inner {
@@ -35,16 +32,16 @@ pub(crate) enum Payload {
 
 enum Event {
     Raw { id: String, payload: Payload },
-    Deserialized(Box<dyn Any>),
+    Deserialized(Box<dyn Any + Send>),
 }
 
 pub fn event<E>() -> Option<E>
 where
-    E: DeserializeOwned + Copy + crate::event::Event + 'static,
+    E: DeserializeOwned + Copy + crate::event::Event + Send + 'static,
 {
     SCOPE
         .try_with(|scope| {
-            let mut state = scope.inner.borrow_mut();
+            let mut state = scope.inner.lock().unwrap();
             let event = state.event.as_mut()?;
             match event {
                 Event::Raw { id, payload } => {
@@ -96,7 +93,7 @@ where
 {
     SCOPE
         .try_with(|scope| {
-            let mut state = scope.inner.borrow_mut();
+            let mut state = scope.inner.lock().unwrap();
             let event = state.event.take()?;
             match event {
                 Event::Raw { id, payload } => {
@@ -146,17 +143,18 @@ where
 pub fn take_multipart() -> Option<Multipart<'static>> {
     SCOPE
         .try_with(|scope| {
-            let mut state = scope.inner.borrow_mut();
+            let mut state = scope.inner.lock().unwrap();
             state.multipart.take()
         })
         .ok()
         .flatten()
 }
 
+// FIXME: implement builder to avoid locking over and over again
 impl Scope {
     pub fn new() -> Self {
         Self {
-            inner: Rc::new(RefCell::new(Inner {
+            inner: Arc::new(Mutex::new(Inner {
                 event: None,
                 multipart: None,
                 error: None,
@@ -166,7 +164,7 @@ impl Scope {
 
     pub(crate) fn with_event(self, id: String, payload: Payload) -> Self {
         {
-            let mut state = self.inner.borrow_mut();
+            let mut state = self.inner.lock().unwrap();
             state.event = Some(Event::Raw { id, payload });
         }
         self
@@ -175,7 +173,7 @@ impl Scope {
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn with_multipart(self, multipart: Multipart<'static>) -> Self {
         {
-            let mut state = self.inner.borrow_mut();
+            let mut state = self.inner.lock().unwrap();
             state.multipart = Some(multipart);
         }
         self
@@ -183,10 +181,10 @@ impl Scope {
 
     pub async fn run<T>(
         self,
-        f: impl Future<Output = Result<T, crate::Error>>,
+        f: impl Future<Output = Result<T, crate::Error>> + Send,
     ) -> Result<T, crate::Error> {
         let result = SCOPE.scope(self.clone(), f).await;
-        let mut inner = self.inner.borrow_mut();
+        let mut inner = self.inner.lock().unwrap();
         if let Some(err) = inner.error.take() {
             return Err(err.into());
         }
@@ -211,18 +209,6 @@ impl Scope {
 
     pub fn key() -> Option<u32> {
         KEY.try_with(|key| *key).ok()
-    }
-
-    pub fn spawn_local<F>(future: F) -> JoinHandle<F::Output>
-    where
-        F: Future + 'static,
-        F::Output: 'static,
-    {
-        let scope = SCOPE
-            .try_with(|scope| scope.clone())
-            .expect("not called within scope");
-        let span = tracing::trace_span!("spawn_local_scope");
-        tokio::task::spawn_local(SCOPE.scope(scope, future.instrument(span)))
     }
 }
 

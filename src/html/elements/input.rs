@@ -322,7 +322,7 @@ pub trait Input: WithAttribute {
 
     fn on_input<E>(self, event: E) -> Self::Output<OnInput>
     where
-        E: ::serde::Serialize + Event + 'static,
+        E: ::serde::Serialize + Event + Send + 'static,
     {
         self.with_attribute(OnInput(Box::new(move || {
             serde_json::to_string(&event)
@@ -336,7 +336,7 @@ pub trait Input: WithAttribute {
 
     fn on_change<E>(self, event: E) -> Self::Output<OnChange>
     where
-        E: ::serde::Serialize + Event + 'static,
+        E: ::serde::Serialize + Event + Send + 'static,
     {
         self.with_attribute(OnChange(Box::new(move || {
             serde_json::to_string(&event)

@@ -1,4 +1,5 @@
 use std::convert::Infallible;
+use std::future::{ready, Ready};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Duration;
@@ -6,14 +7,12 @@ use std::time::Duration;
 use bytes::Bytes;
 use futures_util::future::MapOk;
 use futures_util::TryFutureExt;
-use http_body::{Body, Frame};
-use std::future::{ready, Ready};
-use tokio::time::{interval, Interval};
-use tokio_util::either::Either;
-
 use http::{header, Method, Request, Response};
+use http_body::{Body, Frame};
 use http_body_util::combinators::UnsyncBoxBody;
 use http_body_util::Full;
+use tokio::time::{interval, Interval};
+use tokio_util::either::Either;
 use tower_layer::Layer;
 use tower_service::Service;
 

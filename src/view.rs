@@ -14,6 +14,7 @@ use std::task::{Context, Poll};
 pub use boundary::Boundary;
 pub use boxed::BoxedView;
 pub use future::FutureExt;
+use futures_util::future::Either;
 use http_error::{AnyHttpError, HttpError};
 pub use iter::IteratorExt;
 pub use update::UpdateView;
@@ -24,11 +25,13 @@ use crate::render::{Escape, Renderer};
 // (`Box<dyn View>`).
 pub trait View
 where
-    Self: 'static,
+    Self: Send + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture;
 
-    fn prime(&mut self) {}
+    fn prime(&mut self) -> impl Future<Output = ()> + Send {
+        std::future::ready(())
+    }
 
     fn boxed(self) -> BoxedView
     where
@@ -37,7 +40,7 @@ where
         BoxedView::new(self)
     }
 
-    fn boundary<Args>(self, args: Args) -> Boundary<Args>
+    fn boundary<Args: Send>(self, args: Args) -> Boundary<Args>
     where
         Self: Sized,
     {
@@ -54,7 +57,7 @@ pub trait IntoView {
 
 pub enum RenderFuture {
     Ready(Option<Result<Renderer, crate::Error>>),
-    Future(Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>>>>),
+    Future(Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>),
 }
 
 impl RenderFuture {
@@ -105,9 +108,11 @@ where
         }
     }
 
-    fn prime(&mut self) {
+    fn prime(&mut self) -> impl Future<Output = ()> + Send {
         if let Some(inner) = self {
-            inner.prime();
+            Either::Left(inner.prime())
+        } else {
+            Either::Right(std::future::ready(()))
         }
     }
 }
@@ -116,7 +121,7 @@ impl<V, E> View for Result<V, E>
 where
     V: View,
     Box<dyn HttpError + Send + 'static>: From<E>,
-    E: IntoView + 'static,
+    E: IntoView + Send + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
@@ -133,9 +138,9 @@ where
         }
     }
 
-    fn prime(&mut self) {
+    async fn prime(&mut self) {
         if let Ok(inner) = self {
-            inner.prime();
+            inner.prime().await;
         }
     }
 }
@@ -163,12 +168,12 @@ impl Future for RenderFuture {
 
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),*; $( $generic:tt ),* ) => {
-        impl<$( $generic: View + 'static),*> View for ($($generic,)*) {
+        impl<$( $generic: View ),*> View for ($($generic,)*) {
             fn render(mut self, r: Renderer, _include_hash: bool) -> RenderFuture {
                 RenderFuture::Future(Box::pin(async move {
-                    $(
-                        self.$ix.prime();
-                    )*
+                    tokio::join!($(
+                        self.$ix.prime(),
+                    )*);
                     $(
                         let r = self.$ix.render(r, true).await?;
                     )*

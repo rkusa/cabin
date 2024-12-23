@@ -14,7 +14,7 @@ pub trait WithAttribute: Sized {
     fn get_attribute_mut<T: 'static>(&mut self) -> Option<&mut T>;
 }
 
-pub trait Attributes: Sized + 'static {
+pub trait Attributes: Sized + Send + 'static {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error>;
 
     fn get<T: 'static>(&self) -> Option<&T> {

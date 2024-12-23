@@ -49,7 +49,7 @@ where
 
 impl<F> View for Text<F>
 where
-    F: FnOnce(Renderer) -> Result<Renderer, crate::Error> + 'static,
+    F: FnOnce(Renderer) -> Result<Renderer, crate::Error> + Send + 'static,
 {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
         RenderFuture::ready((self.0)(r))

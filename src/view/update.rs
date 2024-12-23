@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use super::RenderFuture;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Html, Raw};
@@ -32,7 +34,7 @@ impl<V> UpdateView<V> {
 
 impl<El, A, V> View for UpdateView<Html<El, A, V>>
 where
-    El: 'static,
+    El: Send + 'static,
     A: Attributes,
     V: View,
 {
@@ -47,7 +49,7 @@ where
         }
     }
 
-    fn prime(&mut self) {
+    fn prime(&mut self) -> impl Future<Output = ()> + Send {
         self.view.prime()
     }
 }
@@ -61,7 +63,7 @@ impl View for UpdateView<Raw> {
         }
     }
 
-    fn prime(&mut self) {
+    fn prime(&mut self) -> impl Future<Output = ()> + Send {
         self.view.prime()
     }
 }

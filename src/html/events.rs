@@ -121,7 +121,7 @@ pub struct CustomEvent<E> {
 impl<E> CustomEvent<E> {
     pub fn new(name: impl Into<Cow<'static, str>>, event: E) -> Self
     where
-        E: serde::Serialize + Event + 'static,
+        E: serde::Serialize + Event + Send + 'static,
     {
         Self {
             name: name.into(),
@@ -138,7 +138,7 @@ impl<E> CustomEvent<E> {
     }
 }
 
-impl<E: 'static> Attributes for CustomEvent<E> {
+impl<E: Send + 'static> Attributes for CustomEvent<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
         // TODO: directly write into el?
         let (id, payload) = &(self.event)()?;

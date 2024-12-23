@@ -31,7 +31,7 @@ pub trait Common: WithAttribute {
 
     fn on_click<E>(self, event: E) -> Self::Output<OnClick>
     where
-        E: serde::Serialize + Event + 'static,
+        E: serde::Serialize + Event + Send + 'static,
     {
         self.with_attribute(OnClick(Box::new(move || {
             serde_json::to_string(&event)
@@ -45,7 +45,7 @@ pub trait Common: WithAttribute {
 
     fn on_transition_end<E>(self, event: E) -> Self::Output<OnTransitionEnd>
     where
-        E: serde::Serialize + Event + 'static,
+        E: serde::Serialize + Event + Send + 'static,
     {
         self.with_attribute(OnTransitionEnd(Box::new(move || {
             serde_json::to_string(&event)
@@ -59,7 +59,7 @@ pub trait Common: WithAttribute {
 
     fn on_animation_end<E>(self, event: E) -> Self::Output<OnAnimationEnd>
     where
-        E: serde::Serialize + Event + 'static,
+        E: serde::Serialize + Event + Send + 'static,
     {
         self.with_attribute(OnAnimationEnd(Box::new(move || {
             serde_json::to_string(&event)

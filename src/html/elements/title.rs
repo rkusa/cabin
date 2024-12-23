@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::future::Future;
 
 use http::{HeaderName, HeaderValue};
 
@@ -45,7 +46,7 @@ impl View for TitleUpdate {
         RenderFuture::Ready(Some(Ok(r)))
     }
 
-    fn prime(&mut self) {
+    fn prime(&mut self) -> impl Future<Output = ()> + Send {
         self.0.prime()
     }
 }

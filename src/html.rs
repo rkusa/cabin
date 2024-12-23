@@ -4,6 +4,7 @@ pub mod events;
 pub mod list;
 mod raw;
 
+use std::future::Future;
 use std::marker::PhantomData;
 
 #[doc(inline)]
@@ -285,7 +286,7 @@ where
 
 impl<El, A, V> View for Html<El, A, V>
 where
-    El: 'static,
+    El: Send + 'static,
     A: Attributes,
     V: View,
 {
@@ -310,8 +311,8 @@ where
         }))
     }
 
-    fn prime(&mut self) {
-        self.content.prime();
+    fn prime(&mut self) -> impl Future<Output = ()> + Send {
+        self.content.prime()
     }
 }
 
