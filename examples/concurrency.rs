@@ -21,10 +21,9 @@ async fn delayed(start: Instant, delay: Duration) -> impl View {
     let started_at = start.elapsed();
     let inner = Instant::now();
     tokio::time::sleep(delay).await;
-    // FIXME: fix task locals
-    // eprintln!("{}", TASK_LOCAL.get());
-    // let task_local = TASK_LOCAL.get();
-    let task_local = "task local DOES NOT work";
+    let task_local = TASK_LOCAL
+        .try_with(|_| "task local works")
+        .unwrap_or("task local DOES NOT work");
     h::li(h::text!(
         "delayed for {:?}, started after {:.2}, took {:.2}, finished after {:.2} -- {task_local}",
         delay,
@@ -52,10 +51,11 @@ async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| cabin::get_page(|| TASK_LOCAL.scope("task local works", app())))
-                .put(|req: Request<axum::body::Body>| {
+            axum::routing::get(|| TASK_LOCAL.scope("task local works", cabin::get_page(app))).put(
+                |req: Request<axum::body::Body>| {
                     cabin::put_page(req, || TASK_LOCAL.scope("task local works", app()))
-                }),
+                },
+            ),
         )
         .layer(cabin_service::boundaries::layer())
         .layer(cabin_service::livereload::layer())
