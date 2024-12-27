@@ -8,7 +8,6 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-// FIXME: restore example
 async fn app() -> impl View {
     basic_document(level(1, 1, true))
 }

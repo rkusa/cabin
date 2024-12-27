@@ -15,10 +15,10 @@ tokio::task_local! {
 
 #[derive(Clone)]
 pub struct Scope {
-    inner: Arc<Mutex<Inner>>,
+    inner: Arc<Mutex<ScopeBuilder>>,
 }
 
-struct Inner {
+pub(crate) struct ScopeBuilder {
     event: Option<Event>,
     multipart: Option<Multipart<'static>>,
     error: Option<InternalError>,
@@ -152,31 +152,12 @@ pub fn take_multipart() -> Option<Multipart<'static>> {
 
 // FIXME: implement builder to avoid locking over and over again
 impl Scope {
-    pub fn new() -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(Inner {
-                event: None,
-                multipart: None,
-                error: None,
-            })),
+    pub(crate) fn builder() -> ScopeBuilder {
+        ScopeBuilder {
+            event: None,
+            multipart: None,
+            error: None,
         }
-    }
-
-    pub(crate) fn with_event(self, id: String, payload: Payload) -> Self {
-        {
-            let mut state = self.inner.lock().unwrap();
-            state.event = Some(Event::Raw { id, payload });
-        }
-        self
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn with_multipart(self, multipart: Multipart<'static>) -> Self {
-        {
-            let mut state = self.inner.lock().unwrap();
-            state.multipart = Some(multipart);
-        }
-        self
     }
 
     pub async fn run<T>(
@@ -212,8 +193,29 @@ impl Scope {
     }
 }
 
+impl ScopeBuilder {
+    pub(crate) fn with_event(mut self, id: String, payload: Payload) -> Self {
+        self.event = Some(Event::Raw { id, payload });
+        self
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn with_multipart(mut self, multipart: Multipart<'static>) -> Self {
+        self.multipart = Some(multipart);
+        self
+    }
+
+    pub fn build(self) -> Scope {
+        Scope {
+            inner: Arc::new(Mutex::new(self)),
+        }
+    }
+}
+
 impl Default for Scope {
     fn default() -> Self {
-        Self::new()
+        Scope {
+            inner: Arc::new(Mutex::new(Self::builder())),
+        }
     }
 }

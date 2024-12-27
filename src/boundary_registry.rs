@@ -94,11 +94,12 @@ impl BoundaryRegistry {
                 Err(err) => return err_to_response(err.into()),
             };
 
-            let mut scope = Scope::new().with_event(event.event_id, event.payload);
+            let mut scope = Scope::builder().with_event(event.event_id, event.payload);
             if let Some(multipart) = event.multipart {
                 scope = scope.with_multipart(multipart);
             }
             let result = scope
+                .build()
                 .run(async move {
                     let r = Renderer::new_update();
                     handler(state_json.get(), r).await

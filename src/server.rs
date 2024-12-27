@@ -70,7 +70,7 @@ where
     F: Future<Output = V> + Send,
     V: View,
 {
-    let scope = Scope::new();
+    let scope = Scope::default();
     let result = scope
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move {
@@ -111,11 +111,12 @@ where
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
-    let mut scope = Scope::new().with_event(event.event_id, event.payload);
+    let mut scope = Scope::builder().with_event(event.event_id, event.payload);
     if let Some(multipart) = event.multipart {
         scope = scope.with_multipart(multipart);
     }
     let result = scope
+        .build()
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move {
             let r = Renderer::new_update();
