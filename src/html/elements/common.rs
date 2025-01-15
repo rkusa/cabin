@@ -36,7 +36,21 @@ pub trait Common: WithAttribute {
         self.with_attribute(OnClick(Box::new(move || {
             serde_json::to_string(&event)
                 .map_err(|err| InternalError::Serialize {
-                    what: "custom event",
+                    what: "click event",
+                    err,
+                })
+                .map(|json| (E::ID, json))
+        })))
+    }
+
+    fn on_mouse_up<E>(self, event: E) -> Self::Output<OnMouseUp>
+    where
+        E: serde::Serialize + Event + Send + 'static,
+    {
+        self.with_attribute(OnMouseUp(Box::new(move || {
+            serde_json::to_string(&event)
+                .map_err(|err| InternalError::Serialize {
+                    what: "mouseup event",
                     err,
                 })
                 .map(|json| (E::ID, json))
@@ -90,6 +104,21 @@ impl Attributes for OnClick {
         r.attribute("cabin-click", id)
             .map_err(crate::error::InternalError::from)?;
         r.attribute("cabin-click-payload", payload)
+            .map_err(crate::error::InternalError::from)?;
+
+        Ok(())
+    }
+}
+
+pub struct OnMouseUp(pub Box<SerializeEventFn>);
+
+impl Attributes for OnMouseUp {
+    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
+        // TODO: directly write into el?
+        let (id, payload) = &(self.0)()?;
+        r.attribute("cabin-mouseup", id)
+            .map_err(crate::error::InternalError::from)?;
+        r.attribute("cabin-mouseup-payload", payload)
             .map_err(crate::error::InternalError::from)?;
 
         Ok(())

@@ -732,6 +732,10 @@ function setupEventListeners(el) {
     preventDefault: true,
     disable: true,
   });
+
+  setUpEventListener(el, "mouseup", {
+    events,
+  });
   setUpEventListener(el, "transitionend", {
     events,
   });
