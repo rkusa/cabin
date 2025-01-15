@@ -3,6 +3,8 @@
 //!
 //! <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
 
+pub mod self_;
+
 use crate::Property;
 
 const JUSTIFY_CONTENT: &str = "justify-content";

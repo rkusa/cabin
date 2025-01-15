@@ -80,6 +80,7 @@ pub mod visibility;
 pub mod w;
 pub mod whitespace;
 pub mod z;
+pub mod self_;
 
 use std::fmt;
 
