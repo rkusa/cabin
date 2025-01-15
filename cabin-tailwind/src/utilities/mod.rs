@@ -63,9 +63,11 @@ pub mod px;
 pub mod py;
 pub mod right;
 pub mod ring;
+pub mod rotate;
 pub mod rounded;
 pub mod row;
 pub mod select;
+pub mod self_;
 pub mod shadow;
 pub mod space;
 pub mod start;
@@ -80,7 +82,6 @@ pub mod visibility;
 pub mod w;
 pub mod whitespace;
 pub mod z;
-pub mod self_;
 
 use std::fmt;
 
@@ -127,6 +128,7 @@ pub use px::unit as px;
 pub use py::unit as py;
 pub use right::unit as right;
 pub use ring::{width as ring, DEFAULT as RING};
+pub use rotate::deg as rotate;
 pub use rounded::DEFAULT as ROUNDED;
 pub use shadow::DEFAULT as SHADOW;
 pub use start::unit as start;

@@ -85,3 +85,43 @@ impl Utility for DelayS {
         1
     }
 }
+
+pub struct IterationCount(pub u16);
+
+/// Number of times the animation is played before stopping.
+/// ```css
+/// animation-iteration-count: {n};
+/// ```
+pub fn iterations(n: u16) -> IterationCount {
+    IterationCount(n)
+}
+
+impl Utility for IterationCount {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        write!(f, "animation-iteration-count: {};", self.0)?;
+        Ok(())
+    }
+
+    fn order(&self) -> usize {
+        1
+    }
+}
+
+pub struct Infinite;
+
+/// Run the animation indefinitely.
+/// ```css
+/// animation-iteration-count: infinite;
+/// ```
+pub const INFINITE: Infinite = Infinite;
+
+impl Utility for Infinite {
+    fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        write!(f, "animation-iteration-count: infinite;")?;
+        Ok(())
+    }
+
+    fn order(&self) -> usize {
+        1
+    }
+}
