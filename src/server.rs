@@ -210,6 +210,8 @@ where
         #[serde(rename_all = "camelCase")]
         struct JsonEvent {
             event_id: String,
+            // Allow `state` to be missing, but prevent `null` from getting deserialized as `None`.
+            #[serde(default, deserialize_with = "de::deserialize")]
             state: Option<Box<RawValue>>,
             payload: Box<RawValue>,
         }
@@ -354,4 +356,52 @@ fn format_caused_by(source: Option<&dyn std::error::Error>) -> String {
     }
 
     caused_by
+}
+
+mod de {
+    use serde::{Deserialize, Deserializer};
+    use serde_json::value::RawValue;
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Box<RawValue>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Some(Box::<RawValue>::deserialize(deserializer)?))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde::Deserialize;
+    use serde_json::value::RawValue;
+
+    #[derive(Debug, Deserialize)]
+    struct JsonEvent {
+        #[serde(default, deserialize_with = "super::de::deserialize")]
+        state: Option<Box<RawValue>>,
+    }
+
+    #[test]
+    fn event_state_deserialization() {
+        assert!(serde_json::from_str::<JsonEvent>(r#"{}"#)
+            .unwrap()
+            .state
+            .is_none());
+        assert_eq!(
+            serde_json::from_str::<JsonEvent>(r#"{"state":"test"}"#)
+                .unwrap()
+                .state
+                .unwrap()
+                .get(),
+            r#""test""#
+        );
+        assert_eq!(
+            serde_json::from_str::<JsonEvent>(r#"{"state":null}"#)
+                .unwrap()
+                .state
+                .unwrap()
+                .get(),
+            r#"null"#
+        );
+    }
 }
