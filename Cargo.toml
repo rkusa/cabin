@@ -21,7 +21,7 @@ futures-util = "0.3"
 http = "1.0"
 http-body = "1.0"
 http-body-util = "0.1"
-http-error = { version = "0.3.0-alpha.1", features = [
+http-error = { version = "0.3.0-alpha.2", features = [
     "tracing",
 ] } # git = "https://github.com/rkusa/http-error.git", rev = "1f0630c" } # path = "../http-error" }
 linkme = "0.3"
