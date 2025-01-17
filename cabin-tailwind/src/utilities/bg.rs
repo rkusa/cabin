@@ -2,6 +2,8 @@
 //!
 //! <https://developer.mozilla.org/en-US/docs/Web/CSS/background-color>
 
+pub mod clip;
+
 use crate::Property;
 
 const BACKGROUND_COLOR: &str = "background-color";
