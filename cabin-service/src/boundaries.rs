@@ -4,7 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
-use http::{header, HeaderValue, Method, Request, Response, StatusCode};
+use http::{Method, Request, Response};
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -53,29 +53,7 @@ where
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         let mut service = self.service.clone();
         Box::pin(async move {
-            if req.method() == Method::GET && req.uri().path() == "/client_redirect" {
-                if req.headers().get("x-cabin") == Some(&HeaderValue::from_static("boundary")) {
-                    Ok(Response::builder()
-                        .status(StatusCode::NO_CONTENT)
-                        // TODO: handle missing query?
-                        // TODO: validate same host for redirect?
-                        // TODO: be smarter about client_redirect and not have the extra step
-                        // for full       page navigations?
-                        // .header(header::LOCATION, req.uri().query().unwrap_or(""))
-                        .body(String::new().into())
-                        .unwrap())
-                } else {
-                    Ok(Response::builder()
-                        .status(StatusCode::SEE_OTHER)
-                        // TODO: handle missing query?
-                        // TODO: validate same host for redirect?
-                        // TODO: be smarter about client_redirect and not have the extra step
-                        // for full       page navigations?
-                        .header(header::LOCATION, req.uri().query().unwrap_or(""))
-                        .body(String::new().into())
-                        .unwrap())
-                }
-            } else if let Some(id) = (req.method() == Method::PUT)
+            if let Some(id) = (req.method() == Method::PUT)
                 .then(|| req.uri().path().strip_prefix("/__boundary/"))
                 .flatten()
             {
