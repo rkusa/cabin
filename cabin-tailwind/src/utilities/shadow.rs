@@ -4,7 +4,16 @@
 
 use std::fmt;
 
-use crate::Utility;
+use crate::{Property, Utility};
+
+const SHADOW_COLOR: &str = "--tw-shadow-color";
+
+include!(concat!(env!("OUT_DIR"), "/shadow-color.rs"));
+
+/// Set a custom border color.
+pub fn color(color: &'static str) -> Property {
+    Property(SHADOW_COLOR, color)
+}
 
 pub struct BoxShadow(pub &'static str, pub &'static str);
 

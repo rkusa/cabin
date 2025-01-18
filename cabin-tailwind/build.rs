@@ -230,6 +230,22 @@ fn main() {
         .unwrap();
     }
 
+    // shadow-color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("shadow-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(
+            out,
+            r#"/// `--tw-shadow-color: {color};` <b style="color:{color}">⏺</b>"#
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: Property = Property(SHADOW_COLOR, "{color}");"#
+        )
+        .unwrap();
+    }
+
     // from-color
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("from-color.rs");
     let out = &mut File::create(path).unwrap();

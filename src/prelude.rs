@@ -35,6 +35,7 @@ pub use crate::html::elements::progress::Progress as _;
 pub use crate::html::elements::q::Q as _;
 pub use crate::html::elements::script::Script as _;
 pub use crate::html::elements::select::Select as _;
+pub use crate::html::elements::source::Source as _;
 pub use crate::html::elements::textarea::Textarea as _;
 pub use crate::html::elements::time::Time as _;
 pub use crate::html::h;
