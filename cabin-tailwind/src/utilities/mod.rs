@@ -82,6 +82,7 @@ pub mod visibility;
 pub mod w;
 pub mod whitespace;
 pub mod z;
+pub mod appearance;
 
 use std::fmt;
 
