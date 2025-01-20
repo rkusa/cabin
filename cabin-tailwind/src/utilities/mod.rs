@@ -1,4 +1,5 @@
 pub mod animation;
+pub mod appearance;
 pub mod aspect;
 pub mod auto_cols;
 pub mod auto_rows;
@@ -82,7 +83,7 @@ pub mod visibility;
 pub mod w;
 pub mod whitespace;
 pub mod z;
-pub mod appearance;
+pub mod divide;
 
 use std::fmt;
 

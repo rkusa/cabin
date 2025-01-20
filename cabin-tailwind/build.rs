@@ -246,6 +246,22 @@ fn main() {
         .unwrap();
     }
 
+    // divide color
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("divide-color.rs");
+    let out = &mut File::create(path).unwrap();
+    for (ident, color) in theme.colors {
+        writeln!(
+            out,
+            r#"/// `border-color: {color};` <b style="color:{color}">⏺</b>"#
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r#"pub const {ident}: DivideColor = DivideColor("{color}");"#
+        )
+        .unwrap();
+    }
+
     // from-color
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("from-color.rs");
     let out = &mut File::create(path).unwrap();
