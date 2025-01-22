@@ -600,17 +600,6 @@ function patchAttributes(
   disabledBefore,
   readOnlyBefore,
 ) {
-  // special handling for certain elements
-  switch (childAfter.nodeName) {
-    case "DIALOG":
-      if (childAfter.hasAttribute("open")) {
-        childBefore.show();
-      } else {
-        childBefore.close();
-      }
-      childAfter.removeAttribute("open");
-  }
-
   const oldAttributeNames = new Set(childBefore.getAttributeNames());
   if (childBefore instanceof HTMLInputElement) {
     if (childBefore.type === "checkbox" || childBefore.type === "radio") {
