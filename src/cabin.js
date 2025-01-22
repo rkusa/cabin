@@ -195,6 +195,20 @@ async function update(
       return;
     }
 
+    if (res.status === 204) {
+      const eventId = res.headers.get("cabin-event");
+      const payload = res.headers.get("cabin-event-payload");
+      if (eventId && payload) {
+        target.dispatchEvent(
+          new CustomEvent("cabinFire", {
+            detail: { eventId, payload: JSON.parse(payload) },
+            bubbles: true,
+          }),
+        );
+      }
+      return
+    }
+
     if (res.status !== 200) {
       throw new Error(`received unexpected status code: ${res.status}`);
     }

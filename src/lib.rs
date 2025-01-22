@@ -31,6 +31,7 @@ mod server;
 pub mod view;
 #[cfg(target_arch = "wasm32")]
 mod wasm_exports;
+pub mod fire_event;
 
 pub mod wasm {
     pub use cabin_macros::wasm_boundary as boundary;

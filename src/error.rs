@@ -108,6 +108,7 @@ pub enum InternalError {
     InvalidAttributeName {
         name: String,
     },
+    InvalidHeaderValue(http::header::InvalidHeaderValue),
     Join(tokio::task::JoinError),
     MissingBoundaryAttribute,
 }
@@ -157,6 +158,7 @@ impl error::Error for InternalError {
             Self::Serialize { err, .. } => Some(err),
             Self::Deserialize { err, .. } => Some(err.as_ref()),
             Self::Join(err) => Some(err),
+            Self::InvalidHeaderValue(err) => Some(err),
         }
     }
 }
@@ -169,6 +171,9 @@ impl fmt::Display for InternalError {
             Self::Deserialize { what, .. } => write!(f, "failed to deserialize {what}"),
             Self::InvalidAttributeName { name } => {
                 write!(f, "invalid attribute name `{name}`")
+            }
+            Self::InvalidHeaderValue { .. } => {
+                write!(f, "invalid header value")
             }
             Self::Join(_) => f.write_str("failed to run internal future to completion"),
             Self::MissingBoundaryAttribute => {
