@@ -65,14 +65,30 @@ where
                             }
                         },
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) => match serde_html_form::from_str(payload) {
+                        Payload::UrlEncoded(payload) if !payload.is_empty() => {
+                            match serde_html_form::from_str(payload) {
+                                Ok(payload) => {
+                                    *event = Event::Deserialized(Box::new(payload));
+                                    Some(payload)
+                                }
+                                Err(err) => {
+                                    state.error = Some(InternalError::Deserialize {
+                                        what: "event urlencoded payload",
+                                        err: Box::new(err),
+                                    });
+                                    None
+                                }
+                            }
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        Payload::UrlEncoded(_) => match serde_json::from_str("null") {
                             Ok(payload) => {
                                 *event = Event::Deserialized(Box::new(payload));
                                 Some(payload)
                             }
                             Err(err) => {
                                 state.error = Some(InternalError::Deserialize {
-                                    what: "event urlencoded payload",
+                                    what: "event empty urlencoded payload",
                                     err: Box::new(err),
                                 });
                                 None
@@ -115,11 +131,24 @@ where
                             }
                         },
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) => match serde_html_form::from_str(&payload) {
+                        Payload::UrlEncoded(payload) if !payload.is_empty() => {
+                            match serde_html_form::from_str(&payload) {
+                                Ok(payload) => Some(payload),
+                                Err(err) => {
+                                    state.error = Some(InternalError::Deserialize {
+                                        what: "event urlencoded payload",
+                                        err: Box::new(err),
+                                    });
+                                    None
+                                }
+                            }
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        Payload::UrlEncoded(_) => match serde_json::from_str("null") {
                             Ok(payload) => Some(payload),
                             Err(err) => {
                                 state.error = Some(InternalError::Deserialize {
-                                    what: "event urlencoded payload",
+                                    what: "event empty urlencoded payload",
                                     err: Box::new(err),
                                 });
                                 None
