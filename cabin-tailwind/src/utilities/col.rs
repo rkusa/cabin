@@ -21,6 +21,13 @@ pub const AUTO: Property = Property(GRID_COLUMN, "auto");
 pub const FULL: Property = Property(GRID_COLUMN, "1 / -1");
 
 /// ```css
+/// grid-column: {n};
+/// ```
+pub fn colum(n: i16) -> Property<i16> {
+    Property(GRID_COLUMN, n)
+}
+
+/// ```css
 /// grid-column: span {n} / span {n};
 /// ```
 pub fn span(n: u16) -> Property<ColSpan> {

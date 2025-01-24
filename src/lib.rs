@@ -17,6 +17,7 @@ pub use view::View;
 pub mod boundary_registry;
 pub mod error;
 pub mod event;
+pub mod fire_event;
 pub mod html;
 pub mod multipart;
 pub mod pack;
@@ -31,7 +32,6 @@ mod server;
 pub mod view;
 #[cfg(target_arch = "wasm32")]
 mod wasm_exports;
-pub mod fire_event;
 
 pub mod wasm {
     pub use cabin_macros::wasm_boundary as boundary;
