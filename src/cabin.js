@@ -273,10 +273,6 @@ function setUpEventListener(el, eventName, opts) {
         e.submitter?.getAttribute(attrName) ??
         node.getAttribute(attrName);
       if (!eventId) {
-        // The internal state/view of the boundary is possibly going to change due to this event. To
-        // force an update for the boundary if its parent view changes, remove all hash attributes
-        // from ascendents up until the next cabin boundary.
-        node.removeAttribute("hash");
         continue;
       } else {
         break;
@@ -295,6 +291,15 @@ function setUpEventListener(el, eventName, opts) {
       return;
     }
 
+    // The internal state/view of the boundary is possibly going to change due to this event. To
+    // force an update for the boundary if its parent view changes, remove all hash attributes
+    // from ascendents up until the next cabin boundary.
+    if (el !== document) {
+      let el = this;
+      do {
+        el.removeAttribute("hash");
+      } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
+    }
 
     // Note: `e.preventDefault()` doesn't seem to take full effect when called after
     // `abortController.abort()`, so ensure it stays before that
