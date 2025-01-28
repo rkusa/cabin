@@ -206,7 +206,7 @@ async function update(
           }),
         );
       }
-      return
+      return;
     }
 
     if (res.status !== 200) {
@@ -292,13 +292,12 @@ function setUpEventListener(el, eventName, opts) {
     }
 
     // The internal state/view of the boundary is possibly going to change due to this event. To
-    // force an update for the boundary if its parent view changes, remove all hash attributes
-    // from ascendents up until the next cabin boundary.
+    // force an update for the boundary if any ascendent changes, remove their hash attributes.
     if (el !== document) {
       let el = this;
       do {
         el.removeAttribute("hash");
-      } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
+      } while ((el = el.parentElement));
     }
 
     // Note: `e.preventDefault()` doesn't seem to take full effect when called after
