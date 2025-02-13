@@ -14,8 +14,24 @@ impl<S: Utility> Utility for GroupHover<S> {
         Ok(())
     }
 
+    fn selector_suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.0.selector_suffix(f)
+    }
+
     fn selector_declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.0.selector_declarations(f)
+    }
+
+    fn suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.0.suffix(f)
+    }
+
+    fn write_animate_from(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.0.write_animate_from(f)
+    }
+
+    fn write_animate_to(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.0.write_animate_to(f)
     }
 
     fn hash_modifier(&self, hasher: &mut dyn std::hash::Hasher) {

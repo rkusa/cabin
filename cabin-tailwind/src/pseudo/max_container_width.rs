@@ -27,6 +27,10 @@ impl<S: Utility> Utility for MaxContainerWidth<S> {
         Ok(())
     }
 
+    fn selector_suffix(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.style.selector_suffix(f)
+    }
+
     fn selector_declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         self.style.selector_declarations(f)
     }
@@ -35,6 +39,14 @@ impl<S: Utility> Utility for MaxContainerWidth<S> {
         f.write_str("} ")?;
         self.style.suffix(f)?;
         Ok(())
+    }
+
+    fn write_animate_from(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.style.write_animate_from(f)
+    }
+
+    fn write_animate_to(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.style.write_animate_to(f)
     }
 
     fn hash_modifier(&self, hasher: &mut dyn std::hash::Hasher) {

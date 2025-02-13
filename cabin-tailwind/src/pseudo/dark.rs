@@ -38,6 +38,14 @@ impl<S: Utility> Utility for Dark<S> {
         Ok(())
     }
 
+    fn write_animate_from(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.style.write_animate_from(f)
+    }
+
+    fn write_animate_to(&self, f: &mut dyn fmt::Write) -> fmt::Result {
+        self.style.write_animate_to(f)
+    }
+
     fn hash_modifier(&self, hasher: &mut dyn std::hash::Hasher) {
         hasher.write(b"dark");
         self.style.hash_modifier(hasher);
