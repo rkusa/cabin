@@ -81,7 +81,9 @@ where
                             }
                         }
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(_) => match serde_json::from_str("null") {
+                        Payload::UrlEncoded(_) => match serde_json::from_str("null")
+                            .or_else(|_| serde_json::from_str("{}"))
+                        {
                             Ok(payload) => {
                                 *event = Event::Deserialized(Box::new(payload));
                                 Some(payload)
@@ -144,7 +146,9 @@ where
                             }
                         }
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(_) => match serde_json::from_str("null") {
+                        Payload::UrlEncoded(_) => match serde_json::from_str("null")
+                            .or_else(|_| serde_json::from_str("{}"))
+                        {
                             Ok(payload) => Some(payload),
                             Err(err) => {
                                 state.error = Some(InternalError::Deserialize {
