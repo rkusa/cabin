@@ -6,6 +6,7 @@ use std::fmt;
 pub use auto_complete::AutoComplete;
 use cabin_macros::Attribute;
 
+use super::SerializeEventFn;
 use super::button::{
     Disabled, Form, FormAction, FormEnctype, FormMethod, FormNoValidate, FormTarget, Name,
     PopoverTarget, PopoverTargetAction,
@@ -14,7 +15,6 @@ use super::common::Common;
 use super::global::Global;
 use super::img::Alt;
 use super::script::Src;
-use super::SerializeEventFn;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};

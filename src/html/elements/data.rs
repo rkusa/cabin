@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use super::common::Common;
 use super::global::Global;
 use super::input::Value;
-use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::Html;
+use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `data` element represents a group of one or more columns in the [super::table] that is its
 /// parent, if it has a parent and that is a [super::table] element.

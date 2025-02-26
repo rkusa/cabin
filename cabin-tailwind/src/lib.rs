@@ -6,11 +6,11 @@ use std::fmt;
 use std::hash::Hasher;
 
 pub use cabin::html::elements::common::Class;
-pub use cabin_macros::{tw, tw0, tw2, tw3, STYLES};
+pub use cabin_macros::{STYLES, tw, tw0, tw2, tw3};
 pub use utilities as css;
 
 pub mod prelude {
-    pub use crate::{tw, tw0, tw2, tw3, utilities as tw, Responsive, Utility};
+    pub use crate::{Responsive, Utility, tw, tw0, tw2, tw3, utilities as tw};
 }
 
 pub trait Utility {

@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use cabin::prelude::*;
 use cabin::scope::event;
-use cabin::{basic_document, html, Event};
+use cabin::{Event, basic_document, html};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;

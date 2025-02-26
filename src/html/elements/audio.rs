@@ -7,9 +7,9 @@ use super::common::Common;
 use super::global::Global;
 use super::link::CrossOrigin;
 use super::script::Src;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// An `audio` element represents a sound or audio stream.
 pub fn audio(content: impl View) -> Html<marker::Audio, (), impl View> {

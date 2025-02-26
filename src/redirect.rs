@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::{error, fmt};
 
-use http::{header, HeaderName, HeaderValue, StatusCode};
+use http::{HeaderName, HeaderValue, StatusCode, header};
 use http_error::HttpError;
 
 #[derive(Debug)]

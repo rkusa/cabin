@@ -9,11 +9,11 @@ use super::global::Global;
 use super::input::{
     AutoComplete, Dirname, MaxLength, MinLength, OnChange, OnInput, Placeholder, ReadOnly, Required,
 };
+use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.

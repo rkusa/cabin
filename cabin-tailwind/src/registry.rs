@@ -1,6 +1,6 @@
 use std::borrow::Cow;
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
+use std::collections::hash_map::DefaultHasher;
 use std::fmt::{self, Write};
 use std::hash::Hasher;
 
@@ -214,7 +214,7 @@ fn hash_style(style: &dyn Utility) -> u64 {
 fn test_deduplication() {
     // Generate same class name if styles are the same just in a different order.
 
-    use crate::utilities::{p, BLOCK};
+    use crate::utilities::{BLOCK, p};
 
     let mut r = StyleRegistry {
         classes: Default::default(),

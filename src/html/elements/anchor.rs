@@ -6,10 +6,10 @@ use cabin_macros::Attribute;
 use super::common::Common;
 use super::global::Global;
 use super::link::Type;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.

@@ -8,7 +8,7 @@ use proc_macro::TokenStream;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::{Comma, Eq};
-use syn::{parse_macro_input, DeriveInput, Expr, Ident, ItemFn, Type};
+use syn::{DeriveInput, Expr, Ident, ItemFn, Type, parse_macro_input};
 
 #[proc_macro_derive(Attribute, attributes(attribute))]
 pub fn derive_attribute(item: TokenStream) -> TokenStream {

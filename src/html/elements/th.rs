@@ -6,10 +6,10 @@ use cabin_macros::Attribute;
 use super::common::Common;
 use super::global::Global;
 use super::td::{ColSpan, Headers, RowSpan};
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `th` element represents a header cell in a [super::table].
 pub fn th(content: impl View) -> Html<marker::Th, (), impl View> {

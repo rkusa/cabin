@@ -40,7 +40,7 @@ pub fn boundary_attribute(
                 "boundary cannot have self argument",
             )),
             FnArg::Typed(PatType { pat, ty, .. }) => match pat.as_ref() {
-                Pat::Ident(ref ident) => Ok((ident.ident.clone(), ty.clone())),
+                Pat::Ident(ident) => Ok((ident.ident.clone(), ty.clone())),
                 pat => Err(Error::new(pat.span(), "boundary arguments must be idents")),
             },
         })
@@ -53,8 +53,8 @@ pub fn boundary_attribute(
         .iter()
         .cloned()
         .map(|mut input| {
-            if let FnArg::Typed(PatType { ref mut pat, .. }) = &mut input {
-                if let Pat::Ident(ref mut ident) = pat.as_mut() {
+            if let FnArg::Typed(PatType { pat, .. }) = &mut input {
+                if let Pat::Ident(ident) = pat.as_mut() {
                     ident.mutability = None;
                 }
             }
@@ -81,7 +81,7 @@ pub fn boundary_attribute(
     let wasm = wasm_enabled.then(|| {
         quote! {
             #[cfg(target_arch = "wasm32")]
-            #[export_name = concat!(module_path!(), "::", #name)]
+            #[unsafe(export_name = concat!(module_path!(), "::", #name))]
             unsafe extern "C" fn __wasm(event: *const u8, event_len: usize, out: *mut *const u8) -> usize {
                 BOUNDARY.wasm(event, event_len, out)
             }

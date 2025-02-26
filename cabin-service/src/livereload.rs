@@ -1,17 +1,17 @@
 use std::convert::Infallible;
-use std::future::{ready, Ready};
+use std::future::{Ready, ready};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Duration;
 
 use bytes::Bytes;
-use futures_util::future::MapOk;
 use futures_util::TryFutureExt;
-use http::{header, Method, Request, Response};
+use futures_util::future::MapOk;
+use http::{Method, Request, Response, header};
 use http_body::{Body, Frame};
-use http_body_util::combinators::UnsyncBoxBody;
 use http_body_util::Full;
-use tokio::time::{interval, Interval};
+use http_body_util::combinators::UnsyncBoxBody;
+use tokio::time::{Interval, interval};
 use tokio_util::either::Either;
 use tower_layer::Layer;
 use tower_service::Service;
@@ -77,7 +77,6 @@ where
         + Clone
         + Send
         + 'static,
-
     ReqBody: http_body::Body<Data = Bytes> + Send + 'static,
     ReqBody::Error: std::error::Error + Send,
     ResBody: http_body::Body<Data = Bytes>,

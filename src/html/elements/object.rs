@@ -8,9 +8,9 @@ use super::global::Global;
 use super::iframe::Name;
 use super::input::{Height, Width};
 use super::link::Type;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.

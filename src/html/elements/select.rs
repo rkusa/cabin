@@ -4,11 +4,11 @@ use super::button::{Disabled, Form, Name};
 use super::common::Common;
 use super::global::Global;
 use super::input::{AutoComplete, Multiple, OnChange, Required, Size};
+use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
 pub fn select(content: impl View) -> Html<marker::Select, (), impl View> {

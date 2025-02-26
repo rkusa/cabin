@@ -4,9 +4,9 @@ use super::blockquote::Cite;
 use super::common::Common;
 use super::global::Global;
 use super::time::Datetime;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `ins` element represents an addition to the document.
 pub fn ins(content: impl View) -> Html<marker::Ins, (), impl View> {

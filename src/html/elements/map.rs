@@ -4,9 +4,9 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.

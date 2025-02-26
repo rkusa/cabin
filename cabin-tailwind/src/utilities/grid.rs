@@ -19,7 +19,7 @@ pub fn cols(n: u16) -> Property<GridTemplate> {
 }
 
 pub mod cols {
-    use super::{GridTemplate, GRID_TEMPLATE_COLUMNS};
+    use super::{GRID_TEMPLATE_COLUMNS, GridTemplate};
     use crate::Property;
 
     /// ```css
@@ -43,7 +43,7 @@ pub fn rows(n: u16) -> Property<GridTemplate> {
 }
 
 pub mod rows {
-    use super::{GridTemplate, GRID_TEMPLATE_ROWS};
+    use super::{GRID_TEMPLATE_ROWS, GridTemplate};
     use crate::Property;
 
     /// ```css

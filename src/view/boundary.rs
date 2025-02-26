@@ -9,12 +9,12 @@ use script::Script;
 use serde::Serialize;
 
 use super::{BoxedView, IntoView, RenderFuture};
+use crate::View;
 use crate::error::InternalError;
+use crate::html::Html;
 use crate::html::attributes::Attributes;
 use crate::html::script::{self, script};
-use crate::html::Html;
 use crate::render::{ElementRenderer, Renderer};
-use crate::View;
 
 type BoundaryFn<Args> =
     dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = Boundary<Args>> + Send>>;
@@ -69,7 +69,7 @@ where
 
         use crate::scope::Scope;
 
-        let event = core::slice::from_raw_parts(event, event_len);
+        let event = unsafe { core::slice::from_raw_parts(event, event_len) };
         let event = match core::str::from_utf8(event) {
             Ok(event) => event,
             Err(err) => {
@@ -139,7 +139,9 @@ where
 
         let len = html.len();
         let html = Box::into_raw(html.into_boxed_str());
-        *out = html as *const u8;
+        unsafe {
+            *out = html as *const u8;
+        }
         len
     }
 }
@@ -237,7 +239,7 @@ where
                     what: "boundary state",
                     err,
                 }
-                .into())))
+                .into())));
             }
         };
 

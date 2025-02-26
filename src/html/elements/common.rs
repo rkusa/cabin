@@ -161,11 +161,7 @@ impl Class {
     }
 
     pub fn append_when(self, condition: bool, other: Class) -> Class {
-        if !condition {
-            self
-        } else {
-            self + other
-        }
+        if !condition { self } else { self + other }
     }
 }
 

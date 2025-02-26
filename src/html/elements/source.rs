@@ -6,8 +6,8 @@ use super::input::{Height, Width};
 use super::link::Type;
 use super::meta::Media;
 use super::script::Src;
-use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::Html;
+use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `source` element allows authors to specify multiple alternative source sets for [super::img]
 /// elements or multiple alternative media resources for media elements. It does not represent

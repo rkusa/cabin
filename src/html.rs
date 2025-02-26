@@ -15,7 +15,7 @@ pub use elements::common::Common;
 pub use elements::global::Global;
 #[doc(inline)]
 pub use h::*;
-pub use raw::{raw, Raw};
+pub use raw::{Raw, raw};
 
 use self::attributes::{Attributes, Pair, WithAttribute};
 use crate::render::Renderer;
@@ -27,33 +27,33 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::address::address;
     #[doc(inline)]
-    pub use super::elements::anchor::{self as a, a, Anchor};
+    pub use super::elements::anchor::{self as a, Anchor, a};
     #[doc(inline)]
-    pub use super::elements::area::{self as area, area, Area};
+    pub use super::elements::area::{self as area, Area, area};
     #[doc(inline)]
     pub use super::elements::article::article;
     #[doc(inline)]
     pub use super::elements::aside::aside;
     #[doc(inline)]
-    pub use super::elements::audio::{self as audio, audio, Audio};
+    pub use super::elements::audio::{self as audio, Audio, audio};
     #[doc(inline)]
     pub use super::elements::b::b;
     #[doc(inline)]
-    pub use super::elements::base::{self as base, base, Base};
+    pub use super::elements::base::{self as base, Base, base};
     #[doc(inline)]
     pub use super::elements::bdi::bdi;
     #[doc(inline)]
     pub use super::elements::bdo::bdo;
     #[doc(inline)]
-    pub use super::elements::blockquote::{self as blockquote, blockquote, Blockquote};
+    pub use super::elements::blockquote::{self as blockquote, Blockquote, blockquote};
     #[doc(inline)]
     pub use super::elements::body::body;
     #[doc(inline)]
     pub use super::elements::br::br;
     #[doc(inline)]
-    pub use super::elements::button::{self as button, button, Button};
+    pub use super::elements::button::{self as button, Button, button};
     #[doc(inline)]
-    pub use super::elements::canvas::{self as canvas, canvas, Canvas};
+    pub use super::elements::canvas::{self as canvas, Canvas, canvas};
     #[doc(inline)]
     pub use super::elements::caption::caption;
     #[doc(inline)]
@@ -61,23 +61,23 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::code::code;
     #[doc(inline)]
-    pub use super::elements::col::{self as col, col, Col};
+    pub use super::elements::col::{self as col, Col, col};
     #[doc(inline)]
-    pub use super::elements::colgroup::{self as colgroup, colgroup, Colgroup};
+    pub use super::elements::colgroup::{self as colgroup, Colgroup, colgroup};
     #[doc(inline)]
-    pub use super::elements::data::{self as data, data, Data};
+    pub use super::elements::data::{self as data, Data, data};
     #[doc(inline)]
     pub use super::elements::datalist::datalist;
     #[doc(inline)]
     pub use super::elements::dd::dd;
     #[doc(inline)]
-    pub use super::elements::del::{self as del, del, Del};
+    pub use super::elements::del::{self as del, Del, del};
     #[doc(inline)]
-    pub use super::elements::details::{self as details, details, Details};
+    pub use super::elements::details::{self as details, Details, details};
     #[doc(inline)]
     pub use super::elements::dfn::dfn;
     #[doc(inline)]
-    pub use super::elements::dialog::{self as dialog, dialog, Dialog};
+    pub use super::elements::dialog::{self as dialog, Dialog, dialog};
     #[doc(inline)]
     pub use super::elements::div::div;
     #[doc(inline)]
@@ -87,9 +87,9 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::em::em;
     #[doc(inline)]
-    pub use super::elements::embed::{self as embed, embed, Embed};
+    pub use super::elements::embed::{self as embed, Embed, embed};
     #[doc(inline)]
-    pub use super::elements::fieldset::{self as fieldset, fieldset, Fieldset};
+    pub use super::elements::fieldset::{self as fieldset, Fieldset, fieldset};
     #[doc(inline)]
     pub use super::elements::figcaption::figcaption;
     #[doc(inline)]
@@ -97,7 +97,7 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::footer::footer;
     #[doc(inline)]
-    pub use super::elements::form::{self as form, form, Form};
+    pub use super::elements::form::{self as form, Form, form};
     #[doc(inline)]
     pub use super::elements::h1::h1;
     #[doc(inline)]
@@ -123,49 +123,49 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::i::i;
     #[doc(inline)]
-    pub use super::elements::iframe::{self as iframe, iframe, IFrame};
+    pub use super::elements::iframe::{self as iframe, IFrame, iframe};
     #[doc(inline)]
-    pub use super::elements::img::{self as img, img, Img};
+    pub use super::elements::img::{self as img, Img, img};
     #[doc(inline)]
-    pub use super::elements::input::{self as input, input, Input};
+    pub use super::elements::input::{self as input, Input, input};
     #[doc(inline)]
-    pub use super::elements::ins::{self as ins, ins, Ins};
+    pub use super::elements::ins::{self as ins, Ins, ins};
     #[doc(inline)]
     pub use super::elements::kbd::kbd;
     #[doc(inline)]
-    pub use super::elements::label::{self as label, label, Label};
+    pub use super::elements::label::{self as label, Label, label};
     #[doc(inline)]
     pub use super::elements::legend::legend;
     #[doc(inline)]
     pub use super::elements::li::li;
     #[doc(inline)]
-    pub use super::elements::link::{self as link, link, Link};
+    pub use super::elements::link::{self as link, Link, link};
     #[doc(inline)]
     pub use super::elements::main::main;
     #[doc(inline)]
-    pub use super::elements::map::{self as map, map, Map};
+    pub use super::elements::map::{self as map, Map, map};
     #[doc(inline)]
     pub use super::elements::mark::mark;
     #[doc(inline)]
     pub use super::elements::menu::menu;
     #[doc(inline)]
-    pub use super::elements::meta::{self as meta, meta, Meta};
+    pub use super::elements::meta::{self as meta, Meta, meta};
     #[doc(inline)]
-    pub use super::elements::meter::{self as meter, meter, Meter};
+    pub use super::elements::meter::{self as meter, Meter, meter};
     #[doc(inline)]
     pub use super::elements::nav::nav;
     #[doc(inline)]
     pub use super::elements::noscript::noscript;
     #[doc(inline)]
-    pub use super::elements::object::{self as object, object, Object};
+    pub use super::elements::object::{self as object, Object, object};
     #[doc(inline)]
-    pub use super::elements::ol::{self as ol, ol, Ol};
+    pub use super::elements::ol::{self as ol, Ol, ol};
     #[doc(inline)]
-    pub use super::elements::optgroup::{self as optgroup, optgroup, OptGroup};
+    pub use super::elements::optgroup::{self as optgroup, OptGroup, optgroup};
     #[doc(inline)]
-    pub use super::elements::option::{self as option, option, SelectOption};
+    pub use super::elements::option::{self as option, SelectOption, option};
     #[doc(inline)]
-    pub use super::elements::output::{self as output, output, Output};
+    pub use super::elements::output::{self as output, Output, output};
     #[doc(inline)]
     pub use super::elements::p::p;
     #[doc(inline)]
@@ -173,9 +173,9 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::pre::pre;
     #[doc(inline)]
-    pub use super::elements::progress::{self as progress, progress, Progress};
+    pub use super::elements::progress::{self as progress, Progress, progress};
     #[doc(inline)]
-    pub use super::elements::q::{self as q, q, Q};
+    pub use super::elements::q::{self as q, Q, q};
     #[doc(inline)]
     pub use super::elements::rp::rp;
     #[doc(inline)]
@@ -187,25 +187,25 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::samp::samp;
     #[doc(inline)]
-    pub use super::elements::script::{self as script, script, Script};
+    pub use super::elements::script::{self as script, Script, script};
     #[doc(inline)]
     pub use super::elements::search::search;
     #[doc(inline)]
     pub use super::elements::section::section;
     #[doc(inline)]
-    pub use super::elements::select::{self as select, select, Select};
+    pub use super::elements::select::{self as select, Select, select};
     #[doc(inline)]
-    pub use super::elements::slot::{self as slot, slot, Slot};
+    pub use super::elements::slot::{self as slot, Slot, slot};
     #[doc(inline)]
     pub use super::elements::small::small;
     #[doc(inline)]
-    pub use super::elements::source::{self as source, source, Source};
+    pub use super::elements::source::{self as source, Source, source};
     #[doc(inline)]
     pub use super::elements::span::span;
     #[doc(inline)]
     pub use super::elements::strong::strong;
     #[doc(inline)]
-    pub use super::elements::style::{self as style, style, Style};
+    pub use super::elements::style::{self as style, Style, style};
     #[doc(inline)]
     pub use super::elements::sub::sub;
     #[doc(inline)]
@@ -217,25 +217,25 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::tbody::tbody;
     #[doc(inline)]
-    pub use super::elements::td::{self as td, td, Td};
+    pub use super::elements::td::{self as td, Td, td};
     #[doc(inline)]
     pub use super::elements::template::template;
     #[doc(inline)]
-    pub use super::elements::textarea::{self as textarea, textarea, Textarea};
+    pub use super::elements::textarea::{self as textarea, Textarea, textarea};
     #[doc(inline)]
     pub use super::elements::tfoot::tfoot;
     #[doc(inline)]
-    pub use super::elements::th::{self as th, th, Th};
+    pub use super::elements::th::{self as th, Th, th};
     #[doc(inline)]
     pub use super::elements::thead::thead;
     #[doc(inline)]
-    pub use super::elements::time::{self as time, time, Time};
+    pub use super::elements::time::{self as time, Time, time};
     #[doc(inline)]
     pub use super::elements::title::{title, title_update};
     #[doc(inline)]
     pub use super::elements::tr::tr;
     #[doc(inline)]
-    pub use super::elements::track::{self as track, track, Track};
+    pub use super::elements::track::{self as track, Track, track};
     #[doc(inline)]
     pub use super::elements::u::u;
     #[doc(inline)]
@@ -243,12 +243,12 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::var::var;
     #[doc(inline)]
-    pub use super::elements::video::{self as video, video, Video};
+    pub use super::elements::video::{self as video, Video, video};
     #[doc(inline)]
     pub use super::elements::wbr::wbr;
     pub use crate::html::raw;
     #[doc(inline)]
-    pub use crate::view::text::{text, Text};
+    pub use crate::view::text::{Text, text};
 
     pub fn doctype() -> impl crate::View {
         crate::view::UpdateView::hidden_on_update(super::raw("<!DOCTYPE html>"))

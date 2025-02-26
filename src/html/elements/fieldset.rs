@@ -3,9 +3,9 @@ use std::borrow::Cow;
 use super::button::{Disabled, Form, Name};
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `fieldset` element represents a set of form controls (or other content) grouped together,
 /// optionally with a caption. The caption is given by the first [super::legend] element that is a

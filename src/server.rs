@@ -383,10 +383,12 @@ mod tests {
 
     #[test]
     fn event_state_deserialization() {
-        assert!(serde_json::from_str::<JsonEvent>(r#"{}"#)
-            .unwrap()
-            .state
-            .is_none());
+        assert!(
+            serde_json::from_str::<JsonEvent>(r#"{}"#)
+                .unwrap()
+                .state
+                .is_none()
+        );
         assert_eq!(
             serde_json::from_str::<JsonEvent>(r#"{"state":"test"}"#)
                 .unwrap()

@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::fmt::Write;
 
+use crate::View;
 use crate::render::Renderer;
 use crate::view::RenderFuture;
-use crate::View;
 
 pub struct Raw(pub Cow<'static, str>);
 

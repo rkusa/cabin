@@ -5,9 +5,9 @@ use super::global::Global;
 use super::link::Blocking;
 use super::meta::Media;
 use super::script::ScriptEscape;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
 /// element is one of several inputs to the styling processing model. The element does not represent

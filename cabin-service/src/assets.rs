@@ -1,11 +1,11 @@
 use std::convert::Infallible;
-use std::future::{ready, Ready};
+use std::future::{Ready, ready};
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
 use cabin::CABIN_JS;
 use cabin_tailwind::registry::StyleSheet;
-use http::{header, Method, Request, Response};
+use http::{Method, Request, Response, header};
 use tokio_util::either::Either;
 use tower_layer::Layer;
 use tower_service::Service;

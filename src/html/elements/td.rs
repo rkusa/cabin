@@ -4,10 +4,10 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `td` element represents a data cell in a [super::table].
 pub fn td(content: impl View) -> Html<marker::Td, (), impl View> {

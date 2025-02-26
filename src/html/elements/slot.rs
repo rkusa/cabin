@@ -3,9 +3,9 @@ use std::borrow::Cow;
 use cabin_macros::Attribute;
 
 use super::global::Global;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::Html;
 use crate::View;
+use crate::html::Html;
+use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.

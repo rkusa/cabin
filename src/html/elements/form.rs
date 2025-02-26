@@ -3,18 +3,18 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
+use super::SerializeEventFn;
 use super::anchor::Target;
 use super::button::Name;
 use super::common::Common;
 use super::global::Global;
 use super::input::AutoComplete;
-use super::SerializeEventFn;
+use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a

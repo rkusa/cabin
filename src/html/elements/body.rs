@@ -1,7 +1,7 @@
+use crate::View;
 use crate::html::attributes::Attributes;
 use crate::html::{Common, Global, Html};
 use crate::view::UpdateView;
-use crate::View;
 
 /// The `body` element represents the body of an HTML document.
 pub fn body(content: impl View) -> UpdateView<Html<marker::Body, (), impl View>> {

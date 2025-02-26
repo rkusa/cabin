@@ -4,8 +4,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
-    token, Attribute, Data, DataEnum, DataStruct, DeriveInput, Error, Expr, ExprLit, Fields, Ident,
-    Lit, Type,
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Error, Expr, ExprLit, Fields, Ident, Lit,
+    Type, token,
 };
 
 pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {

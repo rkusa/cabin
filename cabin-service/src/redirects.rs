@@ -4,7 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
-use http::{header, HeaderValue, Method, Request, Response, StatusCode};
+use http::{HeaderValue, Method, Request, Response, StatusCode, header};
 use tower_layer::Layer;
 use tower_service::Service;
 

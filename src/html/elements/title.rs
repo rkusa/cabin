@@ -3,11 +3,11 @@ use std::future::Future;
 
 use http::{HeaderName, HeaderValue};
 
+use crate::View;
 use crate::html::attributes::Attributes;
 use crate::html::{Global, Html};
 use crate::render::Renderer;
 use crate::view::RenderFuture;
-use crate::View;
 
 /// The `title` element represents the document's title or name. Authors should use titles that
 /// identify their documents even when they are used out of context, for example in a user's history

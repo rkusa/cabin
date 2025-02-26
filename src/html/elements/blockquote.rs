@@ -4,9 +4,9 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `blockquote` element represents a section that is quoted from another source.
 /// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,

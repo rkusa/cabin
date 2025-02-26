@@ -5,9 +5,9 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population

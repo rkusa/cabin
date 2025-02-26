@@ -6,16 +6,16 @@ use bytes::Bytes;
 use http::{HeaderValue, Request, Response, StatusCode};
 use http_body::Body;
 use once_cell::race::OnceBox;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
+use crate::View;
 use crate::error::InternalError;
 use crate::render::{Out, Renderer};
 use crate::scope::Scope;
 use crate::server::{err_to_response, parse_body};
-use crate::view::boundary::BoundaryRef;
 use crate::view::RenderFuture;
-use crate::View;
+use crate::view::boundary::BoundaryRef;
 
 #[linkme::distributed_slice]
 pub static BOUNDARIES: [fn(&mut BoundaryRegistry)] = [..];

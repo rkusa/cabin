@@ -1,9 +1,9 @@
 use super::col::Span;
 use super::common::Common;
 use super::global::Global;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::Html;
 use crate::View;
+use crate::html::Html;
+use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.

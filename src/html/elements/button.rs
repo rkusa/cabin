@@ -5,11 +5,11 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::form::OnSubmit;
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `button` element represents a button labeled by its contents.
 pub fn button(content: impl View) -> Html<marker::Button, (), impl View> {

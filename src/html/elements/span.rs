@@ -1,8 +1,8 @@
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::Attributes;
 use crate::html::{Aria, Html};
-use crate::View;
 
 // TODO:
 pub fn span(content: impl View) -> Html<marker::Span, (), impl View> {

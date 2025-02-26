@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use cabin::prelude::*;
 use cabin::scope::event;
 use cabin::view::boundary::Boundary;
-use cabin::{basic_document, Event};
+use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;

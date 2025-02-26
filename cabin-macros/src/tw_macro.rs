@@ -1,9 +1,9 @@
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::{Comma, Dot, Paren};
-use syn::{parse_macro_input, ExprLit, Ident, Path};
+use syn::{ExprLit, Ident, Path, parse_macro_input};
 
 pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
     let input = parse_macro_input!(item as Styles);

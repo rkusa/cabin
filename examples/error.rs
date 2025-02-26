@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::{error, fmt};
 
-use cabin::{basic_document, View};
+use cabin::{View, basic_document};
 use http::{Request, StatusCode};
 use http_error::AnyHttpError;
 use tokio::net::TcpListener;

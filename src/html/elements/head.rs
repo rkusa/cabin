@@ -1,7 +1,7 @@
+use crate::View;
 use crate::html::attributes::Attributes;
 use crate::html::{Global, Html};
 use crate::view::UpdateView;
-use crate::View;
 
 /// The `head` element represents a collection of metadata for the document.
 pub fn head(content: impl View) -> UpdateView<Html<marker::Head, (), impl View>> {

@@ -1,6 +1,6 @@
 use super::RenderFuture;
-use crate::render::Renderer;
 use crate::View;
+use crate::render::Renderer;
 
 type ViewBoxRenderer = dyn FnOnce(Renderer, bool) -> RenderFuture + Send;
 

@@ -4,9 +4,9 @@ use super::blockquote::Cite;
 use super::common::Common;
 use super::global::Global;
 use super::time::Datetime;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `del` element represents a removal from the document.
 pub fn del(content: impl View) -> Html<marker::Del, (), impl View> {

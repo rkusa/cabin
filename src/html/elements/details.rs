@@ -1,9 +1,9 @@
 use super::common::Common;
 use super::dialog::Open;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `details` element represents a disclosure widget from which the user can obtain additional
 /// information or controls.

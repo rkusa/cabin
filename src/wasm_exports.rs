@@ -1,20 +1,22 @@
 use std::alloc::Layout;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 unsafe fn alloc(size: usize) -> *mut u8 {
     let align = core::mem::align_of::<usize>();
-    let layout = Layout::from_size_align_unchecked(size, align);
-    std::alloc::alloc(layout)
+    let layout = unsafe { Layout::from_size_align_unchecked(size, align) };
+    unsafe { std::alloc::alloc(layout) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 unsafe fn dealloc(ptr: *mut u8, size: usize) {
     let align = core::mem::align_of::<usize>();
-    let layout = Layout::from_size_align_unchecked(size, align);
-    std::alloc::dealloc(ptr, layout);
+    let layout = unsafe { Layout::from_size_align_unchecked(size, align) };
+    unsafe {
+        std::alloc::dealloc(ptr, layout);
+    }
 }
 
-extern "C" {
+unsafe extern "C" {
     fn error(msg: *mut u8, msg_len: usize);
 }
 
@@ -32,7 +34,7 @@ fn panic_hook(info: &std::panic::PanicHookInfo) {
     fail(&msg);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn init_panic_hook() {
     std::panic::set_hook(Box::new(panic_hook));
 }

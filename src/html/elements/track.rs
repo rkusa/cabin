@@ -6,8 +6,8 @@ use cabin_macros::Attribute;
 use super::global::Global;
 use super::option::Label;
 use super::script::Src;
-use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::Html;
+use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.

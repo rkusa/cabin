@@ -2,14 +2,14 @@
 
 extern crate self as cabin;
 
-pub use cabin_macros::{boundary, Attribute, Event};
+pub use cabin_macros::{Attribute, Event, boundary};
 pub use error::Error;
 pub use html::h;
 pub use http::StatusCode;
 pub use redirect::Redirect;
 #[cfg(not(target_arch = "wasm32"))]
 pub use server::{
-    basic_document, cabin_scripts, content_hash, get_page, put_page, CABIN_JS, LIVERELOAD_JS,
+    CABIN_JS, LIVERELOAD_JS, basic_document, cabin_scripts, content_hash, get_page, put_page,
 };
 pub use view::View;
 

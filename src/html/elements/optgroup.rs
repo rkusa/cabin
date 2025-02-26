@@ -4,9 +4,9 @@ use super::button::Disabled;
 use super::common::Common;
 use super::global::Global;
 use super::option::Label;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
 pub fn optgroup(content: impl View) -> Html<marker::OptGroup, (), impl View> {

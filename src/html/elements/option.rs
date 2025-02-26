@@ -6,9 +6,9 @@ use super::button::Disabled;
 use super::common::Common;
 use super::global::Global;
 use super::input::Value;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.

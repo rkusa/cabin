@@ -8,9 +8,9 @@ use super::global::Global;
 use super::input::{Height, Width};
 use super::link::CrossOrigin;
 use super::script::Src;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
 pub fn video(content: impl View) -> Html<marker::Video, (), impl View> {

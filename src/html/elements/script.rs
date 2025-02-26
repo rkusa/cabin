@@ -7,11 +7,11 @@ use super::anchor::ReferrerPolicy;
 use super::common::Common;
 use super::global::Global;
 use super::link::{Blocking, CrossOrigin, FetchPriority, Type};
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 use crate::render::{Escape, Renderer};
 use crate::view::RenderFuture;
-use crate::View;
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
 pub fn script(content: impl Into<Cow<'static, str>>) -> Html<marker::Script, (), impl View> {

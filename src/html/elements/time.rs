@@ -4,9 +4,9 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.

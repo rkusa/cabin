@@ -3,9 +3,9 @@ use std::borrow::Cow;
 use super::common::Common;
 use super::global::Global;
 use super::meter::{Max, Value};
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
-use crate::View;
 
 /// The `progress` element represents the completion progress of a task. The progress is either
 /// indeterminate, indicating that progress is being made but that it is not clear how much more
