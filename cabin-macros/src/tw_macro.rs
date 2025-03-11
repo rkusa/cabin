@@ -2,8 +2,8 @@ use proc_macro::TokenStream;
 use quote::{ToTokens, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::token::{Comma, Dot, Paren};
-use syn::{ExprLit, Ident, Path, parse_macro_input};
+use syn::token::{Comma, Dot, Minus, Paren};
+use syn::{Ident, Lit, Path, parse_macro_input};
 
 pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
     let input = parse_macro_input!(item as Styles);
@@ -59,7 +59,7 @@ enum StyleExpr {
     Call {
         func: Path,
         paren_token: Paren,
-        args: Punctuated<ExprLit, Comma>,
+        args: Punctuated<StyleArg, Comma>,
         // e.g.: css::w::px(46).hover()
         method_calls: StyleMethodCalls,
     },
@@ -81,7 +81,13 @@ struct StyleMethodCall {
     dot_token: Dot,
     method: Option<Ident>,      // optional to allow incomplete inputs
     paren_token: Option<Paren>, // optional to allow incomplete inputs
-    args: Option<Punctuated<ExprLit, Comma>>, // optional to allow incomplete inputs
+    args: Option<Punctuated<StyleArg, Comma>>, // optional to allow incomplete inputs
+}
+
+#[derive(Debug, Hash, Clone)]
+struct StyleArg {
+    pub neg_token: Option<Minus>,
+    pub lit: Lit,
 }
 
 impl Parse for StyleExpr {
@@ -102,7 +108,7 @@ impl Parse for StyleExpr {
             Ok(StyleExpr::Call {
                 func: path,
                 paren_token: syn::parenthesized!(content in input),
-                args: content.parse_terminated(ExprLit::parse, Comma)?,
+                args: content.parse_terminated(StyleArg::parse, Comma)?,
                 method_calls: input.parse()?,
             })
         } else {
@@ -129,7 +135,7 @@ impl Parse for StyleMethodCalls {
                 },
                 paren_token: if input.peek(Paren) {
                     let paren_token = syn::parenthesized!(content in input);
-                    args = Some(content.parse_terminated(ExprLit::parse, Comma)?);
+                    args = Some(content.parse_terminated(StyleArg::parse, Comma)?);
                     Some(paren_token)
                 } else {
                     None
@@ -144,6 +150,19 @@ impl Parse for StyleMethodCalls {
             } else {
                 Some(method_calls)
             },
+        })
+    }
+}
+
+impl Parse for StyleArg {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            neg_token: if input.peek(Minus) {
+                Some(input.parse()?)
+            } else {
+                None
+            },
+            lit: input.parse()?,
         })
     }
 }
@@ -206,6 +225,19 @@ impl ToTokens for StyleMethodCalls {
                 method_call.to_tokens(tokens);
             }
         }
+    }
+}
+
+impl ToTokens for StyleArg {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let StyleArg {
+            neg_token: neg,
+            lit,
+        } = self;
+        if let Some(neg) = neg {
+            neg.to_tokens(tokens);
+        }
+        lit.to_tokens(tokens);
     }
 }
 
