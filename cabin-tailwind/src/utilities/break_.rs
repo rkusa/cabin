@@ -17,7 +17,7 @@ pub const NORMAL: PropertyTwice = PropertyTwice(WORD_BREAK, OVERFLOW_WRAP, "norm
 /// ```css
 /// word-break: break-wird;
 /// ```
-pub const WORD: Property = Property(WORD_BREAK, "break-wird");
+pub const WORD: Property = Property(WORD_BREAK, "break-word");
 
 /// ```css
 /// word-break: break-all;
