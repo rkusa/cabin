@@ -219,10 +219,6 @@ where
     Args: Clone + Serialize + Send + Sync + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
-        // ensure register calls are already executed
-        #[cfg(not(target_arch = "wasm32"))]
-        crate::boundary_registry::BoundaryRegistry::global();
-
         let Some(args) = self.args else {
             return self.view.render(r, include_hash);
         };

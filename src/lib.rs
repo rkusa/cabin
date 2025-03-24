@@ -2,7 +2,7 @@
 
 extern crate self as cabin;
 
-pub use cabin_macros::{Attribute, Event, boundary};
+pub use cabin_macros::{Attribute, BOUNDARIES, Event, boundary};
 pub use error::Error;
 pub use html::h;
 pub use http::StatusCode;

@@ -5,7 +5,6 @@ use std::sync::Arc;
 use bytes::Bytes;
 use http::{HeaderValue, Request, Response, StatusCode};
 use http_body::Body;
-use once_cell::race::OnceBox;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
@@ -17,28 +16,18 @@ use crate::server::{err_to_response, parse_body};
 use crate::view::RenderFuture;
 use crate::view::boundary::BoundaryRef;
 
-#[linkme::distributed_slice]
-pub static BOUNDARIES: [fn(&mut BoundaryRegistry)] = [..];
-
-static REGISTRY: OnceBox<BoundaryRegistry> = OnceBox::new();
-
 type BoundaryHandler = dyn Send + Sync + Fn(&str, Renderer) -> RenderFuture;
 
+#[derive(Default)]
 pub struct BoundaryRegistry {
     handler: HashMap<&'static str, Arc<BoundaryHandler>>,
 }
 
 impl BoundaryRegistry {
-    pub fn global() -> &'static Self {
-        REGISTRY.get_or_init(|| {
-            let mut registry = Self {
-                handler: Default::default(),
-            };
-            for f in BOUNDARIES {
-                (f)(&mut registry);
-            }
-            Box::new(registry)
-        })
+    pub fn add(&mut self, boundaries: &'static [fn(&mut BoundaryRegistry)]) {
+        for f in boundaries {
+            (f)(self);
+        }
     }
 
     pub fn register<Args>(&mut self, boundary: &'static BoundaryRef<Args>)

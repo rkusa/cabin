@@ -105,7 +105,7 @@ pub fn boundary_attribute(
                 );
 
             #[cfg(not(target_arch = "wasm32"))]
-            #[::cabin::private::linkme::distributed_slice(::cabin::boundary_registry::BOUNDARIES)]
+            #[::cabin::private::linkme::distributed_slice(crate::BOUNDARIES)]
             #[linkme(crate = ::cabin::private::linkme)]
             fn __register(r: &mut ::cabin::boundary_registry::BoundaryRegistry) {
                 r.register(&BOUNDARY)

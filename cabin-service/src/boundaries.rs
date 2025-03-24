@@ -1,32 +1,54 @@
 use std::convert::Infallible;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
+use cabin::boundary_registry::BoundaryRegistry;
 use http::{Method, Request, Response};
 use tower_layer::Layer;
 use tower_service::Service;
 
-pub fn layer() -> BoundariesLayer {
-    BoundariesLayer
+pub fn layer(boundaries: &'static [fn(&mut BoundaryRegistry)]) -> BoundariesLayer {
+    BoundariesLayer {
+        boundaries: vec![boundaries],
+    }
 }
 
 /// Layer to handle framework specific requests.
 #[derive(Clone)]
-pub struct BoundariesLayer;
+pub struct BoundariesLayer {
+    boundaries: Vec<&'static [fn(&mut BoundaryRegistry)]>,
+}
 
 /// Service to handle framework specific requests.
 #[derive(Clone)]
 pub struct BoundariesService<S> {
+    registry: Arc<BoundaryRegistry>,
     service: S,
+}
+
+impl BoundariesLayer {
+    pub fn with(mut self, boundaries: &'static [fn(&mut BoundaryRegistry)]) -> Self {
+        self.boundaries.push(boundaries);
+        self
+    }
 }
 
 impl<S> Layer<S> for BoundariesLayer {
     type Service = BoundariesService<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        BoundariesService { service: inner }
+        let mut registry = BoundaryRegistry::default();
+        for boundaries in &self.boundaries {
+            registry.add(boundaries);
+        }
+
+        BoundariesService {
+            registry: Arc::new(registry),
+            service: inner,
+        }
     }
 }
 
@@ -51,6 +73,7 @@ where
     }
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
+        let registry = Arc::clone(&self.registry);
         let mut service = self.service.clone();
         Box::pin(async move {
             if let Some(id) = (req.method() == Method::PUT)
@@ -58,9 +81,7 @@ where
                 .flatten()
             {
                 let id = id.to_string();
-                let res = cabin::boundary_registry::BoundaryRegistry::global()
-                    .handle(&id, req)
-                    .await;
+                let res = registry.handle(&id, req).await;
                 let (parts, body) = res.into_parts();
                 Ok(Response::from_parts(parts, body.into()))
             } else {

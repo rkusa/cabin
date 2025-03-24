@@ -1,3 +1,4 @@
+mod boundaries_macro;
 mod boundary_attribute;
 mod derive_attribute;
 mod derive_event;
@@ -93,4 +94,13 @@ pub fn STYLES(item: TokenStream) -> TokenStream {
         panic!("no arguments expected");
     }
     styles_macro::styles_macro()
+}
+
+#[proc_macro]
+#[allow(non_snake_case)]
+pub fn BOUNDARIES(item: TokenStream) -> TokenStream {
+    if !item.is_empty() {
+        panic!("no arguments expected");
+    }
+    boundaries_macro::boundaries_macro()
 }

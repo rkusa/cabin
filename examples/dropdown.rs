@@ -49,6 +49,8 @@ struct Toggle(bool);
 #[derive(Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
+cabin::BOUNDARIES!();
+
 #[tokio::main]
 async fn main() {
     let filter =
@@ -67,7 +69,7 @@ async fn main() {
                 .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
         .layer(cabin_service::redirects::layer())
-        .layer(cabin_service::boundaries::layer())
+        .layer(cabin_service::boundaries::layer(&BOUNDARIES))
         .layer(cabin_service::livereload::layer())
         .layer(cabin_service::assets::layer());
 
