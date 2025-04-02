@@ -246,7 +246,6 @@ async function update(
  * @param {Set<string>?} opts.events - list of events the boundary should handle
  * @param {bool?} opts.preventDefault - whether the default of the event should be prevented
  * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
- * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
  * @param {bool?} opts.disableForm - whether to disable the target's form (but only up to the next
  * boundary)
  * @param {(e: Event) => Record<string, any>} opts.eventPayload - custom event payload
@@ -631,6 +630,7 @@ function patchAttributes(
         // intentional change from the server.
         if (childBefore.getAttribute("value") !== newValue) {
           // console.log("update attribute", name);
+          childBefore.setAttribute("value", newValue);
           childBefore.value = newValue;
         }
         break;
