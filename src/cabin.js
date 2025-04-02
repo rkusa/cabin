@@ -1,13 +1,22 @@
 {
   const ENCODER = new TextEncoder();
   const DECODER = new TextDecoder();
-  const WASM = new Promise((resolve) => {
+  const WASM = { href: null, wasm: null };
+
+  /**
+   * @return {Promise<WebAssembly.WebAssemblyInstantiatedSource?}
+   */
+  async function loadWasm() {
     const path = document.querySelector(
       "link[rel='cabin-components'][type='application/wasm']",
     );
     if (path && path.href) {
-      resolve(
-        WebAssembly.instantiateStreaming(fetch(path.href), {
+      if (path.href === WASM.href) {
+        return WASM.wasm;
+      }
+
+      try {
+        const wasm = await WebAssembly.instantiateStreaming(fetch(path.href), {
           env: {
             error(msgPtr, msgLen) {
               WASM.then((wasm) => {
@@ -22,20 +31,20 @@
               });
             },
           },
-        })
-          .then((wasm) => {
-            wasm.instance.exports.init_panic_hook();
-            return wasm;
-          })
-          .catch((err) => {
-            console.error("failed to load components.wasm: ", err);
-            return null;
-          }),
-      );
-    } else {
-      resolve(null);
+        });
+        wasm.instance.exports.init_panic_hook();
+
+        WASM.href = path.href;
+        WASM.wasm = wasm;
+
+        return wasm;
+      } catch (err) {
+        console.error("failed to load components.wasm: ", err);
+      }
     }
-  });
+
+    return null;
+  }
 
   /**
    * @param {string} eventId
@@ -72,7 +81,7 @@
 
       if (target instanceof CabinBoundary) {
         const name = target.getAttribute("name");
-        const wasm = await WASM;
+        const wasm = await loadWasm();
         if (
           wasm &&
           wasm.instance.exports[name] &&
