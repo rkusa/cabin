@@ -57,6 +57,7 @@ where
                                 Some(payload)
                             }
                             Err(err) => {
+                                tracing::debug!(?payload, "event payload");
                                 state.error = Some(InternalError::Deserialize {
                                     what: "event json payload",
                                     err: Box::new(err),
@@ -72,6 +73,7 @@ where
                                     Some(payload)
                                 }
                                 Err(err) => {
+                                    tracing::debug!(payload, "event payload");
                                     state.error = Some(InternalError::Deserialize {
                                         what: "event urlencoded payload",
                                         err: Box::new(err),
@@ -81,7 +83,7 @@ where
                             }
                         }
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(_) => match serde_json::from_str("null")
+                        Payload::UrlEncoded(payload) => match serde_json::from_str("null")
                             .or_else(|_| serde_json::from_str("{}"))
                         {
                             Ok(payload) => {
@@ -89,6 +91,7 @@ where
                                 Some(payload)
                             }
                             Err(err) => {
+                                tracing::debug!(payload, "event payload");
                                 state.error = Some(InternalError::Deserialize {
                                     what: "event empty urlencoded payload",
                                     err: Box::new(err),
@@ -125,6 +128,7 @@ where
                         Payload::Json(payload) => match serde_json::from_str(payload.get()) {
                             Ok(payload) => Some(payload),
                             Err(err) => {
+                                tracing::debug!(?payload, "event payload");
                                 state.error = Some(InternalError::Deserialize {
                                     what: "event json payload",
                                     err: Box::new(err),
@@ -137,6 +141,7 @@ where
                             match serde_html_form::from_str(&payload) {
                                 Ok(payload) => Some(payload),
                                 Err(err) => {
+                                    tracing::debug!(payload, "event payload");
                                     state.error = Some(InternalError::Deserialize {
                                         what: "event urlencoded payload",
                                         err: Box::new(err),
@@ -146,11 +151,12 @@ where
                             }
                         }
                         #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(_) => match serde_json::from_str("null")
+                        Payload::UrlEncoded(payload) => match serde_json::from_str("null")
                             .or_else(|_| serde_json::from_str("{}"))
                         {
                             Ok(payload) => Some(payload),
                             Err(err) => {
+                                tracing::debug!(payload, "event payload");
                                 state.error = Some(InternalError::Deserialize {
                                     what: "event empty urlencoded payload",
                                     err: Box::new(err),
