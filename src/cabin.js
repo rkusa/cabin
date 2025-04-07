@@ -19,7 +19,7 @@
         const wasm = await WebAssembly.instantiateStreaming(fetch(path.href), {
           env: {
             error(msgPtr, msgLen) {
-              WASM.then((wasm) => {
+              loadWasm().then((wasm) => {
                 const data = new Uint8Array(
                   wasm.instance.exports.memory.buffer,
                   msgPtr,
@@ -92,22 +92,20 @@
           const event = `{"eventId":${JSON.stringify(eventId)},"payload":${JSON.stringify(payload)}${
             state ? `,"state":${state}` : ""
           }}`;
-          const eventPtr = wasm.instance.exports.alloc(event.length);
-          ENCODER.encodeInto(
-            event,
-            new Uint8Array(
-              wasm.instance.exports.memory.buffer,
-              eventPtr,
-              event.length,
-            ),
-          );
+          const eventUtf8 = ENCODER.encode(event);
+          const eventPtr = wasm.instance.exports.alloc(eventUtf8.length);
+          new Uint8Array(
+            wasm.instance.exports.memory.buffer,
+            eventPtr,
+            eventUtf8.length,
+          ).set(eventUtf8);
           const outPtr = wasm.instance.exports.alloc(4);
           const len = wasm.instance.exports[name](
             eventPtr,
-            event.length,
+            eventUtf8.length,
             outPtr,
           );
-          wasm.instance.exports.dealloc(eventPtr, event.length);
+          wasm.instance.exports.dealloc(eventPtr, eventUtf8.length);
           if (len > 0) {
             const view = new DataView(wasm.instance.exports.memory.buffer);
             const ptr = view.getInt32(outPtr, true);

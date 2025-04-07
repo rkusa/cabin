@@ -89,7 +89,9 @@ where
         let mut event = match serde_json::from_str::<JsonEvent>(event) {
             Ok(event) => event,
             Err(err) => {
-                crate::wasm_exports::fail(format!("failed to parse event as json: {err}"));
+                crate::wasm_exports::fail(format!(
+                    "failed to parse event as json: {err} (json: `{event}`)"
+                ));
                 return 0;
             }
         };
