@@ -106,7 +106,7 @@ impl StyleRegistry {
             }
             writeln!(&mut out).unwrap();
 
-            let hash = XxHash32::oneshot(0, out[pos..].as_bytes());
+            let hash = XxHash32::oneshot(0, &out.as_bytes()[pos..]);
 
             // write actual class name, prepend `_` as it class names must not start with a number
             let name = styles
