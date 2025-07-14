@@ -29,7 +29,7 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
     if !valid_attribute_name(&attr_name) {
         return Err(Error::new(
             ident.span(),
-            format!("Invalid html attribute name `{}`", attr_name),
+            format!("Invalid html attribute name `{attr_name}`"),
         ));
     }
 

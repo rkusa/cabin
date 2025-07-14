@@ -113,7 +113,7 @@ pub enum InternalError {
     MissingBoundaryAttribute,
 }
 
-impl From<InternalError> for Box<(dyn HttpError + Send + 'static)> {
+impl From<InternalError> for Box<dyn HttpError + Send + 'static> {
     fn from(err: InternalError) -> Self {
         Box::new(err)
     }
@@ -142,7 +142,7 @@ impl fmt::Display for Error {
                 if let Some(err) = source {
                     err.fmt(f)
                 } else {
-                    write!(f, "failed with status code {}", status)
+                    write!(f, "failed with status code {status}")
                 }
             }
         }

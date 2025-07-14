@@ -271,7 +271,7 @@ impl fmt::Display for EventsList {
             if i > 0 {
                 f.write_str(",")?;
             }
-            write!(f, "{}", ev)?;
+            write!(f, "{ev}")?;
         }
 
         Ok(())

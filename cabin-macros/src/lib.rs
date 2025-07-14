@@ -6,10 +6,9 @@ mod styles_macro;
 mod tw_macro;
 
 use proc_macro::TokenStream;
-use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::token::{Comma, Eq};
-use syn::{DeriveInput, Expr, Ident, ItemFn, Type, parse_macro_input};
+use syn::token::Comma;
+use syn::{DeriveInput, ItemFn, Type, parse_macro_input};
 
 #[proc_macro_derive(Attribute, attributes(attribute))]
 pub fn derive_attribute(item: TokenStream) -> TokenStream {
@@ -46,24 +45,6 @@ pub fn wasm_boundary(attr: TokenStream, item: TokenStream) -> TokenStream {
     match boundary_attribute::boundary_attribute(input, events, true) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
-    }
-}
-
-#[derive(Debug, Hash)]
-struct OptionExpr {
-    key: Ident,
-    value: Option<Expr>,
-}
-
-impl Parse for OptionExpr {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let key = Ident::parse(input)?;
-        let value = if Option::<Eq>::parse(input)?.is_some() {
-            Some(Expr::parse(input)?)
-        } else {
-            None
-        };
-        Ok(OptionExpr { key, value })
     }
 }
 

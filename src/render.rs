@@ -123,8 +123,8 @@ impl ElementRenderer {
         self.renderer.write(name.as_bytes());
         value.hash(&mut self.renderer);
 
-        write!(&mut self.renderer.out, r#" {}=""#, name,)?;
-        write!(Escape::attribute_value(&mut self.renderer.out), "{}", value)?;
+        write!(&mut self.renderer.out, r#" {name}=""#,)?;
+        write!(Escape::attribute_value(&mut self.renderer.out), "{value}")?;
         write!(&mut self.renderer.out, r#"""#)?;
 
         Ok(())
@@ -136,7 +136,7 @@ impl ElementRenderer {
         }
         self.renderer.write(name.as_bytes());
 
-        write!(&mut self.renderer.out, r#" {}"#, name,)?;
+        write!(&mut self.renderer.out, r#" {name}"#,)?;
 
         Ok(())
     }
@@ -158,7 +158,7 @@ impl ElementRenderer {
 
         let hash = self.renderer.finish() as u32;
         if let Some(offset) = self.hash_offset {
-            write!(WriteInto::new(&mut self.renderer.out, offset), "{:x}", hash).unwrap();
+            write!(WriteInto::new(&mut self.renderer.out, offset), "{hash:x}").unwrap();
         }
 
         self.parent_hasher.write_u32(hash);
