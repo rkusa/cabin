@@ -53,10 +53,10 @@ pub fn boundary_attribute(
         .iter()
         .cloned()
         .map(|mut input| {
-            if let FnArg::Typed(PatType { pat, .. }) = &mut input {
-                if let Pat::Ident(ident) = pat.as_mut() {
-                    ident.mutability = None;
-                }
+            if let FnArg::Typed(PatType { pat, .. }) = &mut input
+                && let Pat::Ident(ident) = pat.as_mut()
+            {
+                ident.mutability = None;
             }
             input
         })

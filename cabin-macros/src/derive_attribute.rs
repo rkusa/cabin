@@ -96,10 +96,10 @@ pub(crate) enum Kind {
 }
 
 pub(crate) fn extract_inner_type(ty: &Type) -> syn::Result<(&Type, Kind)> {
-    if let Type::Path(p) = ty {
-        if p.path.is_ident("bool") {
-            return Ok((ty, Kind::Bool));
-        }
+    if let Type::Path(p) = ty
+        && p.path.is_ident("bool")
+    {
+        return Ok((ty, Kind::Bool));
     }
 
     Ok((ty, Kind::Other))
