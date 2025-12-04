@@ -7,7 +7,6 @@ use twox_hash::XxHash32;
 use super::RenderFuture;
 pub use super::View;
 use crate::render::Renderer;
-use crate::scope::Scope;
 
 pub trait IteratorExt
 where
@@ -39,6 +38,7 @@ pub struct Keyed<I, F, K> {
     f: F,
     marker: PhantomData<K>,
 }
+
 impl<I, F, K> Keyed<I, F, K>
 where
     I: Iterator,
@@ -59,10 +59,10 @@ where
     ) -> Map<I, impl FnMut(I::Item) -> KeyedView<B>> {
         self.iter.map(move |item| {
             let key = hash((self.f)(&item));
-            Scope::keyed_sync(key, || KeyedView {
+            KeyedView {
                 key,
                 view: (f)(item),
-            })
+            }
         })
     }
 }
@@ -85,42 +85,60 @@ where
     }
 }
 
-impl<Iter, FV, V> View for Map<Iter, FV>
+impl<'v, Iter, FV, V> View<'v> for Map<Iter, FV>
 where
-    Iter: Iterator + Send + 'static,
-    FV: FnMut(Iter::Item) -> V + Send + 'static,
-    V: View,
+    Iter: Iterator + 'v,
+    FV: FnMut(Iter::Item) -> V + 'v,
+    V: View<'v>,
 {
-    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
-        RenderFuture::Future(Box::pin(async move {
-            for i in self {
-                let fut = i.render(r, true);
-                r = fut.await?;
+    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+        while let Some(i) = self.next() {
+            match i.render(r) {
+                RenderFuture::Ready(Some(Ok(renderer))) => r = renderer,
+                RenderFuture::Ready(Some(Err(err))) => return RenderFuture::Ready(Some(Err(err))),
+                RenderFuture::Ready(None) => return RenderFuture::Ready(None),
+                // Only return future upon the first future item is encountered
+                RenderFuture::Future(future) => {
+                    return RenderFuture::Future(Box::pin(async move {
+                        let mut r = future.await?;
+                        for i in self {
+                            r = i.render(r).await?;
+                        }
+                        Ok(r)
+                    }));
+                }
             }
-            Ok(r)
-        }))
+        }
+        RenderFuture::Ready(Some(Ok(r)))
     }
-
-    // TODO: any way to prime without consuming the iterator?
 }
 
-impl<Iter, FV, V> View for FilterMap<Iter, FV>
+impl<'v, Iter, FV, V> View<'v> for FilterMap<Iter, FV>
 where
-    Iter: Iterator + Send + 'static,
-    FV: FnMut(Iter::Item) -> Option<V> + Send + 'static,
-    V: View,
+    Iter: Iterator + Send + 'v,
+    FV: FnMut(Iter::Item) -> Option<V> + Send + 'v,
+    V: View<'v>,
 {
-    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
-        RenderFuture::Future(Box::pin(async move {
-            for i in self {
-                let fut = i.render(r, true);
-                r = fut.await?;
+    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+        while let Some(i) = self.next() {
+            match i.render(r) {
+                RenderFuture::Ready(Some(Ok(renderer))) => r = renderer,
+                RenderFuture::Ready(Some(Err(err))) => return RenderFuture::Ready(Some(Err(err))),
+                RenderFuture::Ready(None) => return RenderFuture::Ready(None),
+                // Only return future upon the first future item is encountered
+                RenderFuture::Future(future) => {
+                    return RenderFuture::Future(Box::pin(async move {
+                        let mut r = future.await?;
+                        for i in self {
+                            r = i.render(r).await?;
+                        }
+                        Ok(r)
+                    }));
+                }
             }
-            Ok(r)
-        }))
+        }
+        RenderFuture::Ready(Some(Ok(r)))
     }
-
-    // TODO: any way to prime without consuming the iterator?
 }
 
 fn hash(val: impl Hash) -> u32 {
@@ -134,16 +152,30 @@ pub struct KeyedView<V> {
     view: V,
 }
 
-impl<V> View for KeyedView<V>
+impl<'v, V> View<'v> for KeyedView<V>
 where
-    V: View,
+    V: View<'v>,
 {
-    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
-        RenderFuture::Future(Box::pin(async move {
-            let mut el = r.element("cabin-keyed", true)?;
-            el.attribute("id", self.key)
-                .map_err(crate::error::InternalError::from)?;
-            el.content(self.view).await
-        }))
+    fn render(self, mut r: Renderer) -> RenderFuture<'v> {
+        let hash_offset = r.start_element("cabin-keyed");
+        r.attribute("id", self.key);
+        r.start_content();
+
+        match self.view.render(r) {
+            RenderFuture::Ready(Some(Ok(mut r))) => {
+                r.end_element("cabin-keyed", false, hash_offset);
+                RenderFuture::ready(Ok(r))
+            }
+            rf @ RenderFuture::Ready(_) => rf,
+            RenderFuture::Future(future) => RenderFuture::Future(Box::pin(async move {
+                match future.await {
+                    Ok(mut r) => {
+                        r.end_element("cabin-keyed", false, hash_offset);
+                        Ok(r)
+                    }
+                    Err(err) => Err(err),
+                }
+            })),
+        }
     }
 }

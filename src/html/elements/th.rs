@@ -3,77 +3,55 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use super::td::{ColSpan, Headers, RowSpan};
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 use crate::html::list::SpaceSeparated;
-use crate::html::{Aria, Html};
 
-/// The `th` element represents a header cell in a [super::table].
-pub fn th(content: impl View) -> Html<marker::Th, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("th", (), content)
+impl Context {
+    /// The `th` element represents a header cell in a [super::table].
+    pub fn th(&self) -> Element<'_, marker::Th> {
+        Element::new(self, "th")
+    }
 }
 
 pub mod marker {
     pub struct Th;
 }
 
-impl<A: Attributes, V: 'static> Th for Html<marker::Th, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Th, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Th, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Th, A, V> {}
+impl<'v> Th for Element<'v, marker::Th> {}
+impl<'v> Common for Element<'v, marker::Th> {}
+impl<'v> Global for Element<'v, marker::Th> {}
+impl<'v> Aria for Element<'v, marker::Th> {}
 
 /// The `th` element represents a header cell in a [super::table].
 pub trait Th: WithAttribute {
     /// Number of columns that the cell is to span.
-    fn col_span(self, col_span: u32) -> Self::Output<ColSpan> {
+    fn col_span(self, col_span: u32) -> Self {
         self.with_attribute(ColSpan(col_span))
     }
 
     /// Number of rows that the cell is to span.
-    fn row_span(self, row_span: u32) -> Self::Output<RowSpan> {
+    fn row_span(self, row_span: u32) -> Self {
         self.with_attribute(RowSpan(row_span))
     }
 
     /// The header cells for this cell.
-    fn headers(
-        self,
-        headers: impl Into<SpaceSeparated<Cow<'static, str>>>,
-    ) -> Self::Output<Headers> {
+    fn headers(self, headers: impl Into<SpaceSeparated<Cow<'static, str>>>) -> Self {
         self.with_attribute(Headers(headers.into()))
     }
 
-    /// Appends a header cell for this cell.
-    fn append_header(mut self, header: impl Into<Cow<'static, str>>) -> Self::Output<Headers> {
-        let headers = if let Some(list) = self.get_attribute_mut::<Headers>() {
-            Headers(
-                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Cow::Borrowed(""))) {
-                    SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, header.into()].into())
-                    }
-                    SpaceSeparated::List(mut list) => {
-                        list.insert(header.into());
-                        SpaceSeparated::List(list)
-                    }
-                },
-            )
-        } else {
-            Headers(SpaceSeparated::Single(header.into()))
-        };
-        self.with_attribute(headers)
-    }
-
     /// Specifies which cells the header cell applies to.
-    fn scope(self, scope: Scope) -> Self::Output<Scope> {
+    fn scope(self, scope: Scope) -> Self {
         self.with_attribute(scope)
     }
 
     /// Alternative label to use for the header cell when referencing the cell in other contexts.
-    fn abbr(self, abbr: impl Into<Cow<'static, str>>) -> Self::Output<Abbr> {
+    fn abbr(self, abbr: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Abbr(abbr.into()))
     }
 }

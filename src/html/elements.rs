@@ -1,5 +1,3 @@
-use crate::error::InternalError;
-
 pub mod anchor;
 pub mod area;
 pub mod aria;
@@ -52,41 +50,33 @@ pub mod title;
 pub mod track;
 pub mod video;
 
-pub(crate) type SerializeEventFn =
-    dyn FnOnce() -> Result<(&'static str, String), InternalError> + Send;
-
 macro_rules! vanilla_element {
     ($method_name:ident, $marker_name:ident, $doc:literal) => {
         pub mod $method_name {
             #[allow(unused)]
             use crate::prelude::*;
 
-            #[doc = $doc]
-            pub fn $method_name(
-                content: impl $crate::View,
-            ) -> $crate::html::Html<marker::$marker_name, (), impl $crate::View> {
-                #[cfg(debug_assertions)]
-                let content = content.boxed();
-                $crate::html::Html::new(stringify!($method_name), (), content)
+            impl $crate::context::Context {
+                #[doc = $doc]
+                pub fn $method_name(&self) -> $crate::element::Element<'_, marker::$marker_name> {
+                    $crate::element::Element::new(self, stringify!($method_name))
+                }
             }
 
             pub mod marker {
                 pub struct $marker_name;
             }
 
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::common::Common
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<'v> $crate::html::elements::common::Common
+                for $crate::element::Element<'v, marker::$marker_name>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::global::Global
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<'v> $crate::html::elements::global::Global
+                for $crate::element::Element<'v, marker::$marker_name>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::aria::Aria
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<'v> $crate::html::elements::aria::Aria
+                for $crate::element::Element<'v, marker::$marker_name>
             {
             }
         }
@@ -99,28 +89,29 @@ macro_rules! vanilla_void_element {
             #[allow(unused)]
             use crate::prelude::*;
 
-            #[doc = $doc]
-            pub fn $method_name() -> $crate::html::Html<marker::$marker_name, (), ()> {
-                $crate::html::Html::new(stringify!($method_name), (), ()).into_void_element()
+            impl $crate::context::Context {
+                #[doc = $doc]
+                pub fn $method_name(
+                    &self,
+                ) -> $crate::void_element::VoidElement<'_, marker::$marker_name> {
+                    $crate::void_element::VoidElement::new(self, stringify!($method_name))
+                }
             }
 
             pub mod marker {
                 pub struct $marker_name;
             }
 
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::common::Common
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<'v> $crate::html::elements::common::Common
+                for $crate::void_element::VoidElement<'v, marker::$marker_name>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::global::Global
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<'v> $crate::html::elements::global::Global
+                for $crate::void_element::VoidElement<'v, marker::$marker_name>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::aria::Aria
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<'v> $crate::html::elements::aria::Aria
+                for $crate::void_element::VoidElement<'v, marker::$marker_name>
             {
             }
         }

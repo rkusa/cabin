@@ -1,28 +1,31 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::scope::event;
-use cabin::{Event, basic_document, html};
+use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
-    basic_document(dialog("Hello World"))
+async fn app(c: &Context) -> impl View<'_> {
+    basic_document(c, dialog(c, "Hello World"))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Toggle(bool);
 
-fn dialog(content: impl View) -> impl View {
-    let open = event::<Toggle>().unwrap_or_default();
+fn dialog<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'v> {
+    let open = c.event::<Toggle>().unwrap_or_default();
 
-    (
-        open.0.then_some(
-            html::dialog((content, h::button("close").on_click(Toggle(false)))).with_open(open.0),
-        ),
-        h::button("open").on_click(Toggle(true)),
-    )
+    c.fragment()
+        .child(
+            open.0.then_some(
+                c.dialog()
+                    .with_open(open.0)
+                    .child(content)
+                    .child(c.button().on_click(Toggle(false)).child("close")),
+            ),
+        )
+        .child(c.button().on_click(Toggle(true)).child("open"))
 }
 
 cabin::BOUNDARIES!();

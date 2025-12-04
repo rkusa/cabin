@@ -7,25 +7,32 @@ use cabin::view::FutureExt;
 use http::Request;
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
+async fn app(c: &Context) -> impl View<'_> {
     let start = Instant::now();
-    basic_document(h::ul((
-        delayed(start, Duration::from_secs(1)).into_view(),
-        delayed(start, Duration::from_secs(2)).into_view(),
-        delayed(start, Duration::from_secs(3)).into_view(),
-        h::text!("page finished after {:.2}", start.elapsed().as_secs_f64()),
-    )))
+    basic_document(
+        c,
+        c.ul()
+            .child(
+                c.fragment()
+                    .child(delayed(c, start, Duration::from_secs(1)).into_view())
+                    .child(delayed(c, start, Duration::from_secs(2)).into_view())
+                    .child(delayed(c, start, Duration::from_secs(3)).into_view())
+                    .finish()
+                    .await,
+            )
+            .child(text!(
+                "page finished after {:.2}",
+                start.elapsed().as_secs_f64()
+            )),
+    )
 }
 
-async fn delayed(start: Instant, delay: Duration) -> impl View {
+async fn delayed(c: &Context, start: Instant, delay: Duration) -> impl View<'_> {
     let started_at = start.elapsed();
     let inner = Instant::now();
     tokio::time::sleep(delay).await;
-    let task_local = TASK_LOCAL
-        .try_with(|_| "task local works")
-        .unwrap_or("task local DOES NOT work");
-    h::li(h::text!(
-        "delayed for {:?}, started after {:.2}, took {:.2}, finished after {:.2} -- {task_local}",
+    c.li().child(text!(
+        "delayed for {:?}, started after {:.2}, took {:.2}, finished after {:.2}",
         delay,
         started_at.as_secs_f64(),
         inner.elapsed().as_secs_f64(),
@@ -34,10 +41,6 @@ async fn delayed(start: Instant, delay: Duration) -> impl View {
 }
 
 cabin::BOUNDARIES!();
-
-tokio::task_local! {
-    static TASK_LOCAL: &'static str;
-}
 
 #[tokio::main]
 async fn main() {
@@ -53,11 +56,8 @@ async fn main() {
     let server = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| TASK_LOCAL.scope("task local works", cabin::get_page(app))).put(
-                |req: Request<axum::body::Body>| {
-                    cabin::put_page(req, || TASK_LOCAL.scope("task local works", app()))
-                },
-            ),
+            axum::routing::get(|| cabin::get_page(app))
+                .put(|req: Request<axum::body::Body>| cabin::put_page(req, app)),
         )
         .layer(cabin_service::redirects::layer())
         .layer(cabin_service::boundaries::layer(&BOUNDARIES))

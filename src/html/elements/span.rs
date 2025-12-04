@@ -1,20 +1,20 @@
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::View;
-use crate::html::attributes::Attributes;
-use crate::html::{Aria, Html};
+use crate::context::Context;
+use crate::element::Element;
 
-// TODO:
-pub fn span(content: impl View) -> Html<marker::Span, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("span", (), content)
+impl Context {
+    // TODO:
+    pub fn span(&self) -> Element<'_, marker::Span> {
+        Element::new(self, "span")
+    }
 }
 
 pub mod marker {
     pub struct Span;
 }
 
-impl<A: Attributes, V: 'static> Common for Html<marker::Span, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Span, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Span, A, V> {}
+impl<'v> Common for Element<'v, marker::Span> {}
+impl<'v> Global for Element<'v, marker::Span> {}
+impl<'v> Aria for Element<'v, marker::Span> {}

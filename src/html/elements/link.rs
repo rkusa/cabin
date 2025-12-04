@@ -4,135 +4,119 @@ use std::fmt;
 use cabin_macros::Attribute;
 
 use super::anchor::{Href, ReferrerPolicy};
+use super::aria::Aria;
 use super::button::Disabled;
 use super::common::Common;
 use super::global::Global;
 use super::img::Sizes;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
 use crate::html::list::SpaceSeparated;
-use crate::html::{Aria, Html};
+use crate::void_element::VoidElement;
 
-/// A `link` element allows to link to other resources.
-pub fn link() -> Html<marker::Link, (), ()> {
-    Html::new("link", (), ()).into_void_element()
+impl Context {
+    /// A `link` element allows to link to other resources.
+    pub fn link(&self) -> VoidElement<'_, marker::Link> {
+        VoidElement::new(self, "link")
+    }
 }
 
 pub mod marker {
     pub struct Link;
 }
 
-impl<A: Attributes, V: 'static> Link for Html<marker::Link, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Link, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Link, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Link, A, V> {}
+impl<'v> Link for VoidElement<'v, marker::Link> {}
+impl<'v> Common for VoidElement<'v, marker::Link> {}
+impl<'v> Global for VoidElement<'v, marker::Link> {}
+impl<'v> Aria for VoidElement<'v, marker::Link> {}
 
 /// A `link` element allows to link to other resources.
 pub trait Link: WithAttribute {
     //// Address of the hyperlink.
-    fn href(self, href: impl Into<Cow<'static, str>>) -> Self::Output<Href> {
+    fn href(self, href: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Href(href.into()))
     }
 
     /// Handling of crossorigin requests.
-    fn cross_origin(self, cross_origin: CrossOrigin) -> Self::Output<CrossOrigin> {
+    fn cross_origin(self, cross_origin: CrossOrigin) -> Self {
         self.with_attribute(cross_origin)
     }
 
     /// Relationship between the document and the linked resource.
-    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self::Output<RelList> {
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self {
         self.with_attribute(RelList(rel.into()))
     }
 
-    /// Appends a [Rel] to the link.
-    fn append_rel(mut self, rel: Rel) -> Self::Output<RelList> {
-        let rel_list = if let Some(list) = self.get_attribute_mut::<RelList>() {
-            RelList(
-                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
-                    SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, rel].into())
-                    }
-                    SpaceSeparated::List(mut list) => {
-                        list.insert(rel);
-                        SpaceSeparated::List(list)
-                    }
-                },
-            )
-        } else {
-            RelList(SpaceSeparated::Single(rel))
-        };
-        self.with_attribute(rel_list)
-    }
-
-    fn r#as(self, r#as: As) -> Self::Output<As> {
+    fn r#as(self, r#as: As) -> Self {
         self.with_attribute(r#as)
     }
 
     /// The media the resource applies to.
-    fn media(self, media: impl Into<Cow<'static, str>>) -> Self::Output<Media> {
+    fn media(self, media: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Media(media.into()))
     }
 
     /// Integrity metadata used in _Subresource Integrity_ checks.
     /// Must only be specified on links with [Rel::StyleSheet], [Rel::Preload], or
     /// [Rel::Modulepreload].
-    fn integrity(self, integrity: impl Into<Cow<'static, str>>) -> Self::Output<Integrity> {
+    fn integrity(self, integrity: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Integrity(integrity.into()))
     }
 
     /// Hint the language of the linked resource.
-    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> Self::Output<Hreflang> {
+    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Hreflang(hreflang.into()))
     }
 
     /// Hint for the type of the referenced resource.
-    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self::Output<Type> {
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Type(r#type.into()))
     }
 
     /// Sizes of the icons ([Rel::Icon]).
-    fn sizes(self, sizes: impl Into<Cow<'static, str>>) -> Self::Output<Sizes> {
+    fn sizes(self, sizes: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Sizes(sizes.into()))
     }
 
     /// Images to use in different situations.
     /// For [Rel::Preload] and [As::Image] only.
-    fn image_srcset(self, image_srcset: impl Into<Cow<'static, str>>) -> Self::Output<ImageSrcset> {
+    fn image_srcset(self, image_srcset: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(ImageSrcset(image_srcset.into()))
     }
 
     /// Image sizes for different page layouts.
     /// For [Rel::Preload] and [As::Image] only.
-    fn image_sizes(self, image_sizes: impl Into<Cow<'static, str>>) -> Self::Output<ImageSizes> {
+    fn image_sizes(self, image_sizes: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(ImageSizes(image_sizes.into()))
     }
 
     /// How much referrer information to send.
-    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self::Output<ReferrerPolicy> {
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self {
         self.with_attribute(referrer_policy)
     }
 
     /// Indicate that the element is potentially render blocking.
-    fn blocking(self) -> Self::Output<Blocking> {
+    fn blocking(self) -> Self {
         self.with_blocking(true)
     }
 
     /// Indicate that the element is potentially render blocking.
-    fn with_blocking(self, blocking: bool) -> Self::Output<Blocking> {
+    fn with_blocking(self, blocking: bool) -> Self {
         self.with_attribute(Blocking(blocking))
     }
 
     /// Whether the link is disabled.
-    fn disabled(self) -> Self::Output<Disabled> {
+    fn disabled(self) -> Self {
         self.with_disabled(true)
     }
 
     /// Whether the link is disabled.
-    fn with_disabled(self, disabled: bool) -> Self::Output<Disabled> {
+    fn with_disabled(self, disabled: bool) -> Self {
         self.with_attribute(Disabled(disabled))
     }
 
     /// Sets the priority for fetches initiated by the element.
-    fn fetch_priority(self, fetch_priority: FetchPriority) -> Self::Output<FetchPriority> {
+    fn fetch_priority(self, fetch_priority: FetchPriority) -> Self {
         self.with_attribute(fetch_priority)
     }
 }

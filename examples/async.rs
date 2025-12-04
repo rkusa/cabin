@@ -3,33 +3,37 @@ use std::net::SocketAddr;
 
 use cabin::html::events::InputValue;
 use cabin::prelude::*;
-use cabin::scope::take_event;
 use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
-    basic_document(search().await)
+async fn app(c: &Context) -> impl View<'_> {
+    basic_document(c, search(c).await)
 }
 
 #[derive(Hash, Event, Serialize, Deserialize)]
 struct Search(InputValue);
 
-async fn search() -> impl View {
-    let query: Cow<'static, str> = take_event::<Search>()
+async fn search(c: &Context) -> impl View<'_> {
+    let query: Cow<'static, str> = c
+        .take_event::<Search>()
         .map(|e| e.0.take())
         .unwrap_or(Cow::Borrowed("Ge"));
     let items = search_countries(&query).await;
 
-    h::div((
-        h::div(
-            h::input()
-                .on_input(Search(InputValue::placeholder()))
-                .value(query),
-        ),
-        h::div(h::ul(items.into_iter().map(h::li))),
-    ))
+    c.div()
+        .child(
+            c.div().child(
+                c.input()
+                    .on_input(Search(InputValue::placeholder()))
+                    .value(query),
+            ),
+        )
+        .child(
+            c.div()
+                .child(c.ul().child(items.into_iter().map(|i| c.li().child(i)))),
+        )
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {

@@ -4,7 +4,11 @@ use std::hash::{Hash, Hasher};
 use http::{HeaderMap, HeaderValue};
 use twox_hash::XxHash32;
 
-use crate::View;
+use crate::error::InternalError;
+use crate::event::Event;
+use crate::html::events::CustomEvent;
+
+const DEFAULT_CAPACITY: usize = 256;
 
 pub struct Renderer {
     out: String,
@@ -20,18 +24,29 @@ pub struct Out {
 }
 
 impl Renderer {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(is_update: bool) -> Self {
+        Self {
+            is_update,
+            ..Default::default()
+        }
     }
 
-    pub(crate) fn new_update() -> Self {
-        Renderer {
-            out: String::with_capacity(256),
-            headers: Default::default(),
-            hasher: XxHash32::default(),
-            skip_hash: false,
-            is_update: true,
+    pub fn reset(&mut self) {
+        self.out.clear();
+        self.headers.clear();
+        self.hasher = XxHash32::default();
+        self.skip_hash = false;
+    }
+
+    pub fn append(&mut self, other: &mut Renderer) {
+        if self.out.is_empty() {
+            std::mem::swap(&mut self.out, &mut other.out);
+        } else {
+            self.out.push_str(&other.out);
         }
+        self.headers.extend(std::mem::take(&mut other.headers));
+        let hash = other.hasher.finish() as u32;
+        self.hasher.write_u32(hash);
     }
 
     pub fn end(self) -> Out {
@@ -45,41 +60,8 @@ impl Renderer {
         self.is_update
     }
 
-    pub fn element(
-        mut self,
-        tag: &'static str,
-        include_hash: bool,
-    ) -> Result<ElementRenderer, crate::Error> {
-        let parent_hasher = std::mem::take(&mut self.hasher);
-        self.write(tag.as_bytes());
-
-        let should_write_id =
-            include_hash && !matches!(tag, "html" | "body" | "head" | "option") && !self.skip_hash;
-        let parent_skip_hash = self.skip_hash;
-        if matches!(tag, "head") {
-            self.skip_hash = true;
-        }
-
-        write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
-
-        let hash_offset = if should_write_id {
-            write!(&mut self.out, " hash=\"").map_err(crate::error::InternalError::from)?;
-            let hash_offset = self.out.len();
-            // Write placeholder id which will be replaced later on
-            write!(&mut self.out, "00000000\"").map_err(crate::error::InternalError::from)?;
-            Some(hash_offset)
-        } else {
-            None
-        };
-
-        Ok(ElementRenderer {
-            tag,
-            parent_hasher,
-            parent_skip_hash,
-            renderer: self,
-            content_started: false,
-            hash_offset,
-        })
+    pub fn len(&self) -> usize {
+        self.out.len()
     }
 
     pub fn headers_mut(&mut self) -> &mut HeaderMap<HeaderValue> {
@@ -92,90 +74,117 @@ impl Renderer {
             renderer: self,
         }
     }
+
+    pub fn attribute(&mut self, name: &str, value: impl Display + Hash) {
+        self.hasher.write(name.as_bytes());
+        value.hash(&mut self.hasher);
+
+        write!(&mut self.out, r#" {name}=""#).unwrap();
+        write!(Escape::attribute_value(&mut self.out), "{value}").unwrap();
+        write!(&mut self.out, r#"""#).unwrap();
+    }
+
+    pub fn empty_attribute(&mut self, name: &str) {
+        self.hasher.write(name.as_bytes());
+        write!(&mut self.out, r#" {name}"#).unwrap();
+    }
+
+    pub fn event_attributes<E: serde::Serialize + Event>(
+        &mut self,
+        event: CustomEvent<E>,
+    ) -> Result<(), crate::Error> {
+        // event id
+        {
+            let pos_name = self.out.len();
+            write!(&mut self.out, " cabin-{}", event.name).unwrap();
+            self.out[(pos_name + 1)..].hash(&mut self.hasher);
+            write!(&mut self.out, r#"=""#).unwrap();
+
+            let pos_value = self.out.len();
+            write!(&mut self.out, "{}", E::ID).unwrap();
+            self.out[pos_value..].hash(&mut self.hasher);
+            write!(&mut self.out, r#"""#).unwrap();
+        }
+
+        // event payload
+        {
+            let pos_name = self.out.len();
+            write!(&mut self.out, " cabin-{}-payload", event.name).unwrap();
+            self.out[(pos_name + 1)..].hash(&mut self.hasher);
+            write!(&mut self.out, r#"=""#).unwrap();
+
+            let pos_value = self.out.len();
+            serde_json::to_writer(Escape::attribute_value(&mut self.out), &event.event).map_err(
+                |err| InternalError::Serialize {
+                    what: format!("{} event", event.name).into(),
+                    err,
+                },
+            )?;
+            self.out[pos_value..].hash(&mut self.hasher);
+            write!(&mut self.out, r#"""#).unwrap();
+        }
+
+        Ok(())
+    }
+
+    pub fn start_element(&mut self, tag: &'static str) -> Option<usize> {
+        self.hasher.write(tag.as_bytes());
+
+        let should_write_hash =
+            !matches!(tag, "html" | "body" | "head" | "option") && !self.skip_hash;
+        if matches!(tag, "head") {
+            // FIXME: no hash in head element
+            self.skip_hash = true;
+        }
+
+        write!(&mut self.out, "<{tag}").unwrap();
+
+        if should_write_hash {
+            write!(&mut self.out, " hash=\"").unwrap();
+            let hash_offset = self.out.len();
+            // Write placeholder id which will be replaced later on
+            write!(&mut self.out, "00000000\"").unwrap();
+            Some(hash_offset)
+        } else {
+            None
+        }
+    }
+
+    pub fn start_content(&mut self) {
+        write!(&mut self.out, ">").unwrap();
+    }
+
+    pub fn end_element(
+        &mut self,
+        tag: &'static str,
+        is_void_element: bool,
+        hash_offset: Option<usize>,
+    ) {
+        let hash = self.hasher.finish() as u32;
+        if let Some(offset) = hash_offset {
+            write!(WriteInto::new(&mut self.out, offset), "{hash:x}").unwrap();
+        }
+
+        // if self.renderer.changed(hash, self.offset)? {
+        // Handle void elements. Content is simply ignored.
+        if is_void_element {
+            write!(&mut self.out, "/>").unwrap();
+        } else {
+            write!(&mut self.out, "</{tag}>").unwrap();
+        }
+        // }
+    }
 }
 
 impl Default for Renderer {
     fn default() -> Self {
         Self {
-            out: String::with_capacity(256),
+            out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
             hasher: XxHash32::default(),
             skip_hash: false,
             is_update: false,
         }
-    }
-}
-
-pub struct ElementRenderer {
-    tag: &'static str,
-    renderer: Renderer,
-    parent_hasher: XxHash32,
-    parent_skip_hash: bool,
-    content_started: bool,
-    hash_offset: Option<usize>,
-}
-
-impl ElementRenderer {
-    pub fn attribute(&mut self, name: &str, value: impl Display + Hash) -> Result<(), fmt::Error> {
-        if self.content_started {
-            todo!("throw error: content started");
-        }
-        self.renderer.write(name.as_bytes());
-        value.hash(&mut self.renderer);
-
-        write!(&mut self.renderer.out, r#" {name}=""#,)?;
-        write!(Escape::attribute_value(&mut self.renderer.out), "{value}")?;
-        write!(&mut self.renderer.out, r#"""#)?;
-
-        Ok(())
-    }
-
-    pub fn empty_attribute(&mut self, name: &str) -> Result<(), fmt::Error> {
-        if self.content_started {
-            todo!("throw error: content started");
-        }
-        self.renderer.write(name.as_bytes());
-
-        write!(&mut self.renderer.out, r#" {name}"#,)?;
-
-        Ok(())
-    }
-
-    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
-        if !self.content_started {
-            self.content_started = true;
-            write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
-        }
-
-        self.renderer = view.render(self.renderer, false).await?;
-        self.end(false)
-    }
-
-    pub fn end(mut self, is_void_element: bool) -> Result<Renderer, crate::Error> {
-        if !self.content_started && !is_void_element {
-            write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
-        }
-
-        let hash = self.renderer.finish() as u32;
-        if let Some(offset) = self.hash_offset {
-            write!(WriteInto::new(&mut self.renderer.out, offset), "{hash:x}").unwrap();
-        }
-
-        self.parent_hasher.write_u32(hash);
-        std::mem::swap(&mut self.renderer.hasher, &mut self.parent_hasher);
-
-        // if self.renderer.changed(hash, self.offset)? {
-        // Handle void elements. Content is simply ignored.
-        if is_void_element {
-            write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
-        } else {
-            write!(&mut self.renderer.out, "</{}>", self.tag)
-                .map_err(crate::error::InternalError::from)?;
-        }
-        // }
-
-        self.renderer.skip_hash = self.parent_skip_hash;
-        Ok(self.renderer)
     }
 }
 
@@ -185,11 +194,10 @@ pub struct TextRenderer {
 }
 
 impl TextRenderer {
-    pub fn end(mut self) -> Result<Renderer, crate::Error> {
+    pub fn end(mut self) -> Renderer {
         let hash = self.hasher.finish() as u32;
-        self.renderer.write_u32(hash);
-
-        Ok(self.renderer)
+        self.renderer.hasher.write_u32(hash);
+        self.renderer
     }
 }
 
@@ -252,6 +260,21 @@ where
     }
 }
 
+impl<W> std::io::Write for Escape<W>
+where
+    W: fmt::Write,
+{
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let s = std::str::from_utf8(buf).map_err(std::io::Error::other)?;
+        self.write_str(s).map_err(std::io::Error::other)?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 pub struct WriteInto<'a> {
     out: &'a mut String,
     offset: usize,
@@ -270,16 +293,6 @@ impl fmt::Write for WriteInto<'_> {
         self.offset += s.len();
 
         Ok(())
-    }
-}
-
-impl Hasher for Renderer {
-    fn finish(&self) -> u64 {
-        self.hasher.finish()
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        self.hasher.write(bytes);
     }
 }
 

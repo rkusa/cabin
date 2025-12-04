@@ -21,7 +21,7 @@ impl FireEvent {
             event_id: HeaderValue::from_static(E::ID),
             payload: HeaderValue::from_str(&serde_json::to_string(&event).map_err(|err| {
                 InternalError::Serialize {
-                    what: "fire event",
+                    what: "fire event".into(),
                     err,
                 }
             })?)

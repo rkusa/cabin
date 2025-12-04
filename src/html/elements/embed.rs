@@ -1,48 +1,52 @@
 use std::borrow::Cow;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use super::input::{Height, Width};
 use super::link::Type;
 use super::script::Src;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::void_element::VoidElement;
 
-/// The <embed< element provides an integration point for an external application or interactive
-/// content.
-pub fn embed() -> Html<marker::Embed, (), ()> {
-    Html::new("embed", (), ()).into_void_element()
+impl Context {
+    /// The `embed` element provides an integration point for an external application or interactive
+    /// content.
+    pub fn embed(&self) -> VoidElement<'_, marker::Embed> {
+        VoidElement::new(self, "embed")
+    }
 }
 
 pub mod marker {
     pub struct Embed;
 }
 
-impl<A: Attributes, V: 'static> Embed for Html<marker::Embed, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Embed, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Embed, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Embed, A, V> {}
+impl<'v> Embed for VoidElement<'v, marker::Embed> {}
+impl<'v> Common for VoidElement<'v, marker::Embed> {}
+impl<'v> Global for VoidElement<'v, marker::Embed> {}
+impl<'v> Aria for VoidElement<'v, marker::Embed> {}
 
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.
 pub trait Embed: WithAttribute {
     /// Address of the resource.
-    fn src(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Src> {
+    fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))
     }
 
     ///  Type of embedded resource
-    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self::Output<Type> {
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Type(r#type.into()))
     }
 
     /// Horizontal dimension.
-    fn width(self, width: u32) -> Self::Output<Width> {
+    fn width(self, width: u32) -> Self {
         self.with_attribute(Width(width))
     }
 
     /// Vertical dimension.
-    fn height(self, height: u32) -> Self::Output<Height> {
+    fn height(self, height: u32) -> Self {
         self.with_attribute(Height(height))
     }
 }

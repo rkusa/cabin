@@ -4,85 +4,47 @@ use std::ops::{Add, AddAssign};
 
 use cabin_macros::Attribute;
 
-use super::SerializeEventFn;
-use crate::error::InternalError;
+use crate::attribute::WithAttribute;
 use crate::event::Event;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 
 pub trait Common: WithAttribute {
     /// Unique identifier across the document.
-    fn id(self, id: impl Into<Cow<'static, str>>) -> Self::Output<Id> {
+    fn id(self, id: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Id(id.into()))
     }
 
     /// The various classes that the element belongs to.
-    fn class(mut self, class: impl Into<Cow<'static, str>>) -> Self::Output<Class> {
-        let class = if let Some(existing) = self.get_attribute_mut::<Class>() {
-            Class(Cow::Owned(format!("{} {}", existing.0, class.into())))
-        } else {
-            Class(class.into())
-        };
-        self.with_attribute(class)
-    }
-
-    fn replace_class(self, class: impl Into<Cow<'static, str>>) -> Self::Output<Class> {
+    fn class(self, class: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Class(class.into()))
     }
 
-    fn on_click<E>(self, event: E) -> Self::Output<OnClick>
+    fn on_click<E>(self, event: E) -> Self
     where
-        E: serde::Serialize + Event + Send + 'static,
+        E: serde::Serialize + Event,
     {
-        self.with_attribute(OnClick(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "click event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("click", event))
     }
 
-    fn on_mouse_up<E>(self, event: E) -> Self::Output<OnMouseUp>
+    fn on_mouse_up<E>(self, event: E) -> Self
     where
-        E: serde::Serialize + Event + Send + 'static,
+        E: serde::Serialize + Event,
     {
-        self.with_attribute(OnMouseUp(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "mouseup event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("mouseup", event))
     }
 
-    fn on_transition_end<E>(self, event: E) -> Self::Output<OnTransitionEnd>
+    fn on_transition_end<E>(self, event: E) -> Self
     where
-        E: serde::Serialize + Event + Send + 'static,
+        E: serde::Serialize + Event,
     {
-        self.with_attribute(OnTransitionEnd(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_transition_end event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("transitionend", event))
     }
 
-    fn on_animation_end<E>(self, event: E) -> Self::Output<OnAnimationEnd>
+    fn on_animation_end<E>(self, event: E) -> Self
     where
-        E: serde::Serialize + Event + Send + 'static,
+        E: serde::Serialize + Event,
     {
-        self.with_attribute(OnAnimationEnd(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_animation_end event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("animationend", event))
     }
 }
 
@@ -94,66 +56,6 @@ pub struct Id(pub Cow<'static, str>);
 // FIXME: make it Copy
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Class(pub Cow<'static, str>);
-
-pub struct OnClick(pub Box<SerializeEventFn>);
-
-impl Attributes for OnClick {
-    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-click", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-click-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
-    }
-}
-
-pub struct OnMouseUp(pub Box<SerializeEventFn>);
-
-impl Attributes for OnMouseUp {
-    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-mouseup", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-mouseup-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
-    }
-}
-
-pub struct OnTransitionEnd(pub Box<SerializeEventFn>);
-
-impl Attributes for OnTransitionEnd {
-    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-transitionend", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-transitionend-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
-    }
-}
-
-pub struct OnAnimationEnd(pub Box<SerializeEventFn>);
-
-impl Attributes for OnAnimationEnd {
-    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-animationend", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-animationend-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
-    }
-}
 
 impl Class {
     pub fn append(self, other: Class) -> Class {

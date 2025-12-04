@@ -2,116 +2,117 @@ use std::borrow::Cow;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::audio::{Autoplay, Controls, Loop, Muted, Preload};
 use super::common::Common;
 use super::global::Global;
 use super::input::{Height, Width};
 use super::link::CrossOrigin;
 use super::script::Src;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// A `video` element is used for playing videos or movies, and audio files with captions.
-pub fn video(content: impl View) -> Html<marker::Video, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("video", (), content)
+impl Context {
+    /// A `video` element is used for playing videos or movies, and audio files with captions.
+    pub fn video(&self) -> Element<'_, marker::Video> {
+        Element::new(self, "video")
+    }
 }
 
 pub mod marker {
     pub struct Video;
 }
 
-impl<A: Attributes, V: 'static> Video for Html<marker::Video, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Video, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Video, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Video, A, V> {}
+impl<'v> Video for Element<'v, marker::Video> {}
+impl<'v> Common for Element<'v, marker::Video> {}
+impl<'v> Global for Element<'v, marker::Video> {}
+impl<'v> Aria for Element<'v, marker::Video> {}
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
 pub trait Video: WithAttribute {
     /// Address of the resource.
-    fn src(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Src> {
+    fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))
     }
 
     /// How the element handles crossorigin requests.
-    fn cross_origin(self, crossorigin: CrossOrigin) -> Self::Output<CrossOrigin> {
+    fn cross_origin(self, crossorigin: CrossOrigin) -> Self {
         self.with_attribute(crossorigin)
     }
 
     /// Poster frame to show prior to video playback.
-    fn poster(self, poster: impl Into<Cow<'static, str>>) -> Self::Output<Poster> {
+    fn poster(self, poster: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Poster(poster.into()))
     }
 
     /// Hints how much buffering the media resource will likely need.
-    fn preload(self, preload: Preload) -> Self::Output<Preload> {
+    fn preload(self, preload: Preload) -> Self {
         self.with_attribute(preload)
     }
 
     /// Hint that the media resource can be started automatically when the page is loaded.
-    fn autoplay(self) -> Self::Output<Autoplay> {
+    fn autoplay(self) -> Self {
         self.with_attribute(Autoplay(true))
     }
 
     /// Hint that the media resource can be started automatically when the page is loaded.
-    fn with_autoplay(self, autoplay: bool) -> Self::Output<Autoplay> {
+    fn with_autoplay(self, autoplay: bool) -> Self {
         self.with_attribute(Autoplay(autoplay))
     }
 
     /// Encourage the user agent to display video content within the element's playback area.
-    fn plays_inline(self) -> Self::Output<PlaysInline> {
+    fn plays_inline(self) -> Self {
         self.with_attribute(PlaysInline(true))
     }
 
     /// Encourage the user agent to display video content within the element's playback area.
-    fn with_plays_inline(self, plays_inline: bool) -> Self::Output<PlaysInline> {
+    fn with_plays_inline(self, plays_inline: bool) -> Self {
         self.with_attribute(PlaysInline(plays_inline))
     }
 
     /// Whether to loop the media resource.
-    fn loop_(self) -> Self::Output<Loop> {
+    fn loop_(self) -> Self {
         self.with_attribute(Loop(true))
     }
 
     /// Whether to loop the media resource.
-    fn r#loop(self) -> Self::Output<Loop> {
+    fn r#loop(self) -> Self {
         self.with_attribute(Loop(true))
     }
 
     /// Whether to loop the media resource.
-    fn with_loop_(self, loop_: bool) -> Self::Output<Loop> {
+    fn with_loop_(self, loop_: bool) -> Self {
         self.with_attribute(Loop(loop_))
     }
 
     /// Whether to mute the media resource by default.
-    fn muted(self) -> Self::Output<Muted> {
+    fn muted(self) -> Self {
         self.with_attribute(Muted(true))
     }
 
     /// Whether to mute the media resource by default.
-    fn with_muted(self, muted: bool) -> Self::Output<Muted> {
+    fn with_muted(self, muted: bool) -> Self {
         self.with_attribute(Muted(muted))
     }
 
     /// Show user agent controls.
-    fn controls(self) -> Self::Output<Controls> {
+    fn controls(self) -> Self {
         self.with_attribute(Controls(true))
     }
 
     /// Show user agent controls.
-    fn with_controls(self, controls: bool) -> Self::Output<Controls> {
+    fn with_controls(self, controls: bool) -> Self {
         self.with_attribute(Controls(controls))
     }
 
     /// Vertical dimension.
-    fn height(self, height: u32) -> Self::Output<Height> {
+    fn height(self, height: u32) -> Self {
         self.with_attribute(Height(height))
     }
 
     /// Horizontal dimension.
-    fn width(self, width: u32) -> Self::Output<Width> {
+    fn width(self, width: u32) -> Self {
         self.with_attribute(Width(width))
     }
 }

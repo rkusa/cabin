@@ -2,36 +2,37 @@ use std::borrow::Cow;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `blockquote` element represents a section that is quoted from another source.
-/// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,
-/// may be cited in the [Blockquote::cite] attribute.
-pub fn blockquote(content: impl View) -> Html<marker::Blockquote, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("blockquote", (), content)
+impl Context {
+    /// The `blockquote` element represents a section that is quoted from another source.
+    /// Content inside a `blockquote` must be quoted from another source, whose address, if it has
+    /// one, may be cited in the [Blockquote::cite] attribute.
+    pub fn blockquote(&self) -> Element<'_, marker::Blockquote> {
+        Element::new(self, "blockquote")
+    }
 }
 
 pub mod marker {
     pub struct Blockquote;
 }
 
-impl<A: Attributes, V: 'static> Blockquote for Html<marker::Blockquote, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Blockquote, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Blockquote, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Blockquote, A, V> {}
+impl<'v> Blockquote for Element<'v, marker::Blockquote> {}
+impl<'v> Common for Element<'v, marker::Blockquote> {}
+impl<'v> Global for Element<'v, marker::Blockquote> {}
+impl<'v> Aria for Element<'v, marker::Blockquote> {}
 
 /// The `blockquote` element represents a section that is quoted from another source.
 /// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,
 /// may be cited in the [Blockquote::cite] attribute.
 pub trait Blockquote: WithAttribute {
     /// Link to the source of the quotation or more information about the edit.
-    fn cite(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Cite> {
+    fn cite(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Cite(src.into()))
     }
 }

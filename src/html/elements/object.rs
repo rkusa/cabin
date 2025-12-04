@@ -2,63 +2,64 @@ use std::borrow::Cow;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::button::Form;
 use super::common::Common;
 use super::global::Global;
 use super::iframe::Name;
 use super::input::{Height, Width};
 use super::link::Type;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `object` element can represent an external resource, which, depending on the type of the
-/// resource, will either be treated as an image or as a child navigable.
-pub fn object(content: impl View) -> Html<marker::Object, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("object", (), content)
+impl Context {
+    /// The `object` element can represent an external resource, which, depending on the type of the
+    /// resource, will either be treated as an image or as a child navigable.
+    pub fn object(&self) -> Element<'_, marker::Object> {
+        Element::new(self, "object")
+    }
 }
 
 pub mod marker {
     pub struct Object;
 }
 
-impl<A: Attributes, V: 'static> Object for Html<marker::Object, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Object, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Object, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Object, A, V> {}
+impl<'v> Object for Element<'v, marker::Object> {}
+impl<'v> Common for Element<'v, marker::Object> {}
+impl<'v> Global for Element<'v, marker::Object> {}
+impl<'v> Aria for Element<'v, marker::Object> {}
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.
 pub trait Object: WithAttribute {
     /// Address of the resource.
-    fn data(self, data: impl Into<Cow<'static, str>>) -> Self::Output<Data> {
+    fn data(self, data: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Data(data.into()))
     }
 
     /// Type of embedded resource.
-    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self::Output<Type> {
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Type(r#type.into()))
     }
 
     /// Name of content navigable.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))
     }
 
     /// Associates the element with a [super::form] element.
-    fn form(self, form: impl Into<Cow<'static, str>>) -> Self::Output<Form> {
+    fn form(self, form: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Form(form.into()))
     }
 
     /// Horizontal dimension.
-    fn width(self, width: u32) -> Self::Output<Width> {
+    fn width(self, width: u32) -> Self {
         self.with_attribute(Width(width))
     }
 
     /// Vertical dimension.
-    fn height(self, height: u32) -> Self::Output<Height> {
+    fn height(self, height: u32) -> Self {
         self.with_attribute(Height(height))
     }
 }

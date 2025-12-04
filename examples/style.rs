@@ -3,40 +3,41 @@ use std::sync::LazyLock;
 
 use cabin::cabin_scripts;
 use cabin::prelude::*;
-use cabin::scope::event;
 use cabin_tailwind::prelude::*;
 use cabin_tailwind::registry::{StyleRegistry, StyleSheet};
 use http::Request;
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
-    let count = event::<usize>().unwrap_or(0);
+async fn app(c: &Context) -> impl View<'_> {
+    let count = c.event::<usize>().unwrap_or(0);
 
     document(
-        h::button(h::text!("{}", count)).on_click(count + 1).class(
-            // TODO: modifier groups?
-            // TODO: autocomplate after XZY. (for modifiers)
-            // TODO: autocomplete after text::
-            tw![
-                tw::BLOCK,
-                tw::text::BLACK,
-                tw::text::SM,
-                tw::bg::BLACK.hover(),
-                tw::text::WHITE.hover(),
-                tw::text::XS.hover().focus(),
-            ]
-            .append_when(count == 0, tw![tw::text::color("red")]),
-        ),
+        c,
+        c.button()
+            .on_click(count + 1)
+            .class(
+                // TODO: modifier groups?
+                // TODO: autocomplate after XZY. (for modifiers)
+                // TODO: autocomplete after text::
+                tw![
+                    tw::BLOCK,
+                    tw::text::BLACK,
+                    tw::text::SM,
+                    tw::bg::BLACK.hover(),
+                    tw::text::WHITE.hover(),
+                    tw::text::XS.hover().focus(),
+                ]
+                .append_when(count == 0, tw![tw::text::color("red")]),
+            )
+            .child(text!("{}", count)),
     )
 }
 
-fn document(content: impl View) -> impl View {
-    (
-        h::doctype(),
-        h::html((
-            h::head((STYLE_SHEET.link(), cabin_scripts())),
-            h::body(content),
-        )),
+fn document<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'v> {
+    c.fragment().child(c.doctype()).child(
+        c.html()
+            .child(c.head().child(STYLE_SHEET.link(c)).child(cabin_scripts(c)))
+            .child(c.body().child(content)),
     )
 }
 

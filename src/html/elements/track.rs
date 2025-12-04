@@ -6,68 +6,71 @@ use cabin_macros::Attribute;
 use super::global::Global;
 use super::option::Label;
 use super::script::Src;
-use crate::html::Html;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::void_element::VoidElement;
 
-/// The `track` element allows authors to specify explicit external timed text tracks for media
-/// ([super::audio], [super::video]) elements. It does not represent anything on its own.
-pub fn track() -> Html<marker::Track, (), ()> {
-    Html::new("track", (), ()).into_void_element()
+impl Context {
+    /// The `track` element allows authors to specify explicit external timed text tracks for media
+    /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
+    pub fn track(&self) -> VoidElement<'_, marker::Track> {
+        VoidElement::new(self, "track")
+    }
 }
 
 pub mod marker {
     pub struct Track;
 }
 
-impl<A: Attributes, V: 'static> Track for Html<marker::Track, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Track, A, V> {}
+impl<'v> Track for VoidElement<'v, marker::Track> {}
+impl<'v> Global for VoidElement<'v, marker::Track> {}
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
 pub trait Track: WithAttribute {
     ///  The type of text track.
-    fn kind(self, kind: Kind) -> Self::Output<Kind> {
+    fn kind(self, kind: Kind) -> Self {
         self.with_attribute(kind)
     }
 
-    fn kind_subtitles(self) -> Self::Output<Kind> {
+    fn kind_subtitles(self) -> Self {
         self.kind(Kind::Subtitles)
     }
-    fn kind_captions(self) -> Self::Output<Kind> {
+    fn kind_captions(self) -> Self {
         self.kind(Kind::Captions)
     }
-    fn kind_descriptions(self) -> Self::Output<Kind> {
+    fn kind_descriptions(self) -> Self {
         self.kind(Kind::Descriptions)
     }
-    fn kind_chapters(self) -> Self::Output<Kind> {
+    fn kind_chapters(self) -> Self {
         self.kind(Kind::Chapters)
     }
-    fn kind_metadata(self) -> Self::Output<Kind> {
+    fn kind_metadata(self) -> Self {
         self.kind(Kind::Metadata)
     }
 
     /// Address of the resource.
-    fn src(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Src> {
+    fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))
     }
 
     /// Language of the text track.
-    fn src_lang(self, src_lang: impl Into<Cow<'static, str>>) -> Self::Output<SrcLang> {
+    fn src_lang(self, src_lang: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(SrcLang(src_lang.into()))
     }
 
     /// User-visible label.
-    fn label(self, value: impl Into<Cow<'static, str>>) -> Self::Output<Label> {
+    fn label(self, value: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Label(value.into()))
     }
 
     /// Enable the track if no other text track is more suitable.
-    fn default(self) -> Self::Output<Default> {
+    fn default(self) -> Self {
         self.with_default(true)
     }
 
     /// Enable the track if no other text track is more suitable.
-    fn with_default(self, default: bool) -> Self::Output<Default> {
+    fn with_default(self, default: bool) -> Self {
         self.with_attribute(Default(default))
     }
 }

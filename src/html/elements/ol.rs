@@ -2,64 +2,65 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The ol element represents a list of items, where the items have been intentionally ordered, such
-/// that changing the order would change the meaning of the document.
-pub fn ol(content: impl View) -> Html<marker::Ol, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("ol", (), content)
+impl Context {
+    /// The ol element represents a list of items, where the items have been intentionally ordered,
+    /// such that changing the order would change the meaning of the document.
+    pub fn ol(&self) -> Element<'_, marker::Ol> {
+        Element::new(self, "ol")
+    }
 }
 
 pub mod marker {
     pub struct Ol;
 }
 
-impl<A: Attributes, V: 'static> Ol for Html<marker::Ol, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Ol, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Ol, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Ol, A, V> {}
+impl<'v> Ol for Element<'v, marker::Ol> {}
+impl<'v> Common for Element<'v, marker::Ol> {}
+impl<'v> Global for Element<'v, marker::Ol> {}
+impl<'v> Aria for Element<'v, marker::Ol> {}
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.
 pub trait Ol: WithAttribute {
     /// Number the list backwards.
-    fn reversed(self, reversed: bool) -> Self::Output<Reversed> {
+    fn reversed(self, reversed: bool) -> Self {
         self.with_attribute(Reversed(reversed))
     }
 
     /// Starting value of the list.
-    fn start(self, start: u32) -> Self::Output<Start> {
+    fn start(self, start: u32) -> Self {
         self.with_attribute(Start(start))
     }
 
     /// Kind of list marker.
-    fn r#type(self, r#type: Type) -> Self::Output<Type> {
+    fn r#type(self, r#type: Type) -> Self {
         self.with_attribute(r#type)
     }
 
-    fn type_decimal(self) -> Self::Output<Type> {
+    fn type_decimal(self) -> Self {
         self.with_attribute(Type::Decimal)
     }
 
-    fn type_lower_alpha(self) -> Self::Output<Type> {
+    fn type_lower_alpha(self) -> Self {
         self.with_attribute(Type::LowerAlpha)
     }
 
-    fn type_upper_alpha(self) -> Self::Output<Type> {
+    fn type_upper_alpha(self) -> Self {
         self.with_attribute(Type::UpperAlpha)
     }
 
-    fn type_lower_roman(self) -> Self::Output<Type> {
+    fn type_lower_roman(self) -> Self {
         self.with_attribute(Type::LowerRoman)
     }
 
-    fn type_upper_roman(self) -> Self::Output<Type> {
+    fn type_upper_roman(self) -> Self {
         self.with_attribute(Type::UpperRoman)
     }
 }

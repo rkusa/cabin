@@ -1,28 +1,26 @@
-use super::RenderFuture;
 use crate::View;
 use crate::render::Renderer;
+use crate::view::RenderFuture;
 
-type ViewBoxRenderer = dyn FnOnce(Renderer, bool) -> RenderFuture + Send;
-
-pub struct BoxedView {
-    view: Box<ViewBoxRenderer>,
+pub trait BoxedView<'v> {
+    fn render(self: Box<Self>, r: Renderer) -> RenderFuture<'v>;
 }
 
-impl BoxedView {
-    pub fn new<V>(view: V) -> Self
+impl<'v, V: View<'v>> BoxedView<'v> for V {
+    fn render(self: Box<Self>, r: Renderer) -> RenderFuture<'v> {
+        <Self as View>::render(*self, r)
+    }
+}
+
+impl<'v> View<'v> for Box<dyn View<'v>> {
+    fn render(self, r: Renderer) -> RenderFuture<'v> {
+        <dyn View as BoxedView>::render(self, r)
+    }
+
+    fn boxed(self) -> Box<dyn View<'v>>
     where
-        V: View,
+        Self: Sized,
     {
-        BoxedView {
-            view: Box::new(|r: Renderer, include_hash: bool| view.render(r, include_hash)),
-        }
+        self
     }
-}
-
-impl View for BoxedView {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
-        (self.view)(r, include_hash)
-    }
-
-    // TODO: prime
 }

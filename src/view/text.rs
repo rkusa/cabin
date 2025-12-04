@@ -4,7 +4,7 @@ use crate::render::Renderer;
 #[macro_export]
 macro_rules! text {
     ($fmt:expr) => {
-        $crate::html::Text::new(
+        $crate::view::text::Text::new(
             move |r: $crate::render::Renderer|
                 -> Result<$crate::render::Renderer, $crate::error::Error>
             {
@@ -13,12 +13,12 @@ macro_rules! text {
                     &mut $crate::render::Escape::content(&mut txt),
                     format_args!($fmt)
                 ).map_err($crate::error::InternalError::from)?;
-                txt.end()
+                Ok(txt.end())
             },
         )
     };
     ($fmt:expr, $($args:tt)*) => {
-        $crate::html::Text::new(
+        $crate::view::text::Text::new(
             move |r: $crate::render::Renderer|
                 -> Result<$crate::render::Renderer, $crate::error::Error>
             {
@@ -27,7 +27,7 @@ macro_rules! text {
                     &mut $crate::render::Escape::content(&mut txt),
                     format_args!($fmt, $($args)*)
                 ).map_err($crate::error::InternalError::from)?;
-                txt.end()
+                Ok(txt.end())
             },
         )
     };
@@ -47,11 +47,11 @@ where
     }
 }
 
-impl<F> View for Text<F>
+impl<'v, F> View<'v> for Text<F>
 where
-    F: FnOnce(Renderer) -> Result<Renderer, crate::Error> + Send + 'static,
+    F: FnOnce(Renderer) -> Result<Renderer, crate::Error> + 'v,
 {
-    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture<'v> {
         RenderFuture::ready((self.0)(r))
     }
 }

@@ -41,7 +41,7 @@ twox-hash = { version = "2.0", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-axum = "0.8.0-rc.1"
+axum = "0.8"
 cabin-tailwind = { path = "./cabin-tailwind", default-features = false }
 cabin-service = { path = "./cabin-service" }
 tracing-subscriber = { version = "0.3", default-features = false, features = [

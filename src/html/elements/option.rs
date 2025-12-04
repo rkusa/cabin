@@ -2,61 +2,62 @@ use std::borrow::Cow;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::button::Disabled;
 use super::common::Common;
 use super::global::Global;
 use super::input::Value;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `option` element represents an option in a [super::select] element or as part of a list of
-/// suggestions in a [super::datalist] element.
-pub fn option(content: impl View) -> Html<marker::SelectOption, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("option", (), content)
+impl Context {
+    /// The `option` element represents an option in a [super::select] element or as part of a list
+    /// of suggestions in a [super::datalist] element.
+    pub fn option(&self) -> Element<'_, marker::SelectOption> {
+        Element::new(self, "option")
+    }
 }
 
 pub mod marker {
     pub struct SelectOption;
 }
 
-impl<A: Attributes, V: 'static> SelectOption for Html<marker::SelectOption, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::SelectOption, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::SelectOption, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::SelectOption, A, V> {}
+impl<'v> SelectOption for Element<'v, marker::SelectOption> {}
+impl<'v> Common for Element<'v, marker::SelectOption> {}
+impl<'v> Global for Element<'v, marker::SelectOption> {}
+impl<'v> Aria for Element<'v, marker::SelectOption> {}
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.
 pub trait SelectOption: WithAttribute {
     /// Whether the form control is disabled.
-    fn disabled(self) -> Self::Output<Disabled> {
+    fn disabled(self) -> Self {
         self.with_disabled(true)
     }
 
     /// Whether the form control is disabled.
-    fn with_disabled(self, disabled: bool) -> Self::Output<Disabled> {
+    fn with_disabled(self, disabled: bool) -> Self {
         self.with_attribute(Disabled(disabled))
     }
 
     /// User-visible label.
-    fn label(self, value: impl Into<Cow<'static, str>>) -> Self::Output<Label> {
+    fn label(self, value: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Label(value.into()))
     }
 
     /// Whether the control is selected.
-    fn selected(self) -> Self::Output<Selected> {
+    fn selected(self) -> Self {
         self.with_selected(true)
     }
 
     /// Whether the control is selected.
-    fn with_selected(self, selected: bool) -> Self::Output<Selected> {
+    fn with_selected(self, selected: bool) -> Self {
         self.with_attribute(Selected(selected))
     }
 
     /// Value of the option
-    fn value(self, value: impl Into<Cow<'static, str>>) -> Self::Output<Value> {
+    fn value(self, value: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Value(value.into()))
     }
 }

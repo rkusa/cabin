@@ -3,113 +3,94 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use super::link::Type;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 use crate::html::list::SpaceSeparated;
-use crate::html::{Aria, Html};
 
-/// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
-/// address.
-pub fn a(content: impl View) -> Html<marker::Anchor, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("a", (), content)
+impl Context {
+    /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
+    /// address.
+    pub fn a(&self) -> Element<'_, marker::Anchor> {
+        Element::new(self, "a")
+    }
 }
 
 pub mod marker {
     pub struct Anchor;
 }
 
-impl<A: Attributes, V: 'static> Anchor for Html<marker::Anchor, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Anchor, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Anchor, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Anchor, A, V> {}
+impl<'v> Anchor for Element<'v, marker::Anchor> {}
+impl<'v> Common for Element<'v, marker::Anchor> {}
+impl<'v> Global for Element<'v, marker::Anchor> {}
+impl<'v> Aria for Element<'v, marker::Anchor> {}
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
 pub trait Anchor: WithAttribute {
     /// Address of the hyperlink.
-    fn href(self, href: impl Into<Cow<'static, str>>) -> Self::Output<Href> {
+    fn href(self, href: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Href(href.into()))
     }
 
     /// The _browsing context_ the link should be opened in.
-    fn target(self, target: impl Into<Cow<'static, str>>) -> Self::Output<Target> {
+    fn target(self, target: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Target(target.into()))
     }
 
     /// Try to open the link in a new tab.
-    fn target_blank(self) -> Self::Output<Target> {
+    fn target_blank(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_blank")))
     }
 
     /// Open the link in the parent browsing context.
-    fn target_parent(self) -> Self::Output<Target> {
+    fn target_parent(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_parent")))
     }
 
     /// Open the link in the topmost browsing context.
-    fn target_top(self) -> Self::Output<Target> {
+    fn target_top(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_top")))
     }
 
     /// Treat the linked URL as a download with the specified filename.
-    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> Self::Output<Download> {
+    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Download(download.into()))
     }
 
     /// Treat the linked URL as a download and let the browser suggest a filename.
-    fn download(self) -> Self::Output<Download> {
+    fn download(self) -> Self {
         self.with_attribute(Download(Cow::Borrowed("")))
     }
 
     /// A space-separated list of URLs the browser will send POST requests (with the body PING)
     /// when the link is followed (typically used for tracking).
-    fn ping(self, ping: impl Into<Cow<'static, str>>) -> Self::Output<Ping> {
+    fn ping(self, ping: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Ping(ping.into()))
     }
 
     /// Relationship between the location in the document containing the hyperlink and the
     /// destination resource.
-    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self::Output<RelList> {
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self {
         self.with_attribute(RelList(rel.into()))
     }
 
-    /// Appends a [Rel] to the link.
-    fn append_rel(mut self, rel: Rel) -> Self::Output<RelList> {
-        let rel_list = if let Some(list) = self.get_attribute_mut::<RelList>() {
-            RelList(
-                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
-                    SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, rel].into())
-                    }
-                    SpaceSeparated::List(mut list) => {
-                        list.insert(rel);
-                        SpaceSeparated::List(list)
-                    }
-                },
-            )
-        } else {
-            RelList(SpaceSeparated::Single(rel))
-        };
-        self.with_attribute(rel_list)
-    }
-
     /// Hint the language of the linked resource.
-    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> Self::Output<Hreflang> {
+    fn hreflang(self, hreflang: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Hreflang(hreflang.into()))
     }
 
     /// Hint for the type of the referenced resource.
-    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self::Output<Type> {
+    fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Type(r#type.into()))
     }
 
     /// How much referrer information to send.
-    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self::Output<ReferrerPolicy> {
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self {
         self.with_attribute(referrer_policy)
     }
 }

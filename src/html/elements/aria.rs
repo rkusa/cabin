@@ -5,11 +5,11 @@ use std::ops::{Deref, DerefMut};
 
 use cabin_macros::Attribute;
 
-use crate::html::attributes::WithAttribute;
+use crate::attribute::WithAttribute;
 
 pub trait Aria: WithAttribute {
     // Set the aria role of the element.
-    fn role(self, role: Role) -> Self::Output<Role> {
+    fn role(self, role: Role) -> Self {
         self.with_attribute(role)
     }
 
@@ -17,10 +17,7 @@ pub trait Aria: WithAttribute {
     /// textbox, group, or application.
     ///
     /// <https://w3c.github.io/aria/#aria-activedescendant>
-    fn aria_active_descendant(
-        self,
-        aria_active_descendant: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaActiveDescendant> {
+    fn aria_active_descendant(self, aria_active_descendant: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaActiveDescendant(aria_active_descendant.into()))
     }
 
@@ -28,7 +25,7 @@ pub trait Aria: WithAttribute {
     /// region based on the change notifications defined by the aria-relevant attribute.
     ///
     /// <https://w3c.github.io/aria/#aria-atomic>
-    fn aria_atomic(self) -> Self::Output<AriaAtomic> {
+    fn aria_atomic(self) -> Self {
         self.with_aria_atomic(true)
     }
 
@@ -36,7 +33,7 @@ pub trait Aria: WithAttribute {
     /// region based on the change notifications defined by the aria-relevant attribute.
     ///
     /// <https://w3c.github.io/aria/#aria-atomic>
-    fn with_aria_atomic(self, aria_atomic: bool) -> Self::Output<AriaAtomic> {
+    fn with_aria_atomic(self, aria_atomic: bool) -> Self {
         self.with_attribute(AriaAtomic(aria_atomic))
     }
 
@@ -45,10 +42,7 @@ pub trait Aria: WithAttribute {
     /// would be presented if they were made.
     ///
     /// <https://w3c.github.io/aria/#aria-autocomplete>
-    fn aria_autocomplete(
-        self,
-        aria_autocomplete: AutoAutocomplete,
-    ) -> Self::Output<AutoAutocomplete> {
+    fn aria_autocomplete(self, aria_autocomplete: AutoAutocomplete) -> Self {
         self.with_attribute(aria_autocomplete)
     }
 
@@ -56,10 +50,7 @@ pub trait Aria: WithAttribute {
     /// into Braille. See related aria-label.
     ///
     /// <https://w3c.github.io/aria/#aria-braillelabel>
-    fn aria_braille_label(
-        self,
-        aria_braille_label: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaBrailleLabel> {
+    fn aria_braille_label(self, aria_braille_label: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaBrailleLabel(aria_braille_label.into()))
     }
 
@@ -70,7 +61,7 @@ pub trait Aria: WithAttribute {
     fn aria_braille_role_description(
         self,
         aria_braille_role_description: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaBrailleRoleDescription> {
+    ) -> Self {
         self.with_attribute(AriaBrailleRoleDescription(
             aria_braille_role_description.into(),
         ))
@@ -80,7 +71,7 @@ pub trait Aria: WithAttribute {
     /// modifications are complete before exposing them to the user.
     ///
     /// <https://w3c.github.io/aria/#aria-busy>
-    fn aria_busy(self) -> Self::Output<AriaBusy> {
+    fn aria_busy(self) -> Self {
         self.with_aria_busy(true)
     }
 
@@ -88,7 +79,7 @@ pub trait Aria: WithAttribute {
     /// modifications are complete before exposing them to the user.
     ///
     /// <https://w3c.github.io/aria/#aria-busy>
-    fn with_aria_busy(self, aria_busy: bool) -> Self::Output<AriaBusy> {
+    fn with_aria_busy(self, aria_busy: bool) -> Self {
         self.with_attribute(AriaBusy(aria_busy))
     }
 
@@ -96,7 +87,7 @@ pub trait Aria: WithAttribute {
     /// related aria-pressed and aria-selected.
     ///
     /// <https://w3c.github.io/aria/#aria-checked>
-    fn aria_checked(self, aria_checked: AriaChecked) -> Self::Output<AriaChecked> {
+    fn aria_checked(self, aria_checked: AriaChecked) -> Self {
         self.with_attribute(aria_checked)
     }
 
@@ -104,7 +95,7 @@ pub trait Aria: WithAttribute {
     /// aria-colindex.
     ///
     /// <https://w3c.github.io/aria/#aria-colcount>
-    fn aria_col_count(self, aria_col_count: i32) -> Self::Output<AriaColCount> {
+    fn aria_col_count(self, aria_col_count: i32) -> Self {
         self.with_attribute(AriaColCount(aria_col_count))
     }
 
@@ -113,17 +104,14 @@ pub trait Aria: WithAttribute {
     /// aria-colspan.
     ///
     /// <https://w3c.github.io/aria/#aria-colindex>
-    fn aria_col_index(self, aria_col_index: u32) -> Self::Output<AriaColIndex> {
+    fn aria_col_index(self, aria_col_index: u32) -> Self {
         self.with_attribute(AriaColIndex(aria_col_index))
     }
 
     /// Defines a human readable text alternative of aria-colindex. See related aria-rowindextext.
     ///
     /// <https://w3c.github.io/aria/#aria-colindextext>
-    fn aria_colindextext(
-        self,
-        aria_colindextext: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaColindextext> {
+    fn aria_colindextext(self, aria_colindextext: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaColindextext(aria_colindextext.into()))
     }
 
@@ -131,7 +119,7 @@ pub trait Aria: WithAttribute {
     /// treegrid. See related aria-colindex and aria-rowspan.
     ///
     /// <https://w3c.github.io/aria/#aria-colspan>
-    fn aria_col_span(self, aria_col_span: u32) -> Self::Output<AriaColSpan> {
+    fn aria_col_span(self, aria_col_span: u32) -> Self {
         self.with_attribute(AriaColSpan(aria_col_span))
     }
 
@@ -139,10 +127,7 @@ pub trait Aria: WithAttribute {
     /// current element. See related aria-owns.
     ///
     /// <https://w3c.github.io/aria/#aria-controls>
-    fn aria_controls(
-        self,
-        aria_controls: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaControls> {
+    fn aria_controls(self, aria_controls: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaControls(aria_controls.into()))
     }
 
@@ -150,7 +135,7 @@ pub trait Aria: WithAttribute {
     /// elements.
     ///
     /// <https://w3c.github.io/aria/#aria-current>
-    fn aria_current(self, aria_current: AriaCurrent) -> Self::Output<AriaCurrent> {
+    fn aria_current(self, aria_current: AriaCurrent) -> Self {
         self.with_attribute(aria_current)
     }
 
@@ -158,10 +143,7 @@ pub trait Aria: WithAttribute {
     /// and aria-description.
     ///
     /// <https://w3c.github.io/aria/#aria-describedby>
-    fn aria_described_by(
-        self,
-        aria_describedby: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaDescribedBy> {
+    fn aria_described_by(self, aria_describedby: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaDescribedBy(aria_describedby.into()))
     }
 
@@ -169,10 +151,7 @@ pub trait Aria: WithAttribute {
     /// aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-description>
-    fn aria_description(
-        self,
-        aria_description: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaDescription> {
+    fn aria_description(self, aria_description: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaDescription(aria_description.into()))
     }
 
@@ -180,7 +159,7 @@ pub trait Aria: WithAttribute {
     /// object. See related aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-details>
-    fn aria_details(self, aria_details: impl Into<Cow<'static, str>>) -> Self::Output<AriaDetails> {
+    fn aria_details(self, aria_details: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaDetails(aria_details.into()))
     }
 
@@ -188,7 +167,7 @@ pub trait Aria: WithAttribute {
     /// operable. See related aria-hidden and aria-readonly.
     ///
     /// <https://w3c.github.io/aria/#aria-disabled>
-    fn aria_disabled(self) -> Self::Output<AriaDisabled> {
+    fn aria_disabled(self) -> Self {
         self.with_aria_disabled(true)
     }
 
@@ -196,7 +175,7 @@ pub trait Aria: WithAttribute {
     /// operable. See related aria-hidden and aria-readonly.
     ///
     /// <https://w3c.github.io/aria/#aria-disabled>
-    fn with_aria_disabled(self, aria_disabled: bool) -> Self::Output<AriaDisabled> {
+    fn with_aria_disabled(self, aria_disabled: bool) -> Self {
         self.with_attribute(AriaDisabled(aria_disabled))
     }
 
@@ -204,10 +183,7 @@ pub trait Aria: WithAttribute {
     /// related aria-invalid and aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-errormessage>
-    fn aria_error_message(
-        self,
-        aria_error_message: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaErrorMessage> {
+    fn aria_error_message(self, aria_error_message: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaErrorMessage(aria_error_message.into()))
     }
 
@@ -215,7 +191,7 @@ pub trait Aria: WithAttribute {
     /// collapsed.
     ///
     /// <https://w3c.github.io/aria/#aria-expanded>
-    fn aria_expanded(self) -> Self::Output<AriaExpanded> {
+    fn aria_expanded(self) -> Self {
         self.with_aria_expanded(true)
     }
 
@@ -223,7 +199,7 @@ pub trait Aria: WithAttribute {
     /// collapsed.
     ///
     /// <https://w3c.github.io/aria/#aria-expanded>
-    fn with_aria_expanded(self, aria_expanded: bool) -> Self::Output<AriaExpanded> {
+    fn with_aria_expanded(self, aria_expanded: bool) -> Self {
         self.with_attribute(AriaExpanded(aria_expanded))
     }
 
@@ -232,7 +208,7 @@ pub trait Aria: WithAttribute {
     /// reading in document source order.
     ///
     /// <https://w3c.github.io/aria/#aria-flowto>
-    fn aria_flow_to(self, aria_flow_to: impl Into<Cow<'static, str>>) -> Self::Output<AriaFlowTo> {
+    fn aria_flow_to(self, aria_flow_to: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaFlowTo(aria_flow_to.into()))
     }
 
@@ -240,7 +216,7 @@ pub trait Aria: WithAttribute {
     /// that can be triggered by an element.
     ///
     /// <https://w3c.github.io/aria/#aria-haspopup>
-    fn aria_haspopup(self, aria_haspopup: AriaHasPopup) -> Self::Output<AriaHasPopup> {
+    fn aria_haspopup(self, aria_haspopup: AriaHasPopup) -> Self {
         self.with_attribute(aria_haspopup)
     }
 
@@ -248,7 +224,7 @@ pub trait Aria: WithAttribute {
     /// aria-disabled.
     ///
     /// <https://w3c.github.io/aria/#aria-hidden>
-    fn aria_hidden(self, aria_hidden: bool) -> Self::Output<AriaHidden> {
+    fn aria_hidden(self, aria_hidden: bool) -> Self {
         self.with_attribute(AriaHidden(aria_hidden))
     }
 
@@ -256,7 +232,7 @@ pub trait Aria: WithAttribute {
     /// See related aria-errormessage.
     ///
     /// <https://w3c.github.io/aria/#aria-invalid>
-    fn aria_invalid(self, aria_invalid: AriaInvalid) -> Self::Output<AriaInvalid> {
+    fn aria_invalid(self, aria_invalid: AriaInvalid) -> Self {
         self.with_attribute(aria_invalid)
     }
 
@@ -264,17 +240,14 @@ pub trait Aria: WithAttribute {
     /// element.
     ///
     /// <https://w3c.github.io/aria/#aria-keyshortcuts>
-    fn aria_key_shortcuts(
-        self,
-        aria_key_shortcuts: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaKeyShortcuts> {
+    fn aria_key_shortcuts(self, aria_key_shortcuts: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaKeyShortcuts(aria_key_shortcuts.into()))
     }
 
     /// Defines a string value that labels the current element. See related aria-labelledby.
     ///
     /// <https://w3c.github.io/aria/#aria-label>
-    fn aria_label(self, aria_label: impl Into<Cow<'static, str>>) -> Self::Output<AriaLabel> {
+    fn aria_label(self, aria_label: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaLabel(aria_label.into()))
     }
 
@@ -282,17 +255,14 @@ pub trait Aria: WithAttribute {
     /// aria-label and aria-describedby.
     ///
     /// <https://w3c.github.io/aria/#aria-labelledby>
-    fn aria_labelledby(
-        self,
-        aria_labelledby: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaLabelledby> {
+    fn aria_labelledby(self, aria_labelledby: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaLabelledby(aria_labelledby.into()))
     }
 
     /// Defines the hierarchical level of an element within a structure.
     ///
     /// <https://w3c.github.io/aria/#aria-level>
-    fn aria_level(self, aria_level: u32) -> Self::Output<AriaLevel> {
+    fn aria_level(self, aria_level: u32) -> Self {
         self.with_attribute(AriaLevel(aria_level))
     }
 
@@ -300,35 +270,35 @@ pub trait Aria: WithAttribute {
     /// agents, assistive technologies, and user can expect from the live region.
     ///
     /// <https://w3c.github.io/aria/#aria-live>
-    fn aria_live(self, aria_live: AriaLive) -> Self::Output<AriaLive> {
+    fn aria_live(self, aria_live: AriaLive) -> Self {
         self.with_attribute(aria_live)
     }
 
     /// Indicates whether an element is modal when displayed.
     ///
     /// <https://w3c.github.io/aria/#aria-modal>
-    fn aria_modal(self) -> Self::Output<AriaModal> {
+    fn aria_modal(self) -> Self {
         self.with_aria_modal(true)
     }
 
     /// Indicates whether an element is modal when displayed.
     ///
     /// <https://w3c.github.io/aria/#aria-modal>
-    fn with_aria_modal(self, aria_modal: bool) -> Self::Output<AriaModal> {
+    fn with_aria_modal(self, aria_modal: bool) -> Self {
         self.with_attribute(AriaModal(aria_modal))
     }
 
     /// Indicates whether a text box accepts multiple lines of input or only a single line.
     ///
     /// <https://w3c.github.io/aria/#aria-multiline>
-    fn aria_multi_line(self) -> Self::Output<AriaMultiLine> {
+    fn aria_multi_line(self) -> Self {
         self.with_aria_multi_line(true)
     }
 
     /// Indicates whether a text box accepts multiple lines of input or only a single line.
     ///
     /// <https://w3c.github.io/aria/#aria-multiline>
-    fn with_aria_multi_line(self, aria_multi_line: bool) -> Self::Output<AriaMultiLine> {
+    fn with_aria_multi_line(self, aria_multi_line: bool) -> Self {
         self.with_attribute(AriaMultiLine(aria_multi_line))
     }
 
@@ -336,7 +306,7 @@ pub trait Aria: WithAttribute {
     /// descendants.
     ///
     /// <https://w3c.github.io/aria/#aria-multiselectable>
-    fn aria_multi_selectable(self) -> Self::Output<AriaMultiSelectable> {
+    fn aria_multi_selectable(self) -> Self {
         self.with_aria_multi_selectable(true)
     }
 
@@ -344,17 +314,14 @@ pub trait Aria: WithAttribute {
     /// descendants.
     ///
     /// <https://w3c.github.io/aria/#aria-multiselectable>
-    fn with_aria_multi_selectable(
-        self,
-        aria_multi_selectable: bool,
-    ) -> Self::Output<AriaMultiSelectable> {
+    fn with_aria_multi_selectable(self, aria_multi_selectable: bool) -> Self {
         self.with_attribute(AriaMultiSelectable(aria_multi_selectable))
     }
 
     /// Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.
     ///
     /// <https://w3c.github.io/aria/#aria-orientation>
-    fn aria_orientation(self, aria_orientation: AriaOrientation) -> Self::Output<AriaOrientation> {
+    fn aria_orientation(self, aria_orientation: AriaOrientation) -> Self {
         self.with_attribute(aria_orientation)
     }
 
@@ -363,7 +330,7 @@ pub trait Aria: WithAttribute {
     /// represent the relationship. See related aria-controls.
     ///
     /// <https://w3c.github.io/aria/#aria-owns>
-    fn aria_owns(self, aria_owns: impl Into<Cow<'static, str>>) -> Self::Output<AriaOwns> {
+    fn aria_owns(self, aria_owns: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaOwns(aria_owns.into()))
     }
 
@@ -372,10 +339,7 @@ pub trait Aria: WithAttribute {
     /// expected format.
     ///
     /// <https://w3c.github.io/aria/#aria-placeholder>
-    fn aria_placeholder(
-        self,
-        aria_placeholder: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaPlaceholder> {
+    fn aria_placeholder(self, aria_placeholder: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaPlaceholder(aria_placeholder.into()))
     }
 
@@ -383,7 +347,7 @@ pub trait Aria: WithAttribute {
     /// required if all elements in the set are present in the DOM. See related aria-setsize.
     ///
     /// <https://w3c.github.io/aria/#aria-posinset>
-    fn aria_pos_inset(self, aria_pos_inset: u32) -> Self::Output<AriaPosInset> {
+    fn aria_pos_inset(self, aria_pos_inset: u32) -> Self {
         self.with_attribute(AriaPosInset(aria_pos_inset))
     }
 
@@ -391,7 +355,7 @@ pub trait Aria: WithAttribute {
     /// aria-selected.
     ///
     /// <https://w3c.github.io/aria/#aria-pressed>
-    fn aria_pressed(self, aria_pressed: AriaPressed) -> Self::Output<AriaPressed> {
+    fn aria_pressed(self, aria_pressed: AriaPressed) -> Self {
         self.with_attribute(aria_pressed)
     }
 
@@ -399,7 +363,7 @@ pub trait Aria: WithAttribute {
     /// aria-disabled.
     ///
     /// <https://w3c.github.io/aria/#aria-readonly>
-    fn aria_readonly(self) -> Self::Output<AriaReadonly> {
+    fn aria_readonly(self) -> Self {
         self.with_aria_readonly(true)
     }
 
@@ -407,7 +371,7 @@ pub trait Aria: WithAttribute {
     /// aria-disabled.
     ///
     /// <https://w3c.github.io/aria/#aria-readonly>
-    fn with_aria_readonly(self, aria_readonly: bool) -> Self::Output<AriaReadonly> {
+    fn with_aria_readonly(self, aria_readonly: bool) -> Self {
         self.with_attribute(AriaReadonly(aria_readonly))
     }
 
@@ -415,38 +379,35 @@ pub trait Aria: WithAttribute {
     /// a live region is modified. See related aria-atomic.
     ///
     /// <https://w3c.github.io/aria/#aria-relevant>
-    fn aria_relevant(self, aria_relevant: AriaRelevant) -> Self::Output<AriaRelevant> {
+    fn aria_relevant(self, aria_relevant: AriaRelevant) -> Self {
         self.with_attribute(aria_relevant)
     }
 
     /// Indicates that user input is required on the element before a form can be submitted.
     ///
     /// <https://w3c.github.io/aria/#aria-required>
-    fn aria_required(self) -> Self::Output<AriaRequired> {
+    fn aria_required(self) -> Self {
         self.with_aria_required(true)
     }
 
     /// Indicates that user input is required on the element before a form can be submitted.
     ///
     /// <https://w3c.github.io/aria/#aria-required>
-    fn with_aria_required(self, aria_required: bool) -> Self::Output<AriaRequired> {
+    fn with_aria_required(self, aria_required: bool) -> Self {
         self.with_attribute(AriaRequired(aria_required))
     }
 
     /// Defines a human-readable, author-localized description for the role of an element.
     ///
     /// <https://w3c.github.io/aria/#aria-roledescription>
-    fn aria_role_description(
-        self,
-        aria_role_description: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaRoleDescription> {
+    fn aria_role_description(self, aria_role_description: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaRoleDescription(aria_role_description.into()))
     }
 
     /// Defines the total number of rows in a table, grid, or treegrid. See related aria-rowindex.
     ///
     /// <https://w3c.github.io/aria/#aria-rowcount>
-    fn aria_row_count(self, aria_row_count: i32) -> Self::Output<AriaRowCount> {
+    fn aria_row_count(self, aria_row_count: i32) -> Self {
         self.with_attribute(AriaRowCount(aria_row_count))
     }
 
@@ -454,17 +415,14 @@ pub trait Aria: WithAttribute {
     /// a table, grid, or treegrid. See related aria-rowindextext, aria-rowcount, and aria-rowspan.
     ///
     /// <https://w3c.github.io/aria/#aria-rowindex>
-    fn aria_row_index(self, aria_row_index: u32) -> Self::Output<AriaRowIndex> {
+    fn aria_row_index(self, aria_row_index: u32) -> Self {
         self.with_attribute(AriaRowIndex(aria_row_index))
     }
 
     /// Defines a human readable text alternative of aria-rowindex. See related aria-colindextext.
     ///
     /// <https://w3c.github.io/aria/#aria-rowindextext>
-    fn aria_row_index_text(
-        self,
-        aria_row_index_text: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaRowIndexText> {
+    fn aria_row_index_text(self, aria_row_index_text: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaRowIndexText(aria_row_index_text.into()))
     }
 
@@ -472,7 +430,7 @@ pub trait Aria: WithAttribute {
     /// See related aria-rowindex and aria-colspan.
     ///
     /// <https://w3c.github.io/aria/#aria-rowspan>
-    fn aria_row_span(self, aria_row_span: u32) -> Self::Output<AriaRowSpan> {
+    fn aria_row_span(self, aria_row_span: u32) -> Self {
         self.with_attribute(AriaRowSpan(aria_row_span))
     }
 
@@ -480,7 +438,7 @@ pub trait Aria: WithAttribute {
     /// aria-pressed.
     ///
     /// <https://w3c.github.io/aria/#aria-selected>
-    fn aria_selected(self) -> Self::Output<AriaSelected> {
+    fn aria_selected(self) -> Self {
         self.with_aria_selected(true)
     }
 
@@ -488,7 +446,7 @@ pub trait Aria: WithAttribute {
     /// aria-pressed.
     ///
     /// <https://w3c.github.io/aria/#aria-selected>
-    fn with_aria_selected(self, aria_selected: bool) -> Self::Output<AriaSelected> {
+    fn with_aria_selected(self, aria_selected: bool) -> Self {
         self.with_attribute(AriaSelected(aria_selected))
     }
 
@@ -496,45 +454,42 @@ pub trait Aria: WithAttribute {
     /// all elements in the set are present in the DOM. See related aria-posinset.
     ///
     /// <https://w3c.github.io/aria/#aria-setsize>
-    fn aria_set_size(self, aria_set_size: i32) -> Self::Output<AriaSetSize> {
+    fn aria_set_size(self, aria_set_size: i32) -> Self {
         self.with_attribute(AriaSetSize(aria_set_size))
     }
 
     /// Indicates if items in a table or grid are sorted in ascending or descending order.
     ///
     /// <https://w3c.github.io/aria/#aria-sort>
-    fn aria_sort(self, aria_sort: AriaSort) -> Self::Output<AriaSort> {
+    fn aria_sort(self, aria_sort: AriaSort) -> Self {
         self.with_attribute(aria_sort)
     }
 
     /// Defines the maximum allowed value for a range widget.
     ///
     /// <https://w3c.github.io/aria/#aria-valuemax>
-    fn aria_value_max(self, aria_value_max: impl Into<Number>) -> Self::Output<AriaValueMax> {
+    fn aria_value_max(self, aria_value_max: impl Into<Number>) -> Self {
         self.with_attribute(AriaValueMax(aria_value_max.into()))
     }
 
     /// Defines the minimum allowed value for a range widget.
     ///
     /// <https://w3c.github.io/aria/#aria-valuemin>
-    fn aria_value_min(self, aria_value_min: impl Into<Number>) -> Self::Output<AriaValueMin> {
+    fn aria_value_min(self, aria_value_min: impl Into<Number>) -> Self {
         self.with_attribute(AriaValueMin(aria_value_min.into()))
     }
 
     /// Defines the current value for a range widget. See related aria-valuetext.
     ///
     /// <https://w3c.github.io/aria/#aria-valuenow>
-    fn aria_value_now(self, aria_value_now: impl Into<Number>) -> Self::Output<AriaValueNow> {
+    fn aria_value_now(self, aria_value_now: impl Into<Number>) -> Self {
         self.with_attribute(AriaValueNow(aria_value_now.into()))
     }
 
     /// Defines the human readable text alternative of aria-valuenow for a range widget.
     ///
     /// <https://w3c.github.io/aria/#aria-valuetext>
-    fn aria_value_text(
-        self,
-        aria_value_text: impl Into<Cow<'static, str>>,
-    ) -> Self::Output<AriaValueText> {
+    fn aria_value_text(self, aria_value_text: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(AriaValueText(aria_value_text.into()))
     }
 }

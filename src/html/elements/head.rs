@@ -1,17 +1,16 @@
-use crate::View;
-use crate::html::attributes::Attributes;
-use crate::html::{Global, Html};
-use crate::view::UpdateView;
+use super::global::Global;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `head` element represents a collection of metadata for the document.
-pub fn head(content: impl View) -> UpdateView<Html<marker::Head, (), impl View>> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    UpdateView::hidden_on_update(Html::new("head", (), content))
+impl Context {
+    /// The `head` element represents a collection of metadata for the document.
+    pub fn head(&self) -> Element<'_, marker::Head> {
+        Element::new(self, "head")
+    }
 }
 
 pub mod marker {
     pub struct Head;
 }
 
-impl<A: Attributes, V: 'static> Global for UpdateView<Html<marker::Head, A, V>> {}
+impl<'v> Global for Element<'v, marker::Head> {}

@@ -34,6 +34,8 @@ pub fn boundary_attribute(
     let name = ident.to_string();
     let (args_idents, args_types) = inputs
         .iter()
+        // first argument must be &Context
+        .skip(1)
         .map(|input| match input {
             FnArg::Receiver(_) => Err(Error::new(
                 input.span(),
@@ -64,11 +66,11 @@ pub fn boundary_attribute(
 
     let to_async = if asyncness.is_some() {
         quote! {
-            async move { ::cabin::view::boundary::Boundary::from(#inner_ident(#args_idents).await) }
+            async move { ::cabin::view::boundary::Boundary::from(#inner_ident(c, #args_idents).await) }
         }
     } else {
         quote! {
-            ::std::future::ready(::cabin::view::boundary::Boundary::from(#inner_ident(#args_idents)))
+            ::std::future::ready(::cabin::view::boundary::Boundary::from(#inner_ident(c, #args_idents)))
         }
     };
     let async_await = if asyncness.is_some() {
@@ -101,7 +103,7 @@ pub fn boundary_attribute(
                 ::cabin::view::boundary::BoundaryRef::new(
                     ID,
                     &EVENTS,
-                    &(move |(#args_idents)| Box::pin(#to_async)),
+                    &(move |c, (#args_idents)| Box::pin(#to_async)),
                 );
 
             #[cfg(not(target_arch = "wasm32"))]
@@ -114,7 +116,7 @@ pub fn boundary_attribute(
             #wasm
 
             ::cabin::view::boundary::internal::Boundary::upgrade(
-                #inner_ident(#args_idents) #async_await,
+                #inner_ident(c, #args_idents) #async_await,
                 &BOUNDARY
             )
         }

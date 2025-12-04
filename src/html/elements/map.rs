@@ -2,34 +2,35 @@ use std::borrow::Cow;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `map` element, in conjunction with an [super::img] element and any [super::area] element
-/// descendants, defines an image map. The element represents its children.
-pub fn map(content: impl View) -> Html<marker::Map, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("map", (), content)
+impl Context {
+    /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
+    /// descendants, defines an image map. The element represents its children.
+    pub fn map(&self) -> Element<'_, marker::Map> {
+        Element::new(self, "map")
+    }
 }
 
 pub mod marker {
     pub struct Map;
 }
 
-impl<A: Attributes, V: 'static> Map for Html<marker::Map, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Map, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Map, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Map, A, V> {}
+impl<'v> Map for Element<'v, marker::Map> {}
+impl<'v> Common for Element<'v, marker::Map> {}
+impl<'v> Global for Element<'v, marker::Map> {}
+impl<'v> Aria for Element<'v, marker::Map> {}
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.
 pub trait Map: WithAttribute {
     /// Name of image map to reference from the [super::img::Img::use_map] attribute.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))
     }
 }

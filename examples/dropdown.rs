@@ -1,46 +1,51 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::scope::event;
 use cabin::view::{Boundary, IteratorExt};
 use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
-    let count = event::<Increment>().unwrap_or(Increment(3)).0;
+async fn app(c: &Context) -> impl View<'_> {
+    let count = c.event::<Increment>().unwrap_or(Increment(3)).0;
 
-    basic_document((
-        // Incrementing the counter will cause the dialog to change outside of its boundary, which
-        // causes its internal state to revert to its default (closed). This is intentional.
-        h::button(h::text!("{}", count))
-            .on_click(Increment(count + 1))
-            .style("min-width:40px"),
-        dialog(count, false),
-    ))
+    basic_document(
+        c,
+        c.fragment()
+            // Incrementing the counter will cause the dialog to change outside of its boundary,
+            // which causes its internal state to revert to its default (closed). This
+            // is intentional.
+            .child(
+                c.button()
+                    .on_click(Increment(count + 1))
+                    .style("min-width:40px")
+                    .child(text!("{}", count)),
+            )
+            .child(dialog(c, count, false)),
+    )
 }
 
 #[cabin::boundary]
-fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
-    let open = event::<Toggle>().unwrap_or(Toggle(open)).0;
+fn dialog(c: &Context, count: usize, open: bool) -> Boundary<'_, (usize, bool)> {
+    let open = c.event::<Toggle>().unwrap_or(Toggle(open)).0;
 
-    h::div((
-        h::button("open").on_click(Toggle(!open)),
-        open.then(|| {
-            h::ul(
-                (0..count)
-                    .keyed(|item| *item)
-                    .map(|item| h::li(h::text!("Item {}", item)).style("white-space:nowrap;")),
-            )
-            .style(
-                "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;padding:\
-                 4px;",
-            )
-        }),
-    ))
-    .style("display:inline;position:relative")
-    .boundary((count, open))
+    c.div()
+        .style("display:inline;position:relative")
+        .child(c.button().on_click(Toggle(!open)).child("open"))
+        .child(open.then(|| {
+            c.ul()
+                .style(
+                    "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;\
+                     padding:4px;",
+                )
+                .child((0..count).keyed(|item| *item).map(|item| {
+                    c.li()
+                        .style("white-space:nowrap;")
+                        .child(text!("Item {}", item))
+                }))
+        }))
+        .boundary(c, (count, open))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]

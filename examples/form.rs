@@ -1,34 +1,38 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::scope::take_event;
 use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
-    let data = take_event::<Data>();
+async fn app(c: &Context) -> impl View<'_> {
+    let data = c.take_event::<Data>();
 
     let values = data.clone().unwrap_or_default();
-    basic_document((
-        h::form((
-            h::input().type_text().name("comment").value(values.comment),
-            h::input()
-                .type_checkbox()
-                .name("highlighted")
-                .with_checked(values.highlighted),
-            h::button("submit").type_submit(),
-        ))
-        .on_submit::<Data>(),
-        data.map(|data| {
-            h::text!(
-                "Submitted: comment={}; highlighted={}",
-                data.comment,
-                data.highlighted
+    basic_document(
+        c,
+        c.fragment()
+            .child(
+                c.form()
+                    .on_submit::<Data>()
+                    .child(c.input().type_text().name("comment").value(values.comment))
+                    .child(
+                        c.input()
+                            .type_checkbox()
+                            .name("highlighted")
+                            .with_checked(values.highlighted),
+                    )
+                    .child(c.button().type_submit().child("submit")),
             )
-        }),
-    ))
+            .child(data.map(|data| {
+                text!(
+                    "Submitted: comment={}; highlighted={}",
+                    data.comment,
+                    data.highlighted
+                )
+            })),
+    )
 }
 
 #[derive(Default, Clone, Event, Serialize, Deserialize)]

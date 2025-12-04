@@ -1,38 +1,39 @@
 use std::borrow::Cow;
 
+use super::aria::Aria;
 use super::blockquote::Cite;
 use super::common::Common;
 use super::global::Global;
 use super::time::Datetime;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `del` element represents a removal from the document.
-pub fn del(content: impl View) -> Html<marker::Del, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("del", (), content)
+impl Context {
+    /// The `del` element represents a removal from the document.
+    pub fn del(&self) -> Element<'_, marker::Del> {
+        Element::new(self, "del")
+    }
 }
 
 pub mod marker {
     pub struct Del;
 }
 
-impl<A: Attributes, V: 'static> Del for Html<marker::Del, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Del, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Del, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Del, A, V> {}
+impl<'v> Del for Element<'v, marker::Del> {}
+impl<'v> Common for Element<'v, marker::Del> {}
+impl<'v> Global for Element<'v, marker::Del> {}
+impl<'v> Aria for Element<'v, marker::Del> {}
 
 /// The `del` element represents a removal from the document.
 pub trait Del: WithAttribute {
     /// Link to the source of the quotation or more information about the edit.
-    fn cite(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Cite> {
+    fn cite(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Cite(src.into()))
     }
 
     /// Machine-readable datetime/date/time of the change.
-    fn datetime(self, datetime: impl Into<Cow<'static, str>>) -> Self::Output<Datetime> {
+    fn datetime(self, datetime: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Datetime(datetime.into()))
     }
 }

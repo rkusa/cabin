@@ -81,7 +81,9 @@ where
                 .flatten()
             {
                 let id = id.to_string();
-                let res = registry.handle(&id, req).await;
+                let res =
+                    cabin::local_pool::spawn(|| async move { registry.handle(&id, req).await })
+                        .await;
                 let (parts, body) = res.into_parts();
                 Ok(Response::from_parts(parts, body.into()))
             } else {

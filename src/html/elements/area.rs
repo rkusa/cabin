@@ -4,115 +4,99 @@ use std::fmt::{self};
 use cabin_macros::Attribute;
 
 use super::anchor::{Download, Href, Ping, ReferrerPolicy, Rel, RelList, Target};
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use super::img::Alt;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
 use crate::html::list::SpaceSeparated;
-use crate::html::{Aria, Html};
+use crate::void_element::VoidElement;
 
-/// The `area` element represents either a hyperlink with some text and a corresponding area on an
-/// image map, or a dead area on an image map.
-pub fn area() -> Html<marker::Area, (), ()> {
-    Html::new("area", (), ()).into_void_element()
+impl Context {
+    /// The `area` element represents either a hyperlink with some text and a corresponding area on
+    /// an image map, or a dead area on an image map.
+    pub fn area(&self) -> VoidElement<'_, marker::Area> {
+        VoidElement::new(self, "area")
+    }
 }
 
 pub mod marker {
     pub struct Area;
 }
 
-impl<A: Attributes, V: 'static> Area for Html<marker::Area, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Area, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Area, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Area, A, V> {}
+impl<'v> Area for VoidElement<'v, marker::Area> {}
+impl<'v> Common for VoidElement<'v, marker::Area> {}
+impl<'v> Global for VoidElement<'v, marker::Area> {}
+impl<'v> Aria for VoidElement<'v, marker::Area> {}
 
 /// The `area` element represents either a hyperlink with some text and a corresponding area on an
 /// image map, or a dead area on an image map.
 pub trait Area: WithAttribute {
     /// Replacement text for use when images are not available.
-    fn alt(self, alt: impl Into<Cow<'static, str>>) -> Self::Output<Alt> {
+    fn alt(self, alt: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Alt(alt.into()))
     }
 
     /// Coordinates for the shape to be created in an image map.
-    fn coords(self, coords: impl Into<Cow<'static, str>>) -> Self::Output<Coords> {
+    fn coords(self, coords: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Coords(coords.into()))
     }
 
     /// The kind of shape to be created in an image map.
-    fn shape(self, shape: Shape) -> Self::Output<Shape> {
+    fn shape(self, shape: Shape) -> Self {
         self.with_attribute(shape)
     }
 
     /// Address of the hyperlink.
-    fn href(self, href: impl Into<Cow<'static, str>>) -> Self::Output<Href> {
+    fn href(self, href: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Href(href.into()))
     }
 
     /// The _browsing context_ the link should be opened in.
-    fn target(self, target: impl Into<Cow<'static, str>>) -> Self::Output<Target> {
+    fn target(self, target: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Target(target.into()))
     }
 
     /// Try to open the link in a new tab.
-    fn target_blank(self) -> Self::Output<Target> {
+    fn target_blank(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_blank")))
     }
 
     /// Open the link in the parent browsing context.
-    fn target_parent(self) -> Self::Output<Target> {
+    fn target_parent(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_parent")))
     }
 
     /// Open the link in the topmost browsing context.
-    fn target_top(self) -> Self::Output<Target> {
+    fn target_top(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_top")))
     }
 
     /// Treat the linked URL as a download with the specified filename.
-    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> Self::Output<Download> {
+    fn download_filename(self, download: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Download(download.into()))
     }
 
     /// Treat the linked URL as a download and let the browser suggest a filename.
-    fn download(self) -> Self::Output<Download> {
+    fn download(self) -> Self {
         self.with_attribute(Download(Cow::Borrowed("")))
     }
 
     /// A space-separated list of URLs the browser will send POST requests (with the body PING)
     /// when the link is followed (typically used for tracking).
-    fn ping(self, ping: impl Into<Cow<'static, str>>) -> Self::Output<Ping> {
+    fn ping(self, ping: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Ping(ping.into()))
     }
 
     /// Relationship between the location in the document containing the hyperlink and the
     /// destination resource.
-    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self::Output<RelList> {
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self {
         self.with_attribute(RelList(rel.into()))
     }
 
-    /// Appends a [Rel] to the link.
-    fn append_rel(mut self, rel: Rel) -> Self::Output<RelList> {
-        let rel_list = if let Some(list) = self.get_attribute_mut::<RelList>() {
-            RelList(
-                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::Alternate)) {
-                    SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, rel].into())
-                    }
-                    SpaceSeparated::List(mut list) => {
-                        list.insert(rel);
-                        SpaceSeparated::List(list)
-                    }
-                },
-            )
-        } else {
-            RelList(SpaceSeparated::Single(rel))
-        };
-        self.with_attribute(rel_list)
-    }
-
     /// How much referrer information to send.
-    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self::Output<ReferrerPolicy> {
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self {
         self.with_attribute(referrer_policy)
     }
 }

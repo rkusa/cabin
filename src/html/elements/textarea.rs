@@ -3,147 +3,170 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::button::{Disabled, Form, Name};
 use super::common::Common;
 use super::global::Global;
-use super::input::{
-    AutoComplete, Dirname, MaxLength, MinLength, OnChange, OnInput, Placeholder, ReadOnly, Required,
-};
+use super::input::{AutoComplete, Dirname, MaxLength, MinLength, Placeholder, ReadOnly, Required};
 use crate::View;
-use crate::error::InternalError;
+use crate::attribute::{Attribute, WithAttribute};
+use crate::context::Context;
+use crate::element::{Element, ElementContent};
 use crate::event::Event;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::html::events::CustomEvent;
+use crate::render::Renderer;
+use crate::view::RenderFuture;
 
-/// The `textarea` element represents a multiline plain text edit control for the element's raw
-/// value. The contents of the control represent the control's default value.
-pub fn textarea(content: impl Into<Cow<'static, str>>) -> Html<marker::Textarea, (), impl View> {
-    Html::new("textarea", (), content.into())
+impl Context {
+    /// The `textarea` element represents a multiline plain text edit control for the element's raw
+    /// value. The contents of the control represent the control's default value.
+    pub fn textarea(&self) -> TextareaElement<'_> {
+        TextareaElement(Element::new(self, "textarea"))
+    }
 }
 
-pub mod marker {
+pub struct TextareaElement<'v>(Element<'v, marker::Textarea>);
+pub struct TextareaContent<'v>(ElementContent<'v>);
+
+mod marker {
     pub struct Textarea;
 }
 
-impl<A: Attributes, V: 'static> Textarea for Html<marker::Textarea, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Textarea, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Textarea, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Textarea, A, V> {}
+impl<'v> TextareaElement<'v> {
+    pub fn child(self, child: impl Into<Cow<'v, str>>) -> TextareaContent<'v> {
+        TextareaContent(self.0.child(child.into()))
+    }
+}
+
+impl<'v> TextareaContent<'v> {
+    pub fn child(self, child: impl Into<Cow<'v, str>>) -> Self {
+        Self(self.0.child(child.into()))
+    }
+}
+
+impl<'v> View<'v> for TextareaElement<'v> {
+    fn render(self, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(r)
+    }
+}
+
+impl<'v> View<'v> for TextareaContent<'v> {
+    fn render(self, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(r)
+    }
+}
+
+impl<'v> WithAttribute for TextareaElement<'v> {
+    fn with_attribute(self, attr: impl Attribute) -> Self {
+        Self(self.0.with_attribute(attr))
+    }
+}
+
+impl<'v> Textarea for TextareaElement<'v> {}
+impl<'v> Common for TextareaElement<'v> {}
+impl<'v> Global for TextareaElement<'v> {}
+impl<'v> Aria for TextareaElement<'v> {}
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.
 pub trait Textarea: WithAttribute {
     /// Hint for form autofill feature.
-    fn autocomplete(self, autocomplete: AutoComplete) -> Self::Output<AutoComplete> {
+    fn autocomplete(self, autocomplete: AutoComplete) -> Self {
         self.with_attribute(autocomplete)
     }
 
     /// Maximum number of characters per line.
-    fn cols(self, cols: u32) -> Self::Output<Cols> {
+    fn cols(self, cols: u32) -> Self {
         self.with_attribute(Cols(cols))
     }
 
     /// Name of form control to use for sending the element's directionality in form submission.
-    fn dirname(self, dirname: impl Into<Cow<'static, str>>) -> Self::Output<Dirname> {
+    fn dirname(self, dirname: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Dirname(dirname.into()))
     }
 
     /// Whether the form control is disabled.
-    fn disabled(self) -> Self::Output<Disabled> {
+    fn disabled(self) -> Self {
         self.with_disabled(true)
     }
 
     /// Whether the form control is disabled.
-    fn with_disabled(self, disabled: bool) -> Self::Output<Disabled> {
+    fn with_disabled(self, disabled: bool) -> Self {
         self.with_attribute(Disabled(disabled))
     }
 
     /// Associates the element with a [super::form] element.
-    fn form(self, form: impl Into<Cow<'static, str>>) -> Self::Output<Form> {
+    fn form(self, form: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Form(form.into()))
     }
 
     /// Maximum length of value.
-    fn max_length(self, max_length: i32) -> Self::Output<MaxLength> {
+    fn max_length(self, max_length: i32) -> Self {
         self.with_attribute(MaxLength(max_length))
     }
 
     /// Minimum length of value.
-    fn min_length(self, min_length: i32) -> Self::Output<MinLength> {
+    fn min_length(self, min_length: i32) -> Self {
         self.with_attribute(MinLength(min_length))
     }
 
     /// Name of the element to use for form submission.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))
     }
 
     /// User-visible label to be placed within the form control.
-    fn placeholder(self, placeholder: impl Into<Cow<'static, str>>) -> Self::Output<Placeholder> {
+    fn placeholder(self, placeholder: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Placeholder(placeholder.into()))
     }
 
     /// Whether to allow the value to be edited by the user.
-    fn read_only(self) -> Self::Output<ReadOnly> {
+    fn read_only(self) -> Self {
         self.with_read_only(true)
     }
 
     /// Whether to allow the value to be edited by the user.
-    fn with_read_only(self, read_only: bool) -> Self::Output<ReadOnly> {
+    fn with_read_only(self, read_only: bool) -> Self {
         self.with_attribute(ReadOnly(read_only))
     }
 
     /// Whether the control is required for form submission.
-    fn required(self) -> Self::Output<Required> {
+    fn required(self) -> Self {
         self.with_required(true)
     }
 
     /// Whether the control is required for form submission.
-    fn with_required(self, required: bool) -> Self::Output<Required> {
+    fn with_required(self, required: bool) -> Self {
         self.with_attribute(Required(required))
     }
 
     /// Number of lines to show.
-    fn rows(self, rows: u32) -> Self::Output<Rows> {
+    fn rows(self, rows: u32) -> Self {
         self.with_attribute(Rows(rows))
     }
 
     /// How the value of the form control is to be wrapped for form submission.
-    fn wrap(self, wrap: Wrap) -> Self::Output<Wrap> {
+    fn wrap(self, wrap: Wrap) -> Self {
         self.with_attribute(wrap)
     }
 
     /// How the value of the form control is to be wrapped for form submission.
-    fn wrap_hard(self) -> Self::Output<Wrap> {
+    fn wrap_hard(self) -> Self {
         self.with_attribute(Wrap::Hard)
     }
 
-    fn on_input<E>(self, event: E) -> Self::Output<OnInput>
+    fn on_input<E>(self, event: E) -> Self
     where
-        E: ::serde::Serialize + Event + Send + 'static,
+        E: ::serde::Serialize + Event,
     {
-        self.with_attribute(OnInput(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_input event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("input", event))
     }
 
-    fn on_change<E>(self, event: E) -> Self::Output<OnChange>
+    fn on_change<E>(self, event: E) -> Self
     where
-        E: ::serde::Serialize + Event + Send + 'static,
+        E: ::serde::Serialize + Event,
     {
-        self.with_attribute(OnChange(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_change event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("change", event))
     }
 }
 

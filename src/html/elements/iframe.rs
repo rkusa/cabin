@@ -4,105 +4,86 @@ use std::fmt;
 use cabin_macros::Attribute;
 
 use super::anchor::ReferrerPolicy;
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use super::input::{Height, Width};
 use super::script::Src;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 use crate::html::list::SpaceSeparated;
-use crate::html::{Aria, Html};
 
-/// The `iframe` element represents its content navigable.
-pub fn iframe(content: impl View) -> Html<marker::IFrame, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("iframe", (), content)
+impl Context {
+    /// The `iframe` element represents its content navigable.
+    pub fn iframe(&self) -> Element<'_, marker::IFrame> {
+        Element::new(self, "iframe")
+    }
 }
 
 pub mod marker {
     pub struct IFrame;
 }
 
-impl<A: Attributes, V: 'static> IFrame for Html<marker::IFrame, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::IFrame, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::IFrame, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::IFrame, A, V> {}
+impl<'v> IFrame for Element<'v, marker::IFrame> {}
+impl<'v> Common for Element<'v, marker::IFrame> {}
+impl<'v> Global for Element<'v, marker::IFrame> {}
+impl<'v> Aria for Element<'v, marker::IFrame> {}
 
 /// The `iframe` element represents its content navigable.
 pub trait IFrame: WithAttribute {
     /// Address of the resource.
-    fn src(self, src: impl Into<Cow<'static, str>>) -> Self::Output<Src> {
+    fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))
     }
 
     /// A document to render in the iframe.
-    fn src_doc(self, src_src: impl Into<Cow<'static, str>>) -> Self::Output<SrcDoc> {
+    fn src_doc(self, src_src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(SrcDoc(src_src.into()))
     }
 
     /// Name of content navigable.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))
     }
 
     /// Security rules for nested content.
-    fn sandbox(self, rel: impl Into<SpaceSeparated<Sandbox>>) -> Self::Output<SandboxList> {
+    fn sandbox(self, rel: impl Into<SpaceSeparated<Sandbox>>) -> Self {
         self.with_attribute(SandboxList(rel.into()))
     }
 
-    /// Appends a [Allow] to the security rules.
-    fn append_sandbox(mut self, rel: Sandbox) -> Self::Output<SandboxList> {
-        let rel_list = if let Some(list) = self.get_attribute_mut::<SandboxList>() {
-            SandboxList(
-                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Sandbox::Downloads)) {
-                    SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, rel].into())
-                    }
-                    SpaceSeparated::List(mut list) => {
-                        list.insert(rel);
-                        SpaceSeparated::List(list)
-                    }
-                },
-            )
-        } else {
-            SandboxList(SpaceSeparated::Single(rel))
-        };
-        self.with_attribute(rel_list)
-    }
-
     /// Permissions policy to be applied to the iframe's contents.
-    fn allow(self, allow: impl Into<Cow<'static, str>>) -> Self::Output<Allow> {
+    fn allow(self, allow: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Allow(allow.into()))
     }
 
     /// Whether to allow the iframe's contents to use `requestFullscreen()`.
-    fn allow_fullscreen(self) -> Self::Output<AllowFullscreen> {
+    fn allow_fullscreen(self) -> Self {
         self.with_allow_fullscreen(true)
     }
 
     /// Whether to allow the iframe's contents to use `requestFullscreen()`.
-    fn with_allow_fullscreen(self, allow_fullscreen: bool) -> Self::Output<AllowFullscreen> {
+    fn with_allow_fullscreen(self, allow_fullscreen: bool) -> Self {
         self.with_attribute(AllowFullscreen(allow_fullscreen))
     }
 
     /// Vertical dimension.
-    fn height(self, height: u32) -> Self::Output<Height> {
+    fn height(self, height: u32) -> Self {
         self.with_attribute(Height(height))
     }
 
     /// Horizontal dimension.
-    fn width(self, width: u32) -> Self::Output<Width> {
+    fn width(self, width: u32) -> Self {
         self.with_attribute(Width(width))
     }
 
     /// How much referrer information to send.
-    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self::Output<ReferrerPolicy> {
+    fn referrer_policy(self, referrer_policy: ReferrerPolicy) -> Self {
         self.with_attribute(referrer_policy)
     }
 
     /// Used when determining loading deferral.
-    fn loading(self, loading: Loading) -> Self::Output<Loading> {
+    fn loading(self, loading: Loading) -> Self {
         self.with_attribute(loading)
     }
 }

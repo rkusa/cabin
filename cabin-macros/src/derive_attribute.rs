@@ -36,9 +36,9 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
     if opts.outer || matches!(data, Data::Enum(DataEnum { .. })) {
         return Ok(quote! {
             #[automatically_derived]
-            impl ::cabin::html::attributes::Attributes for #ident {
-                fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
-                    r.attribute(#attr_name, self).map_err(::cabin::error::InternalError::from)?;
+            impl ::cabin::attribute::Attribute for #ident {
+                fn render(self, r: &mut ::cabin::render::Renderer) -> Result<(), ::cabin::Error> {
+                    r.attribute(#attr_name, self);
                     Ok(())
                 }
             }
@@ -69,10 +69,10 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
     match kind {
         Kind::Bool => Ok(quote! {
             #[automatically_derived]
-            impl ::cabin::html::attributes::Attributes for #ident {
-                fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
+            impl ::cabin::attribute::Attribute for #ident {
+                fn render(self, r: &mut ::cabin::render::Renderer) -> Result<(), ::cabin::Error> {
                     if self.0 {
-                        r.empty_attribute(#attr_name).map_err(::cabin::error::InternalError::from)?;
+                        r.empty_attribute(#attr_name);
                     }
                     Ok(())
                 }
@@ -80,9 +80,9 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
         }),
         Kind::Other => Ok(quote! {
             #[automatically_derived]
-            impl ::cabin::html::attributes::Attributes for #ident {
-                fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
-                    r.attribute(#attr_name, self.0).map_err(::cabin::error::InternalError::from)?;
+            impl ::cabin::attribute::Attribute for #ident {
+                fn render(self, r: &mut ::cabin::render::Renderer) -> Result<(), ::cabin::Error> {
+                    r.attribute(#attr_name, self.0);
                     Ok(())
                 }
             }

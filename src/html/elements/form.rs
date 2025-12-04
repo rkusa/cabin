@@ -3,140 +3,120 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
-use super::SerializeEventFn;
 use super::anchor::Target;
+use super::aria::Aria;
 use super::button::Name;
 use super::common::Common;
 use super::global::Global;
 use super::input::AutoComplete;
-use crate::View;
-use crate::error::InternalError;
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 use crate::event::Event;
-use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 use crate::html::list::SpaceSeparated;
-use crate::html::{Aria, Html};
 
-/// The `form` element represents a hyperlink that can be manipulated through a collection of
-/// form-associated elements, some of which can represent editable values that can be submitted to a
-/// server for processing.
-pub fn form(content: impl View) -> Html<marker::Form, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("form", (), content)
+impl Context {
+    /// The `form` element represents a hyperlink that can be manipulated through a collection of
+    /// form-associated elements, some of which can represent editable values that can be submitted
+    /// to a server for processing.
+    pub fn form(&self) -> Element<'_, marker::Form> {
+        Element::new(self, "form")
+    }
 }
 
 pub mod marker {
     pub struct Form;
 }
 
-impl<A: Attributes, V: 'static> Form for Html<marker::Form, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Form, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Form, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Form, A, V> {}
+impl<'v> Form for Element<'v, marker::Form> {}
+impl<'v> Common for Element<'v, marker::Form> {}
+impl<'v> Global for Element<'v, marker::Form> {}
+impl<'v> Aria for Element<'v, marker::Form> {}
 
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a
 /// server for processing.
 pub trait Form: WithAttribute {
     /// Character encodings to use for form submission.
-    fn accept_charset(self, accept_charset: AcceptCharset) -> Self::Output<AcceptCharset> {
+    fn accept_charset(self, accept_charset: AcceptCharset) -> Self {
         self.with_attribute(accept_charset)
     }
 
     /// URL to use for form submission.
-    fn action(self, action: impl Into<Cow<'static, str>>) -> Self::Output<Action> {
+    fn action(self, action: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Action(action.into()))
     }
 
     /// Default setting for autofill feature for controls in the form.
-    fn autocomplete(self, autocomplete: AutoComplete) -> Self::Output<AutoComplete> {
+    fn autocomplete(self, autocomplete: AutoComplete) -> Self {
         self.with_attribute(autocomplete)
     }
 
     /// Entry list encoding type to use for form submission.
-    fn enctype(self, enctype: EncType) -> Self::Output<EncType> {
+    fn enctype(self, enctype: EncType) -> Self {
         self.with_attribute(enctype)
     }
 
     /// Variant used for form submission.
-    fn method(self, method: Method) -> Self::Output<Method> {
+    fn method(self, method: Method) -> Self {
         self.with_attribute(method)
     }
 
     /// Set the form's method to `get`.
-    fn method_get(self) -> Self::Output<Method> {
+    fn method_get(self) -> Self {
         self.method(Method::Get)
     }
 
     /// Set the form's method to `post`.
-    fn method_post(self) -> Self::Output<Method> {
+    fn method_post(self) -> Self {
         self.method(Method::Post)
     }
 
     /// Name of form to use in the `document.forms` API.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))
     }
 
     /// Bypass form control validation for form submission.
-    fn novalidate(self) -> Self::Output<NoValidate> {
+    fn novalidate(self) -> Self {
         self.with_novalidate(true)
     }
 
     /// Bypass form control validation for form submission.
-    fn with_novalidate(self, novalidate: bool) -> Self::Output<NoValidate> {
+    fn with_novalidate(self, novalidate: bool) -> Self {
         self.with_attribute(NoValidate(novalidate))
     }
 
     /// The _browsing context_ the link should be opened in.
-    fn target(self, target: impl Into<Cow<'static, str>>) -> Self::Output<Target> {
+    fn target(self, target: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Target(target.into()))
     }
 
     /// Try to open the link in a new tab.
-    fn target_blank(self) -> Self::Output<Target> {
+    fn target_blank(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_blank")))
     }
 
     /// Open the link in the parent browsing context.
-    fn target_parent(self) -> Self::Output<Target> {
+    fn target_parent(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_parent")))
     }
 
     /// Open the link in the topmost browsing context.
-    fn target_top(self) -> Self::Output<Target> {
+    fn target_top(self) -> Self {
         self.with_attribute(Target(Cow::Borrowed("_top")))
     }
 
     /// Relationship between the location in the document containing the hyperlink and the
     /// destination resource.
-    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self::Output<RelList> {
+    fn rel(self, rel: impl Into<SpaceSeparated<Rel>>) -> Self {
         self.with_attribute(RelList(rel.into()))
-    }
-
-    /// Appends a [Rel] to the form.
-    fn append_rel(mut self, rel: Rel) -> Self::Output<RelList> {
-        let rel_list = if let Some(list) = self.get_attribute_mut::<RelList>() {
-            RelList(
-                match std::mem::replace(&mut list.0, SpaceSeparated::Single(Rel::External)) {
-                    SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, rel].into())
-                    }
-                    SpaceSeparated::List(mut list) => {
-                        list.insert(rel);
-                        SpaceSeparated::List(list)
-                    }
-                },
-            )
-        } else {
-            RelList(SpaceSeparated::Single(rel))
-        };
-        self.with_attribute(rel_list)
     }
 
     /// Intercept form submissions, and serialize the form elements into the `E` event, which can
     /// then be handled via [crate::scope::take_event] or [crate::scope::event].
-    fn on_submit<E>(self) -> Self::Output<OnSubmit>
+    fn on_submit<E>(self) -> Self
     where
         E: Event + 'static,
     {
@@ -145,18 +125,11 @@ pub trait Form: WithAttribute {
 
     /// Intercept form submissions, and submit the provided `event`, which can then be handled via
     /// [crate::scope::take_event] or [crate::scope::event].
-    fn on_submit_with<E>(self, event: E) -> Self::Output<OnSubmitWith>
+    fn on_submit_with<E>(self, event: E) -> Self
     where
-        E: serde::Serialize + Event + Send + 'static,
+        E: serde::Serialize + Event,
     {
-        self.with_attribute(OnSubmitWith(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "custom event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(CustomEvent::new("submit", event))
     }
 }
 
@@ -297,18 +270,3 @@ impl fmt::Display for Rel {
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 #[attribute(name = "cabin-submit")]
 pub struct OnSubmit(pub &'static str);
-
-pub struct OnSubmitWith(pub Box<SerializeEventFn>);
-
-impl Attributes for OnSubmitWith {
-    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-submit", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-submit-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
-    }
-}

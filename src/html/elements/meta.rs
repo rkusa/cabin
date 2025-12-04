@@ -3,56 +3,57 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
+use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::View;
-use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Aria, Html};
+use crate::attribute::WithAttribute;
+use crate::context::Context;
+use crate::element::Element;
 
-/// The `meta` element represents various kinds of metadata that cannot be expressed using the
-/// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
-/// [super::script::script] elements.
-pub fn meta(content: impl View) -> Html<marker::Meta, (), impl View> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
-    Html::new("meta", (), content)
+impl Context {
+    /// The `meta` element represents various kinds of metadata that cannot be expressed using the
+    /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
+    /// [super::script::script] elements.
+    pub fn meta(&self) -> Element<'_, marker::Meta> {
+        Element::new(self, "meta")
+    }
 }
 
 pub mod marker {
     pub struct Meta;
 }
 
-impl<A: Attributes, V: 'static> Meta for Html<marker::Meta, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Meta, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Meta, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Meta, A, V> {}
+impl<'v> Meta for Element<'v, marker::Meta> {}
+impl<'v> Common for Element<'v, marker::Meta> {}
+impl<'v> Global for Element<'v, marker::Meta> {}
+impl<'v> Aria for Element<'v, marker::Meta> {}
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
 /// [super::script::script] elements.
 pub trait Meta: WithAttribute {
     /// Metadata name.
-    fn name(self, name: impl Into<Cow<'static, str>>) -> Self::Output<Name> {
+    fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))
     }
 
     /// Pragma directive.
-    fn http_equiv(self, http_equiv: HttpEquiv) -> Self::Output<HttpEquiv> {
+    fn http_equiv(self, http_equiv: HttpEquiv) -> Self {
         self.with_attribute(http_equiv)
     }
 
     /// Value of the element.
-    fn content(self, content: impl Into<Cow<'static, str>>) -> Self::Output<Content> {
+    fn content(self, content: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Content(content.into()))
     }
 
     /// Character encoding declaration.
-    fn charset(self, charset: Charset) -> Self::Output<Charset> {
+    fn charset(self, charset: Charset) -> Self {
         self.with_attribute(charset)
     }
 
     /// Applicable media.
-    fn media(self, media: impl Into<Cow<'static, str>>) -> Self::Output<Media> {
+    fn media(self, media: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Media(media.into()))
     }
 }

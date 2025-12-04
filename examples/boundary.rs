@@ -1,31 +1,33 @@
 use std::net::SocketAddr;
 
 use cabin::prelude::*;
-use cabin::scope::event;
 use cabin::view::boundary::Boundary;
 use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app() -> impl View {
-    basic_document((
-        counter(1),
-        counter(2),
-        h::button("triger whole page update").on_click(()),
-    ))
+async fn app(c: &Context) -> impl View<'_> {
+    basic_document(
+        c,
+        c.fragment()
+            .child(counter(c, 1))
+            .child(counter(c, 2))
+            .child(c.button().on_click(()).child("triger whole page update")),
+    )
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
 #[cabin::boundary(Increment)]
-fn counter(count: usize) -> Boundary<usize> {
-    let count = event::<Increment>().unwrap_or(Increment(count)).0;
+fn counter(c: &Context, count: usize) -> Boundary<'_, usize> {
+    let count = c.event::<Increment>().unwrap_or(Increment(count)).0;
 
-    h::button(h::text!("{}", count))
+    c.button()
         .on_click(Increment(count + 1))
-        .boundary(count)
+        .child(text!("{}", count))
+        .boundary(c, count)
 }
 
 cabin::BOUNDARIES!();

@@ -1,4 +1,5 @@
 use std::future::Future;
+use std::pin::Pin;
 use std::sync::LazyLock;
 
 use bytes::Bytes;
@@ -12,20 +13,20 @@ use mime::Mime;
 use multer::Multipart;
 use serde_json::value::RawValue;
 
+use crate::context::{Context, Payload};
 pub use crate::error::Error;
 use crate::html;
-use crate::render::{Out, Renderer};
-use crate::scope::{Payload, Scope};
+use crate::render::Out;
 pub use crate::view::View;
 
 pub static CABIN_JS: &str = include_str!("./cabin.js");
 pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
-pub fn cabin_scripts() -> impl View {
+pub fn cabin_scripts(c: &Context) -> impl View<'_> {
     use html::elements::script::Script;
 
-    (
-        html::script("")
+    let fragment = c.fragment().child(
+        c.script()
             .src({
                 static PATH: LazyLock<&'static str> = LazyLock::new(|| {
                     let hash = content_hash(CABIN_JS.as_bytes());
@@ -34,8 +35,11 @@ pub fn cabin_scripts() -> impl View {
                 *PATH
             })
             .defer(),
-        #[cfg(feature = "livereload")]
-        html::script("")
+    );
+
+    #[cfg(feature = "livereload")]
+    let fragment = fragment.child(
+        c.script()
             .src({
                 static PATH: LazyLock<&'static str> = LazyLock::new(|| {
                     let hash = content_hash(LIVERELOAD_JS.as_bytes());
@@ -44,7 +48,9 @@ pub fn cabin_scripts() -> impl View {
                 *PATH
             })
             .defer(),
-    )
+    );
+
+    fragment
 }
 
 pub fn content_hash(bytes: &[u8]) -> u32 {
@@ -58,87 +64,107 @@ pub struct Event {
     pub(crate) multipart: Option<Multipart<'static>>,
 }
 
-pub fn basic_document(content: impl View) -> impl View {
-    (
-        html::doctype(),
-        html::html((html::head(cabin_scripts()), html::body(content))),
-    )
-}
-
-pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<String>
-where
-    F: Future<Output = V> + Send,
-    V: View,
-{
-    let scope = Scope::default();
-    let result = scope
-        // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
-        .run(Box::pin(async move {
-            let r = Renderer::new();
-            let doc = render_fn().await;
-            doc.render(r, false).await
-        }))
-        .await;
-    let result = match result {
-        Ok(result) => result,
-        Err(err) => return err_to_response(err),
-    };
-
-    let Out { html, headers } = result.end();
-    let mut res = Response::builder().header(
-        http::header::CONTENT_TYPE,
-        HeaderValue::from_static("text/html; charset=utf-8"),
-    );
-    for (key, value) in headers {
-        if let Some(key) = key {
-            res = res.header(key, value);
-        }
+pub fn basic_document<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'v> {
+    if c.is_update() {
+        content.boxed()
+    } else {
+        c.fragment()
+            .child(c.doctype())
+            .child(
+                c.html()
+                    .child(c.head().child(cabin_scripts(c)))
+                    .child(c.body().child(content)),
+            )
+            .boxed()
     }
-    res.body(html).unwrap()
 }
 
-pub async fn put_page<F, V, B>(
-    req: Request<B>,
-    render_fn: impl FnOnce() -> F + Send + 'static,
-) -> Response<String>
+pub trait RenderFn<'v> {
+    fn render(
+        self,
+        context: &'v Context,
+    ) -> Pin<Box<dyn Future<Output = Box<dyn View<'v> + 'v>> + 'v>>;
+}
+
+impl<'v, R, F, V> RenderFn<'v> for R
 where
-    F: Future<Output = V> + Send,
-    V: View,
+    R: FnOnce(&'v Context) -> F + 'v,
+    F: Future<Output = V> + 'v,
+    V: View<'v>,
+{
+    fn render(
+        self,
+        context: &'v Context,
+    ) -> Pin<Box<dyn Future<Output = Box<dyn View<'v> + 'v>> + 'v>> {
+        Box::pin(async move { (self)(context).await.boxed() })
+    }
+}
+
+pub fn get_page(
+    render_fn: impl for<'v> RenderFn<'v> + Send + 'static,
+) -> impl Future<Output = Response<String>> + Send {
+    crate::local_pool::spawn(|| async move {
+        let context = Context::new(false);
+        let r = context.acquire_renderer();
+        let doc = render_fn.render(&context).await;
+        let result = match doc.render(r).await {
+            Ok(result) => result,
+            Err(err) => return err_to_response(err),
+        };
+
+        let Out { html, headers } = result.end();
+        let mut res = Response::builder().header(
+            http::header::CONTENT_TYPE,
+            HeaderValue::from_static("text/html; charset=utf-8"),
+        );
+        for (key, value) in headers {
+            if let Some(key) = key {
+                res = res.header(key, value);
+            }
+        }
+        res.body(html).unwrap()
+    })
+}
+
+pub fn put_page<B>(
+    req: Request<B>,
+    render_fn: impl for<'v> RenderFn<'v> + Send + 'static,
+) -> impl Future<Output = Response<String>> + Send
+where
     B: Body<Data = Bytes> + Send + 'static,
     B::Error: std::error::Error + Send + 'static,
 {
-    let event = match parse_body(req).await {
-        Ok(result) => result,
-        Err(err) => return err_to_response(err),
-    };
-    let mut scope = Scope::builder().with_event(event.event_id, event.payload);
-    if let Some(multipart) = event.multipart {
-        scope = scope.with_multipart(multipart);
-    }
-    let result = scope
-        .build()
-        // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
-        .run(Box::pin(async move {
-            let r = Renderer::new_update();
-            render_fn().await.render(r, true).await
-        }))
-        .await;
-    let result = match result {
-        Ok(result) => result,
-        Err(err) => return err_to_response(err),
-    };
-
-    let Out { html, headers } = result.end();
-    let mut res = Response::builder().header(
-        http::header::CONTENT_TYPE,
-        HeaderValue::from_static("text/html; charset=utf-8"),
-    );
-    for (key, value) in headers {
-        if let Some(key) = key {
-            res = res.header(key, value);
+    crate::local_pool::spawn(|| async move {
+        let event = match parse_body(req).await {
+            Ok(result) => result,
+            Err(err) => return err_to_response(err),
+        };
+        let mut context = Context::new(true).with_event(event.event_id, event.payload);
+        if let Some(multipart) = event.multipart {
+            context = context.with_multipart(multipart);
         }
-    }
-    res.body(html).unwrap()
+        let result = match render_fn
+            .render(&context)
+            .await
+            .render(context.acquire_renderer())
+            .await
+        {
+            Ok(result) => result,
+            Err(err) => return err_to_response(err),
+        };
+
+        let Out { html, headers } = result.end();
+        let mut res = Response::builder().header(
+            http::header::CONTENT_TYPE,
+            HeaderValue::from_static("text/html; charset=utf-8"),
+        );
+        for (key, value) in headers {
+            if let Some(key) = key {
+                res = res.header(key, value);
+            }
+        }
+        res.body(html).unwrap()
+    })
 }
 
 pub fn err_to_response(err: Error) -> Response<String> {
