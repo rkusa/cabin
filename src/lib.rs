@@ -3,6 +3,7 @@
 extern crate self as cabin;
 
 pub use cabin_macros::{Attribute, BOUNDARIES, Event, boundary};
+pub use context::Context;
 pub use error::Error;
 pub use http::StatusCode;
 pub use redirect::Redirect;
