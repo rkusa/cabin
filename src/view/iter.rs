@@ -6,6 +6,7 @@ use twox_hash::XxHash32;
 
 use super::RenderFuture;
 pub use super::View;
+use crate::context::Context;
 use crate::render::Renderer;
 
 pub trait IteratorExt
@@ -91,9 +92,9 @@ where
     FV: FnMut(Iter::Item) -> V + 'v,
     V: View<'v>,
 {
-    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(mut self, c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         while let Some(i) = self.next() {
-            match i.render(r) {
+            match i.render(c, r) {
                 RenderFuture::Ready(Some(Ok(renderer))) => r = renderer,
                 RenderFuture::Ready(Some(Err(err))) => return RenderFuture::Ready(Some(Err(err))),
                 RenderFuture::Ready(None) => return RenderFuture::Ready(None),
@@ -102,7 +103,7 @@ where
                     return RenderFuture::Future(Box::pin(async move {
                         let mut r = future.await?;
                         for i in self {
-                            r = i.render(r).await?;
+                            r = i.render(c, r).await?;
                         }
                         Ok(r)
                     }));
@@ -119,9 +120,9 @@ where
     FV: FnMut(Iter::Item) -> Option<V> + Send + 'v,
     V: View<'v>,
 {
-    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(mut self, c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         while let Some(i) = self.next() {
-            match i.render(r) {
+            match i.render(c, r) {
                 RenderFuture::Ready(Some(Ok(renderer))) => r = renderer,
                 RenderFuture::Ready(Some(Err(err))) => return RenderFuture::Ready(Some(Err(err))),
                 RenderFuture::Ready(None) => return RenderFuture::Ready(None),
@@ -130,7 +131,7 @@ where
                     return RenderFuture::Future(Box::pin(async move {
                         let mut r = future.await?;
                         for i in self {
-                            r = i.render(r).await?;
+                            r = i.render(c, r).await?;
                         }
                         Ok(r)
                     }));
@@ -156,13 +157,13 @@ impl<'v, V> View<'v> for KeyedView<V>
 where
     V: View<'v>,
 {
-    fn render(self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(self, c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         let parent_hasher = r.take_hasher();
         let hash_offset = r.start_element("cabin-keyed");
         r.attribute("id", self.key);
         r.start_content();
 
-        match self.view.render(r) {
+        match self.view.render(c, r) {
             RenderFuture::Ready(Some(Ok(mut r))) => {
                 r.end_element("cabin-keyed", false, hash_offset);
                 r.merge_hasher(parent_hasher);

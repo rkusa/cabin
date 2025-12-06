@@ -42,14 +42,14 @@ impl<'v> StyleContent<'v> {
 }
 
 impl<'v> View<'v> for StyleElement<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 
 impl<'v> View<'v> for StyleContent<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 

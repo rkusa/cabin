@@ -41,14 +41,14 @@ impl<'v> TitleContent<'v> {
 }
 
 impl<'v> View<'v> for TitleElement<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 
 impl<'v> View<'v> for TitleContent<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 
@@ -67,7 +67,7 @@ pub fn title_update(title: impl Into<Cow<'static, str>>) -> TitleUpdate {
 }
 
 impl<'v> View<'v> for TitleUpdate {
-    fn render(self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         if r.is_update() {
             match HeaderValue::from_str(&self.0) {
                 Ok(v) => {

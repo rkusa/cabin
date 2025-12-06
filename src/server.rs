@@ -107,7 +107,7 @@ pub fn get_page(
         let context = Context::new(false);
         let r = context.acquire_renderer();
         let doc = render_fn.render(&context).await;
-        let result = match doc.render(r).await {
+        let result = match doc.render(&context, r).await {
             Ok(result) => result,
             Err(err) => return err_to_response(err),
         };
@@ -146,7 +146,7 @@ where
         let result = match render_fn
             .render(&context)
             .await
-            .render(context.acquire_renderer())
+            .render(&context, context.acquire_renderer())
             .await
         {
             Ok(result) => result,

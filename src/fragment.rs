@@ -28,7 +28,7 @@ impl<'v> Fragment<'v> {
         }
 
         let renderer = std::mem::replace(&mut self.renderer, self.context.acquire_renderer());
-        match child.into_view().render(renderer) {
+        match child.into_view().render(self.context, renderer) {
             RenderFuture::Ready(Some(Ok(renderer))) => {
                 let other = std::mem::replace(&mut self.renderer, renderer);
                 self.context.release_renderer(other);
@@ -46,9 +46,10 @@ impl<'v> Fragment<'v> {
     }
 
     pub async fn finish(self) -> FinishedView {
-        let r = self.context.acquire_renderer();
+        let c = self.context;
+        let r = c.acquire_renderer();
         FinishedView {
-            result: self.render(r).await,
+            result: self.render(c, r).await,
         }
     }
 
@@ -81,7 +82,7 @@ impl<'v> Fragment<'v> {
 }
 
 impl<'v> View<'v> for Fragment<'v> {
-    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(mut self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         if let Some(err) = self.error {
             return RenderFuture::ready(Err(err));
         }
@@ -119,7 +120,7 @@ pub struct FinishedView {
 }
 
 impl<'v> View<'v> for FinishedView {
-    fn render(self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         match self.result {
             Ok(mut renderer) => {
                 r.append(&mut renderer);

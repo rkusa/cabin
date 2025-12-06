@@ -27,7 +27,7 @@ fn counter(c: &Context, count: usize) -> Boundary<'_, usize> {
     c.button()
         .on_click(Increment(count + 1))
         .child(text!("{}", count))
-        .boundary(c, count)
+        .boundary(count)
 }
 
 cabin::BOUNDARIES!();

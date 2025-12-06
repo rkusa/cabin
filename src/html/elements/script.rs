@@ -42,14 +42,14 @@ impl<'v> ScriptContent<'v> {
 }
 
 impl<'v> View<'v> for ScriptElement<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 
 impl<'v> View<'v> for ScriptContent<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 
@@ -158,7 +158,7 @@ pub struct Integrity(pub Cow<'static, str>);
 pub struct ScriptEscape<'v>(pub Cow<'v, str>);
 
 impl<'v> View<'v> for ScriptEscape<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         let mut txt = r.text();
         RenderFuture::ready(
             Escape::script(&mut txt)
@@ -180,7 +180,7 @@ mod tests {
         assert_eq!(
             c.script()
                 .child("asd</script>")
-                .render(Renderer::new(false))
+                .render(&Context::new(false), Renderer::new(false))
                 .await
                 .unwrap()
                 .end()
@@ -190,7 +190,7 @@ mod tests {
         assert_eq!(
             c.script()
                 .child("asd<!--")
-                .render(Renderer::new(false))
+                .render(&Context::new(false), Renderer::new(false))
                 .await
                 .unwrap()
                 .end()
@@ -200,7 +200,7 @@ mod tests {
         assert_eq!(
             c.script()
                 .child(r#"if (1<2) alert("</script>")"#)
-                .render(Renderer::new(false))
+                .render(&Context::new(false), Renderer::new(false))
                 .await
                 .unwrap()
                 .end()

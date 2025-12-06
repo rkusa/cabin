@@ -25,7 +25,7 @@ pub trait View<'v>: BoxedView<'v>
 where
     Self: 'v,
 {
-    fn render(self, r: Renderer) -> RenderFuture<'v>;
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v>;
 
     fn boxed(self) -> Box<dyn View<'v>>
     where
@@ -34,11 +34,11 @@ where
         Box::new(self)
     }
 
-    fn boundary<Args>(self, c: &'v Context, args: Args) -> Boundary<'v, Args>
+    fn boundary<Args>(self, args: Args) -> Boundary<'v, Args>
     where
         Self: Sized,
     {
-        Boundary::new(c, self, args)
+        Boundary::new(self, args)
     }
 }
 
@@ -74,19 +74,19 @@ impl<'v> RenderFuture<'v> {
 }
 
 impl<'v> View<'v> for () {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         RenderFuture::ready(Ok(r))
     }
 }
 
 impl<'v> View<'v> for &'v str {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        Cow::Borrowed(self).render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        Cow::Borrowed(self).render(c, r)
     }
 }
 
 impl<'v> View<'v> for Cow<'v, str> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         let mut txt = r.text();
         RenderFuture::ready(
             Escape::content(&mut txt)
@@ -99,8 +99,8 @@ impl<'v> View<'v> for Cow<'v, str> {
 }
 
 impl<'v> View<'v> for String {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        Cow::<'static, str>::Owned(self).render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        Cow::<'static, str>::Owned(self).render(c, r)
     }
 }
 
@@ -108,9 +108,9 @@ impl<'v, V> View<'v> for Option<V>
 where
     V: View<'v>,
 {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         match self {
-            Some(i) => i.render(r),
+            Some(i) => i.render(c, r),
             None => RenderFuture::ready(Ok(r)),
         }
     }
@@ -122,12 +122,12 @@ where
     Box<dyn HttpError + Send + 'static>: From<E>,
     E: IntoView<'v> + 'v,
 {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         match self {
-            Ok(v) => v.render(r),
+            Ok(v) => v.render(c, r),
             Err(err) => {
                 if err.should_render() {
-                    err.into_view().render(r)
+                    err.into_view().render(c, r)
                 } else {
                     RenderFuture::ready(Err(crate::Error::from(Box::<
                         dyn HttpError + Send + 'static,

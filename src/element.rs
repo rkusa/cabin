@@ -79,7 +79,7 @@ impl<'v> ElementContent<'v> {
 }
 
 impl<'v, El: 'v> View<'v> for Element<'v, El> {
-    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(mut self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         if let Some(err) = self.error {
             return RenderFuture::ready(Err(err));
         }
@@ -93,7 +93,7 @@ impl<'v, El: 'v> View<'v> for Element<'v, El> {
 }
 
 impl<'v> View<'v> for ElementContent<'v> {
-    fn render(self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         match self.0 {
             ElementContentState::Content {
                 tag,

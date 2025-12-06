@@ -4,6 +4,7 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
+use http_error::HttpError;
 use serde::Serialize;
 
 use super::RenderFuture;
@@ -14,10 +15,10 @@ use crate::element::Element;
 use crate::error::InternalError;
 use crate::html::elements::script::Script as _;
 use crate::render::Renderer;
+use crate::view::IntoView;
 
 pub struct Boundary<'v, Args: 'static> {
     boundary_ref: Option<&'static BoundaryRef<Args>>,
-    context: &'v Context,
     // TODO: take reference to args to avoid cloning them?
     args: Option<Args>,
     view: Box<dyn View<'v>>,
@@ -25,10 +26,9 @@ pub struct Boundary<'v, Args: 'static> {
 }
 
 impl<'v, Args> Boundary<'v, Args> {
-    pub(crate) fn new(context: &'v Context, view: impl View<'v>, args: Args) -> Self {
+    pub(crate) fn new(view: impl View<'v>, args: Args) -> Self {
         Boundary {
             boundary_ref: None,
-            context,
             args: Some(args),
             view: view.boxed(),
             is_update: false,
@@ -188,9 +188,9 @@ impl<'v, Args> View<'v> for Boundary<'v, Args>
 where
     Args: Clone + Serialize,
 {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         let Some(args) = self.args else {
-            return self.view.render(r);
+            return self.view.render(c, r);
         };
 
         // TODO: any way to make this a compile error?
@@ -209,23 +209,17 @@ where
             }
         };
 
-        let body = self
-            .context
+        let body = c
             .fragment()
-            .child(
-                self.context
-                    .script()
-                    .r#type("application/json")
-                    .child(state),
-            )
+            .child(c.script().r#type("application/json").child(state))
             .child(self.view);
         if self.is_update {
-            body.render(r)
+            body.render(c, r)
         } else {
-            Element::<()>::new(self.context, "cabin-boundary")
+            Element::<()>::new(c, "cabin-boundary")
                 .with_attribute(boundary_ref)
                 .child(body)
-                .render(r)
+                .render(c, r)
         }
     }
 }
@@ -254,22 +248,21 @@ impl fmt::Display for EventsList {
     }
 }
 
-// FIXME:
-// impl<'v, Args, E> From<Result<Boundary<'v, Args>, E>> for Boundary<'v, Args>
-// where
-//     Args: Clone + Serialize,
-//     Box<dyn HttpError>: From<E>,
-//     E: IntoView<'v>,
-// {
-//     fn from(result: Result<Boundary<'v, Args>, E>) -> Self {
-//         match result {
-//             Ok(b) => b,
-//             Err(err) => Boundary {
-//                 boundary_ref: None,
-//                 args: None,
-//                 view: View::boxed(Err::<Boundary<'v, Args>, _>(err)),
-//                 is_update: false,
-//             },
-//         }
-//     }
-// }
+impl<'v, Args, E> From<Result<Boundary<'v, Args>, E>> for Boundary<'v, Args>
+where
+    Args: Clone + Serialize,
+    Box<dyn HttpError + Send + 'static>: From<E>,
+    E: IntoView<'v> + 'v,
+{
+    fn from(result: Result<Boundary<'v, Args>, E>) -> Self {
+        match result {
+            Ok(b) => b,
+            Err(err) => Boundary {
+                boundary_ref: None,
+                args: None,
+                view: View::boxed(Err::<Boundary<'v, Args>, _>(err)),
+                is_update: false,
+            },
+        }
+    }
+}

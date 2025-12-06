@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::fmt::Write;
 
 use crate::View;
+use crate::context::Context;
 use crate::render::Renderer;
 use crate::view::RenderFuture;
 
@@ -12,7 +13,7 @@ pub fn raw(txt: impl Into<Cow<'static, str>>) -> Raw {
 }
 
 impl<'v> View<'v> for Raw {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         let mut txt = r.text();
         RenderFuture::ready(
             txt.write_str(&self.0)

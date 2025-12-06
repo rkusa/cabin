@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 
 use super::RenderFuture;
 pub use super::View;
+use crate::context::Context;
 use crate::render::Renderer;
 
 pub trait FutureExt<'v, F, V>
@@ -39,10 +40,10 @@ where
     F: Future<Output = V> + 'v,
     V: View<'v>,
 {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         RenderFuture::Future(Box::pin(async move {
             let view = self.future.await;
-            view.render(r).await
+            view.render(c, r).await
         }))
     }
 }

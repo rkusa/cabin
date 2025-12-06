@@ -45,14 +45,14 @@ impl<'v> TextareaContent<'v> {
 }
 
 impl<'v> View<'v> for TextareaElement<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 
 impl<'v> View<'v> for TextareaContent<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(r)
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render(c, r)
     }
 }
 

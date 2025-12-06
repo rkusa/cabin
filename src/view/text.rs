@@ -1,4 +1,5 @@
 use super::{RenderFuture, View};
+use crate::context::Context;
 use crate::render::Renderer;
 
 #[macro_export]
@@ -51,7 +52,7 @@ impl<'v, F> View<'v> for Text<F>
 where
     F: FnOnce(Renderer) -> Result<Renderer, crate::Error> + 'v,
 {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         RenderFuture::ready((self.0)(r))
     }
 }

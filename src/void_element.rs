@@ -32,7 +32,7 @@ impl<'v, El> VoidElement<'v, El> {
 }
 
 impl<'v, El: 'v> View<'v> for VoidElement<'v, El> {
-    fn render(mut self, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(mut self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
         if let Some(err) = self.error {
             return RenderFuture::ready(Err(err));
         }
