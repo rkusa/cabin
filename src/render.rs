@@ -14,7 +14,6 @@ pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
-    skip_hash: bool,
     is_update: bool,
 }
 
@@ -35,7 +34,6 @@ impl Renderer {
         self.out.clear();
         self.headers.clear();
         self.hasher = XxHash32::default();
-        self.skip_hash = false;
     }
 
     pub fn append(&mut self, other: &mut Renderer) {
@@ -126,15 +124,9 @@ impl Renderer {
     pub fn start_element(&mut self, tag: &'static str) -> Option<usize> {
         self.hasher.write(tag.as_bytes());
 
-        let should_write_hash =
-            !matches!(tag, "html" | "body" | "head" | "option") && !self.skip_hash;
-        if matches!(tag, "head") {
-            // FIXME: no hash in head element
-            self.skip_hash = true;
-        }
-
         write!(&mut self.out, "<{tag}").unwrap();
 
+        let should_write_hash = !matches!(tag, "html" | "body" | "head" | "option");
         if should_write_hash {
             write!(&mut self.out, " hash=\"").unwrap();
             let hash_offset = self.out.len();
@@ -188,7 +180,6 @@ impl Default for Renderer {
             out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
             hasher: XxHash32::default(),
-            skip_hash: false,
             is_update: false,
         }
     }
