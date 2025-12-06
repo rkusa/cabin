@@ -76,8 +76,6 @@ impl<Args: 'static> BoundaryRef<Args> {
     {
         use serde_json::value::RawValue;
 
-        use crate::scope::Scope;
-
         let event = unsafe { core::slice::from_raw_parts(event, event_len) };
         let event = match core::str::from_utf8(event) {
             Ok(event) => event,
@@ -119,15 +117,13 @@ impl<Args: 'static> BoundaryRef<Args> {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
-        let scope = Scope::builder()
-            .with_event(event.event_id, crate::scope::Payload::Json(event.payload))
-            .build();
-        let result = runtime.block_on(scope.run(async move {
-            let r = Renderer::new_update();
-            crate::view::FutureExt::into_view(self.with(args))
-                .render(r, true)
+        let context = Context::new(true)
+            .with_event(event.event_id, crate::context::Payload::Json(event.payload));
+        let result = runtime.block_on(async move {
+            crate::view::FutureExt::into_view(self.with(&context, args))
+                .render(context.acquire_renderer())
                 .await
-        }));
+        });
         let crate::render::Out { html, headers } = match result {
             Ok(result) => result.end(),
             Err(err) => {
