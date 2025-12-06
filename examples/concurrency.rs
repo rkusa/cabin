@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 
 use cabin::basic_document;
 use cabin::prelude::*;
+use cabin::view::FutureExt;
 use http::Request;
 use tokio::net::TcpListener;
 
@@ -13,10 +14,9 @@ async fn app(c: &Context) -> impl View<'_> {
         c.ul()
             .child(
                 c.fragment()
-                    .child(delayed(c, start, Duration::from_secs(1)))
-                    .child(delayed(c, start, Duration::from_secs(2)))
-                    .child(delayed(c, start, Duration::from_secs(3)))
-                    .finish()
+                    .child(delayed(c, start, Duration::from_secs(1)).into_view())
+                    .child(delayed(c, start, Duration::from_secs(2)).into_view())
+                    .child(delayed(c, start, Duration::from_secs(3)).into_view())
                     .await,
             )
             .child(text!(

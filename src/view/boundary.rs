@@ -214,7 +214,7 @@ where
             .child(c.script().r#type("application/json").child(state))
             .child(self.view);
         if self.is_update {
-            body.render(c, r)
+            View::render(body, c, r)
         } else {
             Element::<()>::new(c, "cabin-boundary")
                 .with_attribute(boundary_ref)

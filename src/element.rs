@@ -2,19 +2,19 @@ use std::marker::PhantomData;
 
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
-use crate::child::IntoChild;
 use crate::context::Context;
 use crate::fragment::Fragment;
 use crate::render::Renderer;
-use crate::view::chunk::ViewChunk;
+use crate::view::internal::{Internal, Render};
 use crate::view::{IntoView, RenderFuture};
 
-pub struct Element<'v, El> {
+pub struct Element<'v, El>(Internal<'v, ElementBuilder<'v, El>>);
+
+struct ElementBuilder<'v, El> {
     tag: &'static str,
     renderer: Renderer,
     context: &'v Context,
     hash_offset: Option<usize>,
-    error: Option<crate::Error>,
     marker: PhantomData<El>,
 }
 
@@ -23,140 +23,103 @@ impl<'v, El> Element<'v, El> {
         let mut r = context.acquire_renderer();
         let hash_offset = r.start_element(tag);
 
-        Self {
+        Self(Internal::new(ElementBuilder {
             tag,
             renderer: r,
             context,
             hash_offset,
-            error: None,
             marker: PhantomData,
-        }
+        }))
     }
 
-    pub fn child<V: IntoView<'v>>(mut self, child: impl IntoChild<V>) -> ElementContent<'v> {
-        if let Some(err) = self.error {
-            return ElementContent(ElementContentState::Error(err));
-        }
+    pub fn child(self, child: impl IntoView<'v>) -> ElementContent<'v> {
+        let mut el = match self.0.take_builder() {
+            Ok(builder) => builder,
+            Err(err) => return ElementContent(Internal::error(err)),
+        };
 
-        self.renderer.start_content();
-        let fragment = Fragment::new(self.renderer, self.context).child(child);
-        ElementContent(ElementContentState::Content {
-            tag: self.tag,
-            hash_offset: self.hash_offset,
+        el.renderer.start_content();
+        let fragment = Fragment::new(el.renderer, el.context).child(child);
+        ElementContent(Internal::new(ElementContentBuilder {
+            tag: el.tag,
+            hash_offset: el.hash_offset,
             fragment,
-            context: self.context,
-        })
-    }
-
-    pub async fn finish(self) -> ViewChunk {
-        let c = self.context;
-        let r = c.acquire_renderer();
-        ViewChunk {
-            result: self.render(c, r).await,
-        }
+        }))
     }
 }
 
-pub struct ElementContent<'v>(ElementContentState<'v>);
-
-enum ElementContentState<'v> {
-    Content {
-        tag: &'static str,
-        hash_offset: Option<usize>,
-        fragment: Fragment<'v>,
-        context: &'v Context,
-    },
-    Error(crate::Error),
-}
-
-impl<'v> ElementContent<'v> {
-    pub fn child<V: IntoView<'v>>(self, child: impl IntoChild<V>) -> Self {
-        ElementContent(match self.0 {
-            ElementContentState::Content {
-                tag,
-                hash_offset,
-                fragment,
-                context,
-            } => ElementContentState::Content {
-                tag,
-                hash_offset,
-                fragment: fragment.child(child),
-                context,
-            },
-            ElementContentState::Error(err) => ElementContentState::Error(err),
-        })
-    }
-
-    pub async fn finish(self) -> ViewChunk {
-        match self.0 {
-            ElementContentState::Content { context, .. } => {
-                let c = context;
-                let r = c.acquire_renderer();
-                ViewChunk {
-                    result: self.render(c, r).await,
-                }
-            }
-            ElementContentState::Error(err) => ViewChunk { result: Err(err) },
-        }
+impl<'v, El> Render<'v> for ElementBuilder<'v, El> {
+    fn render(mut self) -> RenderFuture<'v> {
+        self.renderer.start_content();
+        self.renderer.end_element(self.tag, false, self.hash_offset);
+        RenderFuture::ready(Ok(self.renderer))
     }
 }
 
 impl<'v, El: 'v> View<'v> for Element<'v, El> {
-    fn render(mut self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
-        if let Some(err) = self.error {
-            return RenderFuture::ready(Err(err));
-        }
-
-        self.renderer.start_content();
-        self.renderer.end_element(self.tag, false, self.hash_offset);
-        r.append(&mut self.renderer);
-        self.context.release_renderer(self.renderer);
-        RenderFuture::ready(Ok(r))
-    }
-}
-
-impl<'v> View<'v> for ElementContent<'v> {
-    fn render(self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
-        match self.0 {
-            ElementContentState::Content {
-                tag,
-                hash_offset,
-                fragment,
-                context,
-            } => match fragment.render_self() {
-                RenderFuture::Ready(Some(Ok(mut renderer))) => {
-                    renderer.end_element(tag, false, hash_offset);
-                    r.append(&mut renderer);
-                    context.release_renderer(renderer);
-                    RenderFuture::ready(Ok(r))
-                }
-                RenderFuture::Ready(Some(Err(err))) => RenderFuture::Ready(Some(Err(err))),
-                RenderFuture::Ready(None) => RenderFuture::Ready(None),
-                RenderFuture::Future(future) => RenderFuture::Future(Box::pin(async move {
-                    match future.await {
-                        Ok(mut renderer) => {
-                            renderer.end_element(tag, false, hash_offset);
-                            r.append(&mut renderer);
-                            context.release_renderer(renderer);
-                            Ok(r)
-                        }
-                        Err(err) => Err(err),
-                    }
-                })),
-            },
-            ElementContentState::Error(err) => RenderFuture::ready(Err(err)),
-        }
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render().merge_into(c, r)
     }
 }
 
 impl<'v, El> WithAttribute for Element<'v, El> {
     fn with_attribute(mut self, attr: impl Attribute) -> Self {
-        if self.error.is_some() {
+        let Some(builder) = self.0.builder_mut() else {
             return self;
+        };
+
+        if let Err(err) = attr.render(&mut builder.renderer) {
+            self.0.errored(err);
         }
-        if let Err(err) = attr.render(&mut self.renderer) {
-            self.error = Some(err);
-        }
+
         self
+    }
+}
+
+pub struct ElementContent<'v>(Internal<'v, ElementContentBuilder<'v>>);
+
+struct ElementContentBuilder<'v> {
+    tag: &'static str,
+    hash_offset: Option<usize>,
+    fragment: Fragment<'v>,
+}
+
+impl<'v> ElementContent<'v> {
+    pub fn child(mut self, child: impl IntoView<'v>) -> Self {
+        let Some(builder) = self.0.builder_mut() else {
+            return self;
+        };
+
+        builder.fragment.append_child(child);
+
+        self
+    }
+}
+
+impl<'v> Render<'v> for ElementContentBuilder<'v> {
+    fn render(self) -> RenderFuture<'v> {
+        match self.fragment.render() {
+            RenderFuture::Ready(Some(Ok(mut r))) => {
+                r.end_element(self.tag, false, self.hash_offset);
+                RenderFuture::ready(Ok(r))
+            }
+            RenderFuture::Ready(Some(Err(err))) => RenderFuture::Ready(Some(Err(err))),
+            RenderFuture::Ready(None) => RenderFuture::Ready(None),
+            RenderFuture::Future(future) => RenderFuture::Future(Box::pin(async move {
+                match future.await {
+                    Ok(mut r) => {
+                        r.end_element(self.tag, false, self.hash_offset);
+                        Ok(r)
+                    }
+                    Err(err) => Err(err),
+                }
+            })),
+        }
+    }
+}
+
+impl<'v> View<'v> for ElementContent<'v> {
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render().merge_into(c, r)
     }
 }

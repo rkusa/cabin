@@ -45,7 +45,7 @@ fn dialog(c: &Context, count: usize, open: bool) -> Boundary<'_, (usize, bool)> 
                         .child(text!("Item {}", item))
                 }))
         }))
-        .boundary((count, open))
+        .boundary( (count, open))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]

@@ -5,14 +5,15 @@ use crate::attribute::{Attribute, WithAttribute};
 use crate::context::Context;
 use crate::render::Renderer;
 use crate::view::RenderFuture;
+use crate::view::internal::{Internal, Render};
 
-pub struct VoidElement<'v, El> {
+pub struct VoidElement<'v, El>(Internal<'v, VoidElementBuilder<'v, El>>);
+
+struct VoidElementBuilder<'v, El> {
     tag: &'static str,
     renderer: Renderer,
-    context: &'v Context,
     hash_offset: Option<usize>,
-    error: Option<crate::Error>,
-    marker: PhantomData<El>,
+    marker: PhantomData<&'v El>,
 }
 
 impl<'v, El> VoidElement<'v, El> {
@@ -20,38 +21,38 @@ impl<'v, El> VoidElement<'v, El> {
         let mut r = context.acquire_renderer();
         let hash_offset = r.start_element(tag);
 
-        Self {
+        Self(Internal::new(VoidElementBuilder {
             tag,
             renderer: r,
-            context,
             hash_offset,
-            error: None,
             marker: PhantomData,
-        }
+        }))
+    }
+}
+
+impl<'v, El> Render<'v> for VoidElementBuilder<'v, El> {
+    fn render(mut self) -> RenderFuture<'v> {
+        self.renderer.end_element(self.tag, true, self.hash_offset);
+        RenderFuture::ready(Ok(self.renderer))
     }
 }
 
 impl<'v, El: 'v> View<'v> for VoidElement<'v, El> {
-    fn render(mut self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
-        if let Some(err) = self.error {
-            return RenderFuture::ready(Err(err));
-        }
-
-        self.renderer.end_element(self.tag, true, self.hash_offset);
-        r.append(&mut self.renderer);
-        self.context.release_renderer(self.renderer);
-        RenderFuture::ready(Ok(r))
+    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        self.0.render().merge_into(c, r)
     }
 }
 
 impl<'v, El> WithAttribute for VoidElement<'v, El> {
     fn with_attribute(mut self, attr: impl Attribute) -> Self {
-        if self.error.is_some() {
+        let Some(builder) = self.0.builder_mut() else {
             return self;
+        };
+
+        if let Err(err) = attr.render(&mut builder.renderer) {
+            self.0.errored(err);
         }
-        if let Err(err) = attr.render(&mut self.renderer) {
-            self.error = Some(err);
-        }
+
         self
     }
 }

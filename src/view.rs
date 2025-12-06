@@ -2,6 +2,7 @@ pub mod boundary;
 mod boxed;
 pub mod chunk;
 mod future;
+pub(crate) mod internal;
 mod iter;
 pub mod text;
 
@@ -44,9 +45,7 @@ where
 }
 
 pub trait IntoView<'v> {
-    type View: View<'v>;
-
-    fn into_view(self) -> Self::View;
+    fn into_view(self) -> impl View<'v>;
     fn should_render(&self) -> bool {
         true
     }
@@ -56,9 +55,7 @@ impl<'v, V> IntoView<'v> for V
 where
     V: View<'v>,
 {
-    type View = V;
-
-    fn into_view(self) -> Self::View {
+    fn into_view(self) -> impl View<'v> {
         self
     }
 
@@ -75,6 +72,29 @@ pub enum RenderFuture<'v> {
 impl<'v> RenderFuture<'v> {
     pub fn ready(result: Result<Renderer, crate::Error>) -> Self {
         Self::Ready(Some(result))
+    }
+
+    pub fn merge_into(self, c: &'v Context, mut r: Renderer) -> Self {
+        match self {
+            RenderFuture::Ready(Some(Ok(mut renderer))) => {
+                r.append(&mut renderer);
+                c.release_renderer(renderer);
+                RenderFuture::Ready(Some(Ok(r)))
+            }
+            RenderFuture::Ready(result) => RenderFuture::Ready(result),
+            RenderFuture::Future(fut) => RenderFuture::Future(Box::pin(async move {
+                match fut.await {
+                    Ok(mut renderer) => {
+                        r.append(&mut renderer);
+                        c.release_renderer(renderer);
+                        Ok(r)
+                    }
+                    Err(err) => {
+                        return Err(err);
+                    }
+                }
+            })),
+        }
     }
 }
 
@@ -157,9 +177,7 @@ where
 }
 
 impl<'v> IntoView<'v> for AnyHttpError {
-    type View = ();
-
-    fn into_view(self) -> Self::View {
+    fn into_view(self) -> impl View<'v> {
         ()
     }
 

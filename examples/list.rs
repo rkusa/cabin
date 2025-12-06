@@ -74,7 +74,7 @@ async fn list(c: &Context, mut items: Vec<Item>) -> Boundary<'_, Vec<Item>> {
             c.div()
                 .child(c.button().on_click(ItemsEvent::AddBelow).child("add below")),
         )
-        .boundary(items.clone())
+        .boundary( items.clone())
 }
 
 cabin::BOUNDARIES!();

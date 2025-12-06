@@ -38,7 +38,7 @@ impl BoundaryRegistry {
             boundary.id,
             Arc::new(
                 |args_json: &str, c: &Context| match serde_json::from_str(args_json) {
-                    Ok(args) => crate::child::IntoChild::into_child(boundary.with(c, args))
+                    Ok(args) => crate::view::FutureExt::into_view(boundary.with(c, args))
                         .render(c, c.acquire_renderer()),
                     Err(err) => RenderFuture::Ready(Some(Err(InternalError::Deserialize {
                         what: "boundary state json".into(),
