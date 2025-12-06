@@ -17,6 +17,7 @@ pub use view::View;
 mod attribute;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod boundary_registry;
+mod child;
 mod context;
 pub mod element;
 pub mod error;

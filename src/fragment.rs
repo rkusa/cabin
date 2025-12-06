@@ -1,6 +1,7 @@
 use std::pin::Pin;
 
 use crate::View;
+use crate::child::IntoChild;
 use crate::context::Context;
 use crate::render::Renderer;
 use crate::view::chunk::ViewChunk;
@@ -23,13 +24,17 @@ impl<'v> Fragment<'v> {
         }
     }
 
-    pub fn child(mut self, child: impl IntoView<'v>) -> Self {
+    pub fn child<V: IntoView<'v>>(mut self, child: impl IntoChild<V>) -> Self {
         if self.error.is_some() {
             return self;
         }
 
         let renderer = std::mem::replace(&mut self.renderer, self.context.acquire_renderer());
-        match child.into_view().render(self.context, renderer) {
+        match child
+            .into_child()
+            .into_view()
+            .render(self.context, renderer)
+        {
             RenderFuture::Ready(Some(Ok(renderer))) => {
                 let other = std::mem::replace(&mut self.renderer, renderer);
                 self.context.release_renderer(other);

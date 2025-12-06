@@ -33,7 +33,7 @@ fn level(
         .child(c.button().on_click(Increment).child(text!("{}", count)))
         .child(c.button().on_click(ToggleChild).child("toggle child"))
         .child(has_next_level.then(|| level(c, n + 1, n + 1, n < 3).boxed()))
-        .boundary( (n, count, has_next_level))
+        .boundary((n, count, has_next_level))
 }
 
 #[derive(Clone, Copy, Event, Serialize, Deserialize)]

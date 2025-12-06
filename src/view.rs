@@ -44,7 +44,9 @@ where
 }
 
 pub trait IntoView<'v> {
-    fn into_view(self) -> impl View<'v>;
+    type View: View<'v>;
+
+    fn into_view(self) -> Self::View;
     fn should_render(&self) -> bool {
         true
     }
@@ -54,7 +56,9 @@ impl<'v, V> IntoView<'v> for V
 where
     V: View<'v>,
 {
-    fn into_view(self) -> impl View<'v> {
+    type View = V;
+
+    fn into_view(self) -> Self::View {
         self
     }
 
@@ -153,7 +157,9 @@ where
 }
 
 impl<'v> IntoView<'v> for AnyHttpError {
-    fn into_view(self) -> impl View<'v> {
+    type View = ();
+
+    fn into_view(self) -> Self::View {
         ()
     }
 

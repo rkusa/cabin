@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 
 use super::RenderFuture;
 pub use super::View;
+use crate::child::IntoChild;
 use crate::context::Context;
 use crate::render::Renderer;
 
@@ -11,6 +12,7 @@ where
     F: IntoFuture<Output = V>,
     V: View<'v>,
 {
+    #[deprecated]
     fn into_view(self) -> FutureView<F::IntoFuture, V>;
 }
 
@@ -20,6 +22,19 @@ where
     V: View<'v>,
 {
     fn into_view(self) -> FutureView<F::IntoFuture, V> {
+        FutureView {
+            future: self.into_future(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<'v, F, V> IntoChild<FutureView<F::IntoFuture, V>> for F
+where
+    F: IntoFuture<Output = V>,
+    V: View<'v>,
+{
+    fn into_child(self) -> FutureView<F::IntoFuture, V> {
         FutureView {
             future: self.into_future(),
             marker: PhantomData,

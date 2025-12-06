@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
+use crate::child::IntoChild;
 use crate::context::Context;
 use crate::fragment::Fragment;
 use crate::render::Renderer;
@@ -32,7 +33,7 @@ impl<'v, El> Element<'v, El> {
         }
     }
 
-    pub fn child(mut self, child: impl IntoView<'v>) -> ElementContent<'v> {
+    pub fn child<V: IntoView<'v>>(mut self, child: impl IntoChild<V>) -> ElementContent<'v> {
         if let Some(err) = self.error {
             return ElementContent(ElementContentState::Error(err));
         }
@@ -69,7 +70,7 @@ enum ElementContentState<'v> {
 }
 
 impl<'v> ElementContent<'v> {
-    pub fn child(self, child: impl IntoView<'v>) -> Self {
+    pub fn child<V: IntoView<'v>>(self, child: impl IntoChild<V>) -> Self {
         ElementContent(match self.0 {
             ElementContentState::Content {
                 tag,
