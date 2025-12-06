@@ -5,6 +5,7 @@ use crate::attribute::{Attribute, WithAttribute};
 use crate::context::Context;
 use crate::fragment::Fragment;
 use crate::render::Renderer;
+use crate::view::chunk::ViewChunk;
 use crate::view::{IntoView, RenderFuture};
 
 pub struct Element<'v, El> {
@@ -45,6 +46,14 @@ impl<'v, El> Element<'v, El> {
             context: self.context,
         })
     }
+
+    pub async fn finish(self) -> ViewChunk {
+        let c = self.context;
+        let r = c.acquire_renderer();
+        ViewChunk {
+            result: self.render(c, r).await,
+        }
+    }
 }
 
 pub struct ElementContent<'v>(ElementContentState<'v>);
@@ -75,6 +84,19 @@ impl<'v> ElementContent<'v> {
             },
             ElementContentState::Error(err) => ElementContentState::Error(err),
         })
+    }
+
+    pub async fn finish(self) -> ViewChunk {
+        match self.0 {
+            ElementContentState::Content { context, .. } => {
+                let c = context;
+                let r = c.acquire_renderer();
+                ViewChunk {
+                    result: self.render(c, r).await,
+                }
+            }
+            ElementContentState::Error(err) => ViewChunk { result: Err(err) },
+        }
     }
 }
 

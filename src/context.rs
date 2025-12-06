@@ -9,7 +9,7 @@ use crate::View;
 use crate::error::InternalError;
 use crate::fragment::Fragment;
 use crate::render::Renderer;
-use crate::view::any::AnyView;
+use crate::view::chunk::ViewChunk;
 
 pub struct Context {
     renderer_pool: RefCell<Vec<Renderer>>,
@@ -208,9 +208,9 @@ impl Context {
         self.multipart.take()
     }
 
-    pub async fn any<'v>(&'v self, view: impl View<'v>) -> AnyView {
+    pub async fn any<'v>(&'v self, view: impl View<'v>) -> ViewChunk {
         let r = self.acquire_renderer();
-        AnyView {
+        ViewChunk {
             result: view.render(self, r).await,
         }
     }

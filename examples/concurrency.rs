@@ -17,7 +17,7 @@ async fn app(c: &Context) -> impl View<'_> {
                     .child(delayed(c, start, Duration::from_secs(1)).into_view())
                     .child(delayed(c, start, Duration::from_secs(2)).into_view())
                     .child(delayed(c, start, Duration::from_secs(3)).into_view())
-                    .into_any_view(c)
+                    .finish()
                     .await,
             )
             .child(text!(

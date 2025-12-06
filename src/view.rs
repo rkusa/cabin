@@ -1,6 +1,6 @@
-pub mod any;
 pub mod boundary;
 mod boxed;
+pub mod chunk;
 mod future;
 mod iter;
 pub mod text;
@@ -18,7 +18,6 @@ pub use iter::IteratorExt;
 
 use crate::context::Context;
 use crate::render::{Escape, Renderer};
-use crate::view::any::AnyView;
 use crate::view::boxed::BoxedView;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
@@ -41,13 +40,6 @@ where
         Self: Sized,
     {
         Boundary::new(self, args)
-    }
-
-    fn into_any_view(self, c: &'v Context) -> impl Future<Output = AnyView> + 'v
-    where
-        Self: Sized,
-    {
-        c.any(self)
     }
 }
 

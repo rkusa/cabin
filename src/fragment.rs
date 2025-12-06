@@ -3,6 +3,7 @@ use std::pin::Pin;
 use crate::View;
 use crate::context::Context;
 use crate::render::Renderer;
+use crate::view::chunk::ViewChunk;
 use crate::view::{IntoView, RenderFuture};
 
 pub struct Fragment<'v> {
@@ -43,6 +44,14 @@ impl<'v> Fragment<'v> {
         }
 
         self
+    }
+
+    pub async fn finish(self) -> ViewChunk {
+        let c = self.context;
+        let r = c.acquire_renderer();
+        ViewChunk {
+            result: self.render(c, r).await,
+        }
     }
 
     pub(crate) fn render_self(mut self) -> RenderFuture<'v> {
