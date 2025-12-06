@@ -104,6 +104,19 @@ impl<'v> View<'v> for String {
     }
 }
 
+impl<'v> View<'v> for &'v String {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        let mut txt = r.text();
+        RenderFuture::ready(
+            Escape::content(&mut txt)
+                .write_str(&self)
+                .map_err(crate::error::InternalError::from)
+                .map_err(crate::error::Error::from)
+                .and_then(|_| Ok(txt.end())),
+        )
+    }
+}
+
 impl<'v, V> View<'v> for Option<V>
 where
     V: View<'v>,
