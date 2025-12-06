@@ -1,3 +1,5 @@
+use std::fmt::Arguments;
+
 use super::{RenderFuture, View};
 use crate::context::Context;
 use crate::render::Renderer;
@@ -54,5 +56,17 @@ where
 {
     fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
         RenderFuture::ready((self.0)(r))
+    }
+}
+
+impl<'v> View<'v> for Arguments<'v> {
+    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+        let mut txt = r.text();
+        if let Err(err) =
+            ::std::fmt::Write::write_fmt(&mut crate::render::Escape::content(&mut txt), self)
+        {
+            return RenderFuture::ready(Err(crate::error::InternalError::from(err).into()));
+        }
+        RenderFuture::ready(Ok(txt.end()))
     }
 }
