@@ -45,14 +45,6 @@ impl<'v> Fragment<'v> {
         self
     }
 
-    pub async fn finish(self) -> FinishedView {
-        let c = self.context;
-        let r = c.acquire_renderer();
-        FinishedView {
-            result: self.render(c, r).await,
-        }
-    }
-
     pub(crate) fn render_self(mut self) -> RenderFuture<'v> {
         if let Some(err) = self.error {
             return RenderFuture::ready(Err(err));
@@ -111,22 +103,6 @@ impl<'v> View<'v> for Fragment<'v> {
 
                 Ok(r)
             }))
-        }
-    }
-}
-
-pub struct FinishedView {
-    result: Result<Renderer, crate::Error>,
-}
-
-impl<'v> View<'v> for FinishedView {
-    fn render(self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
-        match self.result {
-            Ok(mut renderer) => {
-                r.append(&mut renderer);
-                RenderFuture::ready(Ok(r))
-            }
-            Err(err) => RenderFuture::ready(Err(err)),
         }
     }
 }

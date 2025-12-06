@@ -5,9 +5,11 @@ use multer::Multipart;
 use serde::de::DeserializeOwned;
 use serde_json::value::RawValue;
 
+use crate::View;
 use crate::error::InternalError;
 use crate::fragment::Fragment;
 use crate::render::Renderer;
+use crate::view::any::AnyView;
 
 pub struct Context {
     renderer_pool: RefCell<Vec<Renderer>>,
@@ -204,6 +206,13 @@ impl Context {
 
     pub fn take_multipart(&self) -> Option<Multipart<'static>> {
         self.multipart.take()
+    }
+
+    pub async fn any<'v>(&'v self, view: impl View<'v>) -> AnyView {
+        let r = self.acquire_renderer();
+        AnyView {
+            result: view.render(self, r).await,
+        }
     }
 }
 
