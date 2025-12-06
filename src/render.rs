@@ -60,10 +60,6 @@ impl Renderer {
         self.is_update
     }
 
-    pub fn len(&self) -> usize {
-        self.out.len()
-    }
-
     pub fn headers_mut(&mut self) -> &mut HeaderMap<HeaderValue> {
         &mut self.headers
     }
@@ -173,6 +169,16 @@ impl Renderer {
             write!(&mut self.out, "</{tag}>").unwrap();
         }
         // }
+    }
+
+    pub fn take_hasher(&mut self) -> XxHash32 {
+        std::mem::replace(&mut self.hasher, Default::default())
+    }
+
+    pub fn merge_hasher(&mut self, mut hasher: XxHash32) {
+        let hash = self.hasher.finish() as u32;
+        hasher.write_u32(hash);
+        self.hasher = hasher;
     }
 }
 

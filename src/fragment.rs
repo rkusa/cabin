@@ -51,6 +51,33 @@ impl<'v> Fragment<'v> {
             result: self.render(r).await,
         }
     }
+
+    pub(crate) fn render_self(mut self) -> RenderFuture<'v> {
+        if let Some(err) = self.error {
+            return RenderFuture::ready(Err(err));
+        }
+
+        if self.previous_chunks.is_empty() {
+            RenderFuture::ready(Ok(self.renderer))
+        } else {
+            RenderFuture::Future(Box::pin(async move {
+                let results = futures_util::future::join_all(self.previous_chunks).await;
+                for result in results {
+                    match result {
+                        Ok(mut renderer) => {
+                            self.renderer.append(&mut renderer);
+                            self.context.release_renderer(renderer);
+                        }
+                        Err(err) => {
+                            return Err(err);
+                        }
+                    }
+                }
+
+                Ok(self.renderer)
+            }))
+        }
+    }
 }
 
 impl<'v> View<'v> for Fragment<'v> {
@@ -69,7 +96,7 @@ impl<'v> View<'v> for Fragment<'v> {
                 for result in results {
                     match result {
                         Ok(mut renderer) => {
-                            r.append(&mut renderer);
+                            self.renderer.append(&mut renderer);
                             self.context.release_renderer(renderer);
                         }
                         Err(err) => {

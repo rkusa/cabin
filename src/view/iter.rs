@@ -157,6 +157,7 @@ where
     V: View<'v>,
 {
     fn render(self, mut r: Renderer) -> RenderFuture<'v> {
+        let parent_hasher = r.take_hasher();
         let hash_offset = r.start_element("cabin-keyed");
         r.attribute("id", self.key);
         r.start_content();
@@ -164,6 +165,7 @@ where
         match self.view.render(r) {
             RenderFuture::Ready(Some(Ok(mut r))) => {
                 r.end_element("cabin-keyed", false, hash_offset);
+                r.merge_hasher(parent_hasher);
                 RenderFuture::ready(Ok(r))
             }
             rf @ RenderFuture::Ready(_) => rf,
@@ -171,6 +173,7 @@ where
                 match future.await {
                     Ok(mut r) => {
                         r.end_element("cabin-keyed", false, hash_offset);
+                        r.merge_hasher(parent_hasher);
                         Ok(r)
                     }
                     Err(err) => Err(err),

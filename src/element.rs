@@ -42,6 +42,7 @@ impl<'v, El> Element<'v, El> {
             tag: self.tag,
             hash_offset: self.hash_offset,
             fragment,
+            context: self.context,
         })
     }
 }
@@ -53,6 +54,7 @@ enum ElementContentState<'v> {
         tag: &'static str,
         hash_offset: Option<usize>,
         fragment: Fragment<'v>,
+        context: &'v Context,
     },
     Error(crate::Error),
 }
@@ -64,10 +66,12 @@ impl<'v> ElementContent<'v> {
                 tag,
                 hash_offset,
                 fragment,
+                context,
             } => ElementContentState::Content {
                 tag,
                 hash_offset,
                 fragment: fragment.child(child),
+                context,
             },
             ElementContentState::Error(err) => ElementContentState::Error(err),
         })
@@ -89,24 +93,28 @@ impl<'v, El: 'v> View<'v> for Element<'v, El> {
 }
 
 impl<'v> View<'v> for ElementContent<'v> {
-    fn render(self, r: Renderer) -> RenderFuture<'v> {
-        let offset = r.len();
+    fn render(self, mut r: Renderer) -> RenderFuture<'v> {
         match self.0 {
             ElementContentState::Content {
                 tag,
                 hash_offset,
                 fragment,
-            } => match fragment.render(r) {
-                RenderFuture::Ready(Some(Ok(mut r))) => {
-                    r.end_element(tag, false, hash_offset.map(|o| o + offset));
+                context,
+            } => match fragment.render_self() {
+                RenderFuture::Ready(Some(Ok(mut renderer))) => {
+                    renderer.end_element(tag, false, hash_offset);
+                    r.append(&mut renderer);
+                    context.release_renderer(renderer);
                     RenderFuture::ready(Ok(r))
                 }
                 RenderFuture::Ready(Some(Err(err))) => RenderFuture::Ready(Some(Err(err))),
                 RenderFuture::Ready(None) => RenderFuture::Ready(None),
                 RenderFuture::Future(future) => RenderFuture::Future(Box::pin(async move {
                     match future.await {
-                        Ok(mut r) => {
-                            r.end_element(tag, false, hash_offset.map(|o| o + offset));
+                        Ok(mut renderer) => {
+                            renderer.end_element(tag, false, hash_offset);
+                            r.append(&mut renderer);
+                            context.release_renderer(renderer);
                             Ok(r)
                         }
                         Err(err) => Err(err),
