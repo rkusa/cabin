@@ -17,12 +17,13 @@ use crate::context::{Context, Payload};
 pub use crate::error::Error;
 use crate::html;
 use crate::render::Out;
+use crate::view::AnyView;
 pub use crate::view::View;
 
 pub static CABIN_JS: &str = include_str!("./cabin.js");
 pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
-pub fn cabin_scripts(c: &Context) -> impl View<'_> {
+pub fn cabin_scripts(c: &Context) -> impl View {
     use html::elements::script::Script;
 
     let fragment = c.fragment().child(
@@ -64,9 +65,9 @@ pub struct Event {
     pub(crate) multipart: Option<Multipart<'static>>,
 }
 
-pub fn basic_document<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'v> {
+pub fn basic_document(c: &Context, content: impl View) -> impl View {
     if c.is_update() {
-        content.boxed()
+        c.any(content)
     } else {
         c.fragment()
             .child(c.doctype())
@@ -75,28 +76,22 @@ pub fn basic_document<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'
                     .child(c.head().child(cabin_scripts(c)))
                     .child(c.body().child(content)),
             )
-            .boxed()
+            .any()
     }
 }
 
 pub trait RenderFn<'v> {
-    fn render(
-        self,
-        context: &'v Context,
-    ) -> Pin<Box<dyn Future<Output = Box<dyn View<'v> + 'v>> + 'v>>;
+    fn render(self, context: &'v Context) -> Pin<Box<dyn Future<Output = AnyView> + 'v>>;
 }
 
 impl<'v, R, F, V> RenderFn<'v> for R
 where
     R: FnOnce(&'v Context) -> F + 'v,
     F: Future<Output = V> + 'v,
-    V: View<'v>,
+    V: View + 'v,
 {
-    fn render(
-        self,
-        context: &'v Context,
-    ) -> Pin<Box<dyn Future<Output = Box<dyn View<'v> + 'v>> + 'v>> {
-        Box::pin(async move { (self)(context).await.boxed() })
+    fn render(self, context: &'v Context) -> Pin<Box<dyn Future<Output = AnyView> + 'v>> {
+        Box::pin(async move { context.any((self)(context).await) })
     }
 }
 
@@ -105,14 +100,13 @@ pub fn get_page(
 ) -> impl Future<Output = Response<String>> + Send {
     crate::local_pool::spawn(|| async move {
         let context = Context::new(false);
-        let r = context.acquire_renderer();
+        let mut r = context.acquire_renderer();
         let doc = render_fn.render(&context).await;
-        let result = match doc.render(&context, r).await {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
+        if let Err(err) = doc.render(&mut r) {
+            return err_to_response(err);
+        }
 
-        let Out { html, headers } = result.end();
+        let Out { html, headers } = r.end();
         let mut res = Response::builder().header(
             http::header::CONTENT_TYPE,
             HeaderValue::from_static("text/html; charset=utf-8"),
@@ -143,17 +137,13 @@ where
         if let Some(multipart) = event.multipart {
             context = context.with_multipart(multipart);
         }
-        let result = match render_fn
-            .render(&context)
-            .await
-            .render(&context, context.acquire_renderer())
-            .await
-        {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
+        let mut r = context.acquire_renderer();
+        let doc = render_fn.render(&context).await;
+        if let Err(err) = doc.render(&mut r) {
+            return err_to_response(err);
+        }
 
-        let Out { html, headers } = result.end();
+        let Out { html, headers } = r.end();
         let mut res = Response::builder().header(
             http::header::CONTENT_TYPE,
             HeaderValue::from_static("text/html; charset=utf-8"),

@@ -6,7 +6,7 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     let data = c.take_event::<Data>();
 
     let values = data.clone().unwrap_or_default();
@@ -26,11 +26,11 @@ async fn app(c: &Context) -> impl View<'_> {
                     .child(c.button().type_submit().child("submit")),
             )
             .child(data.map(|data| {
-                text!(
+                c.any(text!(
                     "Submitted: comment={}; highlighted={}",
                     data.comment,
                     data.highlighted
-                )
+                ))
             })),
     )
 }

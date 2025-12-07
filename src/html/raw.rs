@@ -2,24 +2,20 @@ use std::borrow::Cow;
 use std::fmt::Write;
 
 use crate::View;
-use crate::context::Context;
 use crate::render::Renderer;
-use crate::view::RenderFuture;
 
-pub struct Raw(pub Cow<'static, str>);
+pub struct Raw<'s>(pub Cow<'s, str>);
 
-pub fn raw(txt: impl Into<Cow<'static, str>>) -> Raw {
+pub fn raw<'s>(txt: impl Into<Cow<'s, str>>) -> Raw<'s> {
     Raw(txt.into())
 }
 
-impl<'v> View<'v> for Raw {
-    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+impl<'s> View for Raw<'s> {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
         let mut txt = r.text();
-        RenderFuture::ready(
-            txt.write_str(&self.0)
-                .map_err(crate::error::InternalError::from)
-                .map_err(crate::error::Error::from)
-                .and_then(|_| Ok(txt.end())),
-        )
+        txt.write_str(&self.0)
+            .map_err(crate::error::InternalError::from)?;
+        txt.end();
+        Ok(())
     }
 }

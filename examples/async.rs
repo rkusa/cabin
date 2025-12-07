@@ -8,14 +8,14 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     basic_document(c, search(c).await)
 }
 
 #[derive(Hash, Event, Serialize, Deserialize)]
 struct Search(InputValue);
 
-async fn search(c: &Context) -> impl View<'_> {
+async fn search(c: &Context) -> impl View {
     let query: Cow<'static, str> = c
         .take_event::<Search>()
         .map(|e| e.0.take())

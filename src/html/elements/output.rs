@@ -12,8 +12,8 @@ use crate::element::Element;
 impl Context {
     /// The output element represents the result of a calculation performed by the application, or
     /// the result of a user action.
-    pub fn output(&self) -> Element<'_, marker::Output> {
-        Element::new(self, "output")
+    pub fn output(&self) -> Element<marker::Output> {
+        Element::new(self.acquire_renderer(), "output")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Output;
 }
 
-impl<'v> Output for Element<'v, marker::Output> {}
-impl<'v> Common for Element<'v, marker::Output> {}
-impl<'v> Global for Element<'v, marker::Output> {}
-impl<'v> Aria for Element<'v, marker::Output> {}
+impl Output for Element<marker::Output> {}
+impl Common for Element<marker::Output> {}
+impl Global for Element<marker::Output> {}
+impl Aria for Element<marker::Output> {}
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.

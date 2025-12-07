@@ -6,14 +6,14 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     basic_document(c, dialog(c, "Hello World"))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Toggle(bool);
 
-fn dialog<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'v> {
+fn dialog(c: &Context, content: impl View) -> impl View {
     let open = c.event::<Toggle>().unwrap_or_default();
 
     c.fragment()

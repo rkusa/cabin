@@ -11,8 +11,8 @@ use crate::element::Element;
 
 impl Context {
     /// The `optgroup` element represents a group of [super::option] elements with a common label.
-    pub fn optgroup(&self) -> Element<'_, marker::OptGroup> {
-        Element::new(self, "optgroup")
+    pub fn optgroup(&self) -> Element<marker::OptGroup> {
+        Element::new(self.acquire_renderer(), "optgroup")
     }
 }
 
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct OptGroup;
 }
 
-impl<'v> OptGroup for Element<'v, marker::OptGroup> {}
-impl<'v> Common for Element<'v, marker::OptGroup> {}
-impl<'v> Global for Element<'v, marker::OptGroup> {}
-impl<'v> Aria for Element<'v, marker::OptGroup> {}
+impl OptGroup for Element<marker::OptGroup> {}
+impl Common for Element<marker::OptGroup> {}
+impl Global for Element<marker::OptGroup> {}
+impl Aria for Element<marker::OptGroup> {}
 
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
 pub trait OptGroup: WithAttribute {

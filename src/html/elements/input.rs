@@ -22,8 +22,8 @@ use crate::html::events::CustomEvent;
 use crate::void_element::VoidElement;
 
 impl Context {
-    pub fn input(&self) -> VoidElement<'_, marker::Input> {
-        VoidElement::new(self, "input")
+    pub fn input(&self) -> VoidElement<marker::Input> {
+        VoidElement::new(self.acquire_renderer(), "input")
     }
 }
 
@@ -31,10 +31,10 @@ pub mod marker {
     pub struct Input;
 }
 
-impl<'v> Input for VoidElement<'v, marker::Input> {}
-impl<'v> Common for VoidElement<'v, marker::Input> {}
-impl<'v> Global for VoidElement<'v, marker::Input> {}
-impl<'v> Aria for VoidElement<'v, marker::Input> {}
+impl Input for VoidElement<marker::Input> {}
+impl Common for VoidElement<marker::Input> {}
+impl Global for VoidElement<marker::Input> {}
+impl Aria for VoidElement<marker::Input> {}
 
 // TODO: typed inputs? (number, date, ...)
 /// TODO: doc comment

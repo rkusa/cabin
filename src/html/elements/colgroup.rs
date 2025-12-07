@@ -8,8 +8,8 @@ use crate::element::Element;
 impl Context {
     /// The `colgroup` element represents a group of one or more columns in the [super::table] that
     /// is its parent, if it has a parent and that is a [super::table] element.
-    pub fn colgroup(&self) -> Element<'_, marker::Colgroup> {
-        Element::new(self, "colgroup")
+    pub fn colgroup(&self) -> Element<marker::Colgroup> {
+        Element::new(self.acquire_renderer(), "colgroup")
     }
 }
 
@@ -17,9 +17,9 @@ pub mod marker {
     pub struct Colgroup;
 }
 
-impl<'v> Colgroup for Element<'v, marker::Colgroup> {}
-impl<'v> Common for Element<'v, marker::Colgroup> {}
-impl<'v> Global for Element<'v, marker::Colgroup> {}
+impl Colgroup for Element<marker::Colgroup> {}
+impl Common for Element<marker::Colgroup> {}
+impl Global for Element<marker::Colgroup> {}
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.

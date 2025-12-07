@@ -14,8 +14,8 @@ use crate::html::elements::form::OnSubmit;
 
 impl Context {
     /// The `button` element represents a button labeled by its contents.
-    pub fn button(&self) -> Element<'_, marker::Button> {
-        Element::new(self, "button")
+    pub fn button(&self) -> Element<marker::Button> {
+        Element::new(self.acquire_renderer(), "button")
     }
 }
 
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Button;
 }
 
-impl<'v> Button for Element<'v, marker::Button> {}
-impl<'v> Common for Element<'v, marker::Button> {}
-impl<'v> Global for Element<'v, marker::Button> {}
-impl<'v> Aria for Element<'v, marker::Button> {}
+impl Button for Element<marker::Button> {}
+impl Common for Element<marker::Button> {}
+impl Global for Element<marker::Button> {}
+impl Aria for Element<marker::Button> {}
 
 /// The `button` element represents a button labeled by its contents.
 pub trait Button: WithAttribute {

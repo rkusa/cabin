@@ -12,8 +12,8 @@ use crate::element::Element;
 impl Context {
     /// The ol element represents a list of items, where the items have been intentionally ordered,
     /// such that changing the order would change the meaning of the document.
-    pub fn ol(&self) -> Element<'_, marker::Ol> {
-        Element::new(self, "ol")
+    pub fn ol(&self) -> Element<marker::Ol> {
+        Element::new(self.acquire_renderer(), "ol")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Ol;
 }
 
-impl<'v> Ol for Element<'v, marker::Ol> {}
-impl<'v> Common for Element<'v, marker::Ol> {}
-impl<'v> Global for Element<'v, marker::Ol> {}
-impl<'v> Aria for Element<'v, marker::Ol> {}
+impl Ol for Element<marker::Ol> {}
+impl Common for Element<marker::Ol> {}
+impl Global for Element<marker::Ol> {}
+impl Aria for Element<marker::Ol> {}
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.

@@ -20,8 +20,8 @@ impl Context {
     /// The `form` element represents a hyperlink that can be manipulated through a collection of
     /// form-associated elements, some of which can represent editable values that can be submitted
     /// to a server for processing.
-    pub fn form(&self) -> Element<'_, marker::Form> {
-        Element::new(self, "form")
+    pub fn form(&self) -> Element<marker::Form> {
+        Element::new(self.acquire_renderer(), "form")
     }
 }
 
@@ -29,10 +29,10 @@ pub mod marker {
     pub struct Form;
 }
 
-impl<'v> Form for Element<'v, marker::Form> {}
-impl<'v> Common for Element<'v, marker::Form> {}
-impl<'v> Global for Element<'v, marker::Form> {}
-impl<'v> Aria for Element<'v, marker::Form> {}
+impl Form for Element<marker::Form> {}
+impl Common for Element<marker::Form> {}
+impl Global for Element<marker::Form> {}
+impl Aria for Element<marker::Form> {}
 
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a

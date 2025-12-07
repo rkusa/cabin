@@ -12,8 +12,8 @@ use crate::element::Element;
 impl Context {
     /// The `time` element represents a datetime, in machine-readable form as the `datetime`
     /// attribute, and in human-readable form as its content.
-    pub fn time(&self) -> Element<'_, marker::Time> {
-        Element::new(self, "time")
+    pub fn time(&self) -> Element<marker::Time> {
+        Element::new(self.acquire_renderer(), "time")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Time;
 }
 
-impl<'v> Time for Element<'v, marker::Time> {}
-impl<'v> Common for Element<'v, marker::Time> {}
-impl<'v> Global for Element<'v, marker::Time> {}
-impl<'v> Aria for Element<'v, marker::Time> {}
+impl Time for Element<marker::Time> {}
+impl Common for Element<marker::Time> {}
+impl Global for Element<marker::Time> {}
+impl Aria for Element<marker::Time> {}
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.

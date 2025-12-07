@@ -16,8 +16,8 @@ use crate::void_element::VoidElement;
 impl Context {
     /// The `area` element represents either a hyperlink with some text and a corresponding area on
     /// an image map, or a dead area on an image map.
-    pub fn area(&self) -> VoidElement<'_, marker::Area> {
-        VoidElement::new(self, "area")
+    pub fn area(&self) -> VoidElement<marker::Area> {
+        VoidElement::new(self.acquire_renderer(), "area")
     }
 }
 
@@ -25,10 +25,10 @@ pub mod marker {
     pub struct Area;
 }
 
-impl<'v> Area for VoidElement<'v, marker::Area> {}
-impl<'v> Common for VoidElement<'v, marker::Area> {}
-impl<'v> Global for VoidElement<'v, marker::Area> {}
-impl<'v> Aria for VoidElement<'v, marker::Area> {}
+impl Area for VoidElement<marker::Area> {}
+impl Common for VoidElement<marker::Area> {}
+impl Global for VoidElement<marker::Area> {}
+impl Aria for VoidElement<marker::Area> {}
 
 /// The `area` element represents either a hyperlink with some text and a corresponding area on an
 /// image map, or a dead area on an image map.

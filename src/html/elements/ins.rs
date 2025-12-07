@@ -11,8 +11,8 @@ use crate::element::Element;
 
 impl Context {
     /// The `ins` element represents an addition to the document.
-    pub fn ins(&self) -> Element<'_, marker::Ins> {
-        Element::new(self, "ins")
+    pub fn ins(&self) -> Element<marker::Ins> {
+        Element::new(self.acquire_renderer(), "ins")
     }
 }
 
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Ins;
 }
 
-impl<'v> Ins for Element<'v, marker::Ins> {}
-impl<'v> Common for Element<'v, marker::Ins> {}
-impl<'v> Global for Element<'v, marker::Ins> {}
-impl<'v> Aria for Element<'v, marker::Ins> {}
+impl Ins for Element<marker::Ins> {}
+impl Common for Element<marker::Ins> {}
+impl Global for Element<marker::Ins> {}
+impl Aria for Element<marker::Ins> {}
 
 /// The `ins` element represents an addition to the document.
 pub trait Ins: WithAttribute {

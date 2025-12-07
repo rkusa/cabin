@@ -7,7 +7,7 @@ pub mod list;
 pub mod raw;
 
 impl Context {
-    pub fn doctype(&self) -> Raw {
+    pub fn doctype(&self) -> Raw<'static> {
         raw::raw("<!DOCTYPE html>")
     }
 }

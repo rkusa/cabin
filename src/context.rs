@@ -9,11 +9,11 @@ use crate::View;
 use crate::error::InternalError;
 use crate::fragment::Fragment;
 use crate::render::Renderer;
-use crate::view::chunk::ViewChunk;
+use crate::renderer_pool::RendererPool;
+use crate::view::AnyView;
 
 pub struct Context {
-    renderer_pool: RefCell<Vec<Renderer>>,
-    is_update: bool,
+    renderer_pool: RendererPool,
     event: RefCell<Option<Event>>,
     multipart: RefCell<Option<Multipart<'static>>>,
     error: RefCell<Option<InternalError>>,
@@ -33,8 +33,16 @@ pub(crate) enum Payload {
 impl Context {
     pub fn new(is_update: bool) -> Self {
         Self {
-            renderer_pool: RefCell::new(Vec::with_capacity(8)),
-            is_update,
+            renderer_pool: RendererPool::new(is_update),
+            event: RefCell::new(None),
+            multipart: RefCell::new(None),
+            error: RefCell::new(None),
+        }
+    }
+
+    pub(crate) fn from_pool(renderer_pool: RendererPool) -> Self {
+        Self {
+            renderer_pool,
             event: RefCell::new(None),
             multipart: RefCell::new(None),
             error: RefCell::new(None),
@@ -53,22 +61,15 @@ impl Context {
     }
 
     pub fn is_update(&self) -> bool {
-        self.is_update
+        self.renderer_pool.is_update()
     }
 
-    pub fn fragment(&self) -> Fragment<'_> {
-        Fragment::new(self.acquire_renderer(), self)
+    pub fn fragment(&self) -> Fragment {
+        Fragment::new(self.acquire_renderer())
     }
 
     pub(crate) fn acquire_renderer(&self) -> Renderer {
-        let mut pool = self.renderer_pool.borrow_mut();
-        pool.pop().unwrap_or_else(|| Renderer::new(self.is_update))
-    }
-
-    pub(crate) fn release_renderer(&self, mut renderer: Renderer) {
-        renderer.reset();
-        let mut pool = self.renderer_pool.borrow_mut();
-        pool.push(renderer);
+        self.renderer_pool.acquire()
     }
 
     pub fn event<E>(&self) -> Option<E>
@@ -208,16 +209,18 @@ impl Context {
         self.multipart.take()
     }
 
-    pub async fn any<'v>(&'v self, view: impl View<'v>) -> ViewChunk {
-        let r = self.acquire_renderer();
-        ViewChunk {
-            result: view.render(self, r).await,
+    pub fn any(&self, view: impl View) -> AnyView {
+        let mut r = self.acquire_renderer();
+        AnyView {
+            result: view.render(&mut r).map(|_| r),
         }
     }
 }
 
 impl Drop for Context {
     fn drop(&mut self) {
-        eprintln!("poll size: {}", self.renderer_pool.borrow().len());
+        // There is a cyclic dependency, so make sure the pool gets emptied for it to get properly
+        // dropped
+        self.renderer_pool.drain();
     }
 }

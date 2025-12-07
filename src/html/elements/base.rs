@@ -12,8 +12,8 @@ impl Context {
     /// The `base` element allows authors to specify the document base URL for the purposes of
     /// parsing URLs, and the name of the default navigable for the purposes of following
     /// hyperlinks. The element does not represent any content beyond this information.
-    pub fn base(&self) -> VoidElement<'_, marker::Base> {
-        VoidElement::new(self, "base")
+    pub fn base(&self) -> VoidElement<marker::Base> {
+        VoidElement::new(self.acquire_renderer(), "base")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Base;
 }
 
-impl<'v> Base for VoidElement<'_, marker::Base> {}
-impl<'v> Common for VoidElement<'_, marker::Base> {}
-impl<'v> Global for VoidElement<'_, marker::Base> {}
-impl<'v> Aria for VoidElement<'_, marker::Base> {}
+impl Base for VoidElement<marker::Base> {}
+impl Common for VoidElement<marker::Base> {}
+impl Global for VoidElement<marker::Base> {}
+impl Aria for VoidElement<marker::Base> {}
 
 /// The `base` element allows authors to specify the document base URL for the purposes of parsing
 /// URLs, and the name of the default navigable for the purposes of following hyperlinks. The

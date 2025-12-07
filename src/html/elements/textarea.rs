@@ -15,57 +15,56 @@ use crate::element::{Element, ElementContent};
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 use crate::render::Renderer;
-use crate::view::RenderFuture;
 
 impl Context {
     /// The `textarea` element represents a multiline plain text edit control for the element's raw
     /// value. The contents of the control represent the control's default value.
-    pub fn textarea(&self) -> TextareaElement<'_> {
-        TextareaElement(Element::new(self, "textarea"))
+    pub fn textarea(&self) -> TextareaElement {
+        TextareaElement(Element::new(self.acquire_renderer(), "textarea"))
     }
 }
 
-pub struct TextareaElement<'v>(Element<'v, marker::Textarea>);
-pub struct TextareaContent<'v>(ElementContent<'v>);
+pub struct TextareaElement(Element<marker::Textarea>);
+pub struct TextareaContent(ElementContent);
 
 mod marker {
     pub struct Textarea;
 }
 
-impl<'v> TextareaElement<'v> {
-    pub fn child(self, child: impl Into<Cow<'v, str>>) -> TextareaContent<'v> {
+impl TextareaElement {
+    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> TextareaContent {
         TextareaContent(self.0.child(child.into()))
     }
 }
 
-impl<'v> TextareaContent<'v> {
-    pub fn child(self, child: impl Into<Cow<'v, str>>) -> Self {
+impl TextareaContent {
+    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
         Self(self.0.child(child.into()))
     }
 }
 
-impl<'v> View<'v> for TextareaElement<'v> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(c, r)
+impl View for TextareaElement {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        View::render(self.0, r)
     }
 }
 
-impl<'v> View<'v> for TextareaContent<'v> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(c, r)
+impl View for TextareaContent {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        self.0.render(r)
     }
 }
 
-impl<'v> WithAttribute for TextareaElement<'v> {
+impl WithAttribute for TextareaElement {
     fn with_attribute(self, attr: impl Attribute) -> Self {
         Self(self.0.with_attribute(attr))
     }
 }
 
-impl<'v> Textarea for TextareaElement<'v> {}
-impl<'v> Common for TextareaElement<'v> {}
-impl<'v> Global for TextareaElement<'v> {}
-impl<'v> Aria for TextareaElement<'v> {}
+impl Textarea for TextareaElement {}
+impl Common for TextareaElement {}
+impl Global for TextareaElement {}
+impl Aria for TextareaElement {}
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.

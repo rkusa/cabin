@@ -14,8 +14,8 @@ impl Context {
     /// The `source` element allows authors to specify multiple alternative source sets for
     /// [super::img] elements or multiple alternative media resources for media elements. It
     /// does not represent anything on its own.
-    pub fn source(&self) -> VoidElement<'_, marker::Source> {
-        VoidElement::new(self, "source")
+    pub fn source(&self) -> VoidElement<marker::Source> {
+        VoidElement::new(self.acquire_renderer(), "source")
     }
 }
 
@@ -23,8 +23,8 @@ pub mod marker {
     pub struct Source;
 }
 
-impl<'v> Source for VoidElement<'v, marker::Source> {}
-impl<'v> Global for VoidElement<'v, marker::Source> {}
+impl Source for VoidElement<marker::Source> {}
+impl Global for VoidElement<marker::Source> {}
 
 /// An `source` element represents an image.
 pub trait Source: WithAttribute {

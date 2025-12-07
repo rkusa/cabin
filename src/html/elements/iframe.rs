@@ -16,8 +16,8 @@ use crate::html::list::SpaceSeparated;
 
 impl Context {
     /// The `iframe` element represents its content navigable.
-    pub fn iframe(&self) -> Element<'_, marker::IFrame> {
-        Element::new(self, "iframe")
+    pub fn iframe(&self) -> Element<marker::IFrame> {
+        Element::new(self.acquire_renderer(), "iframe")
     }
 }
 
@@ -25,10 +25,10 @@ pub mod marker {
     pub struct IFrame;
 }
 
-impl<'v> IFrame for Element<'v, marker::IFrame> {}
-impl<'v> Common for Element<'v, marker::IFrame> {}
-impl<'v> Global for Element<'v, marker::IFrame> {}
-impl<'v> Aria for Element<'v, marker::IFrame> {}
+impl IFrame for Element<marker::IFrame> {}
+impl Common for Element<marker::IFrame> {}
+impl Global for Element<marker::IFrame> {}
+impl Aria for Element<marker::IFrame> {}
 
 /// The `iframe` element represents its content navigable.
 pub trait IFrame: WithAttribute {

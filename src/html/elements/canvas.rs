@@ -10,8 +10,8 @@ impl Context {
     /// The `canvas` element provides scripts with a resolution-dependent bitmap canvas, which can
     /// be used for rendering graphs, game graphics, art, or other visual images on the fly. The
     /// contents of the canvas element, if any, are the element's fallback content.
-    pub fn canvas(&self) -> Element<'_, marker::Canvas> {
-        Element::new(self, "canvas")
+    pub fn canvas(&self) -> Element<marker::Canvas> {
+        Element::new(self.acquire_renderer(), "canvas")
     }
 }
 
@@ -19,10 +19,10 @@ pub mod marker {
     pub struct Canvas;
 }
 
-impl<'v> Canvas for Element<'v, marker::Canvas> {}
-impl<'v> Common for Element<'v, marker::Canvas> {}
-impl<'v> Global for Element<'v, marker::Canvas> {}
-impl<'v> Aria for Element<'v, marker::Canvas> {}
+impl Canvas for Element<marker::Canvas> {}
+impl Common for Element<marker::Canvas> {}
+impl Global for Element<marker::Canvas> {}
+impl Aria for Element<marker::Canvas> {}
 
 /// The `canvas` element provides scripts with a resolution-dependent bitmap canvas, which can be
 /// used for rendering graphs, game graphics, art, or other visual images on the fly. The contents

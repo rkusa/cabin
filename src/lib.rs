@@ -31,6 +31,7 @@ pub mod prelude;
 pub mod private;
 mod redirect;
 pub mod render;
+mod renderer_pool;
 pub mod serde;
 #[cfg(not(target_arch = "wasm32"))]
 mod server;

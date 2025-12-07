@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use bytes::Bytes;
@@ -11,12 +12,16 @@ use serde::de::DeserializeOwned;
 use crate::View;
 use crate::context::Context;
 use crate::error::InternalError;
-use crate::render::Out;
+use crate::render::{Out, Renderer};
 use crate::server::{err_to_response, parse_body};
-use crate::view::RenderFuture;
 use crate::view::boundary::BoundaryRef;
 
-type BoundaryHandler = dyn Send + Sync + for<'v> Fn(&'v str, &'v Context) -> RenderFuture<'v>;
+type BoundaryHandler = dyn Send
+    + Sync
+    + for<'v> Fn(
+        &'v str,
+        &'v Context,
+    ) -> Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + 'v>>;
 
 #[derive(Default)]
 pub struct BoundaryRegistry {
@@ -36,17 +41,22 @@ impl BoundaryRegistry {
     {
         self.handler.insert(
             boundary.id,
-            Arc::new(
-                |args_json: &str, c: &Context| match serde_json::from_str(args_json) {
-                    Ok(args) => crate::view::FutureExt::into_view(boundary.with(c, args))
-                        .render(c, c.acquire_renderer()),
-                    Err(err) => RenderFuture::Ready(Some(Err(InternalError::Deserialize {
-                        what: "boundary state json".into(),
-                        err: Box::new(err),
+            Arc::new(|args_json: &str, c: &Context| {
+                Box::pin(async {
+                    match serde_json::from_str(args_json) {
+                        Ok(args) => {
+                            let mut r = c.acquire_renderer();
+                            boundary.render(c, args).await.render(&mut r)?;
+                            Ok(r)
+                        }
+                        Err(err) => Err(InternalError::Deserialize {
+                            what: "boundary state json".into(),
+                            err: Box::new(err),
+                        }
+                        .into()),
                     }
-                    .into()))),
-                },
-            ),
+                })
+            }),
         );
     }
 

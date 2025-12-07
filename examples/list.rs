@@ -7,7 +7,7 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     basic_document(
         c,
         list(c, vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await,
@@ -29,7 +29,7 @@ enum ItemsEvent {
 }
 
 #[cabin::boundary]
-async fn list(c: &Context, mut items: Vec<Item>) -> Boundary<'_, Vec<Item>> {
+async fn list(c: &Context, mut items: Vec<Item>) -> Boundary<Vec<Item>> {
     if let Some(event) = c.take_event::<ItemsEvent>() {
         match event {
             ItemsEvent::AddAbove => {
@@ -74,7 +74,7 @@ async fn list(c: &Context, mut items: Vec<Item>) -> Boundary<'_, Vec<Item>> {
             c.div()
                 .child(c.button().on_click(ItemsEvent::AddBelow).child("add below")),
         )
-        .boundary( items.clone())
+        .boundary(items.clone())
 }
 
 cabin::BOUNDARIES!();

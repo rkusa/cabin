@@ -10,8 +10,8 @@ use crate::element::Element;
 
 impl Context {
     /// The `q` element represents some phrasing content quoted from another source.
-    pub fn q(&self) -> Element<'_, marker::Q> {
-        Element::new(self, "q")
+    pub fn q(&self) -> Element<marker::Q> {
+        Element::new(self.acquire_renderer(), "q")
     }
 }
 
@@ -19,10 +19,10 @@ pub mod marker {
     pub struct Q;
 }
 
-impl<'v> Q for Element<'v, marker::Q> {}
-impl<'v> Common for Element<'v, marker::Q> {}
-impl<'v> Global for Element<'v, marker::Q> {}
-impl<'v> Aria for Element<'v, marker::Q> {}
+impl Q for Element<marker::Q> {}
+impl Common for Element<marker::Q> {}
+impl Global for Element<marker::Q> {}
+impl Aria for Element<marker::Q> {}
 
 /// The `q` element represents some phrasing content quoted from another source.
 pub trait Q: WithAttribute {

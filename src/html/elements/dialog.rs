@@ -9,8 +9,8 @@ use crate::element::Element;
 
 impl Context {
     /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
-    pub fn dialog(&self) -> Element<'_, marker::Dialog> {
-        Element::new(self, "dialog")
+    pub fn dialog(&self) -> Element<marker::Dialog> {
+        Element::new(self.acquire_renderer(), "dialog")
     }
 }
 
@@ -18,10 +18,10 @@ pub mod marker {
     pub struct Dialog;
 }
 
-impl<'v> Dialog for Element<'v, marker::Dialog> {}
-impl<'v> Common for Element<'v, marker::Dialog> {}
-impl<'v> Global for Element<'v, marker::Dialog> {}
-impl<'v> Aria for Element<'v, marker::Dialog> {}
+impl Dialog for Element<marker::Dialog> {}
+impl Common for Element<marker::Dialog> {}
+impl Global for Element<marker::Dialog> {}
+impl Aria for Element<marker::Dialog> {}
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
 pub trait Dialog: WithAttribute {

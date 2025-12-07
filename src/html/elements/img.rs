@@ -17,8 +17,8 @@ use crate::void_element::VoidElement;
 
 impl Context {
     /// An `img` element represents an image.
-    pub fn img(&self) -> VoidElement<'_, marker::Img> {
-        VoidElement::new(self, "img")
+    pub fn img(&self) -> VoidElement<marker::Img> {
+        VoidElement::new(self.acquire_renderer(), "img")
     }
 }
 
@@ -26,10 +26,10 @@ pub mod marker {
     pub struct Img;
 }
 
-impl<'v> Img for VoidElement<'v, marker::Img> {}
-impl<'v> Common for VoidElement<'v, marker::Img> {}
-impl<'v> Global for VoidElement<'v, marker::Img> {}
-impl<'v> Aria for VoidElement<'v, marker::Img> {}
+impl Img for VoidElement<marker::Img> {}
+impl Common for VoidElement<marker::Img> {}
+impl Global for VoidElement<marker::Img> {}
+impl Aria for VoidElement<marker::Img> {}
 
 /// An `img` element represents an image.
 pub trait Img: WithAttribute {

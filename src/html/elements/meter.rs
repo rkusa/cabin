@@ -14,8 +14,8 @@ impl Context {
     /// The `meter` element represents a scalar measurement within a known range, or a fractional
     /// value; for example disk usage, the relevance of a query result, or the fraction of a
     /// voting population to have selected a particular candidate.
-    pub fn meter(&self) -> Element<'_, marker::Meter> {
-        Element::new(self, "meter")
+    pub fn meter(&self) -> Element<marker::Meter> {
+        Element::new(self.acquire_renderer(), "meter")
     }
 }
 
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Meter;
 }
 
-impl<'v> Meter for Element<'v, marker::Meter> {}
-impl<'v> Common for Element<'v, marker::Meter> {}
-impl<'v> Global for Element<'v, marker::Meter> {}
-impl<'v> Aria for Element<'v, marker::Meter> {}
+impl Meter for Element<marker::Meter> {}
+impl Common for Element<marker::Meter> {}
+impl Global for Element<marker::Meter> {}
+impl Aria for Element<marker::Meter> {}
 
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population

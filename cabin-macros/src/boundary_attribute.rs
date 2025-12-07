@@ -66,11 +66,19 @@ pub fn boundary_attribute(
 
     let to_async = if asyncness.is_some() {
         quote! {
-            async move { ::cabin::view::boundary::Boundary::from(#inner_ident(c, #args_idents).await) }
+            async move {
+                c.any(::cabin::view::boundary::internal::Boundary::upgrade(
+                    #inner_ident(c, #args_idents).await,
+                    &BOUNDARY
+                ))
+            }
         }
     } else {
         quote! {
-            ::std::future::ready(::cabin::view::boundary::Boundary::from(#inner_ident(c, #args_idents)))
+            ::std::future::ready(c.any(::cabin::view::boundary::internal::Boundary::upgrade(
+                #inner_ident(c, #args_idents),
+                &BOUNDARY
+            )))
         }
     };
     let async_await = if asyncness.is_some() {

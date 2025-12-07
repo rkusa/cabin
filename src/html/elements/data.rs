@@ -10,8 +10,8 @@ use crate::void_element::VoidElement;
 impl Context {
     /// The `data` element represents a group of one or more columns in the [super::table] that is
     /// its parent, if it has a parent and that is a [super::table] element.
-    pub fn data(&self) -> VoidElement<'_, marker::Data> {
-        VoidElement::new(self, "data")
+    pub fn data(&self) -> VoidElement<marker::Data> {
+        VoidElement::new(self.acquire_renderer(), "data")
     }
 }
 
@@ -19,9 +19,9 @@ pub mod marker {
     pub struct Data;
 }
 
-impl<'v> Data for VoidElement<'v, marker::Data> {}
-impl<'v> Common for VoidElement<'v, marker::Data> {}
-impl<'v> Global for VoidElement<'v, marker::Data> {}
+impl Data for VoidElement<marker::Data> {}
+impl Common for VoidElement<marker::Data> {}
+impl Global for VoidElement<marker::Data> {}
 
 /// The `data` element represents a group of one or more columns in the [super::table] that is its
 /// parent, if it has a parent and that is a [super::table] element.

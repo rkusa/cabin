@@ -4,9 +4,11 @@ use std::hash::{Hash, Hasher};
 use http::{HeaderMap, HeaderValue};
 use twox_hash::XxHash32;
 
+use crate::Context;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
+use crate::renderer_pool::RendererPool;
 
 const DEFAULT_CAPACITY: usize = 256;
 
@@ -14,7 +16,7 @@ pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
-    is_update: bool,
+    renderer_pool: RendererPool,
 }
 
 pub struct Out {
@@ -23,10 +25,12 @@ pub struct Out {
 }
 
 impl Renderer {
-    pub fn new(is_update: bool) -> Self {
+    pub fn new(renderer_pool: RendererPool) -> Self {
         Self {
-            is_update,
-            ..Default::default()
+            out: String::with_capacity(DEFAULT_CAPACITY),
+            headers: Default::default(),
+            hasher: XxHash32::default(),
+            renderer_pool,
         }
     }
 
@@ -36,7 +40,7 @@ impl Renderer {
         self.hasher = XxHash32::default();
     }
 
-    pub fn append(&mut self, other: &mut Renderer) {
+    pub fn append(&mut self, mut other: Renderer) {
         if self.out.is_empty() {
             std::mem::swap(&mut self.out, &mut other.out);
         } else {
@@ -45,6 +49,20 @@ impl Renderer {
         self.headers.extend(std::mem::take(&mut other.headers));
         let hash = other.hasher.finish() as u32;
         self.hasher.write_u32(hash);
+
+        self.release_renderer(other);
+    }
+
+    pub(crate) fn acquire_renderer(&self) -> Renderer {
+        self.renderer_pool.acquire()
+    }
+
+    pub(crate) fn release_renderer(&self, renderer: Renderer) {
+        self.renderer_pool.release(renderer)
+    }
+
+    pub(crate) fn empty_context(&self) -> Context {
+        Context::from_pool(self.renderer_pool.clone())
     }
 
     pub fn end(self) -> Out {
@@ -55,14 +73,14 @@ impl Renderer {
     }
 
     pub fn is_update(&self) -> bool {
-        self.is_update
+        self.renderer_pool.is_update()
     }
 
     pub fn headers_mut(&mut self) -> &mut HeaderMap<HeaderValue> {
         &mut self.headers
     }
 
-    pub fn text(self) -> TextRenderer {
+    pub fn text<'r>(&'r mut self) -> TextRenderer<'r> {
         TextRenderer {
             hasher: Default::default(),
             renderer: self,
@@ -174,27 +192,15 @@ impl Renderer {
     }
 }
 
-impl Default for Renderer {
-    fn default() -> Self {
-        Self {
-            out: String::with_capacity(DEFAULT_CAPACITY),
-            headers: Default::default(),
-            hasher: XxHash32::default(),
-            is_update: false,
-        }
-    }
-}
-
-pub struct TextRenderer {
+pub struct TextRenderer<'r> {
     hasher: XxHash32,
-    renderer: Renderer,
+    renderer: &'r mut Renderer,
 }
 
-impl TextRenderer {
-    pub fn end(mut self) -> Renderer {
+impl<'r> TextRenderer<'r> {
+    pub fn end(self) {
         let hash = self.hasher.finish() as u32;
         self.renderer.hasher.write_u32(hash);
-        self.renderer
     }
 }
 
@@ -293,7 +299,7 @@ impl fmt::Write for WriteInto<'_> {
     }
 }
 
-impl Write for TextRenderer {
+impl<'r> Write for TextRenderer<'r> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.hasher.write(s.as_bytes());
         self.renderer.out.write_str(s)

@@ -4,9 +4,7 @@ use std::marker::PhantomData;
 
 use twox_hash::XxHash32;
 
-use super::RenderFuture;
 pub use super::View;
-use crate::context::Context;
 use crate::render::Renderer;
 
 pub trait IteratorExt
@@ -86,59 +84,31 @@ where
     }
 }
 
-impl<'v, Iter, FV, V> View<'v> for Map<Iter, FV>
+impl<Iter, FV, V> View for Map<Iter, FV>
 where
-    Iter: Iterator + 'v,
-    FV: FnMut(Iter::Item) -> V + 'v,
-    V: View<'v>,
+    Iter: Iterator,
+    FV: FnMut(Iter::Item) -> V,
+    V: View,
 {
-    fn render(mut self, c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
-        while let Some(i) = self.next() {
-            match i.render(c, r) {
-                RenderFuture::Ready(Some(Ok(renderer))) => r = renderer,
-                RenderFuture::Ready(Some(Err(err))) => return RenderFuture::Ready(Some(Err(err))),
-                RenderFuture::Ready(None) => return RenderFuture::Ready(None),
-                // Only return future upon the first future item is encountered
-                RenderFuture::Future(future) => {
-                    return RenderFuture::Future(Box::pin(async move {
-                        let mut r = future.await?;
-                        for i in self {
-                            r = i.render(c, r).await?;
-                        }
-                        Ok(r)
-                    }));
-                }
-            }
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        for i in self {
+            i.render(r)?;
         }
-        RenderFuture::Ready(Some(Ok(r)))
+        Ok(())
     }
 }
 
-impl<'v, Iter, FV, V> View<'v> for FilterMap<Iter, FV>
+impl<Iter, FV, V> View for FilterMap<Iter, FV>
 where
-    Iter: Iterator + Send + 'v,
-    FV: FnMut(Iter::Item) -> Option<V> + Send + 'v,
-    V: View<'v>,
+    Iter: Iterator + Send,
+    FV: FnMut(Iter::Item) -> Option<V> + Send,
+    V: View,
 {
-    fn render(mut self, c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
-        while let Some(i) = self.next() {
-            match i.render(c, r) {
-                RenderFuture::Ready(Some(Ok(renderer))) => r = renderer,
-                RenderFuture::Ready(Some(Err(err))) => return RenderFuture::Ready(Some(Err(err))),
-                RenderFuture::Ready(None) => return RenderFuture::Ready(None),
-                // Only return future upon the first future item is encountered
-                RenderFuture::Future(future) => {
-                    return RenderFuture::Future(Box::pin(async move {
-                        let mut r = future.await?;
-                        for i in self {
-                            r = i.render(c, r).await?;
-                        }
-                        Ok(r)
-                    }));
-                }
-            }
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        for i in self {
+            i.render(r)?;
         }
-        RenderFuture::Ready(Some(Ok(r)))
+        Ok(())
     }
 }
 
@@ -153,33 +123,19 @@ pub struct KeyedView<V> {
     view: V,
 }
 
-impl<'v, V> View<'v> for KeyedView<V>
+impl<V> View for KeyedView<V>
 where
-    V: View<'v>,
+    V: View,
 {
-    fn render(self, c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
         let parent_hasher = r.take_hasher();
         let hash_offset = r.start_element("cabin-keyed");
         r.attribute("id", self.key);
         r.start_content();
 
-        match self.view.render(c, r) {
-            RenderFuture::Ready(Some(Ok(mut r))) => {
-                r.end_element("cabin-keyed", false, hash_offset);
-                r.merge_hasher(parent_hasher);
-                RenderFuture::ready(Ok(r))
-            }
-            rf @ RenderFuture::Ready(_) => rf,
-            RenderFuture::Future(future) => RenderFuture::Future(Box::pin(async move {
-                match future.await {
-                    Ok(mut r) => {
-                        r.end_element("cabin-keyed", false, hash_offset);
-                        r.merge_hasher(parent_hasher);
-                        Ok(r)
-                    }
-                    Err(err) => Err(err),
-                }
-            })),
-        }
+        self.view.render(r)?;
+        r.end_element("cabin-keyed", false, hash_offset);
+        r.merge_hasher(parent_hasher);
+        Ok(())
     }
 }

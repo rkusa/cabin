@@ -53,7 +53,7 @@ pub trait Common: WithAttribute {
 pub struct Id(pub Cow<'static, str>);
 
 /// The various classes that the element belongs to.
-// FIXME: make it Copy
+// TODO: make it Copy
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Class(pub Cow<'static, str>);
 
@@ -89,7 +89,7 @@ impl Add<Class> for Class {
     type Output = Class;
 
     fn add(self, rhs: Class) -> Self::Output {
-        // FIXME: avoid allocation
+        // TODO: avoid allocation
         Class(Cow::Owned(format!("{self} {rhs}")))
     }
 }
@@ -99,7 +99,7 @@ impl Add<Option<Class>> for Class {
 
     fn add(self, rhs: Option<Class>) -> Self::Output {
         if let Some(rhs) = rhs {
-            // FIXME: avoid allocation
+            // TODO: avoid allocation
             Class(Cow::Owned(format!("{self} {rhs}")))
         } else {
             self
@@ -112,7 +112,7 @@ impl Add<Class> for Option<Class> {
 
     fn add(self, rhs: Class) -> Self::Output {
         if let Some(lhs) = self {
-            // FIXME: avoid allocation
+            // TODO: avoid allocation
             Class(Cow::Owned(format!("{lhs} {rhs}")))
         } else {
             rhs
@@ -122,7 +122,7 @@ impl Add<Class> for Option<Class> {
 
 impl AddAssign for Class {
     fn add_assign(&mut self, rhs: Self) {
-        // FIXME: avoid allocation
+        // TODO: avoid allocation
         *self = Class(Cow::Owned(format!("{self} {rhs}")))
     }
 }

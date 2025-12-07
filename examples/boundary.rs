@@ -7,7 +7,7 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     basic_document(
         c,
         c.fragment()
@@ -21,7 +21,7 @@ async fn app(c: &Context) -> impl View<'_> {
 struct Increment(usize);
 
 #[cabin::boundary(Increment)]
-fn counter(c: &Context, count: usize) -> Boundary<'_, usize> {
+fn counter(c: &Context, count: usize) -> Boundary<usize> {
     let count = c.event::<Increment>().unwrap_or(Increment(count)).0;
 
     c.button()

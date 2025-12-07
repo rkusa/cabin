@@ -4,41 +4,37 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-use http_error::HttpError;
 use serde::Serialize;
 
-use super::RenderFuture;
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute as _};
 use crate::context::Context;
 use crate::element::Element;
 use crate::error::InternalError;
-use crate::html::elements::script::Script as _;
+use crate::fragment::Fragment;
+use crate::html::elements::script::{Script as _, ScriptElement};
 use crate::render::Renderer;
-use crate::view::IntoView;
+use crate::view::AnyView;
 
-pub struct Boundary<'v, Args: 'static> {
+pub struct Boundary<Args: 'static> {
     boundary_ref: Option<&'static BoundaryRef<Args>>,
     // TODO: take reference to args to avoid cloning them?
     args: Option<Args>,
-    view: Box<dyn View<'v>>,
-    is_update: bool,
+    view: AnyView,
 }
 
-impl<'v, Args> Boundary<'v, Args> {
-    pub(crate) fn new(view: impl View<'v>, args: Args) -> Self {
+impl<Args> Boundary<Args> {
+    pub(crate) fn new(view: AnyView, args: Args) -> Self {
         Boundary {
             boundary_ref: None,
             args: Some(args),
-            view: view.boxed(),
-            is_update: false,
+            view,
         }
     }
 }
 
-type BoundaryFn<Args> = dyn Send
-    + Sync
-    + for<'v> Fn(&'v Context, Args) -> Pin<Box<dyn Future<Output = Boundary<'v, Args>> + 'v>>;
+type BoundaryFn<Args> =
+    dyn Send + Sync + for<'v> Fn(&'v Context, Args) -> Pin<Box<dyn Future<Output = AnyView> + 'v>>;
 
 pub struct BoundaryRef<Args: 'static> {
     pub id: &'static str,
@@ -60,8 +56,8 @@ impl<Args: 'static> BoundaryRef<Args> {
         Self { id, events, f }
     }
 
-    pub async fn with<'v>(&'static self, context: &'v Context, args: Args) -> Boundary<'v, Args> {
-        self::internal::Boundary::upgrade((self.f)(context, args).await, self).into_update()
+    pub async fn render(&'static self, context: &Context, args: Args) -> AnyView {
+        (self.f)(context, args).await
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -119,18 +115,13 @@ impl<Args: 'static> BoundaryRef<Args> {
             .unwrap();
         let context = Context::new(true)
             .with_event(event.event_id, crate::context::Payload::Json(event.payload));
-        let result = runtime.block_on(async move {
-            crate::view::FutureExt::into_view(self.with(&context, args))
-                .render(context.acquire_renderer())
-                .await
-        });
-        let crate::render::Out { html, headers } = match result {
-            Ok(result) => result.end(),
-            Err(err) => {
-                crate::wasm_exports::fail(format!("failed to render boundary: {err}"));
-                return 0;
-            }
-        };
+        let doc = runtime.block_on(self.render(&context, args));
+        let mut r = context.acquire_renderer();
+        if let Err(err) = doc.render(&mut r) {
+            crate::wasm_exports::fail(format!("failed to render boundary: {err}"));
+            return 0;
+        }
+        let crate::render::Out { html, headers } = r.end();
 
         if !headers.is_empty() {
             crate::wasm_exports::fail(format!(
@@ -160,14 +151,14 @@ pub mod internal {
         fn upgrade(self, id: &'static BoundaryRef<Args>) -> Self;
     }
 
-    impl<'v, Args> Boundary<Args> for super::Boundary<'v, Args> {
+    impl<Args> Boundary<Args> for super::Boundary<Args> {
         fn upgrade(mut self, boundary_ref: &'static BoundaryRef<Args>) -> Self {
             self.boundary_ref = Some(boundary_ref);
             self
         }
     }
 
-    impl<'v, Args, E> Boundary<Args> for Result<super::Boundary<'v, Args>, E> {
+    impl<Args, E> Boundary<Args> for Result<super::Boundary<Args>, E> {
         fn upgrade(mut self, boundary_ref: &'static BoundaryRef<Args>) -> Self {
             if let Ok(b) = &mut self {
                 b.boundary_ref = Some(boundary_ref);
@@ -177,49 +168,45 @@ pub mod internal {
     }
 }
 
-impl<'v, Args> Boundary<'v, Args> {
-    fn into_update(mut self) -> Self {
-        self.is_update = true;
-        self
-    }
-}
-
-impl<'v, Args> View<'v> for Boundary<'v, Args>
+impl<Args> View for Boundary<Args>
 where
-    Args: Clone + Serialize,
+    Args: Serialize,
 {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
         let Some(args) = self.args else {
-            return self.view.render(c, r);
+            return self.view.render(r);
         };
 
         // TODO: any way to make this a compile error?
         let Some(boundary_ref) = self.boundary_ref else {
-            return RenderFuture::Ready(Some(Err(InternalError::MissingBoundaryAttribute.into())));
+            return Err(InternalError::MissingBoundaryAttribute.into());
         };
 
         let state = match serde_json::to_string(&args) {
             Ok(state) => state,
             Err(err) => {
-                return RenderFuture::Ready(Some(Err(InternalError::Serialize {
+                return Err(InternalError::Serialize {
                     what: "boundary state".into(),
                     err,
                 }
-                .into())));
+                .into());
             }
         };
 
-        let body = c
-            .fragment()
-            .child(c.script().r#type("application/json").child(state))
+        let body = Fragment::new(r.acquire_renderer())
+            .child(
+                ScriptElement::new(r.acquire_renderer())
+                    .r#type("application/json")
+                    .child(state),
+            )
             .child(self.view);
-        if self.is_update {
-            View::render(body, c, r)
+        if r.is_update() {
+            View::render(body, r)
         } else {
-            Element::<()>::new(c, "cabin-boundary")
+            Element::<()>::new(r.acquire_renderer(), "cabin-boundary")
                 .with_attribute(boundary_ref)
                 .child(body)
-                .render(c, r)
+                .render(r)
         }
     }
 }
@@ -245,24 +232,5 @@ impl fmt::Display for EventsList {
         }
 
         Ok(())
-    }
-}
-
-impl<'v, Args, E> From<Result<Boundary<'v, Args>, E>> for Boundary<'v, Args>
-where
-    Args: Clone + Serialize,
-    Box<dyn HttpError + Send + 'static>: From<E>,
-    E: IntoView<'v> + 'v,
-{
-    fn from(result: Result<Boundary<'v, Args>, E>) -> Self {
-        match result {
-            Ok(b) => b,
-            Err(err) => Boundary {
-                boundary_ref: None,
-                args: None,
-                view: View::boxed(Err::<Boundary<'v, Args>, _>(err)),
-                is_update: false,
-            },
-        }
     }
 }

@@ -1,39 +1,67 @@
 use std::net::SocketAddr;
 use std::{error, fmt};
 
-use cabin::prelude::Context;
-use cabin::{View, basic_document};
+use cabin::basic_document;
+use cabin::prelude::*;
+use cabin::view::boundary::Boundary;
+use cabin::view::error::ErrorView;
 use http::{Request, StatusCode};
-use http_error::AnyHttpError;
+use http_error::{AnyHttpError, HttpError};
 use tokio::net::TcpListener;
 
 async fn app(c: &Context) -> impl View {
-    basic_document(c, health().await)
+    basic_document(c, boundary(c))
 }
 
-async fn health() -> Result<impl View, AnyHttpError> {
-    test_database_connection().await?;
-    Ok("Ok")
+#[cabin::boundary(())]
+fn boundary(c: &Context) -> Result<Boundary<()>, ExposedError> {
+    if c.event::<()>().is_some() {
+        return Err(ExposedError(
+            http_error::error::bad_request("BOUNDARY ERROR").into(),
+        ));
+    }
+
+    Ok(c.button().on_click(()).child("trigger error").boundary(()))
 }
 
 #[derive(Debug)]
-struct DbError;
+pub struct ExposedError(AnyHttpError);
 
-async fn test_database_connection() -> Result<(), DbError> {
-    Err(DbError)
-}
+impl ErrorView for ExposedError {
+    fn into_view(self, c: &Context) -> impl View {
+        c.b().child(text!("{self}"))
+    }
 
-impl error::Error for DbError {}
-
-impl fmt::Display for DbError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("error connecting to database")
+    fn should_render(&self) -> bool {
+        let status_code = self.0.status_code();
+        !status_code.is_redirection() && status_code != StatusCode::NO_CONTENT
     }
 }
 
-impl http_error::HttpError for DbError {
-    fn status_code(&self) -> http::StatusCode {
-        StatusCode::INTERNAL_SERVER_ERROR
+impl fmt::Display for ExposedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl error::Error for ExposedError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        self.0.source()
+    }
+}
+
+impl<E> From<E> for ExposedError
+where
+    E: Into<AnyHttpError>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
+}
+
+impl From<ExposedError> for Box<dyn HttpError + Send + 'static> {
+    fn from(err: ExposedError) -> Self {
+        err.0.into()
     }
 }
 

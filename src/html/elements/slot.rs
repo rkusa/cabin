@@ -10,8 +10,8 @@ use crate::element::Element;
 impl Context {
     /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
     /// represents its assigned nodes, if any, and its contents otherwise.
-    pub fn slot(&self) -> Element<'_, marker::Slot> {
-        Element::new(self, "slot")
+    pub fn slot(&self) -> Element<marker::Slot> {
+        Element::new(self.acquire_renderer(), "slot")
     }
 }
 
@@ -19,8 +19,8 @@ pub mod marker {
     pub struct Slot;
 }
 
-impl<'v> Slot for Element<'v, marker::Slot> {}
-impl<'v> Global for Element<'v, marker::Slot> {}
+impl Slot for Element<marker::Slot> {}
+impl Global for Element<marker::Slot> {}
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.

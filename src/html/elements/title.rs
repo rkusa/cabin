@@ -8,7 +8,6 @@ use crate::attribute::{Attribute, WithAttribute};
 use crate::context::Context;
 use crate::element::{Element, ElementContent};
 use crate::render::Renderer;
-use crate::view::RenderFuture;
 
 impl Context {
     /// The `title` element represents the document's title or name. Authors should use titles that
@@ -16,49 +15,49 @@ impl Context {
     /// history or bookmarks, or in search results. The document's title is often different from
     /// its first heading, since the first heading does not have to stand alone when taken out
     /// of context.
-    pub fn title(&self) -> TitleElement<'_> {
-        TitleElement(Element::new(self, "title"))
+    pub fn title(&self) -> TitleElement {
+        TitleElement(Element::new(self.acquire_renderer(), "title"))
     }
 }
 
-pub struct TitleElement<'v>(Element<'v, marker::Title>);
-pub struct TitleContent<'v>(ElementContent<'v>);
+pub struct TitleElement(Element<marker::Title>);
+pub struct TitleContent(ElementContent);
 
 mod marker {
     pub struct Title;
 }
 
-impl<'v> TitleElement<'v> {
-    pub fn child(self, child: impl Into<Cow<'v, str>>) -> TitleContent<'v> {
+impl TitleElement {
+    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> TitleContent {
         TitleContent(self.0.child(child.into()))
     }
 }
 
-impl<'v> TitleContent<'v> {
-    pub fn child(self, child: impl Into<Cow<'v, str>>) -> Self {
+impl TitleContent {
+    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
         Self(self.0.child(child.into()))
     }
 }
 
-impl<'v> View<'v> for TitleElement<'v> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(c, r)
+impl View for TitleElement {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        View::render(self.0, r)
     }
 }
 
-impl<'v> View<'v> for TitleContent<'v> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(c, r)
+impl View for TitleContent {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        self.0.render(r)
     }
 }
 
-impl<'v> WithAttribute for TitleElement<'v> {
+impl WithAttribute for TitleElement {
     fn with_attribute(self, attr: impl Attribute) -> Self {
         Self(self.0.with_attribute(attr))
     }
 }
 
-impl<'v> Global for TitleElement<'v> {}
+impl Global for TitleElement {}
 
 pub struct TitleUpdate(pub Cow<'static, str>);
 
@@ -66,8 +65,8 @@ pub fn title_update(title: impl Into<Cow<'static, str>>) -> TitleUpdate {
     TitleUpdate(title.into())
 }
 
-impl<'v> View<'v> for TitleUpdate {
-    fn render(self, _c: &'v Context, mut r: Renderer) -> RenderFuture<'v> {
+impl View for TitleUpdate {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
         if r.is_update() {
             match HeaderValue::from_str(&self.0) {
                 Ok(v) => {
@@ -80,6 +79,6 @@ impl<'v> View<'v> for TitleUpdate {
             }
         }
 
-        RenderFuture::ready(Ok(r))
+        Ok(())
     }
 }

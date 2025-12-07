@@ -3,21 +3,23 @@ use std::time::{Duration, Instant};
 
 use cabin::basic_document;
 use cabin::prelude::*;
-use cabin::view::FutureExt;
 use http::Request;
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     let start = Instant::now();
     basic_document(
         c,
         c.ul()
             .child(
-                c.fragment()
-                    .child(delayed(c, start, Duration::from_secs(1)).into_view())
-                    .child(delayed(c, start, Duration::from_secs(2)).into_view())
-                    .child(delayed(c, start, Duration::from_secs(3)).into_view())
-                    .await,
+                // You are responsible for making sure futures are handled concurrently if this is
+                // what you intent
+                futures_util::future::join_all([
+                    delayed(c, start, Duration::from_secs(1)),
+                    delayed(c, start, Duration::from_secs(2)),
+                    delayed(c, start, Duration::from_secs(3)),
+                ])
+                .await,
             )
             .child(text!(
                 "page finished after {:.2}",
@@ -26,7 +28,7 @@ async fn app(c: &Context) -> impl View<'_> {
     )
 }
 
-async fn delayed(c: &Context, start: Instant, delay: Duration) -> impl View<'_> {
+async fn delayed(c: &Context, start: Instant, delay: Duration) -> impl View {
     let started_at = start.elapsed();
     let inner = Instant::now();
     tokio::time::sleep(delay).await;

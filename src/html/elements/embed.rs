@@ -13,8 +13,8 @@ use crate::void_element::VoidElement;
 impl Context {
     /// The `embed` element provides an integration point for an external application or interactive
     /// content.
-    pub fn embed(&self) -> VoidElement<'_, marker::Embed> {
-        VoidElement::new(self, "embed")
+    pub fn embed(&self) -> VoidElement<marker::Embed> {
+        VoidElement::new(self.acquire_renderer(), "embed")
     }
 }
 
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Embed;
 }
 
-impl<'v> Embed for VoidElement<'v, marker::Embed> {}
-impl<'v> Common for VoidElement<'v, marker::Embed> {}
-impl<'v> Global for VoidElement<'v, marker::Embed> {}
-impl<'v> Aria for VoidElement<'v, marker::Embed> {}
+impl Embed for VoidElement<marker::Embed> {}
+impl Common for VoidElement<marker::Embed> {}
+impl Global for VoidElement<marker::Embed> {}
+impl Aria for VoidElement<marker::Embed> {}
 
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.

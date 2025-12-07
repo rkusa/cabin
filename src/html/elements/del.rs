@@ -11,8 +11,8 @@ use crate::element::Element;
 
 impl Context {
     /// The `del` element represents a removal from the document.
-    pub fn del(&self) -> Element<'_, marker::Del> {
-        Element::new(self, "del")
+    pub fn del(&self) -> Element<marker::Del> {
+        Element::new(self.acquire_renderer(), "del")
     }
 }
 
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Del;
 }
 
-impl<'v> Del for Element<'v, marker::Del> {}
-impl<'v> Common for Element<'v, marker::Del> {}
-impl<'v> Global for Element<'v, marker::Del> {}
-impl<'v> Aria for Element<'v, marker::Del> {}
+impl Del for Element<marker::Del> {}
+impl Common for Element<marker::Del> {}
+impl Global for Element<marker::Del> {}
+impl Aria for Element<marker::Del> {}
 
 /// The `del` element represents a removal from the document.
 pub trait Del: WithAttribute {

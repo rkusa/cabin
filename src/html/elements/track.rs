@@ -13,8 +13,8 @@ use crate::void_element::VoidElement;
 impl Context {
     /// The `track` element allows authors to specify explicit external timed text tracks for media
     /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
-    pub fn track(&self) -> VoidElement<'_, marker::Track> {
-        VoidElement::new(self, "track")
+    pub fn track(&self) -> VoidElement<marker::Track> {
+        VoidElement::new(self.acquire_renderer(), "track")
     }
 }
 
@@ -22,8 +22,8 @@ pub mod marker {
     pub struct Track;
 }
 
-impl<'v> Track for VoidElement<'v, marker::Track> {}
-impl<'v> Global for VoidElement<'v, marker::Track> {}
+impl Track for VoidElement<marker::Track> {}
+impl Global for VoidElement<marker::Track> {}
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.

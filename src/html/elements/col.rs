@@ -11,8 +11,8 @@ impl Context {
     /// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that
     /// itself has a parent that is a [super::table] element, then the `col` element represents
     /// one or more columns in the column group represented by that [super::colgroup::Colgroup].
-    pub fn col(&self) -> VoidElement<'_, marker::Col> {
-        VoidElement::new(self, "col")
+    pub fn col(&self) -> VoidElement<marker::Col> {
+        VoidElement::new(self.acquire_renderer(), "col")
     }
 }
 
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Col;
 }
 
-impl<'v> Col for VoidElement<'v, marker::Col> {}
-impl<'v> Common for VoidElement<'v, marker::Col> {}
-impl<'v> Global for VoidElement<'v, marker::Col> {}
-impl<'v> Aria for VoidElement<'v, marker::Col> {}
+impl Col for VoidElement<marker::Col> {}
+impl Common for VoidElement<marker::Col> {}
+impl Global for VoidElement<marker::Col> {}
+impl Aria for VoidElement<marker::Col> {}
 
 /// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that itself
 /// has a parent that is a [super::table] element, then the `col` element represents one or more

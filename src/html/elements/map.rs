@@ -12,8 +12,8 @@ use crate::element::Element;
 impl Context {
     /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
     /// descendants, defines an image map. The element represents its children.
-    pub fn map(&self) -> Element<'_, marker::Map> {
-        Element::new(self, "map")
+    pub fn map(&self) -> Element<marker::Map> {
+        Element::new(self.acquire_renderer(), "map")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Map;
 }
 
-impl<'v> Map for Element<'v, marker::Map> {}
-impl<'v> Common for Element<'v, marker::Map> {}
-impl<'v> Global for Element<'v, marker::Map> {}
-impl<'v> Aria for Element<'v, marker::Map> {}
+impl Map for Element<marker::Map> {}
+impl Common for Element<marker::Map> {}
+impl Global for Element<marker::Map> {}
+impl Aria for Element<marker::Map> {}
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.

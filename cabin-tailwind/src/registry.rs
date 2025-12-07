@@ -183,7 +183,7 @@ pub struct StyleSheet {
 }
 
 impl StyleSheet {
-    pub fn link<'v>(&'static self, context: &'v Context) -> impl View<'v> {
+    pub fn link(&'static self, context: &Context) -> impl View {
         use cabin::html::elements::common::Common;
         use cabin::html::elements::link::Link;
 

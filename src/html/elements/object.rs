@@ -16,8 +16,8 @@ use crate::element::Element;
 impl Context {
     /// The `object` element can represent an external resource, which, depending on the type of the
     /// resource, will either be treated as an image or as a child navigable.
-    pub fn object(&self) -> Element<'_, marker::Object> {
-        Element::new(self, "object")
+    pub fn object(&self) -> Element<marker::Object> {
+        Element::new(self.acquire_renderer(), "object")
     }
 }
 
@@ -25,10 +25,10 @@ pub mod marker {
     pub struct Object;
 }
 
-impl<'v> Object for Element<'v, marker::Object> {}
-impl<'v> Common for Element<'v, marker::Object> {}
-impl<'v> Global for Element<'v, marker::Object> {}
-impl<'v> Aria for Element<'v, marker::Object> {}
+impl Object for Element<marker::Object> {}
+impl Common for Element<marker::Object> {}
+impl Global for Element<marker::Object> {}
+impl Aria for Element<marker::Object> {}
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.

@@ -12,8 +12,8 @@ use crate::element::Element;
 impl Context {
     /// A `label` element that represents a caption that can be associated with a specific form
     /// control.
-    pub fn label(&self) -> Element<'_, marker::Label> {
-        Element::new(self, "label")
+    pub fn label(&self) -> Element<marker::Label> {
+        Element::new(self.acquire_renderer(), "label")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Label;
 }
 
-impl<'v> Label for Element<'v, marker::Label> {}
-impl<'v> Common for Element<'v, marker::Label> {}
-impl<'v> Global for Element<'v, marker::Label> {}
-impl<'v> Aria for Element<'v, marker::Label> {}
+impl Label for Element<marker::Label> {}
+impl Common for Element<marker::Label> {}
+impl Global for Element<marker::Label> {}
+impl Aria for Element<marker::Label> {}
 
 /// A `label` element that represents a caption that can be associated with a specific form
 /// control.

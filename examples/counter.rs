@@ -6,14 +6,14 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
-    basic_document(c, counter(&c, 0))
+async fn app(c: &Context) -> impl View {
+    basic_document(c, counter(c, 0))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
-fn counter(c: &Context, start_at: usize) -> impl View<'_> {
+fn counter(c: &Context, start_at: usize) -> impl View {
     let count = c.event::<Increment>().unwrap_or(Increment(start_at)).0;
 
     c.fragment()

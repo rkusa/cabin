@@ -15,8 +15,8 @@ use crate::html::list::SpaceSeparated;
 impl Context {
     /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
     /// address.
-    pub fn a(&self) -> Element<'_, marker::Anchor> {
-        Element::new(self, "a")
+    pub fn a(&self) -> Element<marker::Anchor> {
+        Element::new(self.acquire_renderer(), "a")
     }
 }
 
@@ -24,10 +24,10 @@ pub mod marker {
     pub struct Anchor;
 }
 
-impl<'v> Anchor for Element<'v, marker::Anchor> {}
-impl<'v> Common for Element<'v, marker::Anchor> {}
-impl<'v> Global for Element<'v, marker::Anchor> {}
-impl<'v> Aria for Element<'v, marker::Anchor> {}
+impl Anchor for Element<marker::Anchor> {}
+impl Common for Element<marker::Anchor> {}
+impl Global for Element<marker::Anchor> {}
+impl Aria for Element<marker::Anchor> {}
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.

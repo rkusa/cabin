@@ -14,8 +14,8 @@ use crate::element::Element;
 
 impl Context {
     /// An `audio` element represents a sound or audio stream.
-    pub fn audio(&self) -> Element<'_, marker::Audio> {
-        Element::new(self, "audio")
+    pub fn audio(&self) -> Element<marker::Audio> {
+        Element::new(self.acquire_renderer(), "audio")
     }
 }
 
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Audio;
 }
 
-impl<'v> Audio for Element<'v, marker::Audio> {}
-impl<'v> Common for Element<'v, marker::Audio> {}
-impl<'v> Global for Element<'v, marker::Audio> {}
-impl<'v> Aria for Element<'v, marker::Audio> {}
+impl Audio for Element<marker::Audio> {}
+impl Common for Element<marker::Audio> {}
+impl Global for Element<marker::Audio> {}
+impl Aria for Element<marker::Audio> {}
 
 /// An `audio` element represents a sound or audio stream.
 pub trait Audio: WithAttribute {

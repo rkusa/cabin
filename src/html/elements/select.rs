@@ -13,8 +13,8 @@ use crate::html::events::CustomEvent;
 
 impl Context {
     /// The `select` element represents a control for selecting amongst a set of [super::option]s.
-    pub fn select(&self) -> Element<'_, marker::Select> {
-        Element::new(self, "select")
+    pub fn select(&self) -> Element<marker::Select> {
+        Element::new(self.acquire_renderer(), "select")
     }
 }
 
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Select;
 }
 
-impl<'v> Select for Element<'v, marker::Select> {}
-impl<'v> Common for Element<'v, marker::Select> {}
-impl<'v> Global for Element<'v, marker::Select> {}
-impl<'v> Aria for Element<'v, marker::Select> {}
+impl Select for Element<marker::Select> {}
+impl Common for Element<marker::Select> {}
+impl Global for Element<marker::Select> {}
+impl Aria for Element<marker::Select> {}
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
 pub trait Select: WithAttribute {

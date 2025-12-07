@@ -14,8 +14,8 @@ use crate::html::list::SpaceSeparated;
 
 impl Context {
     /// The `th` element represents a header cell in a [super::table].
-    pub fn th(&self) -> Element<'_, marker::Th> {
-        Element::new(self, "th")
+    pub fn th(&self) -> Element<marker::Th> {
+        Element::new(self.acquire_renderer(), "th")
     }
 }
 
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Th;
 }
 
-impl<'v> Th for Element<'v, marker::Th> {}
-impl<'v> Common for Element<'v, marker::Th> {}
-impl<'v> Global for Element<'v, marker::Th> {}
-impl<'v> Aria for Element<'v, marker::Th> {}
+impl Th for Element<marker::Th> {}
+impl Common for Element<marker::Th> {}
+impl Global for Element<marker::Th> {}
+impl Aria for Element<marker::Th> {}
 
 /// The `th` element represents a header cell in a [super::table].
 pub trait Th: WithAttribute {

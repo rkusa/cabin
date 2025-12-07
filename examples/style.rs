@@ -8,7 +8,7 @@ use cabin_tailwind::registry::{StyleRegistry, StyleSheet};
 use http::Request;
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     let count = c.event::<usize>().unwrap_or(0);
 
     document(
@@ -33,7 +33,7 @@ async fn app(c: &Context) -> impl View<'_> {
     )
 }
 
-fn document<'v>(c: &'v Context, content: impl View<'v>) -> impl View<'v> {
+fn document(c: &Context, content: impl View) -> impl View {
     c.fragment().child(c.doctype()).child(
         c.html()
             .child(c.head().child(STYLE_SHEET.link(c)).child(cabin_scripts(c)))

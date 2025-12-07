@@ -12,8 +12,8 @@ use crate::html::list::SpaceSeparated;
 
 impl Context {
     /// The `td` element represents a data cell in a [super::table].
-    pub fn td(&self) -> Element<'_, marker::Td> {
-        Element::new(self, "td")
+    pub fn td(&self) -> Element<marker::Td> {
+        Element::new(self.acquire_renderer(), "td")
     }
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Td;
 }
 
-impl<'v> Td for Element<'v, marker::Td> {}
-impl<'v> Common for Element<'v, marker::Td> {}
-impl<'v> Global for Element<'v, marker::Td> {}
-impl<'v> Aria for Element<'v, marker::Td> {}
+impl Td for Element<marker::Td> {}
+impl Common for Element<marker::Td> {}
+impl Global for Element<marker::Td> {}
+impl Aria for Element<marker::Td> {}
 
 /// The `td` element represents a data cell in a [super::table].
 pub trait Td: WithAttribute {

@@ -13,56 +13,59 @@ use crate::attribute::{Attribute, WithAttribute};
 use crate::context::Context;
 use crate::element::{Element, ElementContent};
 use crate::render::{Escape, Renderer};
-use crate::view::RenderFuture;
 
 impl Context {
     /// A `script` element allows to include dynamic script and data blocks in their documents.
-    pub fn script(&self) -> ScriptElement<'_> {
-        ScriptElement(Element::new(self, "script"))
+    pub fn script(&self) -> ScriptElement {
+        ScriptElement(Element::new(self.acquire_renderer(), "script"))
     }
 }
 
-pub struct ScriptElement<'v>(Element<'v, marker::Script>);
-pub struct ScriptContent<'v>(ElementContent<'v>);
+pub struct ScriptElement(Element<marker::Script>);
+pub struct ScriptContent(ElementContent);
 
 mod marker {
     pub struct Script;
 }
 
-impl<'v> ScriptElement<'v> {
-    pub fn child(self, child: impl Into<Cow<'v, str>>) -> ScriptContent<'v> {
+impl ScriptElement {
+    pub fn new(renderer: Renderer) -> Self {
+        Self(Element::new(renderer, "script"))
+    }
+
+    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> ScriptContent {
         ScriptContent(self.0.child(ScriptEscape(child.into())))
     }
 }
 
-impl<'v> ScriptContent<'v> {
-    pub fn child(self, child: impl Into<Cow<'v, str>>) -> Self {
+impl ScriptContent {
+    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
         Self(self.0.child(ScriptEscape(child.into())))
     }
 }
 
-impl<'v> View<'v> for ScriptElement<'v> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(c, r)
+impl View for ScriptElement {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        View::render(self.0, r)
     }
 }
 
-impl<'v> View<'v> for ScriptContent<'v> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render(c, r)
+impl View for ScriptContent {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        self.0.render(r)
     }
 }
 
-impl<'v> WithAttribute for ScriptElement<'v> {
+impl WithAttribute for ScriptElement {
     fn with_attribute(self, attr: impl Attribute) -> Self {
         Self(self.0.with_attribute(attr))
     }
 }
 
-impl<'v> Script for ScriptElement<'v> {}
-impl<'v> Common for ScriptElement<'v> {}
-impl<'v> Global for ScriptElement<'v> {}
-impl<'v> Aria for ScriptElement<'v> {}
+impl Script for ScriptElement {}
+impl Common for ScriptElement {}
+impl Global for ScriptElement {}
+impl Aria for ScriptElement {}
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
 pub trait Script: WithAttribute {
@@ -155,18 +158,16 @@ pub struct Defer(pub bool);
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Integrity(pub Cow<'static, str>);
 
-pub struct ScriptEscape<'v>(pub Cow<'v, str>);
+pub struct ScriptEscape<'s>(pub Cow<'s, str>);
 
-impl<'v> View<'v> for ScriptEscape<'v> {
-    fn render(self, _c: &'v Context, r: Renderer) -> RenderFuture<'v> {
+impl<'s> View for ScriptEscape<'s> {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
         let mut txt = r.text();
-        RenderFuture::ready(
-            Escape::script(&mut txt)
-                .write_str(&self.0)
-                .map_err(crate::error::InternalError::from)
-                .map_err(crate::error::Error::from)
-                .and_then(|_| Ok(txt.end())),
-        )
+        Escape::script(&mut txt)
+            .write_str(&self.0)
+            .map_err(crate::error::InternalError::from)?;
+        txt.end();
+        Ok(())
     }
 }
 
@@ -174,38 +175,29 @@ impl<'v> View<'v> for ScriptEscape<'v> {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_script_escape() {
+    #[test]
+    fn test_script_escape() {
         let c = Context::new(false);
+
+        let mut r = c.acquire_renderer();
+        c.script().child("asd</script>").render(&mut r).unwrap();
         assert_eq!(
-            c.script()
-                .child("asd</script>")
-                .render(&Context::new(false), Renderer::new(false))
-                .await
-                .unwrap()
-                .end()
-                .html,
-            r#"<script hash="fc952de5">asd<\/script></script>"#
+            r.end().html,
+            r#"<script hash="54e06b9d">asd<\/script></script>"#
         );
+
+        let mut r = c.acquire_renderer();
+        c.script().child("asd<!--").render(&mut r).unwrap();
+        assert_eq!(r.end().html, r#"<script hash="7eef666f">asd<\!--</script>"#);
+
+        let mut r = c.acquire_renderer();
+        c.script()
+            .child(r#"if (1<2) alert("</script>")"#)
+            .render(&mut r)
+            .unwrap();
         assert_eq!(
-            c.script()
-                .child("asd<!--")
-                .render(&Context::new(false), Renderer::new(false))
-                .await
-                .unwrap()
-                .end()
-                .html,
-            r#"<script hash="e35fcf17">asd<\!--</script>"#
-        );
-        assert_eq!(
-            c.script()
-                .child(r#"if (1<2) alert("</script>")"#)
-                .render(&Context::new(false), Renderer::new(false))
-                .await
-                .unwrap()
-                .end()
-                .html,
-            r#"<script hash="b1fe71be">if (1<2) alert("<\/script>")</script>"#
+            r.end().html,
+            r#"<script hash="75755d90">if (1<2) alert("<\/script>")</script>"#
         );
     }
 }

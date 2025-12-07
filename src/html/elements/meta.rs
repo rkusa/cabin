@@ -14,8 +14,8 @@ impl Context {
     /// The `meta` element represents various kinds of metadata that cannot be expressed using the
     /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
     /// [super::script::script] elements.
-    pub fn meta(&self) -> Element<'_, marker::Meta> {
-        Element::new(self, "meta")
+    pub fn meta(&self) -> Element<marker::Meta> {
+        Element::new(self.acquire_renderer(), "meta")
     }
 }
 
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Meta;
 }
 
-impl<'v> Meta for Element<'v, marker::Meta> {}
-impl<'v> Common for Element<'v, marker::Meta> {}
-impl<'v> Global for Element<'v, marker::Meta> {}
-impl<'v> Aria for Element<'v, marker::Meta> {}
+impl Meta for Element<marker::Meta> {}
+impl Common for Element<marker::Meta> {}
+impl Global for Element<marker::Meta> {}
+impl Aria for Element<marker::Meta> {}
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and

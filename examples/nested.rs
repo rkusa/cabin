@@ -7,7 +7,7 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     basic_document(c, level(c, 1, 1, true))
 }
 
@@ -17,7 +17,7 @@ fn level(
     n: usize,
     count: usize,
     has_next_level: bool,
-) -> Boundary<'_, (usize, usize, bool)> {
+) -> Boundary<(usize, usize, bool)> {
     // Important to take the event here so that it is not available for the nested components
     // anymore
     let count = c
@@ -32,8 +32,8 @@ fn level(
     c.fieldset()
         .child(c.button().on_click(Increment).child(text!("{}", count)))
         .child(c.button().on_click(ToggleChild).child("toggle child"))
-        .child(has_next_level.then(|| level(c, n + 1, n + 1, n < 3).boxed()))
-        .boundary( (n, count, has_next_level))
+        .child(has_next_level.then(|| level(c, n + 1, n + 1, n < 3)))
+        .boundary((n, count, has_next_level))
 }
 
 #[derive(Clone, Copy, Event, Serialize, Deserialize)]

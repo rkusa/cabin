@@ -7,7 +7,7 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View<'_> {
+async fn app(c: &Context) -> impl View {
     let count = c.event::<Increment>().unwrap_or(Increment(3)).0;
 
     basic_document(
@@ -27,7 +27,7 @@ async fn app(c: &Context) -> impl View<'_> {
 }
 
 #[cabin::boundary]
-fn dialog(c: &Context, count: usize, open: bool) -> Boundary<'_, (usize, bool)> {
+fn dialog(c: &Context, count: usize, open: bool) -> Boundary<(usize, bool)> {
     let open = c.event::<Toggle>().unwrap_or(Toggle(open)).0;
 
     c.div()
@@ -45,7 +45,7 @@ fn dialog(c: &Context, count: usize, open: bool) -> Boundary<'_, (usize, bool)> 
                         .child(text!("Item {}", item))
                 }))
         }))
-        .boundary( (count, open))
+        .boundary((count, open))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]

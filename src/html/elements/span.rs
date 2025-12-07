@@ -6,8 +6,8 @@ use crate::element::Element;
 
 impl Context {
     // TODO:
-    pub fn span(&self) -> Element<'_, marker::Span> {
-        Element::new(self, "span")
+    pub fn span(&self) -> Element<marker::Span> {
+        Element::new(self.acquire_renderer(), "span")
     }
 }
 
@@ -15,6 +15,6 @@ pub mod marker {
     pub struct Span;
 }
 
-impl<'v> Common for Element<'v, marker::Span> {}
-impl<'v> Global for Element<'v, marker::Span> {}
-impl<'v> Aria for Element<'v, marker::Span> {}
+impl Common for Element<marker::Span> {}
+impl Global for Element<marker::Span> {}
+impl Aria for Element<marker::Span> {}

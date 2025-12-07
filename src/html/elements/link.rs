@@ -16,8 +16,8 @@ use crate::void_element::VoidElement;
 
 impl Context {
     /// A `link` element allows to link to other resources.
-    pub fn link(&self) -> VoidElement<'_, marker::Link> {
-        VoidElement::new(self, "link")
+    pub fn link(&self) -> VoidElement<marker::Link> {
+        VoidElement::new(self.acquire_renderer(), "link")
     }
 }
 
@@ -25,10 +25,10 @@ pub mod marker {
     pub struct Link;
 }
 
-impl<'v> Link for VoidElement<'v, marker::Link> {}
-impl<'v> Common for VoidElement<'v, marker::Link> {}
-impl<'v> Global for VoidElement<'v, marker::Link> {}
-impl<'v> Aria for VoidElement<'v, marker::Link> {}
+impl Link for VoidElement<marker::Link> {}
+impl Common for VoidElement<marker::Link> {}
+impl Global for VoidElement<marker::Link> {}
+impl Aria for VoidElement<marker::Link> {}
 
 /// A `link` element allows to link to other resources.
 pub trait Link: WithAttribute {

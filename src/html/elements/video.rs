@@ -15,8 +15,8 @@ use crate::element::Element;
 
 impl Context {
     /// A `video` element is used for playing videos or movies, and audio files with captions.
-    pub fn video(&self) -> Element<'_, marker::Video> {
-        Element::new(self, "video")
+    pub fn video(&self) -> Element<marker::Video> {
+        Element::new(self.acquire_renderer(), "video")
     }
 }
 
@@ -24,10 +24,10 @@ pub mod marker {
     pub struct Video;
 }
 
-impl<'v> Video for Element<'v, marker::Video> {}
-impl<'v> Common for Element<'v, marker::Video> {}
-impl<'v> Global for Element<'v, marker::Video> {}
-impl<'v> Aria for Element<'v, marker::Video> {}
+impl Video for Element<marker::Video> {}
+impl Common for Element<marker::Video> {}
+impl Global for Element<marker::Video> {}
+impl Aria for Element<marker::Video> {}
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
 pub trait Video: WithAttribute {

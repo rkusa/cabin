@@ -58,8 +58,8 @@ macro_rules! vanilla_element {
 
             impl $crate::context::Context {
                 #[doc = $doc]
-                pub fn $method_name(&self) -> $crate::element::Element<'_, marker::$marker_name> {
-                    $crate::element::Element::new(self, stringify!($method_name))
+                pub fn $method_name(&self) -> $crate::element::Element<marker::$marker_name> {
+                    $crate::element::Element::new(self.acquire_renderer(), stringify!($method_name))
                 }
             }
 
@@ -67,16 +67,16 @@ macro_rules! vanilla_element {
                 pub struct $marker_name;
             }
 
-            impl<'v> $crate::html::elements::common::Common
-                for $crate::element::Element<'v, marker::$marker_name>
+            impl $crate::html::elements::common::Common
+                for $crate::element::Element<marker::$marker_name>
             {
             }
-            impl<'v> $crate::html::elements::global::Global
-                for $crate::element::Element<'v, marker::$marker_name>
+            impl $crate::html::elements::global::Global
+                for $crate::element::Element<marker::$marker_name>
             {
             }
-            impl<'v> $crate::html::elements::aria::Aria
-                for $crate::element::Element<'v, marker::$marker_name>
+            impl $crate::html::elements::aria::Aria
+                for $crate::element::Element<marker::$marker_name>
             {
             }
         }
@@ -93,8 +93,11 @@ macro_rules! vanilla_void_element {
                 #[doc = $doc]
                 pub fn $method_name(
                     &self,
-                ) -> $crate::void_element::VoidElement<'_, marker::$marker_name> {
-                    $crate::void_element::VoidElement::new(self, stringify!($method_name))
+                ) -> $crate::void_element::VoidElement<marker::$marker_name> {
+                    $crate::void_element::VoidElement::new(
+                        self.acquire_renderer(),
+                        stringify!($method_name),
+                    )
                 }
             }
 
@@ -102,16 +105,16 @@ macro_rules! vanilla_void_element {
                 pub struct $marker_name;
             }
 
-            impl<'v> $crate::html::elements::common::Common
-                for $crate::void_element::VoidElement<'v, marker::$marker_name>
+            impl $crate::html::elements::common::Common
+                for $crate::void_element::VoidElement<marker::$marker_name>
             {
             }
-            impl<'v> $crate::html::elements::global::Global
-                for $crate::void_element::VoidElement<'v, marker::$marker_name>
+            impl $crate::html::elements::global::Global
+                for $crate::void_element::VoidElement<marker::$marker_name>
             {
             }
-            impl<'v> $crate::html::elements::aria::Aria
-                for $crate::void_element::VoidElement<'v, marker::$marker_name>
+            impl $crate::html::elements::aria::Aria
+                for $crate::void_element::VoidElement<marker::$marker_name>
             {
             }
         }

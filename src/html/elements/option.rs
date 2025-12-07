@@ -14,8 +14,8 @@ use crate::element::Element;
 impl Context {
     /// The `option` element represents an option in a [super::select] element or as part of a list
     /// of suggestions in a [super::datalist] element.
-    pub fn option(&self) -> Element<'_, marker::SelectOption> {
-        Element::new(self, "option")
+    pub fn option(&self) -> Element<marker::SelectOption> {
+        Element::new(self.acquire_renderer(), "option")
     }
 }
 
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct SelectOption;
 }
 
-impl<'v> SelectOption for Element<'v, marker::SelectOption> {}
-impl<'v> Common for Element<'v, marker::SelectOption> {}
-impl<'v> Global for Element<'v, marker::SelectOption> {}
-impl<'v> Aria for Element<'v, marker::SelectOption> {}
+impl SelectOption for Element<marker::SelectOption> {}
+impl Common for Element<marker::SelectOption> {}
+impl Global for Element<marker::SelectOption> {}
+impl Aria for Element<marker::SelectOption> {}
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.

@@ -2,48 +2,47 @@ use std::marker::PhantomData;
 
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
-use crate::context::Context;
 use crate::render::Renderer;
-use crate::view::RenderFuture;
-use crate::view::internal::{Internal, Render};
+use crate::view::internal::Internal;
 
-pub struct VoidElement<'v, El>(Internal<'v, VoidElementBuilder<'v, El>>);
+pub struct VoidElement<El>(Internal<VoidElementBuilder<El>>);
 
-struct VoidElementBuilder<'v, El> {
+struct VoidElementBuilder<El> {
     tag: &'static str,
     renderer: Renderer,
     hash_offset: Option<usize>,
-    marker: PhantomData<&'v El>,
+    marker: PhantomData<El>,
 }
 
-impl<'v, El> VoidElement<'v, El> {
-    pub fn new(context: &'v Context, tag: &'static str) -> Self {
-        let mut r = context.acquire_renderer();
-        let hash_offset = r.start_element(tag);
+impl<El> VoidElement<El> {
+    pub fn new(mut renderer: Renderer, tag: &'static str) -> Self {
+        let hash_offset = renderer.start_element(tag);
 
         Self(Internal::new(VoidElementBuilder {
             tag,
-            renderer: r,
+            renderer,
             hash_offset,
             marker: PhantomData,
         }))
     }
-}
 
-impl<'v, El> Render<'v> for VoidElementBuilder<'v, El> {
-    fn render(mut self) -> RenderFuture<'v> {
-        self.renderer.end_element(self.tag, true, self.hash_offset);
-        RenderFuture::ready(Ok(self.renderer))
+    fn render(self) -> Result<Renderer, crate::Error> {
+        let mut builder = self.0.take_builder()?;
+        builder
+            .renderer
+            .end_element(builder.tag, true, builder.hash_offset);
+        Ok(builder.renderer)
     }
 }
 
-impl<'v, El: 'v> View<'v> for VoidElement<'v, El> {
-    fn render(self, c: &'v Context, r: Renderer) -> RenderFuture<'v> {
-        self.0.render().merge_into(c, r)
+impl<El> View for VoidElement<El> {
+    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        r.append(self.render()?);
+        Ok(())
     }
 }
 
-impl<'v, El> WithAttribute for VoidElement<'v, El> {
+impl<El> WithAttribute for VoidElement<El> {
     fn with_attribute(mut self, attr: impl Attribute) -> Self {
         let Some(builder) = self.0.builder_mut() else {
             return self;
