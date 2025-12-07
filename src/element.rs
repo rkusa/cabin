@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
 use crate::fragment::Fragment;
 use crate::render::Renderer;
 use crate::view::AnyView;
 use crate::view::any::IntoAnyView;
 use crate::view::internal::Internal;
+use crate::{Context, View};
 
 pub struct Element<El>(Internal<ElementBuilder<El>>);
 
@@ -18,7 +18,8 @@ struct ElementBuilder<El> {
 }
 
 impl<El> Element<El> {
-    pub fn new(mut renderer: Renderer, tag: &'static str) -> Self {
+    pub fn new(tag: &'static str) -> Self {
+        let mut renderer = Context::acquire_renderer_from_task();
         let hash_offset = renderer.start_element(tag);
 
         Self(Internal::new(ElementBuilder {

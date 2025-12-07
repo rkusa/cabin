@@ -9,19 +9,19 @@ use http_body::Body;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-use crate::View;
 use crate::context::Context;
 use crate::error::InternalError;
 use crate::render::{Out, Renderer};
 use crate::server::{err_to_response, parse_body};
+use crate::view::View as _;
 use crate::view::boundary::BoundaryRef;
 
 type BoundaryHandler = dyn Send
     + Sync
     + for<'v> Fn(
         &'v str,
-        &'v Context,
-    ) -> Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + 'v>>;
+        &'v mut Renderer,
+    ) -> Pin<Box<dyn Future<Output = Result<(), crate::Error>> + 'v>>;
 
 #[derive(Default)]
 pub struct BoundaryRegistry {
@@ -41,13 +41,12 @@ impl BoundaryRegistry {
     {
         self.handler.insert(
             boundary.id,
-            Arc::new(|args_json: &str, c: &Context| {
+            Arc::new(|args_json: &str, r: &mut Renderer| {
                 Box::pin(async {
                     match serde_json::from_str(args_json) {
                         Ok(args) => {
-                            let mut r = c.acquire_renderer();
-                            boundary.render(c, args).await.render(&mut r)?;
-                            Ok(r)
+                            boundary.render(args).await.render(r)?;
+                            Ok(())
                         }
                         Err(err) => Err(InternalError::Deserialize {
                             what: "boundary state json".into(),
@@ -96,12 +95,17 @@ impl BoundaryRegistry {
             if let Some(multipart) = event.multipart {
                 context = context.with_multipart(multipart);
             }
-            let result = match handler(state_json.get(), &context).await {
-                Ok(result) => result,
+            let mut r = context.acquire_renderer();
+            let result = context
+                .run(async move {
+                    handler(state_json.get(), &mut r).await?;
+                    Ok(r.end())
+                })
+                .await;
+            let Out { html, headers } = match result {
+                Ok(out) => out,
                 Err(err) => return err_to_response(err),
             };
-
-            let Out { html, headers } = result.end();
             let mut res = Response::builder().header(
                 http::header::CONTENT_TYPE,
                 HeaderValue::from_static("text/html; charset=utf-8"),

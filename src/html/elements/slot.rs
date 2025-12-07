@@ -4,15 +4,12 @@ use cabin_macros::Attribute;
 
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
-    /// represents its assigned nodes, if any, and its contents otherwise.
-    pub fn slot(&self) -> Element<marker::Slot> {
-        Element::new(self.acquire_renderer(), "slot")
-    }
+/// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
+/// represents its assigned nodes, if any, and its contents otherwise.
+pub fn slot() -> Element<marker::Slot> {
+    Element::new("slot")
 }
 
 pub mod marker {

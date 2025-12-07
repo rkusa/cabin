@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use cabin::context::take_event;
 use cabin::prelude::*;
 use cabin::view::Boundary;
 use cabin::{Event, basic_document};
@@ -7,32 +8,25 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    basic_document(c, level(c, 1, 1, true))
+async fn app() -> impl View {
+    basic_document(level(1, 1, true))
 }
 
 #[cabin::boundary]
-fn level(
-    c: &Context,
-    n: usize,
-    count: usize,
-    has_next_level: bool,
-) -> Boundary<(usize, usize, bool)> {
+fn level(n: usize, count: usize, has_next_level: bool) -> Boundary<(usize, usize, bool)> {
     // Important to take the event here so that it is not available for the nested components
     // anymore
-    let count = c
-        .take_event::<Increment>()
+    let count = take_event::<Increment>()
         .map(|_| count + 1)
         .unwrap_or(count);
-    let has_next_level = c
-        .take_event::<ToggleChild>()
+    let has_next_level = take_event::<ToggleChild>()
         .map(|_| !has_next_level)
         .unwrap_or(has_next_level);
 
-    c.fieldset()
-        .child(c.button().on_click(Increment).child(text!("{}", count)))
-        .child(c.button().on_click(ToggleChild).child("toggle child"))
-        .child(has_next_level.then(|| level(c, n + 1, n + 1, n < 3)))
+    h::fieldset()
+        .child(h::button().on_click(Increment).child(h::text!("{}", count)))
+        .child(h::button().on_click(ToggleChild).child("toggle child"))
+        .child(has_next_level.then(|| level(n + 1, n + 1, n < 3)))
         .boundary((n, count, has_next_level))
 }
 

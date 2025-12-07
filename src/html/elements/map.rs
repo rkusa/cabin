@@ -6,15 +6,12 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
-    /// descendants, defines an image map. The element represents its children.
-    pub fn map(&self) -> Element<marker::Map> {
-        Element::new(self.acquire_renderer(), "map")
-    }
+/// The `map` element, in conjunction with an [super::img] element and any [super::area] element
+/// descendants, defines an image map. The element represents its children.
+pub fn map() -> Element<marker::Map> {
+    Element::new("map")
 }
 
 pub mod marker {

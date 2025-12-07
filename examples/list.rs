@@ -7,11 +7,8 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    basic_document(
-        c,
-        list(c, vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await,
-    )
+async fn app() -> impl View {
+    basic_document(list(vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await)
 }
 
 #[derive(Clone, Hash, Serialize, Deserialize)]
@@ -29,8 +26,8 @@ enum ItemsEvent {
 }
 
 #[cabin::boundary]
-async fn list(c: &Context, mut items: Vec<Item>) -> Boundary<Vec<Item>> {
-    if let Some(event) = c.take_event::<ItemsEvent>() {
+async fn list(mut items: Vec<Item>) -> Boundary<Vec<Item>> {
+    if let Some(event) = cabin::context::take_event::<ItemsEvent>() {
         match event {
             ItemsEvent::AddAbove => {
                 let id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
@@ -53,26 +50,31 @@ async fn list(c: &Context, mut items: Vec<Item>) -> Boundary<Vec<Item>> {
         }
     }
 
-    c.fragment()
+    h::fragment()
         .child(
-            c.div()
-                .child(c.button().on_click(ItemsEvent::AddAbove).child("add above")),
+            h::div().child(
+                h::button()
+                    .on_click(ItemsEvent::AddAbove)
+                    .child("add above"),
+            ),
         )
         .child(
-            c.ul()
-                .child(items.clone().into_iter().keyed(|item| item.id).map(|item| {
-                    c.li()
-                        .child(
-                            c.button()
-                                .on_click(ItemsEvent::Increment(item.id))
-                                .child(text!("{}", item.count)),
-                        )
-                        .child(c.button().on_click(ItemsEvent::Delete(item.id)).child("x"))
-                })),
+            h::ul().child(items.clone().into_iter().keyed(|item| item.id).map(|item| {
+                h::li()
+                    .child(
+                        h::button()
+                            .on_click(ItemsEvent::Increment(item.id))
+                            .child(h::text!("{}", item.count)),
+                    )
+                    .child(h::button().on_click(ItemsEvent::Delete(item.id)).child("x"))
+            })),
         )
         .child(
-            c.div()
-                .child(c.button().on_click(ItemsEvent::AddBelow).child("add below")),
+            h::div().child(
+                h::button()
+                    .on_click(ItemsEvent::AddBelow)
+                    .child("add below"),
+            ),
         )
         .boundary(items.clone())
 }

@@ -6,7 +6,6 @@ use std::hash::Hasher;
 
 use bytes::Bytes;
 use cabin::View;
-use cabin::prelude::Context;
 use twox_hash::XxHash32;
 
 use super::Utility;
@@ -183,12 +182,12 @@ pub struct StyleSheet {
 }
 
 impl StyleSheet {
-    pub fn link(&'static self, context: &Context) -> impl View {
+    pub fn link(&'static self) -> impl View {
         use cabin::html::elements::common::Common;
         use cabin::html::elements::link::Link;
+        use cabin::h;
 
-        context
-            .link()
+        h::link()
             .id("cabin-styles")
             .rel(cabin::html::elements::link::Rel::StyleSheet)
             .href(&self.path)

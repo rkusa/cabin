@@ -10,15 +10,12 @@ use super::iframe::Name;
 use super::input::{Height, Width};
 use super::link::Type;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `object` element can represent an external resource, which, depending on the type of the
-    /// resource, will either be treated as an image or as a child navigable.
-    pub fn object(&self) -> Element<marker::Object> {
-        Element::new(self.acquire_renderer(), "object")
-    }
+/// The `object` element can represent an external resource, which, depending on the type of the
+/// resource, will either be treated as an image or as a child navigable.
+pub fn object() -> Element<marker::Object> {
+    Element::new("object")
 }
 
 pub mod marker {

@@ -7,16 +7,13 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::event::Event;
 use crate::html::elements::form::OnSubmit;
 
-impl Context {
-    /// The `button` element represents a button labeled by its contents.
-    pub fn button(&self) -> Element<marker::Button> {
-        Element::new(self.acquire_renderer(), "button")
-    }
+/// The `button` element represents a button labeled by its contents.
+pub fn button() -> Element<marker::Button> {
+    Element::new("button")
 }
 
 pub mod marker {

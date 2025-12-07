@@ -10,18 +10,15 @@ use super::global::Global;
 use super::input::{AutoComplete, Dirname, MaxLength, MinLength, Placeholder, ReadOnly, Required};
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
-use crate::context::Context;
 use crate::element::{Element, ElementContent};
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 use crate::render::Renderer;
 
-impl Context {
-    /// The `textarea` element represents a multiline plain text edit control for the element's raw
-    /// value. The contents of the control represent the control's default value.
-    pub fn textarea(&self) -> TextareaElement {
-        TextareaElement(Element::new(self.acquire_renderer(), "textarea"))
-    }
+/// The `textarea` element represents a multiline plain text edit control for the element's raw
+/// value. The contents of the control represent the control's default value.
+pub fn textarea() -> TextareaElement {
+    TextareaElement(Element::new("textarea"))
 }
 
 pub struct TextareaElement(Element<marker::Textarea>);

@@ -6,15 +6,12 @@ use super::common::Common;
 use super::global::Global;
 use super::label::For;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The output element represents the result of a calculation performed by the application, or
-    /// the result of a user action.
-    pub fn output(&self) -> Element<marker::Output> {
-        Element::new(self.acquire_renderer(), "output")
-    }
+/// The output element represents the result of a calculation performed by the application, or
+/// the result of a user action.
+pub fn output() -> Element<marker::Output> {
+    Element::new("output")
 }
 
 pub mod marker {

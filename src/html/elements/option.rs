@@ -8,15 +8,12 @@ use super::common::Common;
 use super::global::Global;
 use super::input::Value;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `option` element represents an option in a [super::select] element or as part of a list
-    /// of suggestions in a [super::datalist] element.
-    pub fn option(&self) -> Element<marker::SelectOption> {
-        Element::new(self.acquire_renderer(), "option")
-    }
+/// The `option` element represents an option in a [super::select] element or as part of a list
+/// of suggestions in a [super::datalist] element.
+pub fn option() -> Element<marker::SelectOption> {
+    Element::new("option")
 }
 
 pub mod marker {

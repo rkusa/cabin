@@ -1,14 +1,13 @@
 use std::net::SocketAddr;
 use std::{error, fmt};
 
-use cabin::prelude::Context;
 use cabin::{View, basic_document};
 use http::{Request, StatusCode};
 use http_error::AnyHttpError;
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    basic_document(c, health().await)
+async fn app() -> impl View {
+    basic_document(health().await)
 }
 
 async fn health() -> Result<impl View, AnyHttpError> {

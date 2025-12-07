@@ -9,14 +9,11 @@ use super::global::Global;
 use super::link::CrossOrigin;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// An `audio` element represents a sound or audio stream.
-    pub fn audio(&self) -> Element<marker::Audio> {
-        Element::new(self.acquire_renderer(), "audio")
-    }
+/// An `audio` element represents a sound or audio stream.
+pub fn audio() -> Element<marker::Audio> {
+    Element::new("audio")
 }
 
 pub mod marker {

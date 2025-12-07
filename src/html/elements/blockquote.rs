@@ -6,16 +6,13 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `blockquote` element represents a section that is quoted from another source.
-    /// Content inside a `blockquote` must be quoted from another source, whose address, if it has
-    /// one, may be cited in the [Blockquote::cite] attribute.
-    pub fn blockquote(&self) -> Element<marker::Blockquote> {
-        Element::new(self.acquire_renderer(), "blockquote")
-    }
+/// The `blockquote` element represents a section that is quoted from another source.
+/// Content inside a `blockquote` must be quoted from another source, whose address, if it has
+/// one, may be cited in the [Blockquote::cite] attribute.
+pub fn blockquote() -> Element<marker::Blockquote> {
+    Element::new("blockquote")
 }
 
 pub mod marker {

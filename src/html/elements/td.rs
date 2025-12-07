@@ -6,15 +6,12 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::html::list::SpaceSeparated;
 
-impl Context {
-    /// The `td` element represents a data cell in a [super::table].
-    pub fn td(&self) -> Element<marker::Td> {
-        Element::new(self.acquire_renderer(), "td")
-    }
+/// The `td` element represents a data cell in a [super::table].
+pub fn td() -> Element<marker::Td> {
+    Element::new("td")
 }
 
 pub mod marker {

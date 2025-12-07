@@ -8,15 +8,12 @@ use super::common::Common;
 use super::global::Global;
 use super::td::{ColSpan, Headers, RowSpan};
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::html::list::SpaceSeparated;
 
-impl Context {
-    /// The `th` element represents a header cell in a [super::table].
-    pub fn th(&self) -> Element<marker::Th> {
-        Element::new(self.acquire_renderer(), "th")
-    }
+/// The `th` element represents a header cell in a [super::table].
+pub fn th() -> Element<marker::Th> {
+    Element::new("th")
 }
 
 pub mod marker {

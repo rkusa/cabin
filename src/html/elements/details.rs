@@ -3,15 +3,12 @@ use super::common::Common;
 use super::dialog::Open;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `details` element represents a disclosure widget from which the user can obtain
-    /// additional information or controls.
-    pub fn details(&self) -> Element<marker::Details> {
-        Element::new(self.acquire_renderer(), "details")
-    }
+/// The `details` element represents a disclosure widget from which the user can obtain
+/// additional information or controls.
+pub fn details() -> Element<marker::Details> {
+    Element::new("details")
 }
 
 pub mod marker {

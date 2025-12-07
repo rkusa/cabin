@@ -6,14 +6,11 @@ use super::common::Common;
 use super::global::Global;
 use super::time::Datetime;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `ins` element represents an addition to the document.
-    pub fn ins(&self) -> Element<marker::Ins> {
-        Element::new(self.acquire_renderer(), "ins")
-    }
+/// The `ins` element represents an addition to the document.
+pub fn ins() -> Element<marker::Ins> {
+    Element::new("ins")
 }
 
 pub mod marker {

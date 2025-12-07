@@ -2,15 +2,12 @@ use super::col::Span;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `colgroup` element represents a group of one or more columns in the [super::table] that
-    /// is its parent, if it has a parent and that is a [super::table] element.
-    pub fn colgroup(&self) -> Element<marker::Colgroup> {
-        Element::new(self.acquire_renderer(), "colgroup")
-    }
+/// The `colgroup` element represents a group of one or more columns in the [super::table] that
+/// is its parent, if it has a parent and that is a [super::table] element.
+pub fn colgroup() -> Element<marker::Colgroup> {
+    Element::new("colgroup")
 }
 
 pub mod marker {

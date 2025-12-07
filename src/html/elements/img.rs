@@ -12,14 +12,11 @@ use super::input::{Height, Width};
 use super::link::{CrossOrigin, FetchPriority};
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// An `img` element represents an image.
-    pub fn img(&self) -> VoidElement<marker::Img> {
-        VoidElement::new(self.acquire_renderer(), "img")
-    }
+/// An `img` element represents an image.
+pub fn img() -> VoidElement<marker::Img> {
+    VoidElement::new("img")
 }
 
 pub mod marker {

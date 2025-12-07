@@ -6,14 +6,11 @@ use super::common::Common;
 use super::global::Global;
 use super::option::Label;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `optgroup` element represents a group of [super::option] elements with a common label.
-    pub fn optgroup(&self) -> Element<marker::OptGroup> {
-        Element::new(self.acquire_renderer(), "optgroup")
-    }
+/// The `optgroup` element represents a group of [super::option] elements with a common label.
+pub fn optgroup() -> Element<marker::OptGroup> {
+    Element::new("optgroup")
 }
 
 pub mod marker {

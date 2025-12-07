@@ -88,8 +88,7 @@ where
             Ok(v) => v.render(r),
             Err(err) => {
                 if err.should_render() {
-                    let c = r.empty_context();
-                    err.into_view(&c).render(r)
+                    err.into_view().render(r)
                 } else {
                     Err(crate::Error::from(
                         Box::<dyn HttpError + Send + 'static>::from(err),

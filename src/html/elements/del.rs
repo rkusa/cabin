@@ -6,14 +6,11 @@ use super::common::Common;
 use super::global::Global;
 use super::time::Datetime;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `del` element represents a removal from the document.
-    pub fn del(&self) -> Element<marker::Del> {
-        Element::new(self.acquire_renderer(), "del")
-    }
+/// The `del` element represents a removal from the document.
+pub fn del() -> Element<marker::Del> {
+    Element::new("del")
 }
 
 pub mod marker {

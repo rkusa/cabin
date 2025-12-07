@@ -7,15 +7,12 @@ use super::global::Global;
 use super::option::Label;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// The `track` element allows authors to specify explicit external timed text tracks for media
-    /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
-    pub fn track(&self) -> VoidElement<marker::Track> {
-        VoidElement::new(self.acquire_renderer(), "track")
-    }
+/// The `track` element allows authors to specify explicit external timed text tracks for media
+/// ([super::audio], [super::video]) elements. It does not represent anything on its own.
+pub fn track() -> VoidElement<marker::Track> {
+    VoidElement::new("track")
 }
 
 pub mod marker {

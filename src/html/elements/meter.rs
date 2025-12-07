@@ -7,16 +7,13 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `meter` element represents a scalar measurement within a known range, or a fractional
-    /// value; for example disk usage, the relevance of a query result, or the fraction of a
-    /// voting population to have selected a particular candidate.
-    pub fn meter(&self) -> Element<marker::Meter> {
-        Element::new(self.acquire_renderer(), "meter")
-    }
+/// The `meter` element represents a scalar measurement within a known range, or a fractional
+/// value; for example disk usage, the relevance of a query result, or the fraction of a
+/// voting population to have selected a particular candidate.
+pub fn meter() -> Element<marker::Meter> {
+    Element::new("meter")
 }
 
 pub mod marker {

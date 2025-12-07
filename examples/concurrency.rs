@@ -6,33 +6,32 @@ use cabin::prelude::*;
 use http::Request;
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
+async fn app() -> impl View {
     let start = Instant::now();
     basic_document(
-        c,
-        c.ul()
+        h::ul()
             .child(
                 // You are responsible for making sure futures are handled concurrently if this is
                 // what you intent
                 futures_util::future::join_all([
-                    delayed(c, start, Duration::from_secs(1)),
-                    delayed(c, start, Duration::from_secs(2)),
-                    delayed(c, start, Duration::from_secs(3)),
+                    delayed(start, Duration::from_secs(1)),
+                    delayed(start, Duration::from_secs(2)),
+                    delayed(start, Duration::from_secs(3)),
                 ])
                 .await,
             )
-            .child(text!(
+            .child(h::text!(
                 "page finished after {:.2}",
                 start.elapsed().as_secs_f64()
             )),
     )
 }
 
-async fn delayed(c: &Context, start: Instant, delay: Duration) -> impl View {
+async fn delayed(start: Instant, delay: Duration) -> impl View {
     let started_at = start.elapsed();
     let inner = Instant::now();
     tokio::time::sleep(delay).await;
-    c.li().child(text!(
+    h::li().child(h::text!(
         "delayed for {:?}, started after {:.2}, took {:.2}, finished after {:.2}",
         delay,
         started_at.as_secs_f64(),

@@ -6,15 +6,12 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// A `label` element that represents a caption that can be associated with a specific form
-    /// control.
-    pub fn label(&self) -> Element<marker::Label> {
-        Element::new(self.acquire_renderer(), "label")
-    }
+/// A `label` element that represents a caption that can be associated with a specific form
+/// control.
+pub fn label() -> Element<marker::Label> {
+    Element::new("label")
 }
 
 pub mod marker {

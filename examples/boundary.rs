@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use cabin::context::event;
 use cabin::prelude::*;
 use cabin::view::boundary::Boundary;
 use cabin::{Event, basic_document};
@@ -7,13 +8,12 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
+async fn app() -> impl View {
     basic_document(
-        c,
-        c.fragment()
-            .child(counter(c, 1))
-            .child(counter(c, 2))
-            .child(c.button().on_click(()).child("triger whole page update")),
+        h::fragment()
+            .child(counter(1))
+            .child(counter(2))
+            .child(h::button().on_click(()).child("triger whole page update")),
     )
 }
 
@@ -21,12 +21,12 @@ async fn app(c: &Context) -> impl View {
 struct Increment(usize);
 
 #[cabin::boundary(Increment)]
-fn counter(c: &Context, count: usize) -> Boundary<usize> {
-    let count = c.event::<Increment>().unwrap_or(Increment(count)).0;
+fn counter(count: usize) -> Boundary<usize> {
+    let count = event::<Increment>().unwrap_or(Increment(count)).0;
 
-    c.button()
+    h::button()
         .on_click(Increment(count + 1))
-        .child(text!("{}", count))
+        .child(h::text!("{}", count))
         .boundary(count)
 }
 

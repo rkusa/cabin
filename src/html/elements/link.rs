@@ -10,15 +10,12 @@ use super::common::Common;
 use super::global::Global;
 use super::img::Sizes;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::html::list::SpaceSeparated;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// A `link` element allows to link to other resources.
-    pub fn link(&self) -> VoidElement<marker::Link> {
-        VoidElement::new(self.acquire_renderer(), "link")
-    }
+/// A `link` element allows to link to other resources.
+pub fn link() -> VoidElement<marker::Link> {
+    VoidElement::new("link")
 }
 
 pub mod marker {

@@ -10,14 +10,11 @@ use super::input::{Height, Width};
 use super::link::CrossOrigin;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// A `video` element is used for playing videos or movies, and audio files with captions.
-    pub fn video(&self) -> Element<marker::Video> {
-        Element::new(self.acquire_renderer(), "video")
-    }
+/// A `video` element is used for playing videos or movies, and audio files with captions.
+pub fn video() -> Element<marker::Video> {
+    Element::new("video")
 }
 
 pub mod marker {

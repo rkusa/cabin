@@ -4,14 +4,11 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
-    pub fn dialog(&self) -> Element<marker::Dialog> {
-        Element::new(self.acquire_renderer(), "dialog")
-    }
+/// A `dialog` element represents a transitory part of an application (e.g. dialog box).
+pub fn dialog() -> Element<marker::Dialog> {
+    Element::new("dialog")
 }
 
 pub mod marker {

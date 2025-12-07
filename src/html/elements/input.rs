@@ -16,15 +16,12 @@ use super::global::Global;
 use super::img::Alt;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 use crate::void_element::VoidElement;
 
-impl Context {
-    pub fn input(&self) -> VoidElement<marker::Input> {
-        VoidElement::new(self.acquire_renderer(), "input")
-    }
+pub fn input() -> VoidElement<marker::Input> {
+    VoidElement::new("input")
 }
 
 pub mod marker {

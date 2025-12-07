@@ -9,16 +9,13 @@ use super::common::Common;
 use super::global::Global;
 use super::img::Alt;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::html::list::SpaceSeparated;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// The `area` element represents either a hyperlink with some text and a corresponding area on
-    /// an image map, or a dead area on an image map.
-    pub fn area(&self) -> VoidElement<marker::Area> {
-        VoidElement::new(self.acquire_renderer(), "area")
-    }
+/// The `area` element represents either a hyperlink with some text and a corresponding area on
+/// an image map, or a dead area on an image map.
+pub fn area() -> VoidElement<marker::Area> {
+    VoidElement::new("area")
 }
 
 pub mod marker {

@@ -7,16 +7,13 @@ use super::link::Type;
 use super::meta::Media;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// The `source` element allows authors to specify multiple alternative source sets for
-    /// [super::img] elements or multiple alternative media resources for media elements. It
-    /// does not represent anything on its own.
-    pub fn source(&self) -> VoidElement<marker::Source> {
-        VoidElement::new(self.acquire_renderer(), "source")
-    }
+/// The `source` element allows authors to specify multiple alternative source sets for
+/// [super::img] elements or multiple alternative media resources for media elements. It
+/// does not represent anything on its own.
+pub fn source() -> VoidElement<marker::Source> {
+    VoidElement::new("source")
 }
 
 pub mod marker {

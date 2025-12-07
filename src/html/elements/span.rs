@@ -1,14 +1,11 @@
 use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    // TODO:
-    pub fn span(&self) -> Element<marker::Span> {
-        Element::new(self.acquire_renderer(), "span")
-    }
+// TODO:
+pub fn span() -> Element<marker::Span> {
+    Element::new("span")
 }
 
 pub mod marker {

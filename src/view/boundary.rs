@@ -6,15 +6,13 @@ use std::pin::Pin;
 
 use serde::Serialize;
 
-use crate::View;
 use crate::attribute::{Attribute, WithAttribute as _};
-use crate::context::Context;
 use crate::element::Element;
 use crate::error::InternalError;
-use crate::fragment::Fragment;
-use crate::html::elements::script::{Script as _, ScriptElement};
+use crate::html::elements::script::Script as _;
 use crate::render::Renderer;
 use crate::view::AnyView;
+use crate::{View, h};
 
 pub struct Boundary<Args: 'static> {
     boundary_ref: Option<&'static BoundaryRef<Args>>,
@@ -33,8 +31,7 @@ impl<Args> Boundary<Args> {
     }
 }
 
-type BoundaryFn<Args> =
-    dyn Send + Sync + for<'v> Fn(&'v Context, Args) -> Pin<Box<dyn Future<Output = AnyView> + 'v>>;
+type BoundaryFn<Args> = dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = AnyView>>>;
 
 pub struct BoundaryRef<Args: 'static> {
     pub id: &'static str,
@@ -56,8 +53,8 @@ impl<Args: 'static> BoundaryRef<Args> {
         Self { id, events, f }
     }
 
-    pub async fn render(&'static self, context: &Context, args: Args) -> AnyView {
-        (self.f)(context, args).await
+    pub async fn render(&'static self, args: Args) -> AnyView {
+        (self.f)(args).await
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -113,15 +110,21 @@ impl<Args: 'static> BoundaryRef<Args> {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
-        let context = Context::new(true)
+        let context = crate::Context::new(true)
             .with_event(event.event_id, crate::context::Payload::Json(event.payload));
-        let doc = runtime.block_on(self.render(&context, args));
         let mut r = context.acquire_renderer();
-        if let Err(err) = doc.render(&mut r) {
-            crate::wasm_exports::fail(format!("failed to render boundary: {err}"));
-            return 0;
-        }
-        let crate::render::Out { html, headers } = r.end();
+        let result = runtime.block_on(context.run(async move {
+            let doc = self.render(args).await;
+            doc.render(&mut r)?;
+            Ok(r.end())
+        }));
+        let crate::render::Out { html, headers } = match result {
+            Ok(out) => out,
+            Err(err) => {
+                crate::wasm_exports::fail(format!("failed to render boundary: {err}"));
+                return 0;
+            }
+        };
 
         if !headers.is_empty() {
             crate::wasm_exports::fail(format!(
@@ -193,17 +196,13 @@ where
             }
         };
 
-        let body = Fragment::new(r.acquire_renderer())
-            .child(
-                ScriptElement::new(r.acquire_renderer())
-                    .r#type("application/json")
-                    .child(state),
-            )
+        let body = h::fragment()
+            .child(h::script().r#type("application/json").child(state))
             .child(self.view);
         if r.is_update() {
             View::render(body, r)
         } else {
-            Element::<()>::new(r.acquire_renderer(), "cabin-boundary")
+            Element::<()>::new("cabin-boundary")
                 .with_attribute(boundary_ref)
                 .child(body)
                 .render(r)

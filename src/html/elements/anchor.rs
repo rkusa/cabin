@@ -8,16 +8,13 @@ use super::common::Common;
 use super::global::Global;
 use super::link::Type;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::html::list::SpaceSeparated;
 
-impl Context {
-    /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
-    /// address.
-    pub fn a(&self) -> Element<marker::Anchor> {
-        Element::new(self.acquire_renderer(), "a")
-    }
+/// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
+/// address.
+pub fn a() -> Element<marker::Anchor> {
+    Element::new("a")
 }
 
 pub mod marker {

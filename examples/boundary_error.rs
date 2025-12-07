@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 use std::{error, fmt};
 
 use cabin::basic_document;
+use cabin::context::event;
 use cabin::prelude::*;
 use cabin::view::boundary::Boundary;
 use cabin::view::error::ErrorView;
@@ -9,27 +10,27 @@ use http::{Request, StatusCode};
 use http_error::{AnyHttpError, HttpError};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    basic_document(c, boundary(c))
+async fn app() -> impl View {
+    basic_document(boundary())
 }
 
 #[cabin::boundary(())]
-fn boundary(c: &Context) -> Result<Boundary<()>, ExposedError> {
-    if c.event::<()>().is_some() {
+fn boundary() -> Result<Boundary<()>, ExposedError> {
+    if event::<()>().is_some() {
         return Err(ExposedError(
             http_error::error::bad_request("BOUNDARY ERROR").into(),
         ));
     }
 
-    Ok(c.button().on_click(()).child("trigger error").boundary(()))
+    Ok(h::button().on_click(()).child("trigger error").boundary(()))
 }
 
 #[derive(Debug)]
 pub struct ExposedError(AnyHttpError);
 
 impl ErrorView for ExposedError {
-    fn into_view(self, c: &Context) -> impl View {
-        c.b().child(text!("{self}"))
+    fn into_view(self) -> impl View {
+        h::b().child(h::text!("{self}"))
     }
 
     fn should_render(&self) -> bool {

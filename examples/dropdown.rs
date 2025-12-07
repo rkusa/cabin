@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use cabin::context::event;
 use cabin::prelude::*;
 use cabin::view::{Boundary, IteratorExt};
 use cabin::{Event, basic_document};
@@ -7,42 +8,41 @@ use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    let count = c.event::<Increment>().unwrap_or(Increment(3)).0;
+async fn app() -> impl View {
+    let count = event::<Increment>().unwrap_or(Increment(3)).0;
 
     basic_document(
-        c,
-        c.fragment()
+        h::fragment()
             // Incrementing the counter will cause the dialog to change outside of its boundary,
             // which causes its internal state to revert to its default (closed). This
             // is intentional.
             .child(
-                c.button()
+                h::button()
                     .on_click(Increment(count + 1))
                     .style("min-width:40px")
-                    .child(text!("{}", count)),
+                    .child(h::text!("{}", count)),
             )
-            .child(dialog(c, count, false)),
+            .child(dialog(count, false)),
     )
 }
 
 #[cabin::boundary]
-fn dialog(c: &Context, count: usize, open: bool) -> Boundary<(usize, bool)> {
-    let open = c.event::<Toggle>().unwrap_or(Toggle(open)).0;
+fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
+    let open = event::<Toggle>().unwrap_or(Toggle(open)).0;
 
-    c.div()
+    h::div()
         .style("display:inline;position:relative")
-        .child(c.button().on_click(Toggle(!open)).child("open"))
+        .child(h::button().on_click(Toggle(!open)).child("open"))
         .child(open.then(|| {
-            c.ul()
+            h::ul()
                 .style(
                     "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;\
                      padding:4px;",
                 )
                 .child((0..count).keyed(|item| *item).map(|item| {
-                    c.li()
+                    h::li()
                         .style("white-space:nowrap;")
-                        .child(text!("Item {}", item))
+                        .child(h::text!("Item {}", item))
                 }))
         }))
         .boundary((count, open))

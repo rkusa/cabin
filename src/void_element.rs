@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
 use crate::render::Renderer;
 use crate::view::internal::Internal;
+use crate::{Context, View};
 
 pub struct VoidElement<El>(Internal<VoidElementBuilder<El>>);
 
@@ -15,7 +15,8 @@ struct VoidElementBuilder<El> {
 }
 
 impl<El> VoidElement<El> {
-    pub fn new(mut renderer: Renderer, tag: &'static str) -> Self {
+    pub fn new(tag: &'static str) -> Self {
+        let mut renderer = Context::acquire_renderer_from_task();
         let hash_offset = renderer.start_element(tag);
 
         Self(Internal::new(VoidElementBuilder {

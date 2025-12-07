@@ -10,15 +10,12 @@ use super::global::Global;
 use super::input::{Height, Width};
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::html::list::SpaceSeparated;
 
-impl Context {
-    /// The `iframe` element represents its content navigable.
-    pub fn iframe(&self) -> Element<marker::IFrame> {
-        Element::new(self.acquire_renderer(), "iframe")
-    }
+/// The `iframe` element represents its content navigable.
+pub fn iframe() -> Element<marker::IFrame> {
+    Element::new("iframe")
 }
 
 pub mod marker {

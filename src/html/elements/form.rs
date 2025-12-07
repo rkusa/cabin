@@ -10,19 +10,16 @@ use super::common::Common;
 use super::global::Global;
 use super::input::AutoComplete;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 use crate::html::list::SpaceSeparated;
 
-impl Context {
-    /// The `form` element represents a hyperlink that can be manipulated through a collection of
-    /// form-associated elements, some of which can represent editable values that can be submitted
-    /// to a server for processing.
-    pub fn form(&self) -> Element<marker::Form> {
-        Element::new(self.acquire_renderer(), "form")
-    }
+/// The `form` element represents a hyperlink that can be manipulated through a collection of
+/// form-associated elements, some of which can represent editable values that can be submitted
+/// to a server for processing.
+pub fn form() -> Element<marker::Form> {
+    Element::new("form")
 }
 
 pub mod marker {

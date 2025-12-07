@@ -5,14 +5,11 @@ use super::blockquote::Cite;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `q` element represents some phrasing content quoted from another source.
-    pub fn q(&self) -> Element<marker::Q> {
-        Element::new(self.acquire_renderer(), "q")
-    }
+/// The `q` element represents some phrasing content quoted from another source.
+pub fn q() -> Element<marker::Q> {
+    Element::new("q")
 }
 
 pub mod marker {

@@ -10,15 +10,12 @@ use super::global::Global;
 use super::link::{Blocking, CrossOrigin, FetchPriority, Type};
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
-use crate::context::Context;
 use crate::element::{Element, ElementContent};
 use crate::render::{Escape, Renderer};
 
-impl Context {
-    /// A `script` element allows to include dynamic script and data blocks in their documents.
-    pub fn script(&self) -> ScriptElement {
-        ScriptElement(Element::new(self.acquire_renderer(), "script"))
-    }
+/// A `script` element allows to include dynamic script and data blocks in their documents.
+pub fn script() -> ScriptElement {
+    ScriptElement(Element::new("script"))
 }
 
 pub struct ScriptElement(Element<marker::Script>);
@@ -29,8 +26,8 @@ mod marker {
 }
 
 impl ScriptElement {
-    pub fn new(renderer: Renderer) -> Self {
-        Self(Element::new(renderer, "script"))
+    pub fn new() -> Self {
+        Self(Element::new("script"))
     }
 
     pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> ScriptContent {
@@ -173,31 +170,40 @@ impl<'s> View for ScriptEscape<'s> {
 
 #[cfg(test)]
 mod tests {
+    use crate::Context;
+    use crate::h;
+
     use super::*;
 
-    #[test]
-    fn test_script_escape() {
+    #[tokio::test]
+    async fn test_script_escape() {
         let c = Context::new(false);
 
-        let mut r = c.acquire_renderer();
-        c.script().child("asd</script>").render(&mut r).unwrap();
-        assert_eq!(
-            r.end().html,
-            r#"<script hash="54e06b9d">asd<\/script></script>"#
-        );
+        c.run(async {
+            let mut r = Context::acquire_renderer_from_task();
+            h::script().child("asd</script>").render(&mut r).unwrap();
+            assert_eq!(
+                r.end().html,
+                r#"<script hash="54e06b9d">asd<\/script></script>"#
+            );
 
-        let mut r = c.acquire_renderer();
-        c.script().child("asd<!--").render(&mut r).unwrap();
-        assert_eq!(r.end().html, r#"<script hash="7eef666f">asd<\!--</script>"#);
+            let mut r = Context::acquire_renderer_from_task();
+            h::script().child("asd<!--").render(&mut r).unwrap();
+            assert_eq!(r.end().html, r#"<script hash="7eef666f">asd<\!--</script>"#);
 
-        let mut r = c.acquire_renderer();
-        c.script()
-            .child(r#"if (1<2) alert("</script>")"#)
-            .render(&mut r)
-            .unwrap();
-        assert_eq!(
-            r.end().html,
-            r#"<script hash="75755d90">if (1<2) alert("<\/script>")</script>"#
-        );
+            let mut r = Context::acquire_renderer_from_task();
+            h::script()
+                .child(r#"if (1<2) alert("</script>")"#)
+                .render(&mut r)
+                .unwrap();
+            assert_eq!(
+                r.end().html,
+                r#"<script hash="75755d90">if (1<2) alert("<\/script>")</script>"#
+            );
+
+            Ok(())
+        })
+        .await
+        .unwrap();
     }
 }

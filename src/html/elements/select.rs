@@ -6,16 +6,13 @@ use super::common::Common;
 use super::global::Global;
 use super::input::{AutoComplete, Multiple, Required, Size};
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 
-impl Context {
-    /// The `select` element represents a control for selecting amongst a set of [super::option]s.
-    pub fn select(&self) -> Element<marker::Select> {
-        Element::new(self.acquire_renderer(), "select")
-    }
+/// The `select` element represents a control for selecting amongst a set of [super::option]s.
+pub fn select() -> Element<marker::Select> {
+    Element::new("select")
 }
 
 pub mod marker {

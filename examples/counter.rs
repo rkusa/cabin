@@ -1,24 +1,25 @@
 use std::net::SocketAddr;
 
+use cabin::context::event;
 use cabin::prelude::*;
 use cabin::{Event, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    basic_document(c, counter(c, 0))
+async fn app() -> impl View {
+    basic_document(counter(0))
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]
 struct Increment(usize);
 
-fn counter(c: &Context, start_at: usize) -> impl View {
-    let count = c.event::<Increment>().unwrap_or(Increment(start_at)).0;
+fn counter(start_at: usize) -> impl View {
+    let count = event::<Increment>().unwrap_or(Increment(start_at)).0;
 
-    c.fragment()
-        .child(c.div().child(text!("Count: {}", count)))
-        .child(c.button().on_click(Increment(count + 1)).child("inc"))
+    h::fragment()
+        .child(h::div().child(h::text!("Count: {}", count)))
+        .child(h::button().on_click(Increment(count + 1)).child("inc"))
 }
 
 cabin::BOUNDARIES!();

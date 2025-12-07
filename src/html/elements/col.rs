@@ -4,16 +4,13 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that
-    /// itself has a parent that is a [super::table] element, then the `col` element represents
-    /// one or more columns in the column group represented by that [super::colgroup::Colgroup].
-    pub fn col(&self) -> VoidElement<marker::Col> {
-        VoidElement::new(self.acquire_renderer(), "col")
-    }
+/// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that
+/// itself has a parent that is a [super::table] element, then the `col` element represents
+/// one or more columns in the column group represented by that [super::colgroup::Colgroup].
+pub fn col() -> VoidElement<marker::Col> {
+    VoidElement::new("col")
 }
 
 pub mod marker {

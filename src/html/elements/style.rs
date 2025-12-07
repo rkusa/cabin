@@ -7,18 +7,15 @@ use super::link::Blocking;
 use super::meta::Media;
 use crate::View;
 use crate::attribute::{Attribute, WithAttribute};
-use crate::context::Context;
 use crate::element::{Element, ElementContent};
 use crate::html::elements::script::ScriptEscape;
 use crate::render::Renderer;
 
-impl Context {
-    /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
-    /// element is one of several inputs to the styling processing model. The element does not
-    /// represent content for the user.
-    pub fn style(&self) -> StyleElement {
-        StyleElement(Element::new(self.acquire_renderer(), "style"))
-    }
+/// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
+/// element is one of several inputs to the styling processing model. The element does not
+/// represent content for the user.
+pub fn style() -> StyleElement {
+    StyleElement(Element::new("style"))
 }
 
 pub struct StyleElement(Element<marker::Style>);

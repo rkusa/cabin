@@ -7,16 +7,13 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The `meta` element represents various kinds of metadata that cannot be expressed using the
-    /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
-    /// [super::script::script] elements.
-    pub fn meta(&self) -> Element<marker::Meta> {
-        Element::new(self.acquire_renderer(), "meta")
-    }
+/// The `meta` element represents various kinds of metadata that cannot be expressed using the
+/// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
+/// [super::script::script] elements.
+pub fn meta() -> Element<marker::Meta> {
+    Element::new("meta")
 }
 
 pub mod marker {

@@ -2,18 +2,18 @@ use std::net::SocketAddr;
 use std::sync::LazyLock;
 
 use cabin::cabin_scripts;
+use cabin::context::event;
 use cabin::prelude::*;
 use cabin_tailwind::prelude::*;
 use cabin_tailwind::registry::{StyleRegistry, StyleSheet};
 use http::Request;
 use tokio::net::TcpListener;
 
-async fn app(c: &Context) -> impl View {
-    let count = c.event::<usize>().unwrap_or(0);
+async fn app() -> impl View {
+    let count = event::<usize>().unwrap_or(0);
 
     document(
-        c,
-        c.button()
+        h::button()
             .on_click(count + 1)
             .class(
                 // TODO: modifier groups?
@@ -29,15 +29,15 @@ async fn app(c: &Context) -> impl View {
                 ]
                 .append_when(count == 0, tw![tw::text::color("red")]),
             )
-            .child(text!("{}", count)),
+            .child(h::text!("{}", count)),
     )
 }
 
-fn document(c: &Context, content: impl View) -> impl View {
-    c.fragment().child(c.doctype()).child(
-        c.html()
-            .child(c.head().child(STYLE_SHEET.link(c)).child(cabin_scripts(c)))
-            .child(c.body().child(content)),
+fn document(content: impl View) -> impl View {
+    h::fragment().child(h::doctype()).child(
+        h::html()
+            .child(h::head().child(STYLE_SHEET.link()).child(cabin_scripts()))
+            .child(h::body().child(content)),
     )
 }
 

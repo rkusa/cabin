@@ -5,16 +5,13 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// The `base` element allows authors to specify the document base URL for the purposes of
-    /// parsing URLs, and the name of the default navigable for the purposes of following
-    /// hyperlinks. The element does not represent any content beyond this information.
-    pub fn base(&self) -> VoidElement<marker::Base> {
-        VoidElement::new(self.acquire_renderer(), "base")
-    }
+/// The `base` element allows authors to specify the document base URL for the purposes of
+/// parsing URLs, and the name of the default navigable for the purposes of following
+/// hyperlinks. The element does not represent any content beyond this information.
+pub fn base() -> VoidElement<marker::Base> {
+    VoidElement::new("base")
 }
 
 pub mod marker {

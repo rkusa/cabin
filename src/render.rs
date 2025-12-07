@@ -8,7 +8,6 @@ use crate::Context;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
-use crate::renderer_pool::RendererPool;
 
 const DEFAULT_CAPACITY: usize = 256;
 
@@ -16,7 +15,7 @@ pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
-    renderer_pool: RendererPool,
+    is_update: bool,
 }
 
 pub struct Out {
@@ -25,12 +24,12 @@ pub struct Out {
 }
 
 impl Renderer {
-    pub fn new(renderer_pool: RendererPool) -> Self {
+    pub fn new(is_update: bool) -> Self {
         Self {
             out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
             hasher: XxHash32::default(),
-            renderer_pool,
+            is_update,
         }
     }
 
@@ -50,19 +49,7 @@ impl Renderer {
         let hash = other.hasher.finish() as u32;
         self.hasher.write_u32(hash);
 
-        self.release_renderer(other);
-    }
-
-    pub(crate) fn acquire_renderer(&self) -> Renderer {
-        self.renderer_pool.acquire()
-    }
-
-    pub(crate) fn release_renderer(&self, renderer: Renderer) {
-        self.renderer_pool.release(renderer)
-    }
-
-    pub(crate) fn empty_context(&self) -> Context {
-        Context::from_pool(self.renderer_pool.clone())
+        Context::release_renderer_into_task(other);
     }
 
     pub fn end(self) -> Out {
@@ -73,7 +60,7 @@ impl Renderer {
     }
 
     pub fn is_update(&self) -> bool {
-        self.renderer_pool.is_update()
+        self.is_update
     }
 
     pub fn headers_mut(&mut self) -> &mut HeaderMap<HeaderValue> {

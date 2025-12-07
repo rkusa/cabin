@@ -6,15 +6,12 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::element::Element;
 
-impl Context {
-    /// The ol element represents a list of items, where the items have been intentionally ordered,
-    /// such that changing the order would change the meaning of the document.
-    pub fn ol(&self) -> Element<marker::Ol> {
-        Element::new(self.acquire_renderer(), "ol")
-    }
+/// The ol element represents a list of items, where the items have been intentionally ordered,
+/// such that changing the order would change the meaning of the document.
+pub fn ol() -> Element<marker::Ol> {
+    Element::new("ol")
 }
 
 pub mod marker {
@@ -79,7 +76,7 @@ pub enum Type {
     /// Decimal numbers, e.g. 1., 2., 3., ...
     Decimal,
 
-    /// Lowercase latin alphabet, e.g. a., b., c., ...
+    /// Lowercase latin alphabet, e.g. a., b., h::, ...
     LowerAlpha,
 
     /// Uppercase latin alphabet, e.g. A., B., C., ...

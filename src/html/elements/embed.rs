@@ -7,15 +7,12 @@ use super::input::{Height, Width};
 use super::link::Type;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::context::Context;
 use crate::void_element::VoidElement;
 
-impl Context {
-    /// The `embed` element provides an integration point for an external application or interactive
-    /// content.
-    pub fn embed(&self) -> VoidElement<marker::Embed> {
-        VoidElement::new(self.acquire_renderer(), "embed")
-    }
+/// The `embed` element provides an integration point for an external application or interactive
+/// content.
+pub fn embed() -> VoidElement<marker::Embed> {
+    VoidElement::new("embed")
 }
 
 pub mod marker {

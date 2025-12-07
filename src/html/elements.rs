@@ -56,11 +56,9 @@ macro_rules! vanilla_element {
             #[allow(unused)]
             use crate::prelude::*;
 
-            impl $crate::context::Context {
-                #[doc = $doc]
-                pub fn $method_name(&self) -> $crate::element::Element<marker::$marker_name> {
-                    $crate::element::Element::new(self.acquire_renderer(), stringify!($method_name))
-                }
+            #[doc = $doc]
+            pub fn $method_name() -> $crate::element::Element<marker::$marker_name> {
+                $crate::element::Element::new(stringify!($method_name))
             }
 
             pub mod marker {
@@ -89,16 +87,9 @@ macro_rules! vanilla_void_element {
             #[allow(unused)]
             use crate::prelude::*;
 
-            impl $crate::context::Context {
-                #[doc = $doc]
-                pub fn $method_name(
-                    &self,
-                ) -> $crate::void_element::VoidElement<marker::$marker_name> {
-                    $crate::void_element::VoidElement::new(
-                        self.acquire_renderer(),
-                        stringify!($method_name),
-                    )
-                }
+            #[doc = $doc]
+            pub fn $method_name() -> $crate::void_element::VoidElement<marker::$marker_name> {
+                $crate::void_element::VoidElement::new(stringify!($method_name))
             }
 
             pub mod marker {
