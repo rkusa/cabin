@@ -3,6 +3,16 @@ pub mod events;
 pub mod list;
 pub mod raw;
 
+pub use crate::element::Element;
+#[doc(inline)]
+pub use elements::aria::Aria;
+#[doc(inline)]
+pub use elements::common::Common;
+#[doc(inline)]
+pub use elements::global::Global;
+#[doc(inline)]
+pub use h::*;
+
 pub mod h {
     #[doc(inline)]
     pub use super::elements::abbr::abbr;
@@ -229,14 +239,14 @@ pub mod h {
     #[doc(inline)]
     pub use super::elements::wbr::wbr;
     use crate::fragment::Fragment;
-    pub use crate::html::raw;
+    pub use crate::html::raw::raw;
     use crate::view::AnyView;
     #[doc(inline)]
     pub use crate::view::text::text;
     use crate::{Context, View};
 
-    pub fn doctype() -> raw::Raw<'static> {
-        raw::raw("<!DOCTYPE html>")
+    pub fn doctype() -> super::raw::Raw<'static> {
+        raw("<!DOCTYPE html>")
     }
 
     pub fn any(view: impl View) -> AnyView {
