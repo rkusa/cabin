@@ -13,6 +13,7 @@ use crate::element::Element;
 use crate::error::InternalError;
 use crate::render::Renderer;
 use crate::view::AnyView;
+use crate::view::any::IntoAnyView;
 
 pub struct Boundary<Args: 'static> {
     boundary_ref: Option<&'static BoundaryRef<Args>>,
@@ -28,6 +29,12 @@ impl<Args> Boundary<Args> {
             args: Some(args),
             view,
         }
+    }
+}
+
+impl<Args: Serialize> Boundary<Args> {
+    pub fn any(self) -> AnyView {
+        crate::h::any(self)
     }
 }
 
@@ -209,6 +216,12 @@ where
                 .child(body)
                 .render(r)
         }
+    }
+}
+
+impl<Args: Serialize> IntoAnyView for Boundary<Args> {
+    fn into_any_view(self) -> AnyView {
+        self.any()
     }
 }
 
