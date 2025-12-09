@@ -63,18 +63,24 @@ macro_rules! vanilla_element {
 
             pub mod marker {
                 pub struct $marker_name;
+
+                impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, $marker_name> for V {
+                    fn into_child(self) -> impl crate::View {
+                        self
+                    }
+                }
             }
 
-            impl $crate::html::elements::common::Common
-                for $crate::element::Element<marker::$marker_name>
+            impl<P> $crate::html::elements::common::Common<marker::$marker_name> for P where
+                P: $crate::element::ElementProxy<marker::$marker_name>
             {
             }
-            impl $crate::html::elements::global::Global
-                for $crate::element::Element<marker::$marker_name>
+            impl<P> $crate::html::elements::global::Global<marker::$marker_name> for P where
+                P: $crate::element::ElementProxy<marker::$marker_name>
             {
             }
-            impl $crate::html::elements::aria::Aria
-                for $crate::element::Element<marker::$marker_name>
+            impl<P> $crate::html::elements::aria::Aria<marker::$marker_name> for P where
+                P: $crate::element::ElementProxy<marker::$marker_name>
             {
             }
         }
@@ -96,16 +102,16 @@ macro_rules! vanilla_void_element {
                 pub struct $marker_name;
             }
 
-            impl $crate::html::elements::common::Common
-                for $crate::void_element::VoidElement<marker::$marker_name>
+            impl<P> $crate::html::elements::common::Common<marker::$marker_name> for P where
+                P: $crate::void_element::VoidElementProxy<marker::$marker_name>
             {
             }
-            impl $crate::html::elements::global::Global
-                for $crate::void_element::VoidElement<marker::$marker_name>
+            impl<P> $crate::html::elements::global::Global<marker::$marker_name> for P where
+                P: $crate::void_element::VoidElementProxy<marker::$marker_name>
             {
             }
-            impl $crate::html::elements::aria::Aria
-                for $crate::void_element::VoidElement<marker::$marker_name>
+            impl<P> $crate::html::elements::aria::Aria<marker::$marker_name> for P where
+                P: $crate::void_element::VoidElementProxy<marker::$marker_name>
             {
             }
         }

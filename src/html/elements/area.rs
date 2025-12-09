@@ -10,7 +10,7 @@ use super::global::Global;
 use super::img::Alt;
 use crate::attribute::WithAttribute;
 use crate::html::list::SpaceSeparated;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// The `area` element represents either a hyperlink with some text and a corresponding area on
 /// an image map, or a dead area on an image map.
@@ -22,14 +22,14 @@ pub mod marker {
     pub struct Area;
 }
 
-impl Area for VoidElement<marker::Area> {}
-impl Common for VoidElement<marker::Area> {}
-impl Global for VoidElement<marker::Area> {}
-impl Aria for VoidElement<marker::Area> {}
+impl<P> Area<marker::Area> for P where P: VoidElementProxy<marker::Area> {}
+impl<P> Common<marker::Area> for P where P: VoidElementProxy<marker::Area> {}
+impl<P> Global<marker::Area> for P where P: VoidElementProxy<marker::Area> {}
+impl<P> Aria<marker::Area> for P where P: VoidElementProxy<marker::Area> {}
 
 /// The `area` element represents either a hyperlink with some text and a corresponding area on an
 /// image map, or a dead area on an image map.
-pub trait Area: WithAttribute {
+pub trait Area<T>: WithAttribute {
     /// Replacement text for use when images are not available.
     fn alt(self, alt: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Alt(alt.into()))

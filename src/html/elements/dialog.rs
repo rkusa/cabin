@@ -4,7 +4,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
 pub fn dialog() -> Element<marker::Dialog> {
@@ -13,15 +13,21 @@ pub fn dialog() -> Element<marker::Dialog> {
 
 pub mod marker {
     pub struct Dialog;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Dialog> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Dialog for Element<marker::Dialog> {}
-impl Common for Element<marker::Dialog> {}
-impl Global for Element<marker::Dialog> {}
-impl Aria for Element<marker::Dialog> {}
+impl<P> Dialog<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
+impl<P> Common<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
+impl<P> Global<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
+impl<P> Aria<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
-pub trait Dialog: WithAttribute {
+pub trait Dialog<T>: WithAttribute {
     /// Whether the dialog is showing.
     fn open(self) -> Self {
         self.with_open(true)

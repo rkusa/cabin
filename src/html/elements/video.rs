@@ -10,7 +10,7 @@ use super::input::{Height, Width};
 use super::link::CrossOrigin;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
 pub fn video() -> Element<marker::Video> {
@@ -19,15 +19,21 @@ pub fn video() -> Element<marker::Video> {
 
 pub mod marker {
     pub struct Video;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Video> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Video for Element<marker::Video> {}
-impl Common for Element<marker::Video> {}
-impl Global for Element<marker::Video> {}
-impl Aria for Element<marker::Video> {}
+impl<P> Video<marker::Video> for P where P: ElementProxy<marker::Video> {}
+impl<P> Common<marker::Video> for P where P: ElementProxy<marker::Video> {}
+impl<P> Global<marker::Video> for P where P: ElementProxy<marker::Video> {}
+impl<P> Aria<marker::Video> for P where P: ElementProxy<marker::Video> {}
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
-pub trait Video: WithAttribute {
+pub trait Video<T>: WithAttribute {
     /// Address of the resource.
     fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))

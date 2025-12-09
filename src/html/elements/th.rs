@@ -8,7 +8,7 @@ use super::common::Common;
 use super::global::Global;
 use super::td::{ColSpan, Headers, RowSpan};
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::html::list::SpaceSeparated;
 
 /// The `th` element represents a header cell in a [super::table].
@@ -18,15 +18,21 @@ pub fn th() -> Element<marker::Th> {
 
 pub mod marker {
     pub struct Th;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Th> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Th for Element<marker::Th> {}
-impl Common for Element<marker::Th> {}
-impl Global for Element<marker::Th> {}
-impl Aria for Element<marker::Th> {}
+impl<P> Th<marker::Th> for P where P: ElementProxy<marker::Th> {}
+impl<P> Common<marker::Th> for P where P: ElementProxy<marker::Th> {}
+impl<P> Global<marker::Th> for P where P: ElementProxy<marker::Th> {}
+impl<P> Aria<marker::Th> for P where P: ElementProxy<marker::Th> {}
 
 /// The `th` element represents a header cell in a [super::table].
-pub trait Th: WithAttribute {
+pub trait Th<T>: WithAttribute {
     /// Number of columns that the cell is to span.
     fn col_span(self, col_span: u32) -> Self {
         self.with_attribute(ColSpan(col_span))

@@ -7,7 +7,7 @@ use super::link::Type;
 use super::meta::Media;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// The `source` element allows authors to specify multiple alternative source sets for
 /// [super::img] elements or multiple alternative media resources for media elements. It
@@ -20,11 +20,11 @@ pub mod marker {
     pub struct Source;
 }
 
-impl Source for VoidElement<marker::Source> {}
-impl Global for VoidElement<marker::Source> {}
+impl<P> Source<marker::Source> for P where P: VoidElementProxy<marker::Source> {}
+impl<P> Global<marker::Source> for P where P: VoidElementProxy<marker::Source> {}
 
 /// An `source` element represents an image.
-pub trait Source: WithAttribute {
+pub trait Source<T>: WithAttribute {
     /// Type of embedded resource.
     fn r#type(self, r#type: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Type(r#type.into()))

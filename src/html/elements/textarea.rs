@@ -8,64 +8,35 @@ use super::button::{Disabled, Form, Name};
 use super::common::Common;
 use super::global::Global;
 use super::input::{AutoComplete, Dirname, MaxLength, MinLength, Placeholder, ReadOnly, Required};
-use crate::View;
-use crate::attribute::{Attribute, WithAttribute};
-use crate::element::{Element, ElementContent};
+use crate::attribute::WithAttribute;
+use crate::element::{Element, ElementProxy};
 use crate::event::Event;
 use crate::html::events::CustomEvent;
-use crate::render::Renderer;
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.
-pub fn textarea() -> TextareaElement {
-    TextareaElement(Element::new("textarea"))
+pub fn textarea() -> Element<marker::Textarea> {
+    Element::new("textarea")
 }
 
-pub struct TextareaElement(Element<marker::Textarea>);
-pub struct TextareaContent(ElementContent);
-
-mod marker {
+pub mod marker {
     pub struct Textarea;
-}
 
-impl TextareaElement {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> TextareaContent {
-        TextareaContent(self.0.child(child.into()))
+    impl<'v, S: Into<std::borrow::Cow<'v, str>>> crate::element::IntoChild<'v, Textarea> for S {
+        fn into_child(self) -> impl crate::View + 'v {
+            self.into()
+        }
     }
 }
 
-impl TextareaContent {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
-        Self(self.0.child(child.into()))
-    }
-}
-
-impl View for TextareaElement {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        View::render(self.0, r)
-    }
-}
-
-impl View for TextareaContent {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        self.0.render(r)
-    }
-}
-
-impl WithAttribute for TextareaElement {
-    fn with_attribute(self, attr: impl Attribute) -> Self {
-        Self(self.0.with_attribute(attr))
-    }
-}
-
-impl Textarea for TextareaElement {}
-impl Common for TextareaElement {}
-impl Global for TextareaElement {}
-impl Aria for TextareaElement {}
+impl<P> Textarea<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
+impl<P> Common<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
+impl<P> Global<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
+impl<P> Aria<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.
-pub trait Textarea: WithAttribute {
+pub trait Textarea<T>: WithAttribute {
     /// Hint for form autofill feature.
     fn autocomplete(self, autocomplete: AutoComplete) -> Self {
         self.with_attribute(autocomplete)

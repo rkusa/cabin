@@ -4,8 +4,7 @@ use http::{HeaderName, HeaderValue};
 
 use super::global::Global;
 use crate::View;
-use crate::attribute::{Attribute, WithAttribute};
-use crate::element::{Element, ElementContent};
+use crate::element::{Element, ElementProxy};
 use crate::render::Renderer;
 
 /// The `title` element represents the document's title or name. Authors should use titles that
@@ -13,48 +12,21 @@ use crate::render::Renderer;
 /// history or bookmarks, or in search results. The document's title is often different from
 /// its first heading, since the first heading does not have to stand alone when taken out
 /// of context.
-pub fn title() -> TitleElement {
-    TitleElement(Element::new("title"))
+pub fn title() -> Element<marker::Title> {
+    Element::new("title")
 }
 
-pub struct TitleElement(Element<marker::Title>);
-pub struct TitleContent(ElementContent);
-
-mod marker {
+pub mod marker {
     pub struct Title;
-}
 
-impl TitleElement {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> TitleContent {
-        TitleContent(self.0.child(child.into()))
+    impl<'v, S: Into<std::borrow::Cow<'v, str>>> crate::element::IntoChild<'v, Title> for S {
+        fn into_child(self) -> impl crate::View + 'v {
+            self.into()
+        }
     }
 }
 
-impl TitleContent {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
-        Self(self.0.child(child.into()))
-    }
-}
-
-impl View for TitleElement {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        View::render(self.0, r)
-    }
-}
-
-impl View for TitleContent {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        self.0.render(r)
-    }
-}
-
-impl WithAttribute for TitleElement {
-    fn with_attribute(self, attr: impl Attribute) -> Self {
-        Self(self.0.with_attribute(attr))
-    }
-}
-
-impl Global for TitleElement {}
+impl<P> Global<marker::Title> for P where P: ElementProxy<marker::Title> {}
 
 pub struct TitleUpdate(pub Cow<'static, str>);
 

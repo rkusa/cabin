@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use crate::attribute::{Attribute, WithAttribute};
 use crate::render::Renderer;
+use crate::view::AnyView;
 use crate::view::internal::Internal;
 use crate::{Context, View};
 
@@ -53,6 +54,20 @@ impl<El> WithAttribute for VoidElement<El> {
             self.0.errored(err);
         }
 
+        self
+    }
+}
+
+pub trait VoidElementProxy<El>: View + WithAttribute {
+    fn into_void_element(self) -> VoidElement<El>;
+
+    fn any(self) -> AnyView {
+        self.into_void_element().any()
+    }
+}
+
+impl<El> VoidElementProxy<El> for VoidElement<El> {
+    fn into_void_element(self) -> VoidElement<El> {
         self
     }
 }

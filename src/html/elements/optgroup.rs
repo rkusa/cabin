@@ -6,7 +6,7 @@ use super::common::Common;
 use super::global::Global;
 use super::option::Label;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
 pub fn optgroup() -> Element<marker::OptGroup> {
@@ -15,15 +15,21 @@ pub fn optgroup() -> Element<marker::OptGroup> {
 
 pub mod marker {
     pub struct OptGroup;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, OptGroup> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl OptGroup for Element<marker::OptGroup> {}
-impl Common for Element<marker::OptGroup> {}
-impl Global for Element<marker::OptGroup> {}
-impl Aria for Element<marker::OptGroup> {}
+impl<P> OptGroup<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
+impl<P> Common<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
+impl<P> Global<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
+impl<P> Aria<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
 
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
-pub trait OptGroup: WithAttribute {
+pub trait OptGroup<T>: WithAttribute {
     /// Whether the form control is disabled.
     fn disabled(self) -> Self {
         self.with_disabled(true)

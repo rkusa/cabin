@@ -5,7 +5,7 @@ use cabin_macros::Attribute;
 
 use crate::attribute::WithAttribute;
 
-pub trait Global: WithAttribute {
+pub trait Global<T>: WithAttribute {
     /// Used by the user agent as a guide for creating a keyboard shortcut that activates or
     /// focuses the element.
     fn access_key(self, access_key: impl Into<Cow<'static, str>>) -> Self {

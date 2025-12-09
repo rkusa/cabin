@@ -7,7 +7,7 @@ use super::input::{Height, Width};
 use super::link::Type;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// The `embed` element provides an integration point for an external application or interactive
 /// content.
@@ -19,14 +19,14 @@ pub mod marker {
     pub struct Embed;
 }
 
-impl Embed for VoidElement<marker::Embed> {}
-impl Common for VoidElement<marker::Embed> {}
-impl Global for VoidElement<marker::Embed> {}
-impl Aria for VoidElement<marker::Embed> {}
+impl<P> Embed<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
+impl<P> Common<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
+impl<P> Global<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
+impl<P> Aria<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
 
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.
-pub trait Embed: WithAttribute {
+pub trait Embed<T>: WithAttribute {
     /// Address of the resource.
     fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))

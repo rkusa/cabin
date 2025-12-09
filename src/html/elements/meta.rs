@@ -7,7 +7,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
@@ -18,17 +18,23 @@ pub fn meta() -> Element<marker::Meta> {
 
 pub mod marker {
     pub struct Meta;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Meta> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Meta for Element<marker::Meta> {}
-impl Common for Element<marker::Meta> {}
-impl Global for Element<marker::Meta> {}
-impl Aria for Element<marker::Meta> {}
+impl<P> Meta<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
+impl<P> Common<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
+impl<P> Global<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
+impl<P> Aria<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
 /// [super::script::script] elements.
-pub trait Meta: WithAttribute {
+pub trait Meta<T>: WithAttribute {
     /// Metadata name.
     fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))

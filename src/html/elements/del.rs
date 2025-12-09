@@ -6,7 +6,7 @@ use super::common::Common;
 use super::global::Global;
 use super::time::Datetime;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `del` element represents a removal from the document.
 pub fn del() -> Element<marker::Del> {
@@ -15,15 +15,21 @@ pub fn del() -> Element<marker::Del> {
 
 pub mod marker {
     pub struct Del;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Del> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Del for Element<marker::Del> {}
-impl Common for Element<marker::Del> {}
-impl Global for Element<marker::Del> {}
-impl Aria for Element<marker::Del> {}
+impl<P> Del<marker::Del> for P where P: ElementProxy<marker::Del> {}
+impl<P> Common<marker::Del> for P where P: ElementProxy<marker::Del> {}
+impl<P> Global<marker::Del> for P where P: ElementProxy<marker::Del> {}
+impl<P> Aria<marker::Del> for P where P: ElementProxy<marker::Del> {}
 
 /// The `del` element represents a removal from the document.
-pub trait Del: WithAttribute {
+pub trait Del<T>: WithAttribute {
     /// Link to the source of the quotation or more information about the edit.
     fn cite(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Cite(src.into()))

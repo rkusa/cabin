@@ -6,7 +6,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The ol element represents a list of items, where the items have been intentionally ordered,
 /// such that changing the order would change the meaning of the document.
@@ -16,16 +16,22 @@ pub fn ol() -> Element<marker::Ol> {
 
 pub mod marker {
     pub struct Ol;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Ol> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Ol for Element<marker::Ol> {}
-impl Common for Element<marker::Ol> {}
-impl Global for Element<marker::Ol> {}
-impl Aria for Element<marker::Ol> {}
+impl<P> Ol<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
+impl<P> Common<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
+impl<P> Global<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
+impl<P> Aria<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.
-pub trait Ol: WithAttribute {
+pub trait Ol<T>: WithAttribute {
     /// Number the list backwards.
     fn reversed(self, reversed: bool) -> Self {
         self.with_attribute(Reversed(reversed))

@@ -1,4 +1,5 @@
 use core::fmt;
+use std::any::Any;
 use std::borrow::Cow;
 use std::ops::Deref;
 
@@ -126,5 +127,9 @@ impl<E: serde::Serialize + Event> CustomEvent<E> {
 impl<E: serde::Serialize + Event> Attribute for CustomEvent<E> {
     fn render(self, r: &mut crate::render::Renderer) -> Result<(), crate::Error> {
         r.event_attributes(self)
+    }
+
+    fn as_any(&self) -> Option<&dyn Any> {
+        None
     }
 }

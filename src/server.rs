@@ -64,6 +64,8 @@ pub struct Event {
 }
 
 pub fn basic_document(content: impl View) -> impl View {
+    use cabin::prelude::*;
+
     if is_update() {
         h::any(content)
     } else {

@@ -4,7 +4,7 @@ use cabin_macros::Attribute;
 
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.
@@ -14,14 +14,20 @@ pub fn slot() -> Element<marker::Slot> {
 
 pub mod marker {
     pub struct Slot;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Slot> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Slot for Element<marker::Slot> {}
-impl Global for Element<marker::Slot> {}
+impl<P> Slot<marker::Slot> for P where P: ElementProxy<marker::Slot> {}
+impl<P> Global<marker::Slot> for P where P: ElementProxy<marker::Slot> {}
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.
-pub trait Slot: WithAttribute {
+pub trait Slot<T>: WithAttribute {
     /// Name of shadow tree slot.
     fn name(self, name: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Name(name.into()))

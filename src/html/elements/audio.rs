@@ -9,7 +9,7 @@ use super::global::Global;
 use super::link::CrossOrigin;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// An `audio` element represents a sound or audio stream.
 pub fn audio() -> Element<marker::Audio> {
@@ -18,15 +18,21 @@ pub fn audio() -> Element<marker::Audio> {
 
 pub mod marker {
     pub struct Audio;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Audio> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Audio for Element<marker::Audio> {}
-impl Common for Element<marker::Audio> {}
-impl Global for Element<marker::Audio> {}
-impl Aria for Element<marker::Audio> {}
+impl<P> Audio<marker::Audio> for P where P: ElementProxy<marker::Audio> {}
+impl<P> Common<marker::Audio> for P where P: ElementProxy<marker::Audio> {}
+impl<P> Global<marker::Audio> for P where P: ElementProxy<marker::Audio> {}
+impl<P> Aria<marker::Audio> for P where P: ElementProxy<marker::Audio> {}
 
 /// An `audio` element represents a sound or audio stream.
-pub trait Audio: WithAttribute {
+pub trait Audio<T>: WithAttribute {
     /// Address of the resource.
     fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))

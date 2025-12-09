@@ -10,7 +10,7 @@ use super::common::Common;
 use super::global::Global;
 use super::input::AutoComplete;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 use crate::html::list::SpaceSeparated;
@@ -24,17 +24,23 @@ pub fn form() -> Element<marker::Form> {
 
 pub mod marker {
     pub struct Form;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Form> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Form for Element<marker::Form> {}
-impl Common for Element<marker::Form> {}
-impl Global for Element<marker::Form> {}
-impl Aria for Element<marker::Form> {}
+impl<P> Form<marker::Form> for P where P: ElementProxy<marker::Form> {}
+impl<P> Common<marker::Form> for P where P: ElementProxy<marker::Form> {}
+impl<P> Global<marker::Form> for P where P: ElementProxy<marker::Form> {}
+impl<P> Aria<marker::Form> for P where P: ElementProxy<marker::Form> {}
 
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a
 /// server for processing.
-pub trait Form: WithAttribute {
+pub trait Form<T>: WithAttribute {
     /// Character encodings to use for form submission.
     fn accept_charset(self, accept_charset: AcceptCharset) -> Self {
         self.with_attribute(accept_charset)

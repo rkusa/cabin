@@ -8,7 +8,7 @@ use crate::attribute::WithAttribute;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 
-pub trait Common: WithAttribute {
+pub trait Common<T>: WithAttribute {
     /// Unique identifier across the document.
     fn id(self, id: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Id(id.into()))
@@ -130,5 +130,35 @@ impl AddAssign for Class {
 impl fmt::Display for Class {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+pub struct ClassCollector<T> {
+    inner: T,
+    class: Class,
+}
+
+impl<T: WithAttribute> ClassCollector<T> {
+    pub fn new(inner: T) -> Self {
+        Self {
+            inner,
+            class: Default::default(),
+        }
+    }
+
+    pub fn into_inner(self) -> T {
+        self.inner.with_attribute(self.class)
+    }
+}
+
+impl<T: WithAttribute> WithAttribute for ClassCollector<T> {
+    fn with_attribute(mut self, attr: impl crate::attribute::Attribute) -> Self {
+        if let Some(class) = attr.get::<Class>() {
+            self.class = std::mem::take(&mut self.class).append(class.clone());
+            self
+        } else {
+            self.inner = self.inner.with_attribute(attr);
+            self
+        }
     }
 }

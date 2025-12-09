@@ -7,7 +7,7 @@ use cabin_macros::Attribute;
 
 use crate::attribute::WithAttribute;
 
-pub trait Aria: WithAttribute {
+pub trait Aria<T>: WithAttribute {
     // Set the aria role of the element.
     fn role(self, role: Role) -> Self {
         self.with_attribute(role)

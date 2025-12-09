@@ -30,21 +30,6 @@ impl<El> Element<El> {
         }))
     }
 
-    pub fn child(self, child: impl View) -> ElementContent {
-        let mut el = match self.0.take_builder() {
-            Ok(builder) => builder,
-            Err(err) => return ElementContent(Internal::error(err)),
-        };
-
-        el.renderer.start_content();
-        let fragment = Fragment::new(el.renderer).child(child);
-        ElementContent(Internal::new(ElementContentBuilder {
-            tag: el.tag,
-            hash_offset: el.hash_offset,
-            fragment,
-        }))
-    }
-
     pub fn any(self) -> AnyView {
         AnyView {
             result: self.render(),
@@ -88,21 +73,22 @@ impl<El> IntoAnyView for Element<El> {
     }
 }
 
-pub struct ElementContent(Internal<ElementContentBuilder>);
+pub struct ElementContent<El>(Internal<ElementContentBuilder<El>>);
 
-struct ElementContentBuilder {
+struct ElementContentBuilder<El> {
     tag: &'static str,
     hash_offset: Option<usize>,
     fragment: Fragment,
+    marker: PhantomData<El>,
 }
 
-impl ElementContent {
-    pub fn child(mut self, child: impl View) -> Self {
+impl<El> ElementContent<El> {
+    pub fn child<'c>(mut self, child: impl IntoChild<'c, El>) -> Self {
         let Some(builder) = self.0.builder_mut() else {
             return self;
         };
 
-        builder.fragment.append_child(child);
+        builder.fragment.append_child(child.into_child());
 
         self
     }
@@ -121,15 +107,55 @@ impl ElementContent {
     }
 }
 
-impl View for ElementContent {
+impl<El> View for ElementContent<El> {
     fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
         r.append(self.render()?);
         Ok(())
     }
 }
 
-impl IntoAnyView for ElementContent {
+impl<El> IntoAnyView for ElementContent<El> {
     fn into_any_view(self) -> AnyView {
         self.any()
+    }
+}
+
+pub trait IntoChild<'v, El> {
+    fn into_child(self) -> impl View + 'v;
+}
+
+impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, ()> for V {
+    fn into_child(self) -> impl crate::View + 'v {
+        self
+    }
+}
+
+pub trait ElementProxy<El>: View + WithAttribute {
+    fn into_element(self) -> Element<El>;
+
+    fn child<'c>(self, child: impl IntoChild<'c, El> + 'c) -> ElementContent<El> {
+        self.into_element().child(child)
+    }
+}
+
+impl<El> ElementProxy<El> for Element<El> {
+    fn into_element(self) -> Element<El> {
+        self
+    }
+
+    fn child<'c>(self, child: impl IntoChild<'c, El>) -> ElementContent<El> {
+        let mut el = match self.0.take_builder() {
+            Ok(builder) => builder,
+            Err(err) => return ElementContent(Internal::error(err)),
+        };
+
+        el.renderer.start_content();
+        let fragment = Fragment::new(el.renderer).child(child.into_child());
+        ElementContent(Internal::new(ElementContentBuilder {
+            tag: el.tag,
+            hash_offset: el.hash_offset,
+            fragment,
+            marker: PhantomData,
+        }))
     }
 }

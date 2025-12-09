@@ -6,7 +6,7 @@ use super::common::Common;
 use super::global::Global;
 use super::input::{AutoComplete, Multiple, Required, Size};
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 
@@ -17,15 +17,21 @@ pub fn select() -> Element<marker::Select> {
 
 pub mod marker {
     pub struct Select;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Select> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Select for Element<marker::Select> {}
-impl Common for Element<marker::Select> {}
-impl Global for Element<marker::Select> {}
-impl Aria for Element<marker::Select> {}
+impl<P> Select<marker::Select> for P where P: ElementProxy<marker::Select> {}
+impl<P> Common<marker::Select> for P where P: ElementProxy<marker::Select> {}
+impl<P> Global<marker::Select> for P where P: ElementProxy<marker::Select> {}
+impl<P> Aria<marker::Select> for P where P: ElementProxy<marker::Select> {}
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
-pub trait Select: WithAttribute {
+pub trait Select<T>: WithAttribute {
     /// Hint for form autofill feature.
     fn autocomplete(self, autocomplete: AutoComplete) -> Self {
         self.with_attribute(autocomplete)

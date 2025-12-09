@@ -8,7 +8,7 @@ use super::common::Common;
 use super::global::Global;
 use super::link::Type;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::html::list::SpaceSeparated;
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
@@ -19,16 +19,22 @@ pub fn a() -> Element<marker::Anchor> {
 
 pub mod marker {
     pub struct Anchor;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Anchor> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Anchor for Element<marker::Anchor> {}
-impl Common for Element<marker::Anchor> {}
-impl Global for Element<marker::Anchor> {}
-impl Aria for Element<marker::Anchor> {}
+impl<P> Anchor<marker::Anchor> for P where P: ElementProxy<marker::Anchor> {}
+impl<P> Common<marker::Anchor> for P where P: ElementProxy<marker::Anchor> {}
+impl<P> Global<marker::Anchor> for P where P: ElementProxy<marker::Anchor> {}
+impl<P> Aria<marker::Anchor> for P where P: ElementProxy<marker::Anchor> {}
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
-pub trait Anchor: WithAttribute {
+pub trait Anchor<T>: WithAttribute {
     /// Address of the hyperlink.
     fn href(self, href: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Href(href.into()))

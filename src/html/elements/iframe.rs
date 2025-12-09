@@ -10,7 +10,7 @@ use super::global::Global;
 use super::input::{Height, Width};
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::html::list::SpaceSeparated;
 
 /// The `iframe` element represents its content navigable.
@@ -20,15 +20,21 @@ pub fn iframe() -> Element<marker::IFrame> {
 
 pub mod marker {
     pub struct IFrame;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, IFrame> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl IFrame for Element<marker::IFrame> {}
-impl Common for Element<marker::IFrame> {}
-impl Global for Element<marker::IFrame> {}
-impl Aria for Element<marker::IFrame> {}
+impl<P> IFrame<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
+impl<P> Common<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
+impl<P> Global<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
+impl<P> Aria<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
 
 /// The `iframe` element represents its content navigable.
-pub trait IFrame: WithAttribute {
+pub trait IFrame<T>: WithAttribute {
     /// Address of the resource.
     fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))

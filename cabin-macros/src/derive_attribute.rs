@@ -41,6 +41,10 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
                     r.attribute(#attr_name, self);
                     Ok(())
                 }
+
+                fn as_any(&self) -> Option<&dyn std::any::Any> {
+                    Some(self as &dyn std::any::Any)
+                }
             }
         });
     }
@@ -76,6 +80,10 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
                     }
                     Ok(())
                 }
+
+                fn as_any(&self) -> Option<&dyn std::any::Any> {
+                    Some(self as &dyn std::any::Any)
+                }
             }
         }),
         Kind::Other => Ok(quote! {
@@ -84,6 +92,10 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
                 fn render(self, r: &mut ::cabin::render::Renderer) -> Result<(), ::cabin::Error> {
                     r.attribute(#attr_name, self.0);
                     Ok(())
+                }
+
+                fn as_any(&self) -> Option<&dyn std::any::Any> {
+                    Some(self as &dyn std::any::Any)
                 }
             }
         }),

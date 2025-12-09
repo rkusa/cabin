@@ -1,4 +1,6 @@
 pub use crate::View;
+pub use crate::element::ElementProxy as _;
+pub use crate::element::IntoChild as _;
 pub use crate::html::elements::anchor::Anchor as _;
 pub use crate::html::elements::area::Area as _;
 pub use crate::html::elements::aria::Aria as _;
@@ -43,3 +45,4 @@ pub use crate::html::elements::th::Th as _;
 pub use crate::html::elements::time::Time as _;
 pub use crate::html::h;
 pub use crate::pack::Pack as _;
+pub use crate::void_element::VoidElementProxy as _;

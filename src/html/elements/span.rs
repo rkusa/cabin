@@ -1,7 +1,7 @@
 use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 // TODO:
 pub fn span() -> Element<marker::Span> {
@@ -10,8 +10,14 @@ pub fn span() -> Element<marker::Span> {
 
 pub mod marker {
     pub struct Span;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Span> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Common for Element<marker::Span> {}
-impl Global for Element<marker::Span> {}
-impl Aria for Element<marker::Span> {}
+impl<P> Common<marker::Span> for P where P: ElementProxy<marker::Span> {}
+impl<P> Global<marker::Span> for P where P: ElementProxy<marker::Span> {}
+impl<P> Aria<marker::Span> for P where P: ElementProxy<marker::Span> {}

@@ -18,7 +18,7 @@ use super::script::Src;
 use crate::attribute::WithAttribute;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 pub fn input() -> VoidElement<marker::Input> {
     VoidElement::new("input")
@@ -28,14 +28,14 @@ pub mod marker {
     pub struct Input;
 }
 
-impl Input for VoidElement<marker::Input> {}
-impl Common for VoidElement<marker::Input> {}
-impl Global for VoidElement<marker::Input> {}
-impl Aria for VoidElement<marker::Input> {}
+impl<P> Input<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
+impl<P> Common<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
+impl<P> Global<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
+impl<P> Aria<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
 
 // TODO: typed inputs? (number, date, ...)
 /// TODO: doc comment
-pub trait Input: WithAttribute {
+pub trait Input<T>: WithAttribute {
     /// Hint for expected file type in file upload controls.
     fn accept(self, accept: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Accept(accept.into()))

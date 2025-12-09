@@ -7,7 +7,7 @@ use super::global::Global;
 use super::option::Label;
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
@@ -19,12 +19,12 @@ pub mod marker {
     pub struct Track;
 }
 
-impl Track for VoidElement<marker::Track> {}
-impl Global for VoidElement<marker::Track> {}
+impl<P> Track<marker::Track> for P where P: VoidElementProxy<marker::Track> {}
+impl<P> Global<marker::Track> for P where P: VoidElementProxy<marker::Track> {}
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
-pub trait Track: WithAttribute {
+pub trait Track<T>: WithAttribute {
     ///  The type of text track.
     fn kind(self, kind: Kind) -> Self {
         self.with_attribute(kind)

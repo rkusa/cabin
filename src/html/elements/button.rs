@@ -7,7 +7,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::event::Event;
 use crate::html::elements::form::OnSubmit;
 
@@ -18,15 +18,21 @@ pub fn button() -> Element<marker::Button> {
 
 pub mod marker {
     pub struct Button;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Button> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Button for Element<marker::Button> {}
-impl Common for Element<marker::Button> {}
-impl Global for Element<marker::Button> {}
-impl Aria for Element<marker::Button> {}
+impl<P> Button<marker::Button> for P where P: ElementProxy<marker::Button> {}
+impl<P> Common<marker::Button> for P where P: ElementProxy<marker::Button> {}
+impl<P> Global<marker::Button> for P where P: ElementProxy<marker::Button> {}
+impl<P> Aria<marker::Button> for P where P: ElementProxy<marker::Button> {}
 
 /// The `button` element represents a button labeled by its contents.
-pub trait Button: WithAttribute {
+pub trait Button<T>: WithAttribute {
     /// Whether the button is disabled.
     fn disabled(self) -> Self {
         self.with_disabled(true)

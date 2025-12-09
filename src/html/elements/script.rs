@@ -9,63 +9,32 @@ use super::common::Common;
 use super::global::Global;
 use super::link::{Blocking, CrossOrigin, FetchPriority, Type};
 use crate::View;
-use crate::attribute::{Attribute, WithAttribute};
-use crate::element::{Element, ElementContent};
+use crate::attribute::WithAttribute;
+use crate::element::{Element, ElementProxy};
 use crate::render::{Escape, Renderer};
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
-pub fn script() -> ScriptElement {
-    ScriptElement(Element::new("script"))
+pub fn script() -> Element<marker::Script> {
+    Element::new("script")
 }
 
-pub struct ScriptElement(Element<marker::Script>);
-pub struct ScriptContent(ElementContent);
-
-mod marker {
+pub mod marker {
     pub struct Script;
-}
 
-impl ScriptElement {
-    pub fn new() -> Self {
-        Self(Element::new("script"))
-    }
-
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> ScriptContent {
-        ScriptContent(self.0.child(ScriptEscape(child.into())))
+    impl<'v, S: Into<std::borrow::Cow<'v, str>>> crate::element::IntoChild<'v, Script> for S {
+        fn into_child(self) -> impl crate::View + 'v {
+            self.into()
+        }
     }
 }
 
-impl ScriptContent {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
-        Self(self.0.child(ScriptEscape(child.into())))
-    }
-}
-
-impl View for ScriptElement {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        View::render(self.0, r)
-    }
-}
-
-impl View for ScriptContent {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        self.0.render(r)
-    }
-}
-
-impl WithAttribute for ScriptElement {
-    fn with_attribute(self, attr: impl Attribute) -> Self {
-        Self(self.0.with_attribute(attr))
-    }
-}
-
-impl Script for ScriptElement {}
-impl Common for ScriptElement {}
-impl Global for ScriptElement {}
-impl Aria for ScriptElement {}
+impl<P> Script<marker::Script> for P where P: ElementProxy<marker::Script> {}
+impl<P> Common<marker::Script> for P where P: ElementProxy<marker::Script> {}
+impl<P> Global<marker::Script> for P where P: ElementProxy<marker::Script> {}
+impl<P> Aria<marker::Script> for P where P: ElementProxy<marker::Script> {}
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
-pub trait Script: WithAttribute {
+pub trait Script<T>: WithAttribute {
     /// Address of the resource.
     fn src(self, src: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Src(src.into()))

@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt;
 use std::future::Future;
 use std::hash::Hash;
@@ -6,13 +7,12 @@ use std::pin::Pin;
 
 use serde::Serialize;
 
+use crate::View;
 use crate::attribute::{Attribute, WithAttribute as _};
 use crate::element::Element;
 use crate::error::InternalError;
-use crate::html::elements::script::Script as _;
 use crate::render::Renderer;
 use crate::view::AnyView;
-use crate::{View, h};
 
 pub struct Boundary<Args: 'static> {
     boundary_ref: Option<&'static BoundaryRef<Args>>,
@@ -176,6 +176,8 @@ where
     Args: Serialize,
 {
     fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
+        use cabin::prelude::*;
+
         let Some(args) = self.args else {
             return self.view.render(r);
         };
@@ -215,6 +217,10 @@ impl<Args: 'static> Attribute for &'static BoundaryRef<Args> {
         r.attribute("name", self.id);
         r.attribute("events", EventsList(self.events));
         Ok(())
+    }
+
+    fn as_any(&self) -> Option<&dyn Any> {
+        Some(self as &dyn Any)
     }
 }
 

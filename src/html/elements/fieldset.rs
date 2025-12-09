@@ -5,7 +5,7 @@ use super::button::{Disabled, Form, Name};
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `fieldset` element represents a set of form controls (or other content) grouped
 /// together, optionally with a caption. The caption is given by the first [super::legend]
@@ -17,17 +17,23 @@ pub fn fieldset() -> Element<marker::Fieldset> {
 
 pub mod marker {
     pub struct Fieldset;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Fieldset> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Fieldset for Element<marker::Fieldset> {}
-impl Common for Element<marker::Fieldset> {}
-impl Global for Element<marker::Fieldset> {}
-impl Aria for Element<marker::Fieldset> {}
+impl<P> Fieldset<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
+impl<P> Common<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
+impl<P> Global<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
+impl<P> Aria<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
 
 /// The `fieldset` element represents a set of form controls (or other content) grouped together,
 /// optionally with a caption. The caption is given by the first [super::legend] element that is a
 /// child of the [super::fieldset] element, if any. The remainder of the descendants form the group.
-pub trait Fieldset: WithAttribute {
+pub trait Fieldset<T>: WithAttribute {
     /// Whether the descendant form controls, except any inside [super::legend], are disabled.
     fn disabled(self) -> Self {
         self.with_disabled(true)

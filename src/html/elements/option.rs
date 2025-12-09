@@ -8,7 +8,7 @@ use super::common::Common;
 use super::global::Global;
 use super::input::Value;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `option` element represents an option in a [super::select] element or as part of a list
 /// of suggestions in a [super::datalist] element.
@@ -18,16 +18,22 @@ pub fn option() -> Element<marker::SelectOption> {
 
 pub mod marker {
     pub struct SelectOption;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, SelectOption> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl SelectOption for Element<marker::SelectOption> {}
-impl Common for Element<marker::SelectOption> {}
-impl Global for Element<marker::SelectOption> {}
-impl Aria for Element<marker::SelectOption> {}
+impl<P> SelectOption<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
+impl<P> Common<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
+impl<P> Global<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
+impl<P> Aria<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.
-pub trait SelectOption: WithAttribute {
+pub trait SelectOption<T>: WithAttribute {
     /// Whether the form control is disabled.
     fn disabled(self) -> Self {
         self.with_disabled(true)

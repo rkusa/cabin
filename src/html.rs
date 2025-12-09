@@ -14,6 +14,7 @@ pub use elements::global::Global;
 pub use h::*;
 
 pub mod h {
+
     #[doc(inline)]
     pub use super::elements::abbr::abbr;
     #[doc(inline)]
@@ -238,6 +239,8 @@ pub mod h {
     pub use super::elements::video::{self as video, Video, video};
     #[doc(inline)]
     pub use super::elements::wbr::wbr;
+    #[doc(inline)]
+    pub use crate::element::ElementProxy as _;
     use crate::fragment::Fragment;
     pub use crate::html::raw::raw;
     use crate::view::AnyView;

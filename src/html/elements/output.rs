@@ -6,7 +6,7 @@ use super::common::Common;
 use super::global::Global;
 use super::label::For;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The output element represents the result of a calculation performed by the application, or
 /// the result of a user action.
@@ -16,16 +16,22 @@ pub fn output() -> Element<marker::Output> {
 
 pub mod marker {
     pub struct Output;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Output> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Output for Element<marker::Output> {}
-impl Common for Element<marker::Output> {}
-impl Global for Element<marker::Output> {}
-impl Aria for Element<marker::Output> {}
+impl<P> Output<marker::Output> for P where P: ElementProxy<marker::Output> {}
+impl<P> Common<marker::Output> for P where P: ElementProxy<marker::Output> {}
+impl<P> Global<marker::Output> for P where P: ElementProxy<marker::Output> {}
+impl<P> Aria<marker::Output> for P where P: ElementProxy<marker::Output> {}
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.
-pub trait Output: WithAttribute {
+pub trait Output<T>: WithAttribute {
     /// Specifies controls from which the output was calculated.
     fn r#for(self, r#for: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(For(r#for.into()))

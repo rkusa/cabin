@@ -12,7 +12,7 @@ use super::input::{Height, Width};
 use super::link::{CrossOrigin, FetchPriority};
 use super::script::Src;
 use crate::attribute::WithAttribute;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// An `img` element represents an image.
 pub fn img() -> VoidElement<marker::Img> {
@@ -23,13 +23,13 @@ pub mod marker {
     pub struct Img;
 }
 
-impl Img for VoidElement<marker::Img> {}
-impl Common for VoidElement<marker::Img> {}
-impl Global for VoidElement<marker::Img> {}
-impl Aria for VoidElement<marker::Img> {}
+impl<P> Img<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
+impl<P> Common<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
+impl<P> Global<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
+impl<P> Aria<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
 
 /// An `img` element represents an image.
-pub trait Img: WithAttribute {
+pub trait Img<T>: WithAttribute {
     /// Replacement text for use when images are not available.
     fn alt(self, alt: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Alt(alt.into()))

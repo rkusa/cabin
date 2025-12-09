@@ -7,7 +7,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `meter` element represents a scalar measurement within a known range, or a fractional
 /// value; for example disk usage, the relevance of a query result, or the fraction of a
@@ -18,17 +18,23 @@ pub fn meter() -> Element<marker::Meter> {
 
 pub mod marker {
     pub struct Meter;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Meter> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Meter for Element<marker::Meter> {}
-impl Common for Element<marker::Meter> {}
-impl Global for Element<marker::Meter> {}
-impl Aria for Element<marker::Meter> {}
+impl<P> Meter<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
+impl<P> Common<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
+impl<P> Global<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
+impl<P> Aria<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
 
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population
 /// to have selected a particular candidate.
-pub trait Meter: WithAttribute {
+pub trait Meter<T>: WithAttribute {
     /// Current value of the element.
     fn value(self, value: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Value(value.into()))

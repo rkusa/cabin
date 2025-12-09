@@ -10,7 +10,7 @@ use super::iframe::Name;
 use super::input::{Height, Width};
 use super::link::Type;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.
@@ -20,16 +20,22 @@ pub fn object() -> Element<marker::Object> {
 
 pub mod marker {
     pub struct Object;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Object> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Object for Element<marker::Object> {}
-impl Common for Element<marker::Object> {}
-impl Global for Element<marker::Object> {}
-impl Aria for Element<marker::Object> {}
+impl<P> Object<marker::Object> for P where P: ElementProxy<marker::Object> {}
+impl<P> Common<marker::Object> for P where P: ElementProxy<marker::Object> {}
+impl<P> Global<marker::Object> for P where P: ElementProxy<marker::Object> {}
+impl<P> Aria<marker::Object> for P where P: ElementProxy<marker::Object> {}
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.
-pub trait Object: WithAttribute {
+pub trait Object<T>: WithAttribute {
     /// Address of the resource.
     fn data(self, data: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Data(data.into()))

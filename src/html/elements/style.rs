@@ -5,65 +5,35 @@ use super::common::Common;
 use super::global::Global;
 use super::link::Blocking;
 use super::meta::Media;
-use crate::View;
-use crate::attribute::{Attribute, WithAttribute};
-use crate::element::{Element, ElementContent};
-use crate::html::elements::script::ScriptEscape;
-use crate::render::Renderer;
+use crate::attribute::WithAttribute;
+use crate::element::{Element, ElementProxy};
 
 /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
 /// element is one of several inputs to the styling processing model. The element does not
 /// represent content for the user.
-pub fn style() -> StyleElement {
-    StyleElement(Element::new("style"))
+pub fn style() -> Element<marker::Style> {
+    Element::new("style")
 }
 
-pub struct StyleElement(Element<marker::Style>);
-pub struct StyleContent(ElementContent);
-
-mod marker {
+pub mod marker {
     pub struct Style;
-}
 
-impl StyleElement {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> StyleContent {
-        StyleContent(self.0.child(ScriptEscape(child.into())))
+    impl<'v, S: Into<std::borrow::Cow<'v, str>>> crate::element::IntoChild<'v, Style> for S {
+        fn into_child(self) -> impl crate::View + 'v {
+            self.into()
+        }
     }
 }
 
-impl StyleContent {
-    pub fn child<'s>(self, child: impl Into<Cow<'s, str>>) -> Self {
-        Self(self.0.child(ScriptEscape(child.into())))
-    }
-}
-
-impl View for StyleElement {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        View::render(self.0, r)
-    }
-}
-
-impl View for StyleContent {
-    fn render(self, r: &mut Renderer) -> Result<(), crate::Error> {
-        self.0.render(r)
-    }
-}
-
-impl WithAttribute for StyleElement {
-    fn with_attribute(self, attr: impl Attribute) -> Self {
-        Self(self.0.with_attribute(attr))
-    }
-}
-
-impl Style for StyleElement {}
-impl Common for StyleElement {}
-impl Global for StyleElement {}
-impl Aria for StyleElement {}
+impl<P> Style<marker::Style> for P where P: ElementProxy<marker::Style> {}
+impl<P> Common<marker::Style> for P where P: ElementProxy<marker::Style> {}
+impl<P> Global<marker::Style> for P where P: ElementProxy<marker::Style> {}
+impl<P> Aria<marker::Style> for P where P: ElementProxy<marker::Style> {}
 
 /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
 /// element is one of several inputs to the styling processing model. The element does not represent
 /// content for the user.
-pub trait Style: WithAttribute {
+pub trait Style<T>: WithAttribute {
     /// Applicable media.
     fn media(self, media: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Media(media.into()))

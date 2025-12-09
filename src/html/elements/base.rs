@@ -5,7 +5,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// The `base` element allows authors to specify the document base URL for the purposes of
 /// parsing URLs, and the name of the default navigable for the purposes of following
@@ -18,15 +18,15 @@ pub mod marker {
     pub struct Base;
 }
 
-impl Base for VoidElement<marker::Base> {}
-impl Common for VoidElement<marker::Base> {}
-impl Global for VoidElement<marker::Base> {}
-impl Aria for VoidElement<marker::Base> {}
+impl<P> Base<marker::Base> for P where P: VoidElementProxy<marker::Base> {}
+impl<P> Common<marker::Base> for P where P: VoidElementProxy<marker::Base> {}
+impl<P> Global<marker::Base> for P where P: VoidElementProxy<marker::Base> {}
+impl<P> Aria<marker::Base> for P where P: VoidElementProxy<marker::Base> {}
 
 /// The `base` element allows authors to specify the document base URL for the purposes of parsing
 /// URLs, and the name of the default navigable for the purposes of following hyperlinks. The
 /// element does not represent any content beyond this information.
-pub trait Base: WithAttribute {
+pub trait Base<T>: WithAttribute {
     /// Address of the hyperlink.
     fn href(self, href: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Href(href.into()))

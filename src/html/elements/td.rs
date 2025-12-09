@@ -6,7 +6,7 @@ use super::aria::Aria;
 use super::common::Common;
 use super::global::Global;
 use crate::attribute::WithAttribute;
-use crate::element::Element;
+use crate::element::{Element, ElementProxy};
 use crate::html::list::SpaceSeparated;
 
 /// The `td` element represents a data cell in a [super::table].
@@ -16,15 +16,21 @@ pub fn td() -> Element<marker::Td> {
 
 pub mod marker {
     pub struct Td;
+
+    impl<'v, V: crate::View + 'v> crate::element::IntoChild<'v, Td> for V {
+        fn into_child(self) -> impl crate::View {
+            self
+        }
+    }
 }
 
-impl Td for Element<marker::Td> {}
-impl Common for Element<marker::Td> {}
-impl Global for Element<marker::Td> {}
-impl Aria for Element<marker::Td> {}
+impl<P> Td<marker::Td> for P where P: ElementProxy<marker::Td> {}
+impl<P> Common<marker::Td> for P where P: ElementProxy<marker::Td> {}
+impl<P> Global<marker::Td> for P where P: ElementProxy<marker::Td> {}
+impl<P> Aria<marker::Td> for P where P: ElementProxy<marker::Td> {}
 
 /// The `td` element represents a data cell in a [super::table].
-pub trait Td: WithAttribute {
+pub trait Td<T>: WithAttribute {
     /// Number of columns that the cell is to span.
     fn col_span(self, col_span: u32) -> Self {
         self.with_attribute(ColSpan(col_span))

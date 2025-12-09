@@ -11,7 +11,7 @@ use super::global::Global;
 use super::img::Sizes;
 use crate::attribute::WithAttribute;
 use crate::html::list::SpaceSeparated;
-use crate::void_element::VoidElement;
+use crate::void_element::{VoidElement, VoidElementProxy};
 
 /// A `link` element allows to link to other resources.
 pub fn link() -> VoidElement<marker::Link> {
@@ -22,13 +22,13 @@ pub mod marker {
     pub struct Link;
 }
 
-impl Link for VoidElement<marker::Link> {}
-impl Common for VoidElement<marker::Link> {}
-impl Global for VoidElement<marker::Link> {}
-impl Aria for VoidElement<marker::Link> {}
+impl<P> Link<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
+impl<P> Common<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
+impl<P> Global<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
+impl<P> Aria<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
 
 /// A `link` element allows to link to other resources.
-pub trait Link: WithAttribute {
+pub trait Link<T>: WithAttribute {
     //// Address of the hyperlink.
     fn href(self, href: impl Into<Cow<'static, str>>) -> Self {
         self.with_attribute(Href(href.into()))
