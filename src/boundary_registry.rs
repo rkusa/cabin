@@ -91,7 +91,7 @@ impl BoundaryRegistry {
                 Err(err) => return err_to_response(err.into()),
             };
 
-            let mut context = Context::new(true).with_event(event.event_id, event.payload);
+            let mut context = Context::new(true, false).with_event(event.event_id, event.payload);
             if let Some(multipart) = event.multipart {
                 context = context.with_multipart(multipart);
             }

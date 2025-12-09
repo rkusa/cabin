@@ -16,6 +16,7 @@ pub struct Renderer {
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
     is_update: bool,
+    disable_hashes: bool,
 }
 
 pub struct Out {
@@ -24,12 +25,13 @@ pub struct Out {
 }
 
 impl Renderer {
-    pub fn new(is_update: bool) -> Self {
+    pub fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {
             out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
             hasher: XxHash32::default(),
             is_update,
+            disable_hashes,
         }
     }
 
@@ -132,7 +134,7 @@ impl Renderer {
         write!(&mut self.out, "<{tag}").unwrap();
 
         let should_write_hash = !matches!(tag, "html" | "body" | "head" | "option");
-        if should_write_hash {
+        if should_write_hash && !self.disable_hashes {
             write!(&mut self.out, " hash=\"").unwrap();
             let hash_offset = self.out.len();
             // Write placeholder id which will be replaced later on
@@ -154,7 +156,9 @@ impl Renderer {
         hash_offset: Option<usize>,
     ) {
         let hash = self.hasher.finish() as u32;
-        if let Some(offset) = hash_offset {
+        if let Some(offset) = hash_offset
+            && !self.disable_hashes
+        {
             write!(WriteInto::new(&mut self.out, offset), "{hash:x}").unwrap();
         }
 

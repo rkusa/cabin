@@ -88,7 +88,7 @@ where
     V: View,
 {
     crate::local_pool::spawn(|| async move {
-        let context = Context::new(false);
+        let context = Context::new(false, false);
         let mut r = context.acquire_renderer();
         let result = context
             .run(async move {
@@ -129,7 +129,7 @@ where
             Ok(result) => result,
             Err(err) => return err_to_response(err),
         };
-        let mut context = Context::new(true).with_event(event.event_id, event.payload);
+        let mut context = Context::new(true, false).with_event(event.event_id, event.payload);
         if let Some(multipart) = event.multipart {
             context = context.with_multipart(multipart);
         }

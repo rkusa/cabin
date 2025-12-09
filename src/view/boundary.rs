@@ -117,7 +117,7 @@ impl<Args: 'static> BoundaryRef<Args> {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
-        let context = crate::Context::new(true)
+        let context = crate::Context::new(true, false)
             .with_event(event.event_id, crate::context::Payload::Json(event.payload));
         let mut r = context.acquire_renderer();
         let result = runtime.block_on(context.run(async move {

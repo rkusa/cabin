@@ -146,7 +146,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_script_escape() {
-        let c = Context::new(false);
+        let c = Context::new(false, false);
 
         c.run(async {
             let mut r = Context::acquire_renderer_from_task();

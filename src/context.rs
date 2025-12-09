@@ -18,6 +18,7 @@ pub struct Context {
     multipart: RefCell<Option<Multipart<'static>>>,
     error: RefCell<Option<InternalError>>,
     is_update: bool,
+    disable_hashes: bool,
 }
 
 enum Event {
@@ -32,13 +33,14 @@ pub(crate) enum Payload {
 }
 
 impl Context {
-    pub fn new(is_update: bool) -> Self {
+    pub fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {
             renderer_pool: RefCell::new(Vec::with_capacity(8)),
             event: RefCell::new(None),
             multipart: RefCell::new(None),
             error: RefCell::new(None),
             is_update,
+            disable_hashes,
         }
     }
 
@@ -61,7 +63,7 @@ impl Context {
         self.renderer_pool
             .borrow_mut()
             .pop()
-            .unwrap_or_else(|| Renderer::new(self.is_update))
+            .unwrap_or_else(|| Renderer::new(self.is_update, self.disable_hashes))
     }
 
     pub(crate) fn release_renderer(&self, mut renderer: Renderer) {
@@ -73,7 +75,7 @@ impl Context {
         let r = CONTEXT.try_with(|c| c.acquire_renderer()).ok();
         debug_assert!(r.is_some());
 
-        r.unwrap_or_else(|| Renderer::new(false))
+        r.unwrap_or_else(|| Renderer::new(false, false))
     }
 
     pub(crate) fn release_renderer_into_task(r: Renderer) {
