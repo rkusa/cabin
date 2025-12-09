@@ -5,7 +5,14 @@ use std::hash::{Hash, Hasher};
 #[derive(Debug, Clone)]
 pub enum SpaceSeparated<T> {
     Single(T),
+    // FIXME: use SmallVec?
     List(HashSet<T>),
+}
+
+impl<T: Hash + Eq> SpaceSeparated<T> {
+    pub fn from_iter(iter: impl IntoIterator<Item = T>) -> Self {
+        Self::List(HashSet::from_iter(iter))
+    }
 }
 
 impl<T> From<T> for SpaceSeparated<T> {
