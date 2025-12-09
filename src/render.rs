@@ -5,6 +5,7 @@ use http::{HeaderMap, HeaderValue};
 use twox_hash::XxHash32;
 
 use crate::View;
+use crate::view::RenderFuture;
 
 pub struct Renderer {
     out: String,
@@ -45,11 +46,7 @@ impl Renderer {
         self.is_update
     }
 
-    pub fn element(
-        mut self,
-        tag: &'static str,
-        include_hash: bool,
-    ) -> Result<ElementRenderer, crate::Error> {
+    pub fn element(mut self, tag: &'static str, include_hash: bool) -> ElementRenderer {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.write(tag.as_bytes());
 
@@ -60,26 +57,26 @@ impl Renderer {
             self.skip_hash = true;
         }
 
-        write!(&mut self.out, "<{tag}").map_err(crate::error::InternalError::from)?;
+        write!(&mut self.out, "<{tag}").unwrap();
 
         let hash_offset = if should_write_id {
-            write!(&mut self.out, " hash=\"").map_err(crate::error::InternalError::from)?;
+            write!(&mut self.out, " hash=\"").unwrap();
             let hash_offset = self.out.len();
             // Write placeholder id which will be replaced later on
-            write!(&mut self.out, "00000000\"").map_err(crate::error::InternalError::from)?;
+            write!(&mut self.out, "00000000\"").unwrap();
             Some(hash_offset)
         } else {
             None
         };
 
-        Ok(ElementRenderer {
+        ElementRenderer {
             tag,
             parent_hasher,
             parent_skip_hash,
             renderer: self,
             content_started: false,
             hash_offset,
-        })
+        }
     }
 
     pub fn headers_mut(&mut self) -> &mut HeaderMap<HeaderValue> {
@@ -141,14 +138,47 @@ impl ElementRenderer {
         Ok(())
     }
 
-    pub async fn content(mut self, view: impl View) -> Result<Renderer, crate::Error> {
-        if !self.content_started {
-            self.content_started = true;
-            write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
+    pub fn content(self, view: impl View) -> RenderFuture {
+        let ElementRenderer {
+            tag,
+            mut renderer,
+            parent_hasher,
+            parent_skip_hash,
+            mut content_started,
+            hash_offset,
+        } = self;
+
+        if !content_started {
+            content_started = true;
+            write!(&mut renderer.out, ">").unwrap();
         }
 
-        self.renderer = view.render(self.renderer, false).await?;
-        self.end(false)
+        match view.render(renderer, false) {
+            RenderFuture::Ready(Some(Ok(renderer))) => RenderFuture::ready(
+                ElementRenderer {
+                    tag,
+                    renderer,
+                    parent_hasher,
+                    parent_skip_hash,
+                    content_started,
+                    hash_offset,
+                }
+                .end(false),
+            ),
+            RenderFuture::Ready(Some(Err(err))) => RenderFuture::Ready(Some(Err(err))),
+            RenderFuture::Ready(None) => RenderFuture::Ready(None),
+            RenderFuture::Future(fut) => RenderFuture::Future(Box::pin(async move {
+                ElementRenderer {
+                    tag,
+                    renderer: fut.await?,
+                    parent_hasher,
+                    parent_skip_hash,
+                    content_started,
+                    hash_offset,
+                }
+                .end(false)
+            })),
+        }
     }
 
     pub fn end(mut self, is_void_element: bool) -> Result<Renderer, crate::Error> {

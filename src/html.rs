@@ -291,24 +291,24 @@ where
     V: View,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
-        RenderFuture::Future(Box::pin(async move {
-            let Html {
-                tag,
-                is_void_element,
-                attributes,
-                content,
-                marker: _,
-            } = self;
+        let Html {
+            tag,
+            is_void_element,
+            attributes,
+            content,
+            marker: _,
+        } = self;
 
-            let mut el = r.element(tag, include_hash)?;
-            attributes.render(&mut el)?;
+        let mut el = r.element(tag, include_hash);
+        if let Err(err) = attributes.render(&mut el) {
+            return RenderFuture::ready(Err(err));
+        }
 
-            if !is_void_element {
-                el.content(content).await
-            } else {
-                el.end(true)
-            }
-        }))
+        if !is_void_element {
+            el.content(content)
+        } else {
+            RenderFuture::ready(el.end(true))
+        }
     }
 
     fn prime(&mut self) -> impl Future<Output = ()> + Send {

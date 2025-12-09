@@ -139,11 +139,10 @@ where
     V: View,
 {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
-        RenderFuture::Future(Box::pin(async move {
-            let mut el = r.element("cabin-keyed", true)?;
-            el.attribute("id", self.key)
-                .map_err(crate::error::InternalError::from)?;
-            el.content(self.view).await
-        }))
+        let mut el = r.element("cabin-keyed", true);
+        if let Err(err) = el.attribute("id", self.key) {
+            return RenderFuture::ready(Err(crate::error::InternalError::from(err).into()));
+        }
+        el.content(self.view)
     }
 }
