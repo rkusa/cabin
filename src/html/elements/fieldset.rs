@@ -25,10 +25,10 @@ pub mod marker {
     }
 }
 
-impl<P> Fieldset<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
-impl<P> Common<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
-impl<P> Global<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
-impl<P> Aria<marker::Fieldset> for P where P: ElementProxy<marker::Fieldset> {}
+impl<E, P> Fieldset<(marker::Fieldset, P)> for E where E: ElementProxy<marker::Fieldset, P> {}
+impl<E, P> Common<(marker::Fieldset, P)> for E where E: ElementProxy<marker::Fieldset, P> {}
+impl<E, P> Global<(marker::Fieldset, P)> for E where E: ElementProxy<marker::Fieldset, P> {}
+impl<E, P> Aria<(marker::Fieldset, P)> for E where E: ElementProxy<marker::Fieldset, P> {}
 
 /// The `fieldset` element represents a set of form controls (or other content) grouped together,
 /// optionally with a caption. The caption is given by the first [super::legend] element that is a

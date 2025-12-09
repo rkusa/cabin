@@ -19,8 +19,8 @@ pub mod marker {
     pub struct Track;
 }
 
-impl<P> Track<marker::Track> for P where P: VoidElementProxy<marker::Track> {}
-impl<P> Global<marker::Track> for P where P: VoidElementProxy<marker::Track> {}
+impl<E> Track<marker::Track> for E where E: VoidElementProxy<marker::Track> {}
+impl<E> Global<marker::Track> for E where E: VoidElementProxy<marker::Track> {}
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.

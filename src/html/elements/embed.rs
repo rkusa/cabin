@@ -19,10 +19,10 @@ pub mod marker {
     pub struct Embed;
 }
 
-impl<P> Embed<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
-impl<P> Common<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
-impl<P> Global<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
-impl<P> Aria<marker::Embed> for P where P: VoidElementProxy<marker::Embed> {}
+impl<E> Embed<marker::Embed> for E where E: VoidElementProxy<marker::Embed> {}
+impl<E> Common<marker::Embed> for E where E: VoidElementProxy<marker::Embed> {}
+impl<E> Global<marker::Embed> for E where E: VoidElementProxy<marker::Embed> {}
+impl<E> Aria<marker::Embed> for E where E: VoidElementProxy<marker::Embed> {}
 
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.

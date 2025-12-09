@@ -21,10 +21,10 @@ pub mod marker {
     }
 }
 
-impl<P> Details<marker::Details> for P where P: ElementProxy<marker::Details> {}
-impl<P> Common<marker::Details> for P where P: ElementProxy<marker::Details> {}
-impl<P> Global<marker::Details> for P where P: ElementProxy<marker::Details> {}
-impl<P> Aria<marker::Details> for P where P: ElementProxy<marker::Details> {}
+impl<E, P> Details<(marker::Details, P)> for E where E: ElementProxy<marker::Details, P> {}
+impl<E, P> Common<(marker::Details, P)> for E where E: ElementProxy<marker::Details, P> {}
+impl<E, P> Global<(marker::Details, P)> for E where E: ElementProxy<marker::Details, P> {}
+impl<E, P> Aria<(marker::Details, P)> for E where E: ElementProxy<marker::Details, P> {}
 
 /// The `details` element represents a disclosure widget from which the user can obtain additional
 /// information or controls.

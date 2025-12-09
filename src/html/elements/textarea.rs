@@ -29,10 +29,10 @@ pub mod marker {
     }
 }
 
-impl<P> Textarea<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
-impl<P> Common<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
-impl<P> Global<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
-impl<P> Aria<marker::Textarea> for P where P: ElementProxy<marker::Textarea> {}
+impl<E, P> Textarea<(marker::Textarea, P)> for E where E: ElementProxy<marker::Textarea, P> {}
+impl<E, P> Common<(marker::Textarea, P)> for E where E: ElementProxy<marker::Textarea, P> {}
+impl<E, P> Global<(marker::Textarea, P)> for E where E: ElementProxy<marker::Textarea, P> {}
+impl<E, P> Aria<(marker::Textarea, P)> for E where E: ElementProxy<marker::Textarea, P> {}
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.

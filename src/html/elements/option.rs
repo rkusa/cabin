@@ -26,10 +26,13 @@ pub mod marker {
     }
 }
 
-impl<P> SelectOption<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
-impl<P> Common<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
-impl<P> Global<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
-impl<P> Aria<marker::SelectOption> for P where P: ElementProxy<marker::SelectOption> {}
+impl<E, P> SelectOption<(marker::SelectOption, P)> for E where
+    E: ElementProxy<marker::SelectOption, P>
+{
+}
+impl<E, P> Common<(marker::SelectOption, P)> for E where E: ElementProxy<marker::SelectOption, P> {}
+impl<E, P> Global<(marker::SelectOption, P)> for E where E: ElementProxy<marker::SelectOption, P> {}
+impl<E, P> Aria<(marker::SelectOption, P)> for E where E: ElementProxy<marker::SelectOption, P> {}
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.

@@ -22,10 +22,10 @@ pub mod marker {
     }
 }
 
-impl<P> Canvas<marker::Canvas> for P where P: ElementProxy<marker::Canvas> {}
-impl<P> Common<marker::Canvas> for P where P: ElementProxy<marker::Canvas> {}
-impl<P> Global<marker::Canvas> for P where P: ElementProxy<marker::Canvas> {}
-impl<P> Aria<marker::Canvas> for P where P: ElementProxy<marker::Canvas> {}
+impl<E, P> Canvas<(marker::Canvas, P)> for E where E: ElementProxy<marker::Canvas, P> {}
+impl<E, P> Common<(marker::Canvas, P)> for E where E: ElementProxy<marker::Canvas, P> {}
+impl<E, P> Global<(marker::Canvas, P)> for E where E: ElementProxy<marker::Canvas, P> {}
+impl<E, P> Aria<(marker::Canvas, P)> for E where E: ElementProxy<marker::Canvas, P> {}
 
 /// The `canvas` element provides scripts with a resolution-dependent bitmap canvas, which can be
 /// used for rendering graphs, game graphics, art, or other visual images on the fly. The contents

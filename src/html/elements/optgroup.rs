@@ -23,10 +23,10 @@ pub mod marker {
     }
 }
 
-impl<P> OptGroup<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
-impl<P> Common<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
-impl<P> Global<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
-impl<P> Aria<marker::OptGroup> for P where P: ElementProxy<marker::OptGroup> {}
+impl<E, P> OptGroup<(marker::OptGroup, P)> for E where E: ElementProxy<marker::OptGroup, P> {}
+impl<E, P> Common<(marker::OptGroup, P)> for E where E: ElementProxy<marker::OptGroup, P> {}
+impl<E, P> Global<(marker::OptGroup, P)> for E where E: ElementProxy<marker::OptGroup, P> {}
+impl<E, P> Aria<(marker::OptGroup, P)> for E where E: ElementProxy<marker::OptGroup, P> {}
 
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
 pub trait OptGroup<T>: WithAttribute {

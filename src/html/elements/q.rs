@@ -22,10 +22,10 @@ pub mod marker {
     }
 }
 
-impl<P> Q<marker::Q> for P where P: ElementProxy<marker::Q> {}
-impl<P> Common<marker::Q> for P where P: ElementProxy<marker::Q> {}
-impl<P> Global<marker::Q> for P where P: ElementProxy<marker::Q> {}
-impl<P> Aria<marker::Q> for P where P: ElementProxy<marker::Q> {}
+impl<E, P> Q<(marker::Q, P)> for E where E: ElementProxy<marker::Q, P> {}
+impl<E, P> Common<(marker::Q, P)> for E where E: ElementProxy<marker::Q, P> {}
+impl<E, P> Global<(marker::Q, P)> for E where E: ElementProxy<marker::Q, P> {}
+impl<E, P> Aria<(marker::Q, P)> for E where E: ElementProxy<marker::Q, P> {}
 
 /// The `q` element represents some phrasing content quoted from another source.
 pub trait Q<T>: WithAttribute {

@@ -26,10 +26,10 @@ pub mod marker {
     }
 }
 
-impl<P> Meter<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
-impl<P> Common<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
-impl<P> Global<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
-impl<P> Aria<marker::Meter> for P where P: ElementProxy<marker::Meter> {}
+impl<E, P> Meter<(marker::Meter, P)> for E where E: ElementProxy<marker::Meter, P> {}
+impl<E, P> Common<(marker::Meter, P)> for E where E: ElementProxy<marker::Meter, P> {}
+impl<E, P> Global<(marker::Meter, P)> for E where E: ElementProxy<marker::Meter, P> {}
+impl<E, P> Aria<(marker::Meter, P)> for E where E: ElementProxy<marker::Meter, P> {}
 
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population

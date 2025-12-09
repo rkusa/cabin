@@ -21,10 +21,10 @@ pub mod marker {
     }
 }
 
-impl<P> Dialog<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
-impl<P> Common<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
-impl<P> Global<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
-impl<P> Aria<marker::Dialog> for P where P: ElementProxy<marker::Dialog> {}
+impl<E, P> Dialog<(marker::Dialog, P)> for E where E: ElementProxy<marker::Dialog, P> {}
+impl<E, P> Common<(marker::Dialog, P)> for E where E: ElementProxy<marker::Dialog, P> {}
+impl<E, P> Global<(marker::Dialog, P)> for E where E: ElementProxy<marker::Dialog, P> {}
+impl<E, P> Aria<(marker::Dialog, P)> for E where E: ElementProxy<marker::Dialog, P> {}
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
 pub trait Dialog<T>: WithAttribute {

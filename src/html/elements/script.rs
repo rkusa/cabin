@@ -28,10 +28,10 @@ pub mod marker {
     }
 }
 
-impl<P> Script<marker::Script> for P where P: ElementProxy<marker::Script> {}
-impl<P> Common<marker::Script> for P where P: ElementProxy<marker::Script> {}
-impl<P> Global<marker::Script> for P where P: ElementProxy<marker::Script> {}
-impl<P> Aria<marker::Script> for P where P: ElementProxy<marker::Script> {}
+impl<E, P> Script<(marker::Script, P)> for E where E: ElementProxy<marker::Script, P> {}
+impl<E, P> Common<(marker::Script, P)> for E where E: ElementProxy<marker::Script, P> {}
+impl<E, P> Global<(marker::Script, P)> for E where E: ElementProxy<marker::Script, P> {}
+impl<E, P> Aria<(marker::Script, P)> for E where E: ElementProxy<marker::Script, P> {}
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
 pub trait Script<T>: WithAttribute {

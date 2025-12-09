@@ -26,7 +26,7 @@ pub mod marker {
     }
 }
 
-impl<P> Global<marker::Title> for P where P: ElementProxy<marker::Title> {}
+impl<E, P> Global<(marker::Title, P)> for E where E: ElementProxy<marker::Title, P> {}
 
 pub struct TitleUpdate(pub Cow<'static, str>);
 

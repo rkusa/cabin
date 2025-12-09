@@ -24,10 +24,10 @@ pub mod marker {
     }
 }
 
-impl<P> Output<marker::Output> for P where P: ElementProxy<marker::Output> {}
-impl<P> Common<marker::Output> for P where P: ElementProxy<marker::Output> {}
-impl<P> Global<marker::Output> for P where P: ElementProxy<marker::Output> {}
-impl<P> Aria<marker::Output> for P where P: ElementProxy<marker::Output> {}
+impl<E, P> Output<(marker::Output, P)> for E where E: ElementProxy<marker::Output, P> {}
+impl<E, P> Common<(marker::Output, P)> for E where E: ElementProxy<marker::Output, P> {}
+impl<E, P> Global<(marker::Output, P)> for E where E: ElementProxy<marker::Output, P> {}
+impl<E, P> Aria<(marker::Output, P)> for E where E: ElementProxy<marker::Output, P> {}
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.

@@ -20,8 +20,8 @@ pub mod marker {
     pub struct Source;
 }
 
-impl<P> Source<marker::Source> for P where P: VoidElementProxy<marker::Source> {}
-impl<P> Global<marker::Source> for P where P: VoidElementProxy<marker::Source> {}
+impl<E> Source<marker::Source> for E where E: VoidElementProxy<marker::Source> {}
+impl<E> Global<marker::Source> for E where E: VoidElementProxy<marker::Source> {}
 
 /// An `source` element represents an image.
 pub trait Source<T>: WithAttribute {

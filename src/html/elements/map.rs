@@ -24,10 +24,10 @@ pub mod marker {
     }
 }
 
-impl<P> Map<marker::Map> for P where P: ElementProxy<marker::Map> {}
-impl<P> Common<marker::Map> for P where P: ElementProxy<marker::Map> {}
-impl<P> Global<marker::Map> for P where P: ElementProxy<marker::Map> {}
-impl<P> Aria<marker::Map> for P where P: ElementProxy<marker::Map> {}
+impl<E, P> Map<(marker::Map, P)> for E where E: ElementProxy<marker::Map, P> {}
+impl<E, P> Common<(marker::Map, P)> for E where E: ElementProxy<marker::Map, P> {}
+impl<E, P> Global<(marker::Map, P)> for E where E: ElementProxy<marker::Map, P> {}
+impl<E, P> Aria<(marker::Map, P)> for E where E: ElementProxy<marker::Map, P> {}
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.

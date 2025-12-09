@@ -26,10 +26,10 @@ pub mod marker {
     }
 }
 
-impl<P> Meta<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
-impl<P> Common<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
-impl<P> Global<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
-impl<P> Aria<marker::Meta> for P where P: ElementProxy<marker::Meta> {}
+impl<E, P> Meta<(marker::Meta, P)> for E where E: ElementProxy<marker::Meta, P> {}
+impl<E, P> Common<(marker::Meta, P)> for E where E: ElementProxy<marker::Meta, P> {}
+impl<E, P> Global<(marker::Meta, P)> for E where E: ElementProxy<marker::Meta, P> {}
+impl<E, P> Aria<(marker::Meta, P)> for E where E: ElementProxy<marker::Meta, P> {}
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and

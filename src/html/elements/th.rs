@@ -26,10 +26,10 @@ pub mod marker {
     }
 }
 
-impl<P> Th<marker::Th> for P where P: ElementProxy<marker::Th> {}
-impl<P> Common<marker::Th> for P where P: ElementProxy<marker::Th> {}
-impl<P> Global<marker::Th> for P where P: ElementProxy<marker::Th> {}
-impl<P> Aria<marker::Th> for P where P: ElementProxy<marker::Th> {}
+impl<E, P> Th<(marker::Th, P)> for E where E: ElementProxy<marker::Th, P> {}
+impl<E, P> Common<(marker::Th, P)> for E where E: ElementProxy<marker::Th, P> {}
+impl<E, P> Global<(marker::Th, P)> for E where E: ElementProxy<marker::Th, P> {}
+impl<E, P> Aria<(marker::Th, P)> for E where E: ElementProxy<marker::Th, P> {}
 
 /// The `th` element represents a header cell in a [super::table].
 pub trait Th<T>: WithAttribute {

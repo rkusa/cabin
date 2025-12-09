@@ -24,10 +24,10 @@ pub mod marker {
     }
 }
 
-impl<P> Label<marker::Label> for P where P: ElementProxy<marker::Label> {}
-impl<P> Common<marker::Label> for P where P: ElementProxy<marker::Label> {}
-impl<P> Global<marker::Label> for P where P: ElementProxy<marker::Label> {}
-impl<P> Aria<marker::Label> for P where P: ElementProxy<marker::Label> {}
+impl<E, P> Label<(marker::Label, P)> for E where E: ElementProxy<marker::Label, P> {}
+impl<E, P> Common<(marker::Label, P)> for E where E: ElementProxy<marker::Label, P> {}
+impl<E, P> Global<(marker::Label, P)> for E where E: ElementProxy<marker::Label, P> {}
+impl<E, P> Aria<(marker::Label, P)> for E where E: ElementProxy<marker::Label, P> {}
 
 /// A `label` element that represents a caption that can be associated with a specific form
 /// control.

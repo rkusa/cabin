@@ -25,10 +25,10 @@ pub mod marker {
     }
 }
 
-impl<P> Style<marker::Style> for P where P: ElementProxy<marker::Style> {}
-impl<P> Common<marker::Style> for P where P: ElementProxy<marker::Style> {}
-impl<P> Global<marker::Style> for P where P: ElementProxy<marker::Style> {}
-impl<P> Aria<marker::Style> for P where P: ElementProxy<marker::Style> {}
+impl<E, P> Style<(marker::Style, P)> for E where E: ElementProxy<marker::Style, P> {}
+impl<E, P> Common<(marker::Style, P)> for E where E: ElementProxy<marker::Style, P> {}
+impl<E, P> Global<(marker::Style, P)> for E where E: ElementProxy<marker::Style, P> {}
+impl<E, P> Aria<(marker::Style, P)> for E where E: ElementProxy<marker::Style, P> {}
 
 /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
 /// element is one of several inputs to the styling processing model. The element does not represent

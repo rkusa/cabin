@@ -25,10 +25,10 @@ pub mod marker {
     }
 }
 
-impl<P> Select<marker::Select> for P where P: ElementProxy<marker::Select> {}
-impl<P> Common<marker::Select> for P where P: ElementProxy<marker::Select> {}
-impl<P> Global<marker::Select> for P where P: ElementProxy<marker::Select> {}
-impl<P> Aria<marker::Select> for P where P: ElementProxy<marker::Select> {}
+impl<E, P> Select<(marker::Select, P)> for E where E: ElementProxy<marker::Select, P> {}
+impl<E, P> Common<(marker::Select, P)> for E where E: ElementProxy<marker::Select, P> {}
+impl<E, P> Global<(marker::Select, P)> for E where E: ElementProxy<marker::Select, P> {}
+impl<E, P> Aria<(marker::Select, P)> for E where E: ElementProxy<marker::Select, P> {}
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
 pub trait Select<T>: WithAttribute {

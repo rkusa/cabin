@@ -23,10 +23,10 @@ pub mod marker {
     }
 }
 
-impl<P> Ins<marker::Ins> for P where P: ElementProxy<marker::Ins> {}
-impl<P> Common<marker::Ins> for P where P: ElementProxy<marker::Ins> {}
-impl<P> Global<marker::Ins> for P where P: ElementProxy<marker::Ins> {}
-impl<P> Aria<marker::Ins> for P where P: ElementProxy<marker::Ins> {}
+impl<E, P> Ins<(marker::Ins, P)> for E where E: ElementProxy<marker::Ins, P> {}
+impl<E, P> Common<(marker::Ins, P)> for E where E: ElementProxy<marker::Ins, P> {}
+impl<E, P> Global<(marker::Ins, P)> for E where E: ElementProxy<marker::Ins, P> {}
+impl<E, P> Aria<(marker::Ins, P)> for E where E: ElementProxy<marker::Ins, P> {}
 
 /// The `ins` element represents an addition to the document.
 pub trait Ins<T>: WithAttribute {

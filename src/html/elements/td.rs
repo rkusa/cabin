@@ -24,10 +24,10 @@ pub mod marker {
     }
 }
 
-impl<P> Td<marker::Td> for P where P: ElementProxy<marker::Td> {}
-impl<P> Common<marker::Td> for P where P: ElementProxy<marker::Td> {}
-impl<P> Global<marker::Td> for P where P: ElementProxy<marker::Td> {}
-impl<P> Aria<marker::Td> for P where P: ElementProxy<marker::Td> {}
+impl<E, P> Td<(marker::Td, P)> for E where E: ElementProxy<marker::Td, P> {}
+impl<E, P> Common<(marker::Td, P)> for E where E: ElementProxy<marker::Td, P> {}
+impl<E, P> Global<(marker::Td, P)> for E where E: ElementProxy<marker::Td, P> {}
+impl<E, P> Aria<(marker::Td, P)> for E where E: ElementProxy<marker::Td, P> {}
 
 /// The `td` element represents a data cell in a [super::table].
 pub trait Td<T>: WithAttribute {

@@ -28,10 +28,10 @@ pub mod marker {
     }
 }
 
-impl<P> Object<marker::Object> for P where P: ElementProxy<marker::Object> {}
-impl<P> Common<marker::Object> for P where P: ElementProxy<marker::Object> {}
-impl<P> Global<marker::Object> for P where P: ElementProxy<marker::Object> {}
-impl<P> Aria<marker::Object> for P where P: ElementProxy<marker::Object> {}
+impl<E, P> Object<(marker::Object, P)> for E where E: ElementProxy<marker::Object, P> {}
+impl<E, P> Common<(marker::Object, P)> for E where E: ElementProxy<marker::Object, P> {}
+impl<E, P> Global<(marker::Object, P)> for E where E: ElementProxy<marker::Object, P> {}
+impl<E, P> Aria<(marker::Object, P)> for E where E: ElementProxy<marker::Object, P> {}
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.

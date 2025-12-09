@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Link;
 }
 
-impl<P> Link<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
-impl<P> Common<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
-impl<P> Global<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
-impl<P> Aria<marker::Link> for P where P: VoidElementProxy<marker::Link> {}
+impl<E> Link<marker::Link> for E where E: VoidElementProxy<marker::Link> {}
+impl<E> Common<marker::Link> for E where E: VoidElementProxy<marker::Link> {}
+impl<E> Global<marker::Link> for E where E: VoidElementProxy<marker::Link> {}
+impl<E> Aria<marker::Link> for E where E: VoidElementProxy<marker::Link> {}
 
 /// A `link` element allows to link to other resources.
 pub trait Link<T>: WithAttribute {

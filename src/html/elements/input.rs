@@ -28,10 +28,10 @@ pub mod marker {
     pub struct Input;
 }
 
-impl<P> Input<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
-impl<P> Common<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
-impl<P> Global<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
-impl<P> Aria<marker::Input> for P where P: VoidElementProxy<marker::Input> {}
+impl<E> Input<marker::Input> for E where E: VoidElementProxy<marker::Input> {}
+impl<E> Common<marker::Input> for E where E: VoidElementProxy<marker::Input> {}
+impl<E> Global<marker::Input> for E where E: VoidElementProxy<marker::Input> {}
+impl<E> Aria<marker::Input> for E where E: VoidElementProxy<marker::Input> {}
 
 // TODO: typed inputs? (number, date, ...)
 /// TODO: doc comment

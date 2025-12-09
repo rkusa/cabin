@@ -22,8 +22,8 @@ pub mod marker {
     }
 }
 
-impl<P> Slot<marker::Slot> for P where P: ElementProxy<marker::Slot> {}
-impl<P> Global<marker::Slot> for P where P: ElementProxy<marker::Slot> {}
+impl<E, P> Slot<(marker::Slot, P)> for E where E: ElementProxy<marker::Slot, P> {}
+impl<E, P> Global<(marker::Slot, P)> for E where E: ElementProxy<marker::Slot, P> {}
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.

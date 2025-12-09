@@ -23,10 +23,10 @@ pub mod marker {
     }
 }
 
-impl<P> Del<marker::Del> for P where P: ElementProxy<marker::Del> {}
-impl<P> Common<marker::Del> for P where P: ElementProxy<marker::Del> {}
-impl<P> Global<marker::Del> for P where P: ElementProxy<marker::Del> {}
-impl<P> Aria<marker::Del> for P where P: ElementProxy<marker::Del> {}
+impl<E, P> Del<(marker::Del, P)> for E where E: ElementProxy<marker::Del, P> {}
+impl<E, P> Common<(marker::Del, P)> for E where E: ElementProxy<marker::Del, P> {}
+impl<E, P> Global<(marker::Del, P)> for E where E: ElementProxy<marker::Del, P> {}
+impl<E, P> Aria<(marker::Del, P)> for E where E: ElementProxy<marker::Del, P> {}
 
 /// The `del` element represents a removal from the document.
 pub trait Del<T>: WithAttribute {

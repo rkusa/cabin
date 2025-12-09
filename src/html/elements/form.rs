@@ -32,10 +32,10 @@ pub mod marker {
     }
 }
 
-impl<P> Form<marker::Form> for P where P: ElementProxy<marker::Form> {}
-impl<P> Common<marker::Form> for P where P: ElementProxy<marker::Form> {}
-impl<P> Global<marker::Form> for P where P: ElementProxy<marker::Form> {}
-impl<P> Aria<marker::Form> for P where P: ElementProxy<marker::Form> {}
+impl<E, P> Form<(marker::Form, P)> for E where E: ElementProxy<marker::Form, P> {}
+impl<E, P> Common<(marker::Form, P)> for E where E: ElementProxy<marker::Form, P> {}
+impl<E, P> Global<(marker::Form, P)> for E where E: ElementProxy<marker::Form, P> {}
+impl<E, P> Aria<(marker::Form, P)> for E where E: ElementProxy<marker::Form, P> {}
 
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a

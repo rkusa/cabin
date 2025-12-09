@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Img;
 }
 
-impl<P> Img<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
-impl<P> Common<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
-impl<P> Global<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
-impl<P> Aria<marker::Img> for P where P: VoidElementProxy<marker::Img> {}
+impl<E> Img<marker::Img> for E where E: VoidElementProxy<marker::Img> {}
+impl<E> Common<marker::Img> for E where E: VoidElementProxy<marker::Img> {}
+impl<E> Global<marker::Img> for E where E: VoidElementProxy<marker::Img> {}
+impl<E> Aria<marker::Img> for E where E: VoidElementProxy<marker::Img> {}
 
 /// An `img` element represents an image.
 pub trait Img<T>: WithAttribute {

@@ -28,10 +28,10 @@ pub mod marker {
     }
 }
 
-impl<P> IFrame<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
-impl<P> Common<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
-impl<P> Global<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
-impl<P> Aria<marker::IFrame> for P where P: ElementProxy<marker::IFrame> {}
+impl<E, P> IFrame<(marker::IFrame, P)> for E where E: ElementProxy<marker::IFrame, P> {}
+impl<E, P> Common<(marker::IFrame, P)> for E where E: ElementProxy<marker::IFrame, P> {}
+impl<E, P> Global<(marker::IFrame, P)> for E where E: ElementProxy<marker::IFrame, P> {}
+impl<E, P> Aria<(marker::IFrame, P)> for E where E: ElementProxy<marker::IFrame, P> {}
 
 /// The `iframe` element represents its content navigable.
 pub trait IFrame<T>: WithAttribute {

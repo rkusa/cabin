@@ -18,6 +18,6 @@ pub mod marker {
     }
 }
 
-impl<P> Common<marker::Span> for P where P: ElementProxy<marker::Span> {}
-impl<P> Global<marker::Span> for P where P: ElementProxy<marker::Span> {}
-impl<P> Aria<marker::Span> for P where P: ElementProxy<marker::Span> {}
+impl<E, P> Common<(marker::Span, P)> for E where E: ElementProxy<marker::Span, P> {}
+impl<E, P> Global<(marker::Span, P)> for E where E: ElementProxy<marker::Span, P> {}
+impl<E, P> Aria<(marker::Span, P)> for E where E: ElementProxy<marker::Span, P> {}

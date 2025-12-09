@@ -16,4 +16,4 @@ pub mod marker {
     }
 }
 
-impl<P> Global<marker::Html> for P where P: ElementProxy<marker::Html> {}
+impl<E, P> Global<(marker::Html, P)> for E where E: ElementProxy<marker::Html, P> {}

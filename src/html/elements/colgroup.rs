@@ -20,9 +20,9 @@ pub mod marker {
     }
 }
 
-impl<P> Colgroup<marker::Colgroup> for P where P: ElementProxy<marker::Colgroup> {}
-impl<P> Common<marker::Colgroup> for P where P: ElementProxy<marker::Colgroup> {}
-impl<P> Global<marker::Colgroup> for P where P: ElementProxy<marker::Colgroup> {}
+impl<E, P> Colgroup<(marker::Colgroup, P)> for E where E: ElementProxy<marker::Colgroup, P> {}
+impl<E, P> Common<(marker::Colgroup, P)> for E where E: ElementProxy<marker::Colgroup, P> {}
+impl<E, P> Global<(marker::Colgroup, P)> for E where E: ElementProxy<marker::Colgroup, P> {}
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.

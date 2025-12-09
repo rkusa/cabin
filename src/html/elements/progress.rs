@@ -26,10 +26,10 @@ pub mod marker {
     }
 }
 
-impl<P> Progress<marker::Progress> for P where P: ElementProxy<marker::Progress> {}
-impl<P> Common<marker::Progress> for P where P: ElementProxy<marker::Progress> {}
-impl<P> Global<marker::Progress> for P where P: ElementProxy<marker::Progress> {}
-impl<P> Aria<marker::Progress> for P where P: ElementProxy<marker::Progress> {}
+impl<E, P> Progress<(marker::Progress, P)> for E where E: ElementProxy<marker::Progress, P> {}
+impl<E, P> Common<(marker::Progress, P)> for E where E: ElementProxy<marker::Progress, P> {}
+impl<E, P> Global<(marker::Progress, P)> for E where E: ElementProxy<marker::Progress, P> {}
+impl<E, P> Aria<(marker::Progress, P)> for E where E: ElementProxy<marker::Progress, P> {}
 
 /// The `progress` element represents the completion progress of a task. The progress is either
 /// indeterminate, indicating that progress is being made but that it is not clear how much more

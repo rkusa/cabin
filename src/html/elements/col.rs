@@ -17,10 +17,10 @@ pub mod marker {
     pub struct Col;
 }
 
-impl<P> Col<marker::Col> for P where P: VoidElementProxy<marker::Col> {}
-impl<P> Common<marker::Col> for P where P: VoidElementProxy<marker::Col> {}
-impl<P> Global<marker::Col> for P where P: VoidElementProxy<marker::Col> {}
-impl<P> Aria<marker::Col> for P where P: VoidElementProxy<marker::Col> {}
+impl<E> Col<marker::Col> for E where E: VoidElementProxy<marker::Col> {}
+impl<E> Common<marker::Col> for E where E: VoidElementProxy<marker::Col> {}
+impl<E> Global<marker::Col> for E where E: VoidElementProxy<marker::Col> {}
+impl<E> Aria<marker::Col> for E where E: VoidElementProxy<marker::Col> {}
 
 /// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that itself
 /// has a parent that is a [super::table] element, then the `col` element represents one or more

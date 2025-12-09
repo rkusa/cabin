@@ -24,10 +24,10 @@ pub mod marker {
     }
 }
 
-impl<P> Time<marker::Time> for P where P: ElementProxy<marker::Time> {}
-impl<P> Common<marker::Time> for P where P: ElementProxy<marker::Time> {}
-impl<P> Global<marker::Time> for P where P: ElementProxy<marker::Time> {}
-impl<P> Aria<marker::Time> for P where P: ElementProxy<marker::Time> {}
+impl<E, P> Time<(marker::Time, P)> for E where E: ElementProxy<marker::Time, P> {}
+impl<E, P> Common<(marker::Time, P)> for E where E: ElementProxy<marker::Time, P> {}
+impl<E, P> Global<(marker::Time, P)> for E where E: ElementProxy<marker::Time, P> {}
+impl<E, P> Aria<(marker::Time, P)> for E where E: ElementProxy<marker::Time, P> {}
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.

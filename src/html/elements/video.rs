@@ -27,10 +27,10 @@ pub mod marker {
     }
 }
 
-impl<P> Video<marker::Video> for P where P: ElementProxy<marker::Video> {}
-impl<P> Common<marker::Video> for P where P: ElementProxy<marker::Video> {}
-impl<P> Global<marker::Video> for P where P: ElementProxy<marker::Video> {}
-impl<P> Aria<marker::Video> for P where P: ElementProxy<marker::Video> {}
+impl<E, P> Video<(marker::Video, P)> for E where E: ElementProxy<marker::Video, P> {}
+impl<E, P> Common<(marker::Video, P)> for E where E: ElementProxy<marker::Video, P> {}
+impl<E, P> Global<(marker::Video, P)> for E where E: ElementProxy<marker::Video, P> {}
+impl<E, P> Aria<(marker::Video, P)> for E where E: ElementProxy<marker::Video, P> {}
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
 pub trait Video<T>: WithAttribute {

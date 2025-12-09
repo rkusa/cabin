@@ -24,10 +24,10 @@ pub mod marker {
     }
 }
 
-impl<P> Ol<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
-impl<P> Common<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
-impl<P> Global<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
-impl<P> Aria<marker::Ol> for P where P: ElementProxy<marker::Ol> {}
+impl<E, P> Ol<(marker::Ol, P)> for E where E: ElementProxy<marker::Ol, P> {}
+impl<E, P> Common<(marker::Ol, P)> for E where E: ElementProxy<marker::Ol, P> {}
+impl<E, P> Global<(marker::Ol, P)> for E where E: ElementProxy<marker::Ol, P> {}
+impl<E, P> Aria<(marker::Ol, P)> for E where E: ElementProxy<marker::Ol, P> {}
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.
