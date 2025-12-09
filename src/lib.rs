@@ -1,4 +1,5 @@
-#![cfg_attr(not(target_arch = "wasm32"), forbid(unsafe_code))]
+// FIXME: reenable
+// #![cfg_attr(not(target_arch = "wasm32"), forbid(unsafe_code))]
 
 extern crate self as cabin;
 

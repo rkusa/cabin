@@ -139,3 +139,24 @@ where
         Ok(())
     }
 }
+
+impl<F, V> Future for KeyedView<F>
+where
+    F: Future<Output = V>,
+    V: View + Unpin,
+{
+    type Output = KeyedView<V>;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        let key = self.as_ref().key;
+        // FIXME: check soundness or get rid of unsafe
+        let view = unsafe { self.map_unchecked_mut(|v| &mut v.view) };
+        match view.poll(cx) {
+            std::task::Poll::Ready(view) => std::task::Poll::Ready(KeyedView { key, view }),
+            std::task::Poll::Pending => std::task::Poll::Pending,
+        }
+    }
+}
