@@ -6,6 +6,7 @@ use std::ops::{Deref, DerefMut};
 use cabin_macros::Attribute;
 
 use crate::attribute::WithAttribute;
+use crate::element::ElementProxy;
 
 pub trait Aria<T>: WithAttribute {
     // Set the aria role of the element.
@@ -493,6 +494,8 @@ pub trait Aria<T>: WithAttribute {
         self.with_attribute(AriaValueText(aria_value_text.into()))
     }
 }
+
+impl<E, P> Aria<((), P)> for E where E: ElementProxy<(), P> {}
 
 /// The aria role of the element.
 ///

@@ -5,6 +5,7 @@ use std::ops::{Add, AddAssign};
 use cabin_macros::Attribute;
 
 use crate::attribute::WithAttribute;
+use crate::element::ElementProxy;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
 
@@ -47,6 +48,8 @@ pub trait Common<T>: WithAttribute {
         self.with_attribute(CustomEvent::new("animationend", event))
     }
 }
+
+impl<E, P> Common<((), P)> for E where E: ElementProxy<(), P> {}
 
 /// Unique identifier across the document.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]

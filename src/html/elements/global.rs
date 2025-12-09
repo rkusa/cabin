@@ -4,6 +4,7 @@ use std::fmt;
 use cabin_macros::Attribute;
 
 use crate::attribute::WithAttribute;
+use crate::element::ElementProxy;
 
 pub trait Global<T>: WithAttribute {
     /// Used by the user agent as a guide for creating a keyboard shortcut that activates or
@@ -169,6 +170,8 @@ pub trait Global<T>: WithAttribute {
         self.with_attribute(Translate(translate))
     }
 }
+
+impl<E, P> Global<((), P)> for E where E: ElementProxy<(), P> {}
 
 /// Used by the user agent as a guide for creating a keyboard shortcut that activates or
 /// focuses the element.
