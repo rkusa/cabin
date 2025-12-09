@@ -21,7 +21,7 @@ type BoundaryHandler = dyn Send
     + for<'v> Fn(
         &'v str,
         &'v mut Renderer,
-    ) -> Pin<Box<dyn Future<Output = Result<(), crate::Error>> + 'v>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), crate::Error>> + Send + 'v>>;
 
 #[derive(Default)]
 pub struct BoundaryRegistry {
@@ -37,7 +37,7 @@ impl BoundaryRegistry {
 
     pub fn register<Args>(&mut self, boundary: &'static BoundaryRef<Args>)
     where
-        Args: Clone + Serialize + DeserializeOwned,
+        Args: Clone + Serialize + DeserializeOwned + Send,
     {
         self.handler.insert(
             boundary.id,
@@ -59,7 +59,11 @@ impl BoundaryRegistry {
         );
     }
 
-    pub fn handle<B>(&self, id: &str, req: Request<B>) -> impl Future<Output = Response<String>>
+    pub fn handle<B>(
+        &self,
+        id: &str,
+        req: Request<B>,
+    ) -> impl Future<Output = Response<String>> + Send
     where
         B: Body<Data = Bytes> + Send + 'static,
         B::Error: std::error::Error + Send + 'static,

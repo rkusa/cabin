@@ -38,7 +38,7 @@ impl<Args: Serialize> Boundary<Args> {
     }
 }
 
-type BoundaryFn<Args> = dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = AnyView>>>;
+type BoundaryFn<Args> = dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = AnyView> + Send>>;
 
 pub struct BoundaryRef<Args: 'static> {
     pub id: &'static str,

@@ -80,82 +80,76 @@ pub fn basic_document(content: impl View) -> impl View {
     }
 }
 
-pub fn get_page<F, V>(
-    render_fn: impl FnOnce() -> F + Send + 'static,
-) -> impl Future<Output = Response<String>> + Send
+pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<String>
 where
-    F: Future<Output = V>,
+    F: Future<Output = V> + Send,
     V: View,
 {
-    crate::local_pool::spawn(|| async move {
-        let context = Context::new(false, false);
-        let mut r = context.acquire_renderer();
-        let result = context
-            .run(async move {
-                let doc = (render_fn)().await;
-                doc.render(&mut r)?;
-                Ok(r.end())
-            })
-            .await;
-        let Out { html, headers } = match result {
-            Ok(out) => out,
-            Err(err) => return err_to_response(err),
-        };
-        let mut res = Response::builder().header(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        for (key, value) in headers {
-            if let Some(key) = key {
-                res = res.header(key, value);
-            }
+    let context = Context::new(false, false);
+    let mut r = context.acquire_renderer();
+    let result = context
+        .run(async move {
+            let doc = (render_fn)().await;
+            doc.render(&mut r)?;
+            Ok(r.end())
+        })
+        .await;
+    let Out { html, headers } = match result {
+        Ok(out) => out,
+        Err(err) => return err_to_response(err),
+    };
+    let mut res = Response::builder().header(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("text/html; charset=utf-8"),
+    );
+    for (key, value) in headers {
+        if let Some(key) = key {
+            res = res.header(key, value);
         }
-        res.body(html).unwrap()
-    })
+    }
+    res.body(html).unwrap()
 }
 
-pub fn put_page<B, F, V>(
+pub async fn put_page<B, F, V>(
     req: Request<B>,
     render_fn: impl FnOnce() -> F + Send + 'static,
-) -> impl Future<Output = Response<String>> + Send
+) -> Response<String>
 where
     B: Body<Data = Bytes> + Send + 'static,
     B::Error: std::error::Error + Send + 'static,
     F: Future<Output = V>,
     V: View,
 {
-    crate::local_pool::spawn(|| async move {
-        let event = match parse_body(req).await {
-            Ok(result) => result,
-            Err(err) => return err_to_response(err),
-        };
-        let mut context = Context::new(true, false).with_event(event.event_id, event.payload);
-        if let Some(multipart) = event.multipart {
-            context = context.with_multipart(multipart);
+    let event = match parse_body(req).await {
+        Ok(result) => result,
+        Err(err) => return err_to_response(err),
+    };
+    let mut context = Context::new(true, false).with_event(event.event_id, event.payload);
+    if let Some(multipart) = event.multipart {
+        context = context.with_multipart(multipart);
+    }
+    let mut r = context.acquire_renderer();
+    let result = context
+        .run(async move {
+            let doc = (render_fn)().await;
+            doc.render(&mut r)?;
+            Ok(r.end())
+        })
+        .await;
+    let Out { html, headers } = match result {
+        Ok(out) => out,
+        Err(err) => return err_to_response(err),
+    };
+    let mut res = Response::builder().header(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("text/html; charset=utf-8"),
+    );
+    for (key, value) in headers {
+        if let Some(key) = key {
+            res = res.header(key, value);
         }
-        let mut r = context.acquire_renderer();
-        let result = context
-            .run(async move {
-                let doc = (render_fn)().await;
-                doc.render(&mut r)?;
-                Ok(r.end())
-            })
-            .await;
-        let Out { html, headers } = match result {
-            Ok(out) => out,
-            Err(err) => return err_to_response(err),
-        };
-        let mut res = Response::builder().header(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        for (key, value) in headers {
-            if let Some(key) = key {
-                res = res.header(key, value);
-            }
-        }
-        res.body(html).unwrap()
-    })
+    }
+    res.body(html).unwrap()
 }
 
 pub fn err_to_response(err: Error) -> Response<String> {

@@ -25,7 +25,6 @@ pub mod event;
 pub mod fire_event;
 mod fragment;
 pub mod html;
-pub mod local_pool;
 pub mod multipart;
 pub mod pack;
 pub mod prelude;

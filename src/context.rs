@@ -23,7 +23,7 @@ pub struct Context {
 
 enum Event {
     Raw { id: String, payload: Payload },
-    Deserialized(Box<dyn Any>),
+    Deserialized(Box<dyn Any + Send>),
 }
 
 pub(crate) enum Payload {
@@ -105,7 +105,7 @@ impl Context {
 
 pub fn event<E>() -> Option<E>
 where
-    E: DeserializeOwned + Copy + crate::event::Event + 'static,
+    E: DeserializeOwned + Copy + crate::event::Event + Send + 'static,
 {
     CONTEXT
         .try_with(|context| {
