@@ -7,7 +7,6 @@ use twox_hash::XxHash32;
 use super::RenderFuture;
 pub use super::View;
 use crate::render::Renderer;
-use crate::scope::Scope;
 
 pub trait IteratorExt
 where
@@ -59,10 +58,10 @@ where
     ) -> Map<I, impl FnMut(I::Item) -> KeyedView<B>> {
         self.iter.map(move |item| {
             let key = hash((self.f)(&item));
-            Scope::keyed_sync(key, || KeyedView {
+            KeyedView {
                 key,
                 view: (f)(item),
-            })
+            }
         })
     }
 }

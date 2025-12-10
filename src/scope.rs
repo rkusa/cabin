@@ -10,7 +10,6 @@ use crate::error::InternalError;
 
 tokio::task_local! {
     static SCOPE: Scope;
-    pub static KEY: u32;
 }
 
 #[derive(Clone)]
@@ -209,26 +208,6 @@ impl Scope {
             return Err(err.into());
         }
         result
-    }
-
-    pub fn keyed_sync<F, R>(key: u32, f: F) -> R
-    where
-        F: FnOnce() -> R,
-    {
-        // let key = hash(key);
-        KEY.sync_scope(key, f)
-    }
-
-    pub fn keyed<T, F>(key: u32, f: F) -> impl Future<Output = T>
-    where
-        F: Future<Output = T>,
-    {
-        // let key = hash(key);
-        KEY.scope(key, f)
-    }
-
-    pub fn key() -> Option<u32> {
-        KEY.try_with(|key| *key).ok()
     }
 }
 

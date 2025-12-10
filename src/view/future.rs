@@ -5,7 +5,6 @@ use std::pin::Pin;
 use super::RenderFuture;
 pub use super::View;
 use crate::render::Renderer;
-use crate::scope::Scope;
 
 pub trait FutureExt<F, V>
 where
@@ -24,7 +23,6 @@ where
 {
     fn into_view(self) -> FutureView<F::IntoFuture, V> {
         FutureView {
-            key: Scope::key(),
             state: State::Stored(Box::pin(self.into_future())),
             marker: PhantomData,
         }
@@ -35,7 +33,6 @@ pub struct FutureView<F, V>
 where
     F: Future,
 {
-    key: Option<u32>,
     state: State<F>,
     marker: PhantomData<V>,
 }
@@ -57,38 +54,22 @@ where
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         RenderFuture::Future(Box::pin(async move {
-            let view = if let Some(key) = self.key {
-                Scope::keyed(key, async {
-                    match self.state {
-                        State::Stored(f) => Ok(f.await),
-                        State::Primed(result) => result,
-                        State::Intermediate => unreachable!(),
-                    }
-                })
-                .await?
-            } else {
-                match self.state {
-                    State::Stored(f) => Ok(f.await),
-                    State::Primed(result) => result,
-                    State::Intermediate => unreachable!(),
-                }?
-            };
+            let view = match self.state {
+                State::Stored(f) => Ok(f.await),
+                State::Primed(result) => result,
+                State::Intermediate => unreachable!(),
+            }?;
             view.render(r, include_hash).await
         }))
     }
 
     async fn prime(&mut self) {
-        let key = self.key;
         let s = std::mem::replace(&mut self.state, State::Intermediate);
         let _ = std::mem::replace(
             &mut self.state,
             match s {
                 State::Stored(f) => State::Primed({
-                    let mut view = if let Some(key) = key {
-                        Scope::keyed(key, f).await
-                    } else {
-                        f.await
-                    };
+                    let mut view = f.await;
                     view.prime().await;
                     Ok(view)
                 }),
