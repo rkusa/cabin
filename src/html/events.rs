@@ -1,13 +1,10 @@
 use core::fmt;
 use std::borrow::Cow;
-use std::marker::PhantomData;
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
 use super::attributes::Attributes;
-use super::elements::SerializeEventFn;
-use crate::error::InternalError;
 use crate::event::Event;
 
 #[derive(Debug, Hash)]
@@ -113,40 +110,21 @@ impl fmt::Display for InputChecked {
 }
 
 pub struct CustomEvent<E> {
-    name: Cow<'static, str>,
-    event: Box<SerializeEventFn>,
-    marker: PhantomData<E>,
+    pub(crate) name: Cow<'static, str>,
+    pub(crate) event: E,
 }
 
-impl<E> CustomEvent<E> {
-    pub fn new(name: impl Into<Cow<'static, str>>, event: E) -> Self
-    where
-        E: serde::Serialize + Event + Send + 'static,
-    {
+impl<E: serde::Serialize + Event> CustomEvent<E> {
+    pub fn new(name: impl Into<Cow<'static, str>>, event: E) -> Self {
         Self {
             name: name.into(),
-            event: Box::new(move || {
-                serde_json::to_string(&event)
-                    .map_err(|err| InternalError::Serialize {
-                        what: "on_click event",
-                        err,
-                    })
-                    .map(|json| (E::ID, json))
-            }),
-            marker: PhantomData,
+            event,
         }
     }
 }
 
-impl<E: Send + 'static> Attributes for CustomEvent<E> {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for CustomEvent<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.event)()?;
-        r.attribute(&format!("cabin-{}", self.name), id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute(&format!("cabin-{}-payload", self.name), payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        r.event_attributes(self)
     }
 }

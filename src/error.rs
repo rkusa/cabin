@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::convert::Infallible;
 use std::{error, fmt};
 
@@ -98,7 +99,7 @@ impl Error {
 pub enum InternalError {
     Render,
     Serialize {
-        what: &'static str,
+        what: Cow<'static, str>,
         err: serde_json::Error,
     },
     Deserialize {

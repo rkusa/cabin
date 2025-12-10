@@ -5,9 +5,9 @@ use super::common::Common;
 use super::global::Global;
 use super::input::{AutoComplete, Multiple, OnChange, Required, Size};
 use crate::View;
-use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 use crate::html::{Aria, Html};
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
@@ -78,17 +78,10 @@ pub trait Select: WithAttribute {
         self.with_attribute(Size(size))
     }
 
-    fn on_change<E>(self, event: E) -> Self::Output<OnChange>
+    fn on_change<E>(self, event: E) -> Self::Output<OnChange<E>>
     where
         E: ::serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnChange(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_change event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnChange(CustomEvent::new("change", event)))
     }
 }

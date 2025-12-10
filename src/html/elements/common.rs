@@ -4,10 +4,9 @@ use std::ops::{Add, AddAssign};
 
 use cabin_macros::Attribute;
 
-use super::SerializeEventFn;
-use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 
 pub trait Common: WithAttribute {
     /// Unique identifier across the document.
@@ -29,60 +28,32 @@ pub trait Common: WithAttribute {
         self.with_attribute(Class(class.into()))
     }
 
-    fn on_click<E>(self, event: E) -> Self::Output<OnClick>
+    fn on_click<E>(self, event: E) -> Self::Output<OnClick<E>>
     where
         E: serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnClick(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "click event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnClick(CustomEvent::new("click", event)))
     }
 
-    fn on_mouse_up<E>(self, event: E) -> Self::Output<OnMouseUp>
+    fn on_mouse_up<E>(self, event: E) -> Self::Output<OnMouseUp<E>>
     where
         E: serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnMouseUp(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "mouseup event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnMouseUp(CustomEvent::new("mouseup", event)))
     }
 
-    fn on_transition_end<E>(self, event: E) -> Self::Output<OnTransitionEnd>
+    fn on_transition_end<E>(self, event: E) -> Self::Output<OnTransitionEnd<E>>
     where
         E: serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnTransitionEnd(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_transition_end event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnTransitionEnd(CustomEvent::new("transitionend", event)))
     }
 
-    fn on_animation_end<E>(self, event: E) -> Self::Output<OnAnimationEnd>
+    fn on_animation_end<E>(self, event: E) -> Self::Output<OnAnimationEnd<E>>
     where
         E: serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnAnimationEnd(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_animation_end event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnAnimationEnd(CustomEvent::new("animationend", event)))
     }
 }
 
@@ -95,63 +66,35 @@ pub struct Id(pub Cow<'static, str>);
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Class(pub Cow<'static, str>);
 
-pub struct OnClick(pub Box<SerializeEventFn>);
+pub struct OnClick<E>(CustomEvent<E>);
 
-impl Attributes for OnClick {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnClick<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-click", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-click-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }
 
-pub struct OnMouseUp(pub Box<SerializeEventFn>);
+pub struct OnMouseUp<E>(CustomEvent<E>);
 
-impl Attributes for OnMouseUp {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnMouseUp<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-mouseup", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-mouseup-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }
 
-pub struct OnTransitionEnd(pub Box<SerializeEventFn>);
+pub struct OnTransitionEnd<E>(CustomEvent<E>);
 
-impl Attributes for OnTransitionEnd {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnTransitionEnd<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-transitionend", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-transitionend-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }
 
-pub struct OnAnimationEnd(pub Box<SerializeEventFn>);
+pub struct OnAnimationEnd<E>(CustomEvent<E>);
 
-impl Attributes for OnAnimationEnd {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnAnimationEnd<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-animationend", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-animationend-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }
 

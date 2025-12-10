@@ -6,7 +6,6 @@ use std::fmt;
 pub use auto_complete::AutoComplete;
 use cabin_macros::Attribute;
 
-use super::SerializeEventFn;
 use super::button::{
     Disabled, Form, FormAction, FormEnctype, FormMethod, FormNoValidate, FormTarget, Name,
     PopoverTarget, PopoverTargetAction,
@@ -15,9 +14,9 @@ use super::common::Common;
 use super::global::Global;
 use super::img::Alt;
 use super::script::Src;
-use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 use crate::html::{Aria, Html};
 
 pub fn input() -> Html<marker::Input, (), ()> {
@@ -320,32 +319,18 @@ pub trait Input: WithAttribute {
         self.with_attribute(Width(width))
     }
 
-    fn on_input<E>(self, event: E) -> Self::Output<OnInput>
+    fn on_input<E>(self, event: E) -> Self::Output<OnInput<E>>
     where
         E: ::serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnInput(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_input event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnInput(CustomEvent::new("input", event)))
     }
 
-    fn on_change<E>(self, event: E) -> Self::Output<OnChange>
+    fn on_change<E>(self, event: E) -> Self::Output<OnChange<E>>
     where
         E: ::serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnChange(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_change event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnChange(CustomEvent::new("change", event)))
     }
 }
 
@@ -477,32 +462,18 @@ impl fmt::Display for Type {
     }
 }
 
-pub struct OnInput(pub Box<SerializeEventFn>);
+pub struct OnInput<E>(pub(crate) CustomEvent<E>);
 
-impl Attributes for OnInput {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnInput<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-input", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-input-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }
 
-pub struct OnChange(pub Box<SerializeEventFn>);
+pub struct OnChange<E>(pub(crate) CustomEvent<E>);
 
-impl Attributes for OnChange {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnChange<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-change", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-change-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }

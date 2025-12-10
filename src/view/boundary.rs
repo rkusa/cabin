@@ -234,7 +234,7 @@ where
             Ok(state) => state,
             Err(err) => {
                 return RenderFuture::Ready(Some(Err(InternalError::Serialize {
-                    what: "boundary state",
+                    what: "boundary state".into(),
                     err,
                 }
                 .into())));

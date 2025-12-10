@@ -1,5 +1,3 @@
-use crate::error::InternalError;
-
 pub mod anchor;
 pub mod area;
 pub mod aria;
@@ -51,9 +49,6 @@ pub mod time;
 pub mod title;
 pub mod track;
 pub mod video;
-
-pub(crate) type SerializeEventFn =
-    dyn FnOnce() -> Result<(&'static str, String), InternalError> + Send;
 
 macro_rules! vanilla_element {
     ($method_name:ident, $marker_name:ident, $doc:literal) => {

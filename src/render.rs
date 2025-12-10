@@ -5,6 +5,9 @@ use http::{HeaderMap, HeaderValue};
 use twox_hash::XxHash32;
 
 use crate::View;
+use crate::error::InternalError;
+use crate::event::Event;
+use crate::html::events::CustomEvent;
 use crate::view::RenderFuture;
 
 pub struct Renderer {
@@ -48,7 +51,7 @@ impl Renderer {
 
     pub fn element(mut self, tag: &'static str, include_hash: bool) -> ElementRenderer {
         let parent_hasher = std::mem::take(&mut self.hasher);
-        self.write(tag.as_bytes());
+        self.hasher.write(tag.as_bytes());
 
         let should_write_id =
             include_hash && !matches!(tag, "html" | "body" | "head" | "option") && !self.skip_hash;
@@ -117,8 +120,8 @@ impl ElementRenderer {
         if self.content_started {
             todo!("throw error: content started");
         }
-        self.renderer.write(name.as_bytes());
-        value.hash(&mut self.renderer);
+        self.renderer.hasher.write(name.as_bytes());
+        value.hash(&mut self.renderer.hasher);
 
         write!(&mut self.renderer.out, r#" {name}=""#,)?;
         write!(Escape::attribute_value(&mut self.renderer.out), "{value}")?;
@@ -131,9 +134,49 @@ impl ElementRenderer {
         if self.content_started {
             todo!("throw error: content started");
         }
-        self.renderer.write(name.as_bytes());
+        self.renderer.hasher.write(name.as_bytes());
 
         write!(&mut self.renderer.out, r#" {name}"#,)?;
+
+        Ok(())
+    }
+
+    pub fn event_attributes<E: serde::Serialize + Event>(
+        &mut self,
+        event: CustomEvent<E>,
+    ) -> Result<(), crate::Error> {
+        // event id
+        {
+            let pos_name = self.renderer.out.len();
+            write!(&mut self.renderer.out, " cabin-{}", event.name).unwrap();
+            self.renderer.out[(pos_name + 1)..].hash(&mut self.renderer.hasher);
+            write!(&mut self.renderer.out, r#"=""#).unwrap();
+
+            let pos_value = self.renderer.out.len();
+            write!(&mut self.renderer.out, "{}", E::ID).unwrap();
+            self.renderer.out[pos_value..].hash(&mut self.renderer.hasher);
+            write!(&mut self.renderer.out, r#"""#).unwrap();
+        }
+
+        // event payload
+        {
+            let pos_name = self.renderer.out.len();
+            write!(&mut self.renderer.out, " cabin-{}-payload", event.name).unwrap();
+            self.renderer.out[(pos_name + 1)..].hash(&mut self.renderer.hasher);
+            write!(&mut self.renderer.out, r#"=""#).unwrap();
+
+            let pos_value = self.renderer.out.len();
+            serde_json::to_writer(
+                Escape::attribute_value(&mut self.renderer.out),
+                &event.event,
+            )
+            .map_err(|err| InternalError::Serialize {
+                what: format!("{} event", event.name).into(),
+                err,
+            })?;
+            self.renderer.out[pos_value..].hash(&mut self.renderer.hasher);
+            write!(&mut self.renderer.out, r#"""#).unwrap();
+        }
 
         Ok(())
     }
@@ -186,7 +229,7 @@ impl ElementRenderer {
             write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
         }
 
-        let hash = self.renderer.finish() as u32;
+        let hash = self.renderer.hasher.finish() as u32;
         if let Some(offset) = self.hash_offset {
             write!(WriteInto::new(&mut self.renderer.out, offset), "{hash:x}").unwrap();
         }
@@ -217,7 +260,7 @@ pub struct TextRenderer {
 impl TextRenderer {
     pub fn end(mut self) -> Result<Renderer, crate::Error> {
         let hash = self.hasher.finish() as u32;
-        self.renderer.write_u32(hash);
+        self.renderer.hasher.write_u32(hash);
 
         Ok(self.renderer)
     }
@@ -282,6 +325,21 @@ where
     }
 }
 
+impl<W> std::io::Write for Escape<W>
+where
+    W: fmt::Write,
+{
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let s = std::str::from_utf8(buf).map_err(std::io::Error::other)?;
+        self.write_str(s).map_err(std::io::Error::other)?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 pub struct WriteInto<'a> {
     out: &'a mut String,
     offset: usize,
@@ -300,16 +358,6 @@ impl fmt::Write for WriteInto<'_> {
         self.offset += s.len();
 
         Ok(())
-    }
-}
-
-impl Hasher for Renderer {
-    fn finish(&self) -> u64 {
-        self.hasher.finish()
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        self.hasher.write(bytes);
     }
 }
 

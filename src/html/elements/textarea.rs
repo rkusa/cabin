@@ -10,9 +10,9 @@ use super::input::{
     AutoComplete, Dirname, MaxLength, MinLength, OnChange, OnInput, Placeholder, ReadOnly, Required,
 };
 use crate::View;
-use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 use crate::html::{Aria, Html};
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
@@ -118,32 +118,18 @@ pub trait Textarea: WithAttribute {
         self.with_attribute(Wrap::Hard)
     }
 
-    fn on_input<E>(self, event: E) -> Self::Output<OnInput>
+    fn on_input<E>(self, event: E) -> Self::Output<OnInput<E>>
     where
         E: ::serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnInput(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_input event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnInput(CustomEvent::new("input", event)))
     }
 
-    fn on_change<E>(self, event: E) -> Self::Output<OnChange>
+    fn on_change<E>(self, event: E) -> Self::Output<OnChange<E>>
     where
         E: ::serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnChange(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "on_change event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnChange(CustomEvent::new("change", event)))
     }
 }
 

@@ -3,16 +3,15 @@ use std::fmt;
 
 use cabin_macros::Attribute;
 
-use super::SerializeEventFn;
 use super::anchor::Target;
 use super::button::Name;
 use super::common::Common;
 use super::global::Global;
 use super::input::AutoComplete;
 use crate::View;
-use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
+use crate::html::events::CustomEvent;
 use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
@@ -145,18 +144,11 @@ pub trait Form: WithAttribute {
 
     /// Intercept form submissions, and submit the provided `event`, which can then be handled via
     /// [crate::scope::take_event] or [crate::scope::event].
-    fn on_submit_with<E>(self, event: E) -> Self::Output<OnSubmitWith>
+    fn on_submit_with<E>(self, event: E) -> Self::Output<OnSubmitWith<E>>
     where
         E: serde::Serialize + Event + Send + 'static,
     {
-        self.with_attribute(OnSubmitWith(Box::new(move || {
-            serde_json::to_string(&event)
-                .map_err(|err| InternalError::Serialize {
-                    what: "custom event",
-                    err,
-                })
-                .map(|json| (E::ID, json))
-        })))
+        self.with_attribute(OnSubmitWith(CustomEvent::new("submit", event)))
     }
 }
 
@@ -298,17 +290,10 @@ impl fmt::Display for Rel {
 #[attribute(name = "cabin-submit")]
 pub struct OnSubmit(pub &'static str);
 
-pub struct OnSubmitWith(pub Box<SerializeEventFn>);
+pub struct OnSubmitWith<E>(CustomEvent<E>);
 
-impl Attributes for OnSubmitWith {
+impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnSubmitWith<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        // TODO: directly write into el?
-        let (id, payload) = &(self.0)()?;
-        r.attribute("cabin-submit", id)
-            .map_err(crate::error::InternalError::from)?;
-        r.attribute("cabin-submit-payload", payload)
-            .map_err(crate::error::InternalError::from)?;
-
-        Ok(())
+        self.0.render(r)
     }
 }
