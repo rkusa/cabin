@@ -41,7 +41,7 @@ where
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         if r.is_update() {
             match self.behaviour {
-                Behaviour::Hidden => RenderFuture::Ready(Some(Ok(r))),
+                Behaviour::Hidden => RenderFuture::Ready(Ok(r)),
                 Behaviour::ContentOnly => self.view.content.render(r, include_hash),
             }
         } else {
@@ -57,7 +57,7 @@ where
 impl View for UpdateView<Raw> {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         if r.is_update() {
-            RenderFuture::Ready(Some(Ok(r)))
+            RenderFuture::Ready(Ok(r))
         } else {
             self.view.render(r, include_hash)
         }

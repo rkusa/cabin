@@ -197,7 +197,7 @@ impl ElementRenderer {
         }
 
         match view.render(renderer, false) {
-            RenderFuture::Ready(Some(Ok(renderer))) => RenderFuture::ready(
+            RenderFuture::Ready(Ok(renderer)) => RenderFuture::Ready(
                 ElementRenderer {
                     tag,
                     renderer,
@@ -208,8 +208,7 @@ impl ElementRenderer {
                 }
                 .end(false),
             ),
-            RenderFuture::Ready(Some(Err(err))) => RenderFuture::Ready(Some(Err(err))),
-            RenderFuture::Ready(None) => RenderFuture::Ready(None),
+            RenderFuture::Ready(Err(err)) => RenderFuture::Ready(Err(err)),
             RenderFuture::Future(fut) => RenderFuture::Future(Box::pin(async move {
                 ElementRenderer {
                     tag,

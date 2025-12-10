@@ -41,11 +41,11 @@ impl BoundaryRegistry {
                     Ok(args) => {
                         crate::view::FutureExt::into_view(boundary.with(args)).render(r, true)
                     }
-                    Err(err) => RenderFuture::Ready(Some(Err(InternalError::Deserialize {
+                    Err(err) => RenderFuture::Ready(Err(InternalError::Deserialize {
                         what: "boundary state json",
                         err: Box::new(err),
                     }
-                    .into()))),
+                    .into())),
                 },
             ),
         );

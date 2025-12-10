@@ -43,7 +43,7 @@ impl View for TitleUpdate {
             }
         }
 
-        RenderFuture::Ready(Some(Ok(r)))
+        RenderFuture::Ready(Ok(r))
     }
 
     fn prime(&mut self) -> impl Future<Output = ()> + Send {

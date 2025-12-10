@@ -56,19 +56,13 @@ pub trait IntoView {
 }
 
 pub enum RenderFuture {
-    Ready(Option<Result<Renderer, crate::Error>>),
+    Ready(Result<Renderer, crate::Error>),
     Future(Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>),
-}
-
-impl RenderFuture {
-    pub fn ready(result: Result<Renderer, crate::Error>) -> RenderFuture {
-        RenderFuture::Ready(Some(result))
-    }
 }
 
 impl View for () {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
-        RenderFuture::ready(Ok(r))
+        RenderFuture::Ready(Ok(r))
     }
 }
 
@@ -81,7 +75,7 @@ impl View for &'static str {
 impl View for Cow<'static, str> {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
         let mut txt = r.text();
-        RenderFuture::ready(
+        RenderFuture::Ready(
             Escape::content(&mut txt)
                 .write_str(&self)
                 .map_err(crate::error::InternalError::from)
@@ -104,7 +98,7 @@ where
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
             Some(i) => i.render(r, include_hash),
-            None => RenderFuture::ready(Ok(r)),
+            None => RenderFuture::Ready(Ok(r)),
         }
     }
 
@@ -130,7 +124,7 @@ where
                 if err.should_render() {
                     err.into_view().render(r, include_hash)
                 } else {
-                    RenderFuture::ready(Err(crate::Error::from(Box::<
+                    RenderFuture::Ready(Err(crate::Error::from(Box::<
                         dyn HttpError + Send + 'static,
                     >::from(err))))
                 }
@@ -159,7 +153,11 @@ impl Future for RenderFuture {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match *self.get_mut() {
             RenderFuture::Ready(ref mut result) => {
-                result.take().map(Poll::Ready).unwrap_or(Poll::Pending)
+                let result = std::mem::replace(
+                    result,
+                    Err(crate::error::InternalError::FutureCompleted.into()),
+                );
+                Poll::Ready(result)
             }
             RenderFuture::Future(ref mut future) => future.as_mut().poll(cx),
         }

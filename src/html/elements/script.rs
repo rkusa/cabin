@@ -123,7 +123,7 @@ pub struct ScriptEscape(pub Cow<'static, str>);
 impl View for ScriptEscape {
     fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
         let mut txt = r.text();
-        RenderFuture::ready(
+        RenderFuture::Ready(
             Escape::script(&mut txt)
                 .write_str(&self.0)
                 .map_err(crate::error::InternalError::from)

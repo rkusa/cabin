@@ -301,13 +301,13 @@ where
 
         let mut el = r.element(tag, include_hash);
         if let Err(err) = attributes.render(&mut el) {
-            return RenderFuture::ready(Err(err));
+            return RenderFuture::Ready(Err(err));
         }
 
         if !is_void_element {
             el.content(content)
         } else {
-            RenderFuture::ready(el.end(true))
+            RenderFuture::Ready(el.end(true))
         }
     }
 

@@ -227,17 +227,17 @@ where
 
         // TODO: any way to make this a compile error?
         let Some(boundary_ref) = self.boundary_ref else {
-            return RenderFuture::Ready(Some(Err(InternalError::MissingBoundaryAttribute.into())));
+            return RenderFuture::Ready(Err(InternalError::MissingBoundaryAttribute.into()));
         };
 
         let state = match serde_json::to_string(&args) {
             Ok(state) => state,
             Err(err) => {
-                return RenderFuture::Ready(Some(Err(InternalError::Serialize {
+                return RenderFuture::Ready(Err(InternalError::Serialize {
                     what: "boundary state".into(),
                     err,
                 }
-                .into())));
+                .into()));
             }
         };
 

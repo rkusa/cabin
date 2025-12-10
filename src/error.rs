@@ -112,6 +112,7 @@ pub enum InternalError {
     InvalidHeaderValue(http::header::InvalidHeaderValue),
     Join(tokio::task::JoinError),
     MissingBoundaryAttribute,
+    FutureCompleted,
 }
 
 impl From<InternalError> for Box<dyn HttpError + Send + 'static> {
@@ -153,9 +154,10 @@ impl fmt::Display for Error {
 impl error::Error for InternalError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Render | Self::InvalidAttributeName { .. } | Self::MissingBoundaryAttribute => {
-                None
-            }
+            Self::Render
+            | Self::InvalidAttributeName { .. }
+            | Self::MissingBoundaryAttribute
+            | Self::FutureCompleted => None,
             Self::Serialize { err, .. } => Some(err),
             Self::Deserialize { err, .. } => Some(err.as_ref()),
             Self::Join(err) => Some(err),
@@ -180,6 +182,7 @@ impl fmt::Display for InternalError {
             Self::MissingBoundaryAttribute => {
                 f.write_str("#[cabin::boundary] attribute is missing")
             }
+            Self::FutureCompleted => f.write_str("future already completed"),
         }
     }
 }
