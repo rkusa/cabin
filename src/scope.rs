@@ -215,6 +215,12 @@ impl Scope {
         Renderer::new(self.is_update, self.disable_hashes)
     }
 
+    pub(crate) fn create_renderer_from_task() -> Renderer {
+        SCOPE
+            .try_with(|c| c.create_renderer())
+            .unwrap_or_else(|_| Renderer::new(false, false))
+    }
+
     pub async fn run<T>(
         self,
         f: impl Future<Output = Result<T, crate::Error>> + Send,

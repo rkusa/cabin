@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.
-pub fn embed() -> Html<marker::Embed, (), ()> {
+pub fn embed() -> Html<marker::Embed, ()> {
     Html::new("embed", (), ()).into_void_element()
 }
 
@@ -18,10 +18,10 @@ pub mod marker {
     pub struct Embed;
 }
 
-impl<A: Attributes, V: 'static> Embed for Html<marker::Embed, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Embed, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Embed, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Embed, A, V> {}
+impl<A: Attributes> Embed for Html<marker::Embed, A> {}
+impl<A: Attributes> Common for Html<marker::Embed, A> {}
+impl<A: Attributes> Global for Html<marker::Embed, A> {}
+impl<A: Attributes> Aria for Html<marker::Embed, A> {}
 
 /// The <embed< element provides an integration point for an external application or interactive
 /// content.

@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.
-pub fn map(content: impl View) -> Html<marker::Map, (), impl View> {
+pub fn map(content: impl View) -> Html<marker::Map, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("map", (), content)
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Map;
 }
 
-impl<A: Attributes, V: 'static> Map for Html<marker::Map, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Map, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Map, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Map, A, V> {}
+impl<A: Attributes> Map for Html<marker::Map, A> {}
+impl<A: Attributes> Common for Html<marker::Map, A> {}
+impl<A: Attributes> Global for Html<marker::Map, A> {}
+impl<A: Attributes> Aria for Html<marker::Map, A> {}
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.

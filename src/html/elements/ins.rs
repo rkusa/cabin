@@ -9,7 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `ins` element represents an addition to the document.
-pub fn ins(content: impl View) -> Html<marker::Ins, (), impl View> {
+pub fn ins(content: impl View) -> Html<marker::Ins, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("ins", (), content)
@@ -19,10 +19,10 @@ pub mod marker {
     pub struct Ins;
 }
 
-impl<A: Attributes, V: 'static> Ins for Html<marker::Ins, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Ins, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Ins, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Ins, A, V> {}
+impl<A: Attributes> Ins for Html<marker::Ins, A> {}
+impl<A: Attributes> Common for Html<marker::Ins, A> {}
+impl<A: Attributes> Global for Html<marker::Ins, A> {}
+impl<A: Attributes> Aria for Html<marker::Ins, A> {}
 
 /// The `ins` element represents an addition to the document.
 pub trait Ins: WithAttribute {

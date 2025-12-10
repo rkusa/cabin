@@ -13,7 +13,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
-pub fn video(content: impl View) -> Html<marker::Video, (), impl View> {
+pub fn video(content: impl View) -> Html<marker::Video, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("video", (), content)
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Video;
 }
 
-impl<A: Attributes, V: 'static> Video for Html<marker::Video, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Video, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Video, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Video, A, V> {}
+impl<A: Attributes> Video for Html<marker::Video, A> {}
+impl<A: Attributes> Common for Html<marker::Video, A> {}
+impl<A: Attributes> Global for Html<marker::Video, A> {}
+impl<A: Attributes> Aria for Html<marker::Video, A> {}
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
 pub trait Video: WithAttribute {

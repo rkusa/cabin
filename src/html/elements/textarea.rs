@@ -9,7 +9,6 @@ use super::global::Global;
 use super::input::{
     AutoComplete, Dirname, MaxLength, MinLength, OnChange, OnInput, Placeholder, ReadOnly, Required,
 };
-use crate::View;
 use crate::event::Event;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::events::CustomEvent;
@@ -17,7 +16,7 @@ use crate::html::{Aria, Html};
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.
-pub fn textarea(content: impl Into<Cow<'static, str>>) -> Html<marker::Textarea, (), impl View> {
+pub fn textarea(content: impl Into<Cow<'static, str>>) -> Html<marker::Textarea, ()> {
     Html::new("textarea", (), content.into())
 }
 
@@ -25,10 +24,10 @@ pub mod marker {
     pub struct Textarea;
 }
 
-impl<A: Attributes, V: 'static> Textarea for Html<marker::Textarea, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Textarea, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Textarea, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Textarea, A, V> {}
+impl<A: Attributes> Textarea for Html<marker::Textarea, A> {}
+impl<A: Attributes> Common for Html<marker::Textarea, A> {}
+impl<A: Attributes> Global for Html<marker::Textarea, A> {}
+impl<A: Attributes> Aria for Html<marker::Textarea, A> {}
 
 /// The `textarea` element represents a multiline plain text edit control for the element's raw
 /// value. The contents of the control represent the control's default value.

@@ -59,7 +59,7 @@ macro_rules! vanilla_element {
             #[doc = $doc]
             pub fn $method_name(
                 content: impl $crate::View,
-            ) -> $crate::html::Html<marker::$marker_name, (), impl $crate::View> {
+            ) -> $crate::html::Html<marker::$marker_name, ()> {
                 #[cfg(debug_assertions)]
                 let content = content.boxed();
                 $crate::html::Html::new(stringify!($method_name), (), content)
@@ -69,19 +69,16 @@ macro_rules! vanilla_element {
                 pub struct $marker_name;
             }
 
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::common::Common
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<A: $crate::html::attributes::Attributes> $crate::html::elements::common::Common
+                for $crate::html::Html<marker::$marker_name, A>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::global::Global
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<A: $crate::html::attributes::Attributes> $crate::html::elements::global::Global
+                for $crate::html::Html<marker::$marker_name, A>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::aria::Aria
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<A: $crate::html::attributes::Attributes> $crate::html::elements::aria::Aria
+                for $crate::html::Html<marker::$marker_name, A>
             {
             }
         }
@@ -95,7 +92,7 @@ macro_rules! vanilla_void_element {
             use crate::prelude::*;
 
             #[doc = $doc]
-            pub fn $method_name() -> $crate::html::Html<marker::$marker_name, (), ()> {
+            pub fn $method_name() -> $crate::html::Html<marker::$marker_name, ()> {
                 $crate::html::Html::new(stringify!($method_name), (), ()).into_void_element()
             }
 
@@ -103,19 +100,16 @@ macro_rules! vanilla_void_element {
                 pub struct $marker_name;
             }
 
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::common::Common
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<A: $crate::html::attributes::Attributes> $crate::html::elements::common::Common
+                for $crate::html::Html<marker::$marker_name, A>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::global::Global
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<A: $crate::html::attributes::Attributes> $crate::html::elements::global::Global
+                for $crate::html::Html<marker::$marker_name, A>
             {
             }
-            impl<A: $crate::html::attributes::Attributes, V: 'static>
-                $crate::html::elements::aria::Aria
-                for $crate::html::Html<marker::$marker_name, A, V>
+            impl<A: $crate::html::attributes::Attributes> $crate::html::elements::aria::Aria
+                for $crate::html::Html<marker::$marker_name, A>
             {
             }
         }

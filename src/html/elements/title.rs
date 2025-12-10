@@ -13,7 +13,7 @@ use crate::view::RenderFuture;
 /// identify their documents even when they are used out of context, for example in a user's history
 /// or bookmarks, or in search results. The document's title is often different from its first
 /// heading, since the first heading does not have to stand alone when taken out of context.
-pub fn title(title: impl Into<Cow<'static, str>>) -> Html<marker::Title, (), Cow<'static, str>> {
+pub fn title(title: impl Into<Cow<'static, str>>) -> Html<marker::Title, ()> {
     Html::new("title", (), title.into())
 }
 
@@ -21,7 +21,7 @@ pub mod marker {
     pub struct Title;
 }
 
-impl<A: Attributes, V: 'static> Global for Html<marker::Title, A, V> {}
+impl<A: Attributes> Global for Html<marker::Title, A> {}
 
 pub struct TitleUpdate(pub Cow<'static, str>);
 

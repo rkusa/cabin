@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 /// The `fieldset` element represents a set of form controls (or other content) grouped together,
 /// optionally with a caption. The caption is given by the first [super::legend] element that is a
 /// child of the [super::fieldset] element, if any. The remainder of the descendants form the group.
-pub fn fieldset(content: impl View) -> Html<marker::Fieldset, (), impl View> {
+pub fn fieldset(content: impl View) -> Html<marker::Fieldset, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("fieldset", (), content)
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Fieldset;
 }
 
-impl<A: Attributes, V: 'static> Fieldset for Html<marker::Fieldset, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Fieldset, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Fieldset, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Fieldset, A, V> {}
+impl<A: Attributes> Fieldset for Html<marker::Fieldset, A> {}
+impl<A: Attributes> Common for Html<marker::Fieldset, A> {}
+impl<A: Attributes> Global for Html<marker::Fieldset, A> {}
+impl<A: Attributes> Aria for Html<marker::Fieldset, A> {}
 
 /// The `fieldset` element represents a set of form controls (or other content) grouped together,
 /// optionally with a caption. The caption is given by the first [super::legend] element that is a

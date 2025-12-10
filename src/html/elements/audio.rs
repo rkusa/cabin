@@ -12,7 +12,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// An `audio` element represents a sound or audio stream.
-pub fn audio(content: impl View) -> Html<marker::Audio, (), impl View> {
+pub fn audio(content: impl View) -> Html<marker::Audio, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("audio", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Audio;
 }
 
-impl<A: Attributes, V: 'static> Audio for Html<marker::Audio, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Audio, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Audio, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Audio, A, V> {}
+impl<A: Attributes> Audio for Html<marker::Audio, A> {}
+impl<A: Attributes> Common for Html<marker::Audio, A> {}
+impl<A: Attributes> Global for Html<marker::Audio, A> {}
+impl<A: Attributes> Aria for Html<marker::Audio, A> {}
 
 /// An `audio` element represents a sound or audio stream.
 pub trait Audio: WithAttribute {

@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.
-pub fn time(content: impl View) -> Html<marker::Time, (), impl View> {
+pub fn time(content: impl View) -> Html<marker::Time, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("time", (), content)
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Time;
 }
 
-impl<A: Attributes, V: 'static> Time for Html<marker::Time, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Time, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Time, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Time, A, V> {}
+impl<A: Attributes> Time for Html<marker::Time, A> {}
+impl<A: Attributes> Common for Html<marker::Time, A> {}
+impl<A: Attributes> Global for Html<marker::Time, A> {}
+impl<A: Attributes> Aria for Html<marker::Time, A> {}
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.

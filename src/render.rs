@@ -37,6 +37,21 @@ impl Renderer {
         }
     }
 
+    pub fn append(&mut self, mut other: Renderer) {
+        if self.out.is_empty() {
+            std::mem::swap(&mut self.out, &mut other.out);
+        } else {
+            self.out.push_str(&other.out);
+        }
+        if self.headers.is_empty() {
+            std::mem::swap(&mut self.headers, &mut other.headers);
+        } else {
+            self.headers.extend(std::mem::take(&mut other.headers));
+        }
+        let hash = other.hasher.finish() as u32;
+        self.hasher.write_u32(hash);
+    }
+
     pub fn end(self) -> Out {
         Out {
             html: self.out,

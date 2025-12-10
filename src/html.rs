@@ -19,7 +19,7 @@ pub use raw::{Raw, raw};
 
 use self::attributes::{Attributes, Pair, WithAttribute};
 use crate::render::Renderer;
-use crate::view::{RenderFuture, View};
+use crate::view::{AnyView, RenderFuture, View};
 
 pub mod h {
     #[doc(inline)]
@@ -255,25 +255,24 @@ pub mod h {
     }
 }
 
-pub struct Html<El, A, V> {
+pub struct Html<El, A> {
     tag: &'static str,
     is_void_element: bool,
     attributes: A,
-    pub(crate) content: V,
+    pub(crate) content: AnyView,
     marker: PhantomData<El>,
 }
 
-impl<El, A, V> Html<El, A, V>
+impl<El, A> Html<El, A>
 where
     A: Attributes,
-    V: View,
 {
-    pub fn new(tag: &'static str, attributes: A, content: V) -> Html<El, A, V> {
+    pub fn new(tag: &'static str, attributes: A, content: impl View) -> Html<El, A> {
         Html {
             tag,
             is_void_element: false,
             attributes,
-            content,
+            content: content.into_any_view(),
             marker: PhantomData,
         }
     }
@@ -284,11 +283,10 @@ where
     }
 }
 
-impl<El, A, V> View for Html<El, A, V>
+impl<El, A> View for Html<El, A>
 where
     El: Send + 'static,
     A: Attributes,
-    V: View,
 {
     fn render(self, r: Renderer) -> RenderFuture {
         let Html {
@@ -316,12 +314,12 @@ where
     }
 }
 
-impl<El, A, V> WithAttribute for Html<El, A, V>
+impl<El, A> WithAttribute for Html<El, A>
 where
     A: Attributes,
 {
     type Output<T>
-        = Html<El, Pair<T, A>, V>
+        = Html<El, Pair<T, A>>
     where
         T: Attributes;
 

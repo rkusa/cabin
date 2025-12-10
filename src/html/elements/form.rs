@@ -18,7 +18,7 @@ use crate::html::{Aria, Html};
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a
 /// server for processing.
-pub fn form(content: impl View) -> Html<marker::Form, (), impl View> {
+pub fn form(content: impl View) -> Html<marker::Form, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("form", (), content)
@@ -28,10 +28,10 @@ pub mod marker {
     pub struct Form;
 }
 
-impl<A: Attributes, V: 'static> Form for Html<marker::Form, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Form, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Form, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Form, A, V> {}
+impl<A: Attributes> Form for Html<marker::Form, A> {}
+impl<A: Attributes> Common for Html<marker::Form, A> {}
+impl<A: Attributes> Global for Html<marker::Form, A> {}
+impl<A: Attributes> Aria for Html<marker::Form, A> {}
 
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a

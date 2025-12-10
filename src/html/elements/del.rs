@@ -9,7 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `del` element represents a removal from the document.
-pub fn del(content: impl View) -> Html<marker::Del, (), impl View> {
+pub fn del(content: impl View) -> Html<marker::Del, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("del", (), content)
@@ -19,10 +19,10 @@ pub mod marker {
     pub struct Del;
 }
 
-impl<A: Attributes, V: 'static> Del for Html<marker::Del, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Del, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Del, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Del, A, V> {}
+impl<A: Attributes> Del for Html<marker::Del, A> {}
+impl<A: Attributes> Common for Html<marker::Del, A> {}
+impl<A: Attributes> Global for Html<marker::Del, A> {}
+impl<A: Attributes> Aria for Html<marker::Del, A> {}
 
 /// The `del` element represents a removal from the document.
 pub trait Del: WithAttribute {

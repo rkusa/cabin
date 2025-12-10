@@ -12,7 +12,7 @@ use crate::html::form::OnSubmit;
 use crate::html::{Aria, Html};
 
 /// The `button` element represents a button labeled by its contents.
-pub fn button(content: impl View) -> Html<marker::Button, (), impl View> {
+pub fn button(content: impl View) -> Html<marker::Button, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("button", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Button;
 }
 
-impl<A: Attributes, V: 'static> Button for Html<marker::Button, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Button, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Button, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Button, A, V> {}
+impl<A: Attributes> Button for Html<marker::Button, A> {}
+impl<A: Attributes> Common for Html<marker::Button, A> {}
+impl<A: Attributes> Global for Html<marker::Button, A> {}
+impl<A: Attributes> Aria for Html<marker::Button, A> {}
 
 /// The `button` element represents a button labeled by its contents.
 pub trait Button: WithAttribute {

@@ -11,7 +11,7 @@ use crate::html::{Aria, Html};
 /// The `blockquote` element represents a section that is quoted from another source.
 /// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,
 /// may be cited in the [Blockquote::cite] attribute.
-pub fn blockquote(content: impl View) -> Html<marker::Blockquote, (), impl View> {
+pub fn blockquote(content: impl View) -> Html<marker::Blockquote, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("blockquote", (), content)
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Blockquote;
 }
 
-impl<A: Attributes, V: 'static> Blockquote for Html<marker::Blockquote, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Blockquote, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Blockquote, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Blockquote, A, V> {}
+impl<A: Attributes> Blockquote for Html<marker::Blockquote, A> {}
+impl<A: Attributes> Common for Html<marker::Blockquote, A> {}
+impl<A: Attributes> Global for Html<marker::Blockquote, A> {}
+impl<A: Attributes> Aria for Html<marker::Blockquote, A> {}
 
 /// The `blockquote` element represents a section that is quoted from another source.
 /// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,

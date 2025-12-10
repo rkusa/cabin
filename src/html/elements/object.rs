@@ -14,7 +14,7 @@ use crate::html::{Aria, Html};
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.
-pub fn object(content: impl View) -> Html<marker::Object, (), impl View> {
+pub fn object(content: impl View) -> Html<marker::Object, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("object", (), content)
@@ -24,10 +24,10 @@ pub mod marker {
     pub struct Object;
 }
 
-impl<A: Attributes, V: 'static> Object for Html<marker::Object, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Object, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Object, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Object, A, V> {}
+impl<A: Attributes> Object for Html<marker::Object, A> {}
+impl<A: Attributes> Common for Html<marker::Object, A> {}
+impl<A: Attributes> Global for Html<marker::Object, A> {}
+impl<A: Attributes> Aria for Html<marker::Object, A> {}
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.

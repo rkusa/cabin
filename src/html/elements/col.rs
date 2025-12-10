@@ -8,7 +8,7 @@ use crate::html::{Aria, Html};
 /// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that itself
 /// has a parent that is a [super::table] element, then the `col` element represents one or more
 /// columns in the column group represented by that [super::colgroup::Colgroup].
-pub fn col() -> Html<marker::Col, (), ()> {
+pub fn col() -> Html<marker::Col, ()> {
     Html::new("col", (), ()).into_void_element()
 }
 
@@ -16,10 +16,10 @@ pub mod marker {
     pub struct Col;
 }
 
-impl<A: Attributes, V: 'static> Col for Html<marker::Col, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Col, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Col, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Col, A, V> {}
+impl<A: Attributes> Col for Html<marker::Col, A> {}
+impl<A: Attributes> Common for Html<marker::Col, A> {}
+impl<A: Attributes> Global for Html<marker::Col, A> {}
+impl<A: Attributes> Aria for Html<marker::Col, A> {}
 
 /// If a `col` element has a parent and that is a [super::colgroup::Colgroup] element that itself
 /// has a parent that is a [super::table] element, then the `col` element represents one or more

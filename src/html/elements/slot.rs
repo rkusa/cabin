@@ -9,7 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.
-pub fn slot(content: impl View) -> Html<marker::Slot, (), impl View> {
+pub fn slot(content: impl View) -> Html<marker::Slot, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("slot", (), content)
@@ -19,8 +19,8 @@ pub mod marker {
     pub struct Slot;
 }
 
-impl<A: Attributes, V: 'static> Slot for Html<marker::Slot, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Slot, A, V> {}
+impl<A: Attributes> Slot for Html<marker::Slot, A> {}
+impl<A: Attributes> Global for Html<marker::Slot, A> {}
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.

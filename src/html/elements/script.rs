@@ -14,7 +14,7 @@ use crate::render::{Escape, Renderer};
 use crate::view::RenderFuture;
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
-pub fn script(content: impl Into<Cow<'static, str>>) -> Html<marker::Script, (), impl View> {
+pub fn script(content: impl Into<Cow<'static, str>>) -> Html<marker::Script, ()> {
     Html::new("script", (), ScriptEscape(content.into()))
 }
 
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Script;
 }
 
-impl<A: Attributes, V: 'static> Script for Html<marker::Script, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Script, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Script, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Script, A, V> {}
+impl<A: Attributes> Script for Html<marker::Script, A> {}
+impl<A: Attributes> Common for Html<marker::Script, A> {}
+impl<A: Attributes> Global for Html<marker::Script, A> {}
+impl<A: Attributes> Aria for Html<marker::Script, A> {}
 
 /// A `script` element allows to include dynamic script and data blocks in their documents.
 pub trait Script: WithAttribute {

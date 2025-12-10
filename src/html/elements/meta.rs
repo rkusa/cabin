@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
 /// [super::script::script] elements.
-pub fn meta(content: impl View) -> Html<marker::Meta, (), impl View> {
+pub fn meta(content: impl View) -> Html<marker::Meta, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("meta", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Meta;
 }
 
-impl<A: Attributes, V: 'static> Meta for Html<marker::Meta, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Meta, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Meta, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Meta, A, V> {}
+impl<A: Attributes> Meta for Html<marker::Meta, A> {}
+impl<A: Attributes> Common for Html<marker::Meta, A> {}
+impl<A: Attributes> Global for Html<marker::Meta, A> {}
+impl<A: Attributes> Aria for Html<marker::Meta, A> {}
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and

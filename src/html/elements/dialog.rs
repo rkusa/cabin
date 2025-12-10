@@ -7,7 +7,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
-pub fn dialog(content: impl View) -> Html<marker::Dialog, (), impl View> {
+pub fn dialog(content: impl View) -> Html<marker::Dialog, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("dialog", (), content)
@@ -17,10 +17,10 @@ pub mod marker {
     pub struct Dialog;
 }
 
-impl<A: Attributes, V: 'static> Dialog for Html<marker::Dialog, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Dialog, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Dialog, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Dialog, A, V> {}
+impl<A: Attributes> Dialog for Html<marker::Dialog, A> {}
+impl<A: Attributes> Common for Html<marker::Dialog, A> {}
+impl<A: Attributes> Global for Html<marker::Dialog, A> {}
+impl<A: Attributes> Aria for Html<marker::Dialog, A> {}
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
 pub trait Dialog: WithAttribute {

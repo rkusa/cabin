@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.
-pub fn ol(content: impl View) -> Html<marker::Ol, (), impl View> {
+pub fn ol(content: impl View) -> Html<marker::Ol, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("ol", (), content)
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Ol;
 }
 
-impl<A: Attributes, V: 'static> Ol for Html<marker::Ol, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Ol, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Ol, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Ol, A, V> {}
+impl<A: Attributes> Ol for Html<marker::Ol, A> {}
+impl<A: Attributes> Common for Html<marker::Ol, A> {}
+impl<A: Attributes> Global for Html<marker::Ol, A> {}
+impl<A: Attributes> Aria for Html<marker::Ol, A> {}
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.

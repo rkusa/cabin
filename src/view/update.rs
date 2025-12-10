@@ -32,11 +32,10 @@ impl<V> UpdateView<V> {
     }
 }
 
-impl<El, A, V> View for UpdateView<Html<El, A, V>>
+impl<El, A> View for UpdateView<Html<El, A>>
 where
     El: Send + 'static,
     A: Attributes,
-    V: View,
 {
     fn render(self, r: Renderer) -> RenderFuture {
         if r.is_update() {

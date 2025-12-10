@@ -8,7 +8,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `q` element represents some phrasing content quoted from another source.
-pub fn q(content: impl View) -> Html<marker::Q, (), impl View> {
+pub fn q(content: impl View) -> Html<marker::Q, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("q", (), content)
@@ -18,10 +18,10 @@ pub mod marker {
     pub struct Q;
 }
 
-impl<A: Attributes, V: 'static> Q for Html<marker::Q, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Q, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Q, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Q, A, V> {}
+impl<A: Attributes> Q for Html<marker::Q, A> {}
+impl<A: Attributes> Common for Html<marker::Q, A> {}
+impl<A: Attributes> Global for Html<marker::Q, A> {}
+impl<A: Attributes> Aria for Html<marker::Q, A> {}
 
 /// The `q` element represents some phrasing content quoted from another source.
 pub trait Q: WithAttribute {

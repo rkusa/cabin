@@ -10,7 +10,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `td` element represents a data cell in a [super::table].
-pub fn td(content: impl View) -> Html<marker::Td, (), impl View> {
+pub fn td(content: impl View) -> Html<marker::Td, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("td", (), content)
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Td;
 }
 
-impl<A: Attributes, V: 'static> Td for Html<marker::Td, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Td, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Td, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Td, A, V> {}
+impl<A: Attributes> Td for Html<marker::Td, A> {}
+impl<A: Attributes> Common for Html<marker::Td, A> {}
+impl<A: Attributes> Global for Html<marker::Td, A> {}
+impl<A: Attributes> Aria for Html<marker::Td, A> {}
 
 /// The `td` element represents a data cell in a [super::table].
 pub trait Td: WithAttribute {

@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.
-pub fn option(content: impl View) -> Html<marker::SelectOption, (), impl View> {
+pub fn option(content: impl View) -> Html<marker::SelectOption, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("option", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct SelectOption;
 }
 
-impl<A: Attributes, V: 'static> SelectOption for Html<marker::SelectOption, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::SelectOption, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::SelectOption, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::SelectOption, A, V> {}
+impl<A: Attributes> SelectOption for Html<marker::SelectOption, A> {}
+impl<A: Attributes> Common for Html<marker::SelectOption, A> {}
+impl<A: Attributes> Global for Html<marker::SelectOption, A> {}
+impl<A: Attributes> Aria for Html<marker::SelectOption, A> {}
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.

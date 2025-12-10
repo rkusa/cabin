@@ -12,7 +12,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `th` element represents a header cell in a [super::table].
-pub fn th(content: impl View) -> Html<marker::Th, (), impl View> {
+pub fn th(content: impl View) -> Html<marker::Th, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("th", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Th;
 }
 
-impl<A: Attributes, V: 'static> Th for Html<marker::Th, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Th, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Th, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Th, A, V> {}
+impl<A: Attributes> Th for Html<marker::Th, A> {}
+impl<A: Attributes> Common for Html<marker::Th, A> {}
+impl<A: Attributes> Global for Html<marker::Th, A> {}
+impl<A: Attributes> Aria for Html<marker::Th, A> {}
 
 /// The `th` element represents a header cell in a [super::table].
 pub trait Th: WithAttribute {

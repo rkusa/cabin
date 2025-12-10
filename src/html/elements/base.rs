@@ -9,7 +9,7 @@ use crate::html::{Aria, Html};
 /// The `base` element allows authors to specify the document base URL for the purposes of parsing
 /// URLs, and the name of the default navigable for the purposes of following hyperlinks. The
 /// element does not represent any content beyond this information.
-pub fn base() -> Html<marker::Base, (), ()> {
+pub fn base() -> Html<marker::Base, ()> {
     Html::new("base", (), ()).into_void_element()
 }
 
@@ -17,10 +17,10 @@ pub mod marker {
     pub struct Base;
 }
 
-impl<A: Attributes, V: 'static> Base for Html<marker::Base, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Base, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Base, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Base, A, V> {}
+impl<A: Attributes> Base for Html<marker::Base, A> {}
+impl<A: Attributes> Common for Html<marker::Base, A> {}
+impl<A: Attributes> Global for Html<marker::Base, A> {}
+impl<A: Attributes> Aria for Html<marker::Base, A> {}
 
 /// The `base` element allows authors to specify the document base URL for the purposes of parsing
 /// URLs, and the name of the default navigable for the purposes of following hyperlinks. The

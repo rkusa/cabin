@@ -14,7 +14,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `iframe` element represents its content navigable.
-pub fn iframe(content: impl View) -> Html<marker::IFrame, (), impl View> {
+pub fn iframe(content: impl View) -> Html<marker::IFrame, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("iframe", (), content)
@@ -24,10 +24,10 @@ pub mod marker {
     pub struct IFrame;
 }
 
-impl<A: Attributes, V: 'static> IFrame for Html<marker::IFrame, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::IFrame, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::IFrame, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::IFrame, A, V> {}
+impl<A: Attributes> IFrame for Html<marker::IFrame, A> {}
+impl<A: Attributes> Common for Html<marker::IFrame, A> {}
+impl<A: Attributes> Global for Html<marker::IFrame, A> {}
+impl<A: Attributes> Aria for Html<marker::IFrame, A> {}
 
 /// The `iframe` element represents its content navigable.
 pub trait IFrame: WithAttribute {

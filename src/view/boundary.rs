@@ -245,7 +245,7 @@ where
         if self.is_update {
             body.render(r)
         } else {
-            Html::<(), _, _>::new("cabin-boundary", boundary_ref, body).render(r)
+            Html::<(), _>::new("cabin-boundary", boundary_ref, body).render(r)
         }
     }
 }

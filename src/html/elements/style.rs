@@ -5,14 +5,13 @@ use super::global::Global;
 use super::link::Blocking;
 use super::meta::Media;
 use super::script::ScriptEscape;
-use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
 /// element is one of several inputs to the styling processing model. The element does not represent
 /// content for the user.
-pub fn style(content: impl Into<Cow<'static, str>>) -> Html<marker::Style, (), impl View> {
+pub fn style(content: impl Into<Cow<'static, str>>) -> Html<marker::Style, ()> {
     Html::new("style", (), ScriptEscape(content.into()))
 }
 
@@ -20,10 +19,10 @@ pub mod marker {
     pub struct Style;
 }
 
-impl<A: Attributes, V: 'static> Style for Html<marker::Style, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Style, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Style, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Style, A, V> {}
+impl<A: Attributes> Style for Html<marker::Style, A> {}
+impl<A: Attributes> Common for Html<marker::Style, A> {}
+impl<A: Attributes> Global for Html<marker::Style, A> {}
+impl<A: Attributes> Aria for Html<marker::Style, A> {}
 
 /// The `style` element allows authors to embed CSS style sheets in their documents. The `style`
 /// element is one of several inputs to the styling processing model. The element does not represent

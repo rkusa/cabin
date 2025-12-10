@@ -11,7 +11,7 @@ use crate::html::events::CustomEvent;
 use crate::html::{Aria, Html};
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
-pub fn select(content: impl View) -> Html<marker::Select, (), impl View> {
+pub fn select(content: impl View) -> Html<marker::Select, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("select", (), content)
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Select;
 }
 
-impl<A: Attributes, V: 'static> Select for Html<marker::Select, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Select, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Select, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Select, A, V> {}
+impl<A: Attributes> Select for Html<marker::Select, A> {}
+impl<A: Attributes> Common for Html<marker::Select, A> {}
+impl<A: Attributes> Global for Html<marker::Select, A> {}
+impl<A: Attributes> Aria for Html<marker::Select, A> {}
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
 pub trait Select: WithAttribute {

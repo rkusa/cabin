@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population
 /// to have selected a particular candidate.
-pub fn meter(content: impl View) -> Html<marker::Meter, (), impl View> {
+pub fn meter(content: impl View) -> Html<marker::Meter, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("meter", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Meter;
 }
 
-impl<A: Attributes, V: 'static> Meter for Html<marker::Meter, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Meter, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Meter, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Meter, A, V> {}
+impl<A: Attributes> Meter for Html<marker::Meter, A> {}
+impl<A: Attributes> Common for Html<marker::Meter, A> {}
+impl<A: Attributes> Global for Html<marker::Meter, A> {}
+impl<A: Attributes> Aria for Html<marker::Meter, A> {}
 
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population

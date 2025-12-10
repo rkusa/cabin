@@ -11,7 +11,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.
-pub fn track() -> Html<marker::Track, (), ()> {
+pub fn track() -> Html<marker::Track, ()> {
     Html::new("track", (), ()).into_void_element()
 }
 
@@ -19,8 +19,8 @@ pub mod marker {
     pub struct Track;
 }
 
-impl<A: Attributes, V: 'static> Track for Html<marker::Track, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Track, A, V> {}
+impl<A: Attributes> Track for Html<marker::Track, A> {}
+impl<A: Attributes> Global for Html<marker::Track, A> {}
 
 /// The `track` element allows authors to specify explicit external timed text tracks for media
 /// ([super::audio], [super::video]) elements. It does not represent anything on its own.

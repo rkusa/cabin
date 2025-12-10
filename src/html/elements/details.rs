@@ -7,7 +7,7 @@ use crate::html::{Aria, Html};
 
 /// The `details` element represents a disclosure widget from which the user can obtain additional
 /// information or controls.
-pub fn details(content: impl View) -> Html<marker::Details, (), impl View> {
+pub fn details(content: impl View) -> Html<marker::Details, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("details", (), content)
@@ -17,10 +17,10 @@ pub mod marker {
     pub struct Details;
 }
 
-impl<A: Attributes, V: 'static> Details for Html<marker::Details, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Details, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Details, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Details, A, V> {}
+impl<A: Attributes> Details for Html<marker::Details, A> {}
+impl<A: Attributes> Common for Html<marker::Details, A> {}
+impl<A: Attributes> Global for Html<marker::Details, A> {}
+impl<A: Attributes> Aria for Html<marker::Details, A> {}
 
 /// The `details` element represents a disclosure widget from which the user can obtain additional
 /// information or controls.

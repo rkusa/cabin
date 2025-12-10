@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.
-pub fn output(content: impl View) -> Html<marker::Output, (), impl View> {
+pub fn output(content: impl View) -> Html<marker::Output, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("output", (), content)
@@ -20,10 +20,10 @@ pub mod marker {
     pub struct Output;
 }
 
-impl<A: Attributes, V: 'static> Output for Html<marker::Output, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Output, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Output, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Output, A, V> {}
+impl<A: Attributes> Output for Html<marker::Output, A> {}
+impl<A: Attributes> Common for Html<marker::Output, A> {}
+impl<A: Attributes> Global for Html<marker::Output, A> {}
+impl<A: Attributes> Aria for Html<marker::Output, A> {}
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.

@@ -7,7 +7,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.
-pub fn colgroup(content: impl View) -> Html<marker::Colgroup, (), impl View> {
+pub fn colgroup(content: impl View) -> Html<marker::Colgroup, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("colgroup", (), content)
@@ -17,9 +17,9 @@ pub mod marker {
     pub struct Colgroup;
 }
 
-impl<A: Attributes, V: 'static> Colgroup for Html<marker::Colgroup, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Colgroup, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Colgroup, A, V> {}
+impl<A: Attributes> Colgroup for Html<marker::Colgroup, A> {}
+impl<A: Attributes> Common for Html<marker::Colgroup, A> {}
+impl<A: Attributes> Global for Html<marker::Colgroup, A> {}
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.

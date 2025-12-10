@@ -8,7 +8,7 @@ use crate::html::{Aria, Html};
 /// The `canvas` element provides scripts with a resolution-dependent bitmap canvas, which can be
 /// used for rendering graphs, game graphics, art, or other visual images on the fly. The contents
 /// of the canvas element, if any, are the element's fallback content.
-pub fn canvas(content: impl View) -> Html<marker::Canvas, (), impl View> {
+pub fn canvas(content: impl View) -> Html<marker::Canvas, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("canvas", (), content)
@@ -18,10 +18,10 @@ pub mod marker {
     pub struct Canvas;
 }
 
-impl<A: Attributes, V: 'static> Canvas for Html<marker::Canvas, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Canvas, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Canvas, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Canvas, A, V> {}
+impl<A: Attributes> Canvas for Html<marker::Canvas, A> {}
+impl<A: Attributes> Common for Html<marker::Canvas, A> {}
+impl<A: Attributes> Global for Html<marker::Canvas, A> {}
+impl<A: Attributes> Aria for Html<marker::Canvas, A> {}
 
 /// The `canvas` element provides scripts with a resolution-dependent bitmap canvas, which can be
 /// used for rendering graphs, game graphics, art, or other visual images on the fly. The contents

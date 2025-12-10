@@ -14,7 +14,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// An `img` element represents an image.
-pub fn img() -> Html<marker::Img, (), ()> {
+pub fn img() -> Html<marker::Img, ()> {
     Html::new("img", (), ()).into_void_element()
 }
 
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Img;
 }
 
-impl<A: Attributes, V: 'static> Img for Html<marker::Img, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Img, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Img, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Img, A, V> {}
+impl<A: Attributes> Img for Html<marker::Img, A> {}
+impl<A: Attributes> Common for Html<marker::Img, A> {}
+impl<A: Attributes> Global for Html<marker::Img, A> {}
+impl<A: Attributes> Aria for Html<marker::Img, A> {}
 
 /// An `img` element represents an image.
 pub trait Img: WithAttribute {

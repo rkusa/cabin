@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 /// work remains to be done before the task is complete (e.g. because the task is waiting for a
 /// remote host to respond), or the progress is a number in the range zero to a maximum, giving the
 /// fraction of work that has so far been completed.
-pub fn progress(content: impl View) -> Html<marker::Progress, (), impl View> {
+pub fn progress(content: impl View) -> Html<marker::Progress, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("progress", (), content)
@@ -22,10 +22,10 @@ pub mod marker {
     pub struct Progress;
 }
 
-impl<A: Attributes, V: 'static> Progress for Html<marker::Progress, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Progress, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Progress, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Progress, A, V> {}
+impl<A: Attributes> Progress for Html<marker::Progress, A> {}
+impl<A: Attributes> Common for Html<marker::Progress, A> {}
+impl<A: Attributes> Global for Html<marker::Progress, A> {}
+impl<A: Attributes> Aria for Html<marker::Progress, A> {}
 
 /// The `progress` element represents the completion progress of a task. The progress is either
 /// indeterminate, indicating that progress is being made but that it is not clear how much more

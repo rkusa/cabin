@@ -19,7 +19,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::events::CustomEvent;
 use crate::html::{Aria, Html};
 
-pub fn input() -> Html<marker::Input, (), ()> {
+pub fn input() -> Html<marker::Input, ()> {
     Html::new("input", (), ()).into_void_element()
 }
 
@@ -27,10 +27,10 @@ pub mod marker {
     pub struct Input;
 }
 
-impl<A: Attributes, V: 'static> Input for Html<marker::Input, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Input, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Input, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Input, A, V> {}
+impl<A: Attributes> Input for Html<marker::Input, A> {}
+impl<A: Attributes> Common for Html<marker::Input, A> {}
+impl<A: Attributes> Global for Html<marker::Input, A> {}
+impl<A: Attributes> Aria for Html<marker::Input, A> {}
 
 // TODO: typed inputs? (number, date, ...)
 /// TODO: doc comment

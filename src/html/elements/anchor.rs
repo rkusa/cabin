@@ -13,7 +13,7 @@ use crate::html::{Aria, Html};
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
-pub fn a(content: impl View) -> Html<marker::Anchor, (), impl View> {
+pub fn a(content: impl View) -> Html<marker::Anchor, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("a", (), content)
@@ -23,10 +23,10 @@ pub mod marker {
     pub struct Anchor;
 }
 
-impl<A: Attributes, V: 'static> Anchor for Html<marker::Anchor, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Anchor, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Anchor, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Anchor, A, V> {}
+impl<A: Attributes> Anchor for Html<marker::Anchor, A> {}
+impl<A: Attributes> Common for Html<marker::Anchor, A> {}
+impl<A: Attributes> Global for Html<marker::Anchor, A> {}
+impl<A: Attributes> Aria for Html<marker::Anchor, A> {}
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.

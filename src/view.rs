@@ -1,3 +1,4 @@
+mod any;
 pub mod boundary;
 mod boxed;
 pub mod error;
@@ -12,6 +13,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+pub use any::AnyView;
 pub use boundary::Boundary;
 pub use boxed::BoxedView;
 pub use future::FutureExt;
@@ -47,6 +49,13 @@ where
         Self: Sized,
     {
         Boundary::new(self, args)
+    }
+
+    fn into_any_view(self) -> AnyView
+    where
+        Self: Sized,
+    {
+        AnyView::new(self)
     }
 }
 

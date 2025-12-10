@@ -8,7 +8,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `data` element represents a group of one or more columns in the [super::table] that is its
 /// parent, if it has a parent and that is a [super::table] element.
-pub fn data() -> Html<marker::Data, (), ()> {
+pub fn data() -> Html<marker::Data, ()> {
     Html::new("data", (), ()).into_void_element()
 }
 
@@ -16,9 +16,9 @@ pub mod marker {
     pub struct Data;
 }
 
-impl<A: Attributes, V: 'static> Data for Html<marker::Data, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Data, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Data, A, V> {}
+impl<A: Attributes> Data for Html<marker::Data, A> {}
+impl<A: Attributes> Common for Html<marker::Data, A> {}
+impl<A: Attributes> Global for Html<marker::Data, A> {}
 
 /// The `data` element represents a group of one or more columns in the [super::table] that is its
 /// parent, if it has a parent and that is a [super::table] element.

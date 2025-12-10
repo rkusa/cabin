@@ -13,7 +13,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// A `link` element allows to link to other resources.
-pub fn link() -> Html<marker::Link, (), ()> {
+pub fn link() -> Html<marker::Link, ()> {
     Html::new("link", (), ()).into_void_element()
 }
 
@@ -21,10 +21,10 @@ pub mod marker {
     pub struct Link;
 }
 
-impl<A: Attributes, V: 'static> Link for Html<marker::Link, A, V> {}
-impl<A: Attributes, V: 'static> Common for Html<marker::Link, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Link, A, V> {}
-impl<A: Attributes, V: 'static> Aria for Html<marker::Link, A, V> {}
+impl<A: Attributes> Link for Html<marker::Link, A> {}
+impl<A: Attributes> Common for Html<marker::Link, A> {}
+impl<A: Attributes> Global for Html<marker::Link, A> {}
+impl<A: Attributes> Aria for Html<marker::Link, A> {}
 
 /// A `link` element allows to link to other resources.
 pub trait Link: WithAttribute {

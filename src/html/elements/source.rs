@@ -12,7 +12,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 /// The `source` element allows authors to specify multiple alternative source sets for [super::img]
 /// elements or multiple alternative media resources for media elements. It does not represent
 /// anything on its own.
-pub fn source() -> Html<marker::Source, (), ()> {
+pub fn source() -> Html<marker::Source, ()> {
     Html::new("source", (), ()).into_void_element()
 }
 
@@ -20,8 +20,8 @@ pub mod marker {
     pub struct Source;
 }
 
-impl<A: Attributes, V: 'static> Source for Html<marker::Source, A, V> {}
-impl<A: Attributes, V: 'static> Global for Html<marker::Source, A, V> {}
+impl<A: Attributes> Source for Html<marker::Source, A> {}
+impl<A: Attributes> Global for Html<marker::Source, A> {}
 
 /// An `source` element represents an image.
 pub trait Source: WithAttribute {
