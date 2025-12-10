@@ -4,6 +4,7 @@ mod boxed;
 pub mod error;
 mod future;
 mod iter;
+mod macros;
 pub mod text;
 mod update;
 
@@ -19,6 +20,7 @@ pub use boxed::BoxedView;
 pub use future::FutureExt;
 use http_error::HttpError;
 pub use iter::IteratorExt;
+pub use macros::view;
 pub use update::UpdateView;
 
 pub use crate::pair::Pair;
@@ -141,22 +143,3 @@ impl Future for RenderFuture {
         }
     }
 }
-
-#[macro_export]
-macro_rules! view {
-    () => (
-        ()
-    );
-    ($left:expr) => (
-        $left
-    );
-    ($left:expr, $right:expr) => (
-        $crate::view::Pair::new($left, $right)
-    );
-    ($left:expr, $($tail:expr),*) => (
-        $crate::view::Pair::new($left, view![$($tail),*])
-    );
-    ($($x:expr,)*) => ($crate::view::view![$($x),*])
-}
-
-pub use view;
