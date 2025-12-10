@@ -121,7 +121,7 @@ pub struct Integrity(pub Cow<'static, str>);
 pub struct ScriptEscape(pub Cow<'static, str>);
 
 impl View for ScriptEscape {
-    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         let mut txt = r.text();
         RenderFuture::Ready(
             Escape::script(&mut txt)
@@ -141,7 +141,7 @@ mod tests {
     async fn test_script_escape() {
         assert_eq!(
             script("asd</script>")
-                .render(Renderer::new(false, true), false)
+                .render(Renderer::new(false, true))
                 .await
                 .unwrap()
                 .end()
@@ -150,7 +150,7 @@ mod tests {
         );
         assert_eq!(
             script("asd<!--")
-                .render(Renderer::new(false, true), false)
+                .render(Renderer::new(false, true))
                 .await
                 .unwrap()
                 .end()
@@ -159,7 +159,7 @@ mod tests {
         );
         assert_eq!(
             script(r#"if (1<2) alert("</script>")"#)
-                .render(Renderer::new(false, true), false)
+                .render(Renderer::new(false, true))
                 .await
                 .unwrap()
                 .end()

@@ -290,7 +290,7 @@ where
     A: Attributes,
     V: View,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         let Html {
             tag,
             is_void_element,
@@ -299,7 +299,7 @@ where
             marker: _,
         } = self;
 
-        let mut el = r.element(tag, include_hash);
+        let mut el = r.element(tag);
         if let Err(err) = attributes.render(&mut el) {
             return RenderFuture::Ready(Err(err));
         }

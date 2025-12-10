@@ -48,21 +48,15 @@ impl Renderer {
         self.is_update
     }
 
-    pub fn element(mut self, tag: &'static str, include_hash: bool) -> ElementRenderer {
+    pub fn element(mut self, tag: &'static str) -> ElementRenderer {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.hasher.write(tag.as_bytes());
 
-        let should_write_id = include_hash
-            && !matches!(tag, "html" | "body" | "head" | "option")
-            && !self.disable_hashes;
-        let parent_skip_hash = self.disable_hashes;
-        if matches!(tag, "head") {
-            self.disable_hashes = true;
-        }
-
         write!(&mut self.out, "<{tag}").unwrap();
 
-        let hash_offset = if should_write_id {
+        let should_write_hash =
+            !matches!(tag, "body" | "head" | "html" | "link" | "meta" | "option");
+        let hash_offset = if should_write_hash && !self.disable_hashes {
             write!(&mut self.out, " hash=\"").unwrap();
             let hash_offset = self.out.len();
             // Write placeholder id which will be replaced later on
@@ -75,7 +69,6 @@ impl Renderer {
         ElementRenderer {
             tag,
             parent_hasher,
-            parent_disable_hashes: parent_skip_hash,
             renderer: self,
             content_started: false,
             hash_offset,
@@ -98,7 +91,6 @@ pub struct ElementRenderer {
     tag: &'static str,
     renderer: Renderer,
     parent_hasher: XxHash32,
-    parent_disable_hashes: bool,
     content_started: bool,
     hash_offset: Option<usize>,
 }
@@ -174,7 +166,6 @@ impl ElementRenderer {
             tag,
             mut renderer,
             parent_hasher,
-            parent_disable_hashes: parent_skip_hash,
             mut content_started,
             hash_offset,
         } = self;
@@ -184,13 +175,12 @@ impl ElementRenderer {
             write!(&mut renderer.out, ">").unwrap();
         }
 
-        match view.render(renderer, false) {
+        match view.render(renderer) {
             RenderFuture::Ready(Ok(renderer)) => RenderFuture::Ready(
                 ElementRenderer {
                     tag,
                     renderer,
                     parent_hasher,
-                    parent_disable_hashes: parent_skip_hash,
                     content_started,
                     hash_offset,
                 }
@@ -202,7 +192,6 @@ impl ElementRenderer {
                     tag,
                     renderer: fut.await?,
                     parent_hasher,
-                    parent_disable_hashes: parent_skip_hash,
                     content_started,
                     hash_offset,
                 }
@@ -231,7 +220,6 @@ impl ElementRenderer {
                 .map_err(crate::error::InternalError::from)?;
         }
 
-        self.renderer.disable_hashes = self.parent_disable_hashes;
         Ok(self.renderer)
     }
 }

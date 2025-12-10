@@ -76,7 +76,7 @@ where
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move {
             let doc = render_fn().await;
-            doc.render(r, false).await
+            doc.render(r).await
         }))
         .await;
     let result = match result {
@@ -118,9 +118,7 @@ where
     let r = scope.create_renderer();
     let result = scope
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
-        .run(Box::pin(
-            async move { render_fn().await.render(r, true).await },
-        ))
+        .run(Box::pin(async move { render_fn().await.render(r).await }))
         .await;
     let result = match result {
         Ok(result) => result,

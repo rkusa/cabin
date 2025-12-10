@@ -29,7 +29,7 @@ pub trait View
 where
     Self: Send + 'static,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture;
+    fn render(self, r: Renderer) -> RenderFuture;
 
     fn prime(&mut self) -> impl Future<Output = ()> + Send {
         std::future::ready(())
@@ -56,19 +56,19 @@ pub enum RenderFuture {
 }
 
 impl View for () {
-    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         RenderFuture::Ready(Ok(r))
     }
 }
 
 impl View for &'static str {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
-        Cow::Borrowed(self).render(r, include_hash)
+    fn render(self, r: Renderer) -> RenderFuture {
+        Cow::Borrowed(self).render(r)
     }
 }
 
 impl View for Cow<'static, str> {
-    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         let mut txt = r.text();
         RenderFuture::Ready(
             Escape::content(&mut txt)
@@ -81,8 +81,8 @@ impl View for Cow<'static, str> {
 }
 
 impl View for String {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
-        Cow::<'static, str>::Owned(self).render(r, include_hash)
+    fn render(self, r: Renderer) -> RenderFuture {
+        Cow::<'static, str>::Owned(self).render(r)
     }
 }
 
@@ -90,9 +90,9 @@ impl<V> View for Option<V>
 where
     V: View,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         match self {
-            Some(i) => i.render(r, include_hash),
+            Some(i) => i.render(r),
             None => RenderFuture::Ready(Ok(r)),
         }
     }
@@ -112,12 +112,12 @@ where
     Box<dyn HttpError + Send + 'static>: From<E>,
     E: ErrorView + Send + 'static,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         match self {
-            Ok(v) => v.render(r, include_hash),
+            Ok(v) => v.render(r),
             Err(err) => {
                 if err.should_render() {
-                    err.into_view().render(r, include_hash)
+                    err.into_view().render(r)
                 } else {
                     RenderFuture::Ready(Err(crate::Error::from(Box::<
                         dyn HttpError + Send + 'static,
@@ -154,13 +154,13 @@ impl Future for RenderFuture {
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),*; $( $generic:tt ),* ) => {
         impl<$( $generic: View ),*> View for ($($generic,)*) {
-            fn render(mut self, r: Renderer, _include_hash: bool) -> RenderFuture {
+            fn render(mut self, r: Renderer) -> RenderFuture {
                 RenderFuture::Future(Box::pin(async move {
                     tokio::join!($(
                         self.$ix.prime(),
                     )*);
                     $(
-                        let r = self.$ix.render(r, true).await?;
+                        let r = self.$ix.render(r).await?;
                     )*
                     Ok(r)
                 }))

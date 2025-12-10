@@ -90,10 +90,10 @@ where
     FV: FnMut(Iter::Item) -> V + Send + 'static,
     V: View,
 {
-    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, mut r: Renderer) -> RenderFuture {
         RenderFuture::Future(Box::pin(async move {
             for i in self {
-                let fut = i.render(r, true);
+                let fut = i.render(r);
                 r = fut.await?;
             }
             Ok(r)
@@ -109,10 +109,10 @@ where
     FV: FnMut(Iter::Item) -> Option<V> + Send + 'static,
     V: View,
 {
-    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, mut r: Renderer) -> RenderFuture {
         RenderFuture::Future(Box::pin(async move {
             for i in self {
-                let fut = i.render(r, true);
+                let fut = i.render(r);
                 r = fut.await?;
             }
             Ok(r)
@@ -137,8 +137,8 @@ impl<V> View for KeyedView<V>
 where
     V: View,
 {
-    fn render(self, r: Renderer, _include_hash: bool) -> RenderFuture {
-        let mut el = r.element("cabin-keyed", true);
+    fn render(self, r: Renderer) -> RenderFuture {
+        let mut el = r.element("cabin-keyed");
         if let Err(err) = el.attribute("id", self.key) {
             return RenderFuture::Ready(Err(crate::error::InternalError::from(err).into()));
         }

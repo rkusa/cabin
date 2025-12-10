@@ -30,7 +30,7 @@ pub fn title_update(title: impl Into<Cow<'static, str>>) -> TitleUpdate {
 }
 
 impl View for TitleUpdate {
-    fn render(self, mut r: Renderer, _include_hash: bool) -> RenderFuture {
+    fn render(self, mut r: Renderer) -> RenderFuture {
         if r.is_update() {
             match HeaderValue::from_str(&self.0) {
                 Ok(v) => {

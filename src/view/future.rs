@@ -52,14 +52,14 @@ where
     F: Future<Output = V> + Send + 'static,
     V: View,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         RenderFuture::Future(Box::pin(async move {
             let view = match self.state {
                 State::Stored(f) => Ok(f.await),
                 State::Primed(result) => result,
                 State::Intermediate => unreachable!(),
             }?;
-            view.render(r, include_hash).await
+            view.render(r).await
         }))
     }
 

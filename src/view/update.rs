@@ -38,14 +38,14 @@ where
     A: Attributes,
     V: View,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         if r.is_update() {
             match self.behaviour {
                 Behaviour::Hidden => RenderFuture::Ready(Ok(r)),
-                Behaviour::ContentOnly => self.view.content.render(r, include_hash),
+                Behaviour::ContentOnly => self.view.content.render(r),
             }
         } else {
-            self.view.render(r, include_hash)
+            self.view.render(r)
         }
     }
 
@@ -55,11 +55,11 @@ where
 }
 
 impl View for UpdateView<Raw> {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         if r.is_update() {
             RenderFuture::Ready(Ok(r))
         } else {
-            self.view.render(r, include_hash)
+            self.view.render(r)
         }
     }
 

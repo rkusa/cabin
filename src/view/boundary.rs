@@ -116,7 +116,7 @@ where
         let r = scope.create_renderer();
         let result = runtime.block_on(scope.run(async move {
             crate::view::FutureExt::into_view(self.with(args))
-                .render(r, true)
+                .render(r)
                 .await
         }));
         let crate::render::Out { html, headers } = match result {
@@ -220,9 +220,9 @@ impl<Args> View for Boundary<Args>
 where
     Args: Clone + Serialize + Send + Sync + 'static,
 {
-    fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
+    fn render(self, r: Renderer) -> RenderFuture {
         let Some(args) = self.args else {
-            return self.view.render(r, include_hash);
+            return self.view.render(r);
         };
 
         // TODO: any way to make this a compile error?
@@ -243,9 +243,9 @@ where
 
         let body = (script(state).r#type("application/json"), self.view);
         if self.is_update {
-            body.render(r, include_hash)
+            body.render(r)
         } else {
-            Html::<(), _, _>::new("cabin-boundary", boundary_ref, body).render(r, include_hash)
+            Html::<(), _, _>::new("cabin-boundary", boundary_ref, body).render(r)
         }
     }
 }
