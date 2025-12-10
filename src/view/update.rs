@@ -1,5 +1,3 @@
-use std::future::Future;
-
 use super::RenderFuture;
 use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
@@ -47,10 +45,6 @@ where
             self.view.render(r)
         }
     }
-
-    fn prime(&mut self) -> impl Future<Output = ()> + Send {
-        self.view.prime()
-    }
 }
 
 impl View for UpdateView<Raw> {
@@ -60,10 +54,6 @@ impl View for UpdateView<Raw> {
         } else {
             self.view.render(r)
         }
-    }
-
-    fn prime(&mut self) -> impl Future<Output = ()> + Send {
-        self.view.prime()
     }
 }
 

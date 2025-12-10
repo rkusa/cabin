@@ -17,7 +17,6 @@ pub use any::AnyView;
 pub use boundary::Boundary;
 pub use boxed::BoxedView;
 pub use future::FutureExt;
-use futures_util::future::Either;
 use http_error::HttpError;
 pub use iter::IteratorExt;
 pub use update::UpdateView;
@@ -33,10 +32,6 @@ where
     Self: Send + 'static,
 {
     fn render(self, r: Renderer) -> RenderFuture;
-
-    fn prime(&mut self) -> impl Future<Output = ()> + Send {
-        std::future::ready(())
-    }
 
     fn boxed(self) -> BoxedView
     where
@@ -106,14 +101,6 @@ where
             None => RenderFuture::Ready(Ok(r)),
         }
     }
-
-    fn prime(&mut self) -> impl Future<Output = ()> + Send {
-        if let Some(inner) = self {
-            Either::Left(inner.prime())
-        } else {
-            Either::Right(std::future::ready(()))
-        }
-    }
 }
 
 impl<V, E> View for Result<V, E>
@@ -134,12 +121,6 @@ where
                     >::from(err))))
                 }
             }
-        }
-    }
-
-    async fn prime(&mut self) {
-        if let Ok(inner) = self {
-            inner.prime().await;
         }
     }
 }
@@ -164,16 +145,8 @@ impl Future for RenderFuture {
 macro_rules! impl_tuple {
     ( $count:tt; $( $ix:tt ),*; $( $generic:tt ),* ) => {
         impl<$( $generic: View ),*> View for ($($generic,)*) {
-            fn render(mut self, r: Renderer) -> RenderFuture {
-                RenderFuture::Future(Box::pin(async move {
-                    tokio::join!($(
-                        self.$ix.prime(),
-                    )*);
-                    $(
-                        let r = self.$ix.render(r).await?;
-                    )*
-                    Ok(r)
-                }))
+            fn render(self, r: Renderer) -> RenderFuture {
+                view![$(self.$ix,)*].render(r)
             }
         }
     };

@@ -115,7 +115,7 @@ where
             .with_event(event.event_id, crate::scope::Payload::Json(event.payload));
         let r = scope.create_renderer();
         let result = runtime.block_on(scope.run(async move {
-            crate::view::FutureExt::into_view(self.with(args))
+            crate::view::FutureExt::into_any_view(self.with(args))
                 .render(r)
                 .await
         }));

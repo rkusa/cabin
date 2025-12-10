@@ -85,13 +85,4 @@ impl<L: View, R: View> View for Pair<L, R> {
             })),
         }
     }
-
-    async fn prime(&mut self) {
-        if let Some(left) = &mut self.left {
-            left.prime().await;
-        }
-        if let Some(right) = &mut self.right {
-            right.prime().await;
-        }
-    }
 }

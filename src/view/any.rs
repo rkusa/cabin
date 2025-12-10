@@ -4,7 +4,7 @@ use crate::scope::Scope;
 use crate::view::RenderFuture;
 
 pub struct AnyView {
-    view: RenderFuture,
+    pub(crate) view: RenderFuture,
 }
 
 impl AnyView {
@@ -30,6 +30,30 @@ impl View for AnyView {
                 r.append(inner);
                 Ok(r)
             })),
+        }
+    }
+}
+
+impl Future for AnyView {
+    type Output = Self;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        match self.get_mut().view {
+            RenderFuture::Ready(ref mut result) => {
+                let result = std::mem::replace(
+                    result,
+                    Err(crate::error::InternalError::FutureCompleted.into()),
+                );
+                std::task::Poll::Ready(AnyView {
+                    view: RenderFuture::Ready(result),
+                })
+            }
+            RenderFuture::Future(ref mut future) => future.as_mut().poll(cx).map(|view| AnyView {
+                view: RenderFuture::Ready(view),
+            }),
         }
     }
 }

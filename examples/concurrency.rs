@@ -9,12 +9,16 @@ use tokio::net::TcpListener;
 
 async fn app() -> impl View {
     let start = Instant::now();
-    basic_document(h::ul((
-        delayed(start, Duration::from_secs(1)).into_view(),
-        delayed(start, Duration::from_secs(2)).into_view(),
-        delayed(start, Duration::from_secs(3)).into_view(),
+    basic_document(h::div![
+        h::ul![
+            delayed(start, Duration::from_secs(1)).into_any_view(),
+            delayed(start, Duration::from_secs(2)).into_any_view(),
+            delayed(start, Duration::from_secs(3)).into_any_view(),
+        ]
+        .into_any_view()
+        .await,
         h::text!("page finished after {:.2}", start.elapsed().as_secs_f64()),
-    )))
+    ])
 }
 
 async fn delayed(start: Instant, delay: Duration) -> impl View {

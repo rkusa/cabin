@@ -4,7 +4,6 @@ pub mod events;
 pub mod list;
 mod raw;
 
-use std::future::Future;
 use std::marker::PhantomData;
 
 #[doc(inline)]
@@ -309,10 +308,6 @@ where
         } else {
             RenderFuture::Ready(Ok(el.end(true)))
         }
-    }
-
-    fn prime(&mut self) -> impl Future<Output = ()> + Send {
-        self.content.prime()
     }
 }
 
