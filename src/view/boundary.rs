@@ -110,9 +110,8 @@ where
         let runtime = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
-        let scope = Scope::builder()
-            .with_event(event.event_id, crate::scope::Payload::Json(event.payload))
-            .build();
+        let scope =
+            Scope::new().with_event(event.event_id, crate::scope::Payload::Json(event.payload));
         let result = runtime.block_on(scope.run(async move {
             let r = Renderer::new_update();
             crate::view::FutureExt::into_view(self.with(args))
