@@ -141,7 +141,7 @@ mod tests {
     async fn test_script_escape() {
         assert_eq!(
             script("asd</script>")
-                .render(Renderer::new(), false)
+                .render(Renderer::new(false, true), false)
                 .await
                 .unwrap()
                 .end()
@@ -150,7 +150,7 @@ mod tests {
         );
         assert_eq!(
             script("asd<!--")
-                .render(Renderer::new(), false)
+                .render(Renderer::new(false, true), false)
                 .await
                 .unwrap()
                 .end()
@@ -159,7 +159,7 @@ mod tests {
         );
         assert_eq!(
             script(r#"if (1<2) alert("</script>")"#)
-                .render(Renderer::new(), false)
+                .render(Renderer::new(false, true), false)
                 .await
                 .unwrap()
                 .end()

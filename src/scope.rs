@@ -7,6 +7,7 @@ use serde::de::DeserializeOwned;
 use serde_json::value::RawValue;
 
 use crate::error::InternalError;
+use crate::render::Renderer;
 
 tokio::task_local! {
     static SCOPE: Scope;
@@ -16,6 +17,8 @@ pub struct Scope {
     event: RefCell<Option<Event>>,
     multipart: RefCell<Option<Multipart<'static>>>,
     error: RefCell<Option<InternalError>>,
+    is_update: bool,
+    disable_hashes: bool,
 }
 
 pub(crate) enum Payload {
@@ -183,11 +186,13 @@ pub fn take_multipart() -> Option<Multipart<'static>> {
 
 // FIXME: implement builder to avoid locking over and over again
 impl Scope {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {
             event: RefCell::new(None),
             multipart: RefCell::new(None),
             error: RefCell::new(None),
+            is_update,
+            disable_hashes,
         }
     }
 
@@ -200,6 +205,14 @@ impl Scope {
     pub(crate) fn with_multipart(self, multipart: Multipart<'static>) -> Self {
         *(self.multipart.borrow_mut()) = Some(multipart);
         self
+    }
+
+    pub fn is_update(&self) -> bool {
+        self.is_update
+    }
+
+    pub(crate) fn create_renderer(&self) -> Renderer {
+        Renderer::new(self.is_update, self.disable_hashes)
     }
 
     pub async fn run<T>(

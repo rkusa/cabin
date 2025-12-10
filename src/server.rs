@@ -14,7 +14,7 @@ use serde_json::value::RawValue;
 
 pub use crate::error::Error;
 use crate::html;
-use crate::render::{Out, Renderer};
+use crate::render::Out;
 use crate::scope::{Payload, Scope};
 pub use crate::view::View;
 
@@ -70,11 +70,11 @@ where
     F: Future<Output = V> + Send,
     V: View,
 {
-    let scope = Scope::new();
+    let scope = Scope::new(false, false);
+    let r = scope.create_renderer();
     let result = scope
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move {
-            let r = Renderer::new();
             let doc = render_fn().await;
             doc.render(r, false).await
         }))
@@ -111,16 +111,16 @@ where
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
-    let mut scope = Scope::new().with_event(event.event_id, event.payload);
+    let mut scope = Scope::new(true, false).with_event(event.event_id, event.payload);
     if let Some(multipart) = event.multipart {
         scope = scope.with_multipart(multipart);
     }
+    let r = scope.create_renderer();
     let result = scope
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
-        .run(Box::pin(async move {
-            let r = Renderer::new_update();
-            render_fn().await.render(r, true).await
-        }))
+        .run(Box::pin(
+            async move { render_fn().await.render(r, true).await },
+        ))
         .await;
     let result = match result {
         Ok(result) => result,

@@ -83,15 +83,13 @@ impl BoundaryRegistry {
                 Err(err) => return err_to_response(err.into()),
             };
 
-            let mut scope = Scope::new().with_event(event.event_id, event.payload);
+            let mut scope = Scope::new(true, false).with_event(event.event_id, event.payload);
             if let Some(multipart) = event.multipart {
                 scope = scope.with_multipart(multipart);
             }
+            let r = scope.create_renderer();
             let result = scope
-                .run(async move {
-                    let r = Renderer::new_update();
-                    handler(state_json.get(), r).await
-                })
+                .run(async move { handler(state_json.get(), r).await })
                 .await;
             let result = match result {
                 Ok(result) => result,

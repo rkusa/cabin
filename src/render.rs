@@ -17,8 +17,8 @@ pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
-    disable_hashes: bool,
     is_update: bool,
+    disable_hashes: bool,
 }
 
 pub struct Out {
@@ -27,17 +27,13 @@ pub struct Out {
 }
 
 impl Renderer {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub(crate) fn new_update() -> Self {
-        Renderer {
+    pub fn new(is_update: bool, disable_hashes: bool) -> Self {
+        Self {
             out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
             hasher: XxHash32::default(),
-            disable_hashes: false,
-            is_update: true,
+            disable_hashes,
+            is_update,
         }
     }
 
@@ -94,18 +90,6 @@ impl Renderer {
         TextRenderer {
             hasher: Default::default(),
             renderer: self,
-        }
-    }
-}
-
-impl Default for Renderer {
-    fn default() -> Self {
-        Self {
-            out: String::with_capacity(256),
-            headers: Default::default(),
-            hasher: XxHash32::default(),
-            disable_hashes: false,
-            is_update: false,
         }
     }
 }
