@@ -10,6 +10,19 @@ pub fn body(content: impl View) -> UpdateView<Html<marker::Body, ()>> {
     UpdateView::content_only_on_update(Html::new("body", (), content))
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! body {
+        ($($x:tt)*) => {
+            $crate::html::elements::body::body($crate::view![$($x)*])
+        }
+    }
+
+    pub use body;
+}
+
+pub use macros::body;
+
 pub mod marker {
     pub struct Body;
 }

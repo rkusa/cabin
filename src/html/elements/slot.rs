@@ -15,6 +15,19 @@ pub fn slot(content: impl View) -> Html<marker::Slot, ()> {
     Html::new("slot", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! slot {
+        ($($x:tt)*) => {
+            $crate::html::elements::slot::slot($crate::view![$($x)*])
+        }
+    }
+
+    pub use slot;
+}
+
+pub use macros::slot;
+
 pub mod marker {
     pub struct Slot;
 }

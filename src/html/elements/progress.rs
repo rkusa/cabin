@@ -18,6 +18,19 @@ pub fn progress(content: impl View) -> Html<marker::Progress, ()> {
     Html::new("progress", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! progress {
+        ($($x:tt)*) => {
+            $crate::html::elements::progress::progress($crate::view![$($x)*])
+        }
+    }
+
+    pub use progress;
+}
+
+pub use macros::progress;
+
 pub mod marker {
     pub struct Progress;
 }

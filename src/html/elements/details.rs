@@ -13,6 +13,19 @@ pub fn details(content: impl View) -> Html<marker::Details, ()> {
     Html::new("details", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! details {
+        ($($x:tt)*) => {
+            $crate::html::elements::details::details($crate::view![$($x)*])
+        }
+    }
+
+    pub use details;
+}
+
+pub use macros::details;
+
 pub mod marker {
     pub struct Details;
 }

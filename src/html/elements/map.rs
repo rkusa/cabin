@@ -16,6 +16,19 @@ pub fn map(content: impl View) -> Html<marker::Map, ()> {
     Html::new("map", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! map {
+        ($($x:tt)*) => {
+            $crate::html::elements::map::map($crate::view![$($x)*])
+        }
+    }
+
+    pub use map;
+}
+
+pub use macros::map;
+
 pub mod marker {
     pub struct Map;
 }

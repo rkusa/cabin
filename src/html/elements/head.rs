@@ -10,6 +10,19 @@ pub fn head(content: impl View) -> UpdateView<Html<marker::Head, ()>> {
     UpdateView::hidden_on_update(Html::new("head", (), content))
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! head {
+        ($($x:tt)*) => {
+            $crate::html::elements::head::head($crate::view![$($x)*])
+        }
+    }
+
+    pub use head;
+}
+
+pub use macros::head;
+
 pub mod marker {
     pub struct Head;
 }

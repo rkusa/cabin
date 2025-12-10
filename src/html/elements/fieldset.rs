@@ -16,6 +16,19 @@ pub fn fieldset(content: impl View) -> Html<marker::Fieldset, ()> {
     Html::new("fieldset", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! fieldset {
+        ($($x:tt)*) => {
+            $crate::html::elements::fieldset::fieldset($crate::view![$($x)*])
+        }
+    }
+
+    pub use fieldset;
+}
+
+pub use macros::fieldset;
+
 pub mod marker {
     pub struct Fieldset;
 }

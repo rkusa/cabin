@@ -16,6 +16,19 @@ pub fn td(content: impl View) -> Html<marker::Td, ()> {
     Html::new("td", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! td {
+        ($($x:tt)*) => {
+            $crate::html::elements::td::td($crate::view![$($x)*])
+        }
+    }
+
+    pub use td;
+}
+
+pub use macros::td;
+
 pub mod marker {
     pub struct Td;
 }

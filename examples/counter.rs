@@ -17,10 +17,10 @@ struct Increment(usize);
 async fn counter(start_at: usize) -> impl View {
     let count = event::<Increment>().unwrap_or(Increment(start_at)).0;
 
-    (
-        h::div(h::text!("Count: {}", count)),
+    view![
+        h::div![h::text!("Count: {}", count)],
         h::button("inc").on_click(Increment(count + 1)),
-    )
+    ]
 }
 
 cabin::BOUNDARIES!();

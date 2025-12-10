@@ -17,6 +17,19 @@ pub fn select(content: impl View) -> Html<marker::Select, ()> {
     Html::new("select", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! select {
+        ($($x:tt)*) => {
+            $crate::html::elements::select::select($crate::view![$($x)*])
+        }
+    }
+
+    pub use select;
+}
+
+pub use macros::select;
+
 pub mod marker {
     pub struct Select;
 }

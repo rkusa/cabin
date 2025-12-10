@@ -16,6 +16,19 @@ pub fn label(content: impl View) -> Html<marker::Label, ()> {
     Html::new("label", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! label {
+        ($($x:tt)*) => {
+            $crate::html::elements::label::label($crate::view![$($x)*])
+        }
+    }
+
+    pub use label;
+}
+
+pub use macros::label;
+
 pub mod marker {
     pub struct Label;
 }

@@ -20,6 +20,19 @@ pub fn iframe(content: impl View) -> Html<marker::IFrame, ()> {
     Html::new("iframe", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! iframe {
+        ($($x:tt)*) => {
+            $crate::html::elements::iframe::iframe($crate::view![$($x)*])
+        }
+    }
+
+    pub use iframe;
+}
+
+pub use macros::iframe;
+
 pub mod marker {
     pub struct IFrame;
 }

@@ -16,6 +16,19 @@ pub fn ol(content: impl View) -> Html<marker::Ol, ()> {
     Html::new("ol", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! ol {
+        ($($x:tt)*) => {
+            $crate::html::elements::ol::ol($crate::view![$($x)*])
+        }
+    }
+
+    pub use ol;
+}
+
+pub use macros::ol;
+
 pub mod marker {
     pub struct Ol;
 }

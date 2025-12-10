@@ -13,6 +13,19 @@ pub fn colgroup(content: impl View) -> Html<marker::Colgroup, ()> {
     Html::new("colgroup", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! colgroup {
+        ($($x:tt)*) => {
+            $crate::html::elements::colgroup::colgroup($crate::view![$($x)*])
+        }
+    }
+
+    pub use colgroup;
+}
+
+pub use macros::colgroup;
+
 pub mod marker {
     pub struct Colgroup;
 }

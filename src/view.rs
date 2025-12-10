@@ -22,6 +22,7 @@ use http_error::HttpError;
 pub use iter::IteratorExt;
 pub use update::UpdateView;
 
+pub use crate::pair::Pair;
 use crate::render::{Escape, Renderer};
 use crate::view::error::ErrorView;
 
@@ -188,3 +189,22 @@ impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6; V0, V1, V2, V3, V4, V5, V6);
 impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7; V0, V1, V2, V3, V4, V5, V6, V7);
 impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8; V0, V1, V2, V3, V4, V5, V6, V7, V8);
 impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9; V0, V1, V2, V3, V4, V5, V6, V7, V8, V9);
+
+#[macro_export]
+macro_rules! view {
+    () => (
+        ()
+    );
+    ($left:expr) => (
+        $left
+    );
+    ($left:expr, $right:expr) => (
+        $crate::view::Pair::new($left, $right)
+    );
+    ($left:expr, $($tail:expr),*) => (
+        $crate::view::Pair::new($left, view![$($tail),*])
+    );
+    ($($x:expr,)*) => ($crate::view::view![$($x),*])
+}
+
+pub use view;

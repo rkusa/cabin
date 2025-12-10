@@ -18,6 +18,19 @@ pub fn th(content: impl View) -> Html<marker::Th, ()> {
     Html::new("th", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! th {
+        ($($x:tt)*) => {
+            $crate::html::elements::th::th($crate::view![$($x)*])
+        }
+    }
+
+    pub use th;
+}
+
+pub use macros::th;
+
 pub mod marker {
     pub struct Th;
 }

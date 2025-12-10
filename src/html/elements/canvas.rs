@@ -14,6 +14,19 @@ pub fn canvas(content: impl View) -> Html<marker::Canvas, ()> {
     Html::new("canvas", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! canvas {
+        ($($x:tt)*) => {
+            $crate::html::elements::canvas::canvas($crate::view![$($x)*])
+        }
+    }
+
+    pub use canvas;
+}
+
+pub use macros::canvas;
+
 pub mod marker {
     pub struct Canvas;
 }

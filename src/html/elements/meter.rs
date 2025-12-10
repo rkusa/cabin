@@ -18,6 +18,19 @@ pub fn meter(content: impl View) -> Html<marker::Meter, ()> {
     Html::new("meter", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! meter {
+        ($($x:tt)*) => {
+            $crate::html::elements::meter::meter($crate::view![$($x)*])
+        }
+    }
+
+    pub use meter;
+}
+
+pub use macros::meter;
+
 pub mod marker {
     pub struct Meter;
 }

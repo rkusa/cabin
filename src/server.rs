@@ -24,7 +24,7 @@ pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
 pub fn cabin_scripts() -> impl View {
     use html::elements::script::Script;
 
-    (
+    html::view![
         html::script("")
             .src({
                 static PATH: LazyLock<&'static str> = LazyLock::new(|| {
@@ -44,7 +44,7 @@ pub fn cabin_scripts() -> impl View {
                 *PATH
             })
             .defer(),
-    )
+    ]
 }
 
 pub fn content_hash(bytes: &[u8]) -> u32 {
@@ -59,10 +59,10 @@ pub struct Event {
 }
 
 pub fn basic_document(content: impl View) -> impl View {
-    (
+    html::view![
         html::doctype(),
-        html::html((html::head(cabin_scripts()), html::body(content))),
-    )
+        html::html![html::head(cabin_scripts()), html::body(content)],
+    ]
 }
 
 pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<String>

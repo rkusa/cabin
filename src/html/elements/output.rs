@@ -16,6 +16,19 @@ pub fn output(content: impl View) -> Html<marker::Output, ()> {
     Html::new("output", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! output {
+        ($($x:tt)*) => {
+            $crate::html::elements::output::output($crate::view![$($x)*])
+        }
+    }
+
+    pub use output;
+}
+
+pub use macros::output;
+
 pub mod marker {
     pub struct Output;
 }

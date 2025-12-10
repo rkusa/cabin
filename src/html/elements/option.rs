@@ -18,6 +18,19 @@ pub fn option(content: impl View) -> Html<marker::SelectOption, ()> {
     Html::new("option", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! option {
+        ($($x:tt)*) => {
+            $crate::html::elements::option::option($crate::view![$($x)*])
+        }
+    }
+
+    pub use option;
+}
+
+pub use macros::option;
+
 pub mod marker {
     pub struct SelectOption;
 }

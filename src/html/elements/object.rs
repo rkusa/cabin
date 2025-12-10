@@ -20,6 +20,19 @@ pub fn object(content: impl View) -> Html<marker::Object, ()> {
     Html::new("object", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! object {
+        ($($x:tt)*) => {
+            $crate::html::elements::object::object($crate::view![$($x)*])
+        }
+    }
+
+    pub use object;
+}
+
+pub use macros::object;
+
 pub mod marker {
     pub struct Object;
 }

@@ -18,6 +18,19 @@ pub fn meta(content: impl View) -> Html<marker::Meta, ()> {
     Html::new("meta", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! meta {
+        ($($x:tt)*) => {
+            $crate::html::elements::meta::meta($crate::view![$($x)*])
+        }
+    }
+
+    pub use meta;
+}
+
+pub use macros::meta;
+
 pub mod marker {
     pub struct Meta;
 }

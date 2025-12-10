@@ -43,3 +43,4 @@ pub use crate::html::elements::th::Th as _;
 pub use crate::html::elements::time::Time as _;
 pub use crate::html::h;
 pub use crate::pack::Pack as _;
+pub use crate::view::view;

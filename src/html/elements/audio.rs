@@ -18,6 +18,19 @@ pub fn audio(content: impl View) -> Html<marker::Audio, ()> {
     Html::new("audio", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! audio {
+        ($($x:tt)*) => {
+            $crate::html::elements::audio::audio($crate::view![$($x)*])
+        }
+    }
+
+    pub use audio;
+}
+
+pub use macros::audio;
+
 pub mod marker {
     pub struct Audio;
 }

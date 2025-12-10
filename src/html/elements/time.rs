@@ -16,6 +16,19 @@ pub fn time(content: impl View) -> Html<marker::Time, ()> {
     Html::new("time", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! time {
+        ($($x:tt)*) => {
+            $crate::html::elements::time::time($crate::view![$($x)*])
+        }
+    }
+
+    pub use time;
+}
+
+pub use macros::time;
+
 pub mod marker {
     pub struct Time;
 }

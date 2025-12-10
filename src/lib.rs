@@ -21,6 +21,7 @@ pub mod fire_event;
 pub mod html;
 pub mod multipart;
 pub mod pack;
+mod pair;
 pub mod prelude;
 pub mod private;
 mod redirect;

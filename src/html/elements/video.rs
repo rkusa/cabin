@@ -19,6 +19,19 @@ pub fn video(content: impl View) -> Html<marker::Video, ()> {
     Html::new("video", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! video {
+        ($($x:tt)*) => {
+            $crate::html::elements::video::video($crate::view![$($x)*])
+        }
+    }
+
+    pub use video;
+}
+
+pub use macros::video;
+
 pub mod marker {
     pub struct Video;
 }

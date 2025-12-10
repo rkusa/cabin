@@ -15,6 +15,19 @@ pub fn optgroup(content: impl View) -> Html<marker::OptGroup, ()> {
     Html::new("optgroup", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! optgroup {
+        ($($x:tt)*) => {
+            $crate::html::elements::optgroup::optgroup($crate::view![$($x)*])
+        }
+    }
+
+    pub use optgroup;
+}
+
+pub use macros::optgroup;
+
 pub mod marker {
     pub struct OptGroup;
 }

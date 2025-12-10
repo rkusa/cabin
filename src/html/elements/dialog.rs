@@ -13,6 +13,19 @@ pub fn dialog(content: impl View) -> Html<marker::Dialog, ()> {
     Html::new("dialog", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! dialog {
+        ($($x:tt)*) => {
+            $crate::html::elements::dialog::dialog($crate::view![$($x)*])
+        }
+    }
+
+    pub use dialog;
+}
+
+pub use macros::dialog;
+
 pub mod marker {
     pub struct Dialog;
 }

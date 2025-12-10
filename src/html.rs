@@ -17,7 +17,8 @@ pub use elements::global::Global;
 pub use h::*;
 pub use raw::{Raw, raw};
 
-use self::attributes::{Attributes, Pair, WithAttribute};
+use self::attributes::{Attributes, WithAttribute};
+use crate::pair::Pair;
 use crate::render::Renderer;
 use crate::view::{AnyView, RenderFuture, View};
 
@@ -249,6 +250,7 @@ pub mod h {
     pub use crate::html::raw;
     #[doc(inline)]
     pub use crate::view::text::{Text, text};
+    pub use crate::view::view;
 
     pub fn doctype() -> impl crate::View {
         crate::view::UpdateView::hidden_on_update(super::raw("<!DOCTYPE html>"))

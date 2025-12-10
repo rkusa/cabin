@@ -24,6 +24,19 @@ pub fn form(content: impl View) -> Html<marker::Form, ()> {
     Html::new("form", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! form {
+        ($($x:tt)*) => {
+            $crate::html::elements::form::form($crate::view![$($x)*])
+        }
+    }
+
+    pub use form;
+}
+
+pub use macros::form;
+
 pub mod marker {
     pub struct Form;
 }

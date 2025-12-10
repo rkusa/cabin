@@ -19,6 +19,19 @@ pub fn a(content: impl View) -> Html<marker::Anchor, ()> {
     Html::new("a", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! a {
+        ($($x:tt)*) => {
+            $crate::html::elements::a::a($crate::view![$($x)*])
+        }
+    }
+
+    pub use a;
+}
+
+pub use macros::a;
+
 pub mod marker {
     pub struct Anchor;
 }

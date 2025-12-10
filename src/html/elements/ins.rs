@@ -15,6 +15,19 @@ pub fn ins(content: impl View) -> Html<marker::Ins, ()> {
     Html::new("ins", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! ins {
+        ($($x:tt)*) => {
+            $crate::html::elements::ins::ins($crate::view![$($x)*])
+        }
+    }
+
+    pub use ins;
+}
+
+pub use macros::ins;
+
 pub mod marker {
     pub struct Ins;
 }

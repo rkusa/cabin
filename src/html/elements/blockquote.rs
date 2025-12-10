@@ -17,6 +17,19 @@ pub fn blockquote(content: impl View) -> Html<marker::Blockquote, ()> {
     Html::new("blockquote", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! blockquote {
+        ($($x:tt)*) => {
+            $crate::html::elements::blockquote::blockquote($crate::view![$($x)*])
+        }
+    }
+
+    pub use blockquote;
+}
+
+pub use macros::blockquote;
+
 pub mod marker {
     pub struct Blockquote;
 }

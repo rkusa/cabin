@@ -241,7 +241,7 @@ where
             }
         };
 
-        let body = (script(state).r#type("application/json"), self.view);
+        let body = crate::view![script(state).r#type("application/json"), self.view];
         if self.is_update {
             body.render(r)
         } else {

@@ -18,6 +18,19 @@ pub fn button(content: impl View) -> Html<marker::Button, ()> {
     Html::new("button", (), content)
 }
 
+mod macros {
+    #[macro_export]
+    macro_rules! button {
+        ($($x:tt)*) => {
+            $crate::html::elements::button::button($crate::view![$($x)*])
+        }
+    }
+
+    pub use button;
+}
+
+pub use macros::button;
+
 pub mod marker {
     pub struct Button;
 }
