@@ -113,6 +113,7 @@ pub enum InternalError {
     Join(tokio::task::JoinError),
     MissingBoundaryAttribute,
     FutureCompleted,
+    Utf8(std::str::Utf8Error),
 }
 
 impl From<InternalError> for Box<dyn HttpError + Send + 'static> {
@@ -162,6 +163,7 @@ impl error::Error for InternalError {
             Self::Deserialize { err, .. } => Some(err.as_ref()),
             Self::Join(err) => Some(err),
             Self::InvalidHeaderValue(err) => Some(err),
+            Self::Utf8(err) => Some(err),
         }
     }
 }
@@ -183,6 +185,7 @@ impl fmt::Display for InternalError {
                 f.write_str("#[cabin::boundary] attribute is missing")
             }
             Self::FutureCompleted => f.write_str("future already completed"),
+            Self::Utf8(err) => write!(f, "invalid string in renderer ({err})"),
         }
     }
 }
@@ -214,6 +217,12 @@ impl From<fmt::Error> for InternalError {
 impl From<tokio::task::JoinError> for InternalError {
     fn from(err: tokio::task::JoinError) -> Self {
         InternalError::Join(err)
+    }
+}
+
+impl From<std::str::Utf8Error> for InternalError {
+    fn from(err: std::str::Utf8Error) -> Self {
+        InternalError::Utf8(err)
     }
 }
 

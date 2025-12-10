@@ -305,7 +305,7 @@ where
         if !is_void_element {
             el.content(content)
         } else {
-            RenderFuture::Ready(el.end(true))
+            RenderFuture::Ready(Ok(el.end(true)))
         }
     }
 

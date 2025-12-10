@@ -79,12 +79,10 @@ where
             doc.render(r).await
         }))
         .await;
-    let result = match result {
+    let Out { html, headers } = match result.and_then(|r| r.end()) {
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
-
-    let Out { html, headers } = result.end();
     let mut res = Response::builder().header(
         http::header::CONTENT_TYPE,
         HeaderValue::from_static("text/html; charset=utf-8"),
@@ -120,12 +118,10 @@ where
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move { render_fn().await.render(r).await }))
         .await;
-    let result = match result {
+    let Out { html, headers } = match result.and_then(|r| r.end()) {
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
-
-    let Out { html, headers } = result.end();
     let mut res = Response::builder().header(
         http::header::CONTENT_TYPE,
         HeaderValue::from_static("text/html; charset=utf-8"),

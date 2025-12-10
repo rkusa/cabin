@@ -1,7 +1,9 @@
 use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
+use std::io::Write as _;
 
 use http::{HeaderMap, HeaderValue};
+use smallvec::SmallVec;
 use twox_hash::XxHash32;
 
 use crate::View;
@@ -14,7 +16,7 @@ use crate::view::RenderFuture;
 const DEFAULT_CAPACITY: usize = 128;
 
 pub struct Renderer {
-    out: String,
+    out: SmallVec<u8, DEFAULT_CAPACITY>,
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
     is_update: bool,
@@ -29,7 +31,7 @@ pub struct Out {
 impl Renderer {
     pub fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {
-            out: String::with_capacity(DEFAULT_CAPACITY),
+            out: SmallVec::new(),
             headers: Default::default(),
             hasher: XxHash32::default(),
             disable_hashes,
@@ -41,7 +43,7 @@ impl Renderer {
         if self.out.is_empty() {
             std::mem::swap(&mut self.out, &mut other.out);
         } else {
-            self.out.push_str(&other.out);
+            self.out.append(&mut other.out);
         }
         if self.headers.is_empty() {
             std::mem::swap(&mut self.headers, &mut other.headers);
@@ -52,11 +54,13 @@ impl Renderer {
         self.hasher.write_u32(hash);
     }
 
-    pub fn end(self) -> Out {
-        Out {
-            html: self.out,
+    pub fn end(self) -> Result<Out, crate::Error> {
+        Ok(Out {
+            html: str::from_utf8(&self.out)
+                .map_err(InternalError::from)?
+                .to_string(),
             headers: self.headers,
-        }
+        })
     }
 
     pub fn is_update(&self) -> bool {
@@ -118,9 +122,13 @@ impl ElementRenderer {
         self.renderer.hasher.write(name.as_bytes());
         value.hash(&mut self.renderer.hasher);
 
-        write!(&mut self.renderer.out, r#" {name}=""#,)?;
-        write!(Escape::attribute_value(&mut self.renderer.out), "{value}")?;
-        write!(&mut self.renderer.out, r#"""#)?;
+        write!(&mut self.renderer, r#" {name}=""#).unwrap();
+        Write::write_fmt(
+            &mut Escape::attribute_value(&mut self.renderer),
+            format_args!("{value}"),
+        )
+        .unwrap();
+        write!(&mut self.renderer, r#"""#).unwrap();
 
         Ok(())
     }
@@ -131,7 +139,7 @@ impl ElementRenderer {
         }
         self.renderer.hasher.write(name.as_bytes());
 
-        write!(&mut self.renderer.out, r#" {name}"#,)?;
+        write!(&mut self.renderer, r#" {name}"#).unwrap();
 
         Ok(())
     }
@@ -143,34 +151,31 @@ impl ElementRenderer {
         // event id
         {
             let pos_name = self.renderer.out.len();
-            write!(&mut self.renderer.out, " cabin-{}", event.name).unwrap();
+            write!(&mut self.renderer, " cabin-{}", event.name).unwrap();
             self.renderer.out[(pos_name + 1)..].hash(&mut self.renderer.hasher);
-            write!(&mut self.renderer.out, r#"=""#).unwrap();
+            write!(&mut self.renderer, r#"=""#).unwrap();
 
             let pos_value = self.renderer.out.len();
-            write!(&mut self.renderer.out, "{}", E::ID).unwrap();
+            write!(&mut self.renderer, "{}", E::ID).unwrap();
             self.renderer.out[pos_value..].hash(&mut self.renderer.hasher);
-            write!(&mut self.renderer.out, r#"""#).unwrap();
+            write!(&mut self.renderer, r#"""#).unwrap();
         }
 
         // event payload
         {
             let pos_name = self.renderer.out.len();
-            write!(&mut self.renderer.out, " cabin-{}-payload", event.name).unwrap();
+            write!(&mut self.renderer, " cabin-{}-payload", event.name).unwrap();
             self.renderer.out[(pos_name + 1)..].hash(&mut self.renderer.hasher);
-            write!(&mut self.renderer.out, r#"=""#).unwrap();
+            write!(&mut self.renderer, r#"=""#).unwrap();
 
             let pos_value = self.renderer.out.len();
-            serde_json::to_writer(
-                Escape::attribute_value(&mut self.renderer.out),
-                &event.event,
-            )
-            .map_err(|err| InternalError::Serialize {
-                what: format!("{} event", event.name).into(),
-                err,
-            })?;
+            serde_json::to_writer(Escape::attribute_value(&mut self.renderer), &event.event)
+                .map_err(|err| InternalError::Serialize {
+                    what: format!("{} event", event.name).into(),
+                    err,
+                })?;
             self.renderer.out[pos_value..].hash(&mut self.renderer.hasher);
-            write!(&mut self.renderer.out, r#"""#).unwrap();
+            write!(&mut self.renderer, r#"""#).unwrap();
         }
 
         Ok(())
@@ -191,33 +196,31 @@ impl ElementRenderer {
         }
 
         match view.render(renderer) {
-            RenderFuture::Ready(Ok(renderer)) => RenderFuture::Ready(
-                ElementRenderer {
-                    tag,
-                    renderer,
-                    parent_hasher,
-                    content_started,
-                    hash_offset,
-                }
-                .end(false),
-            ),
+            RenderFuture::Ready(Ok(renderer)) => RenderFuture::Ready(Ok(ElementRenderer {
+                tag,
+                renderer,
+                parent_hasher,
+                content_started,
+                hash_offset,
+            }
+            .end(false))),
             RenderFuture::Ready(Err(err)) => RenderFuture::Ready(Err(err)),
             RenderFuture::Future(fut) => RenderFuture::Future(Box::pin(async move {
-                ElementRenderer {
+                Ok(ElementRenderer {
                     tag,
                     renderer: fut.await?,
                     parent_hasher,
                     content_started,
                     hash_offset,
                 }
-                .end(false)
+                .end(false))
             })),
         }
     }
 
-    pub fn end(mut self, is_void_element: bool) -> Result<Renderer, crate::Error> {
+    pub fn end(mut self, is_void_element: bool) -> Renderer {
         if !self.content_started && !is_void_element {
-            write!(&mut self.renderer.out, ">").map_err(crate::error::InternalError::from)?;
+            write!(&mut self.renderer, ">").unwrap();
         }
 
         let hash = self.renderer.hasher.finish() as u32;
@@ -229,13 +232,12 @@ impl ElementRenderer {
         std::mem::swap(&mut self.renderer.hasher, &mut self.parent_hasher);
         // Handle void elements. Content is simply ignored.
         if is_void_element {
-            write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
+            write!(&mut self.renderer, "/>").unwrap();
         } else {
-            write!(&mut self.renderer.out, "</{}>", self.tag)
-                .map_err(crate::error::InternalError::from)?;
+            write!(&mut self.renderer, "</{}>", self.tag).unwrap();
         }
 
-        Ok(self.renderer)
+        self.renderer
     }
 }
 
@@ -327,21 +329,21 @@ where
     }
 }
 
-pub struct WriteInto<'a> {
-    out: &'a mut String,
+pub struct WriteInto<'a, const N: usize> {
+    out: &'a mut SmallVec<u8, N>,
     offset: usize,
 }
 
-impl<'a> WriteInto<'a> {
-    pub fn new(out: &'a mut String, offset: usize) -> Self {
+impl<'a, const N: usize> WriteInto<'a, N> {
+    pub fn new(out: &'a mut SmallVec<u8, N>, offset: usize) -> Self {
         Self { out, offset }
     }
 }
 
-impl fmt::Write for WriteInto<'_> {
+impl<const N: usize> fmt::Write for WriteInto<'_, N> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.out
-            .replace_range(self.offset..self.offset + s.len(), s);
+            .splice(self.offset..self.offset + s.len(), s.bytes());
         self.offset += s.len();
 
         Ok(())
@@ -351,13 +353,15 @@ impl fmt::Write for WriteInto<'_> {
 impl Write for TextRenderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.hasher.write(s.as_bytes());
-        self.renderer.out.write_str(s)
+        self.renderer.out.extend_from_slice(s.as_bytes());
+        Ok(())
     }
 }
 
 impl Write for Renderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.out.write_str(s)
+        self.out.extend_from_slice(s.as_bytes());
+        Ok(())
     }
 }
 

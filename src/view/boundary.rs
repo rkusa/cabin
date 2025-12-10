@@ -119,8 +119,8 @@ where
                 .render(r)
                 .await
         }));
-        let crate::render::Out { html, headers } = match result {
-            Ok(result) => result.end(),
+        let crate::render::Out { html, headers } = match result.and_then(|r| r.end()) {
+            Ok(out) => out,
             Err(err) => {
                 crate::wasm_exports::fail(format!("failed to render boundary: {err}"));
                 return 0;

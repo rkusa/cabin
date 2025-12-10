@@ -38,9 +38,7 @@ impl BoundaryRegistry {
             boundary.id,
             Arc::new(
                 |args_json: &str, r: Renderer| match serde_json::from_str(args_json) {
-                    Ok(args) => {
-                        crate::view::FutureExt::into_view(boundary.with(args)).render(r)
-                    }
+                    Ok(args) => crate::view::FutureExt::into_view(boundary.with(args)).render(r),
                     Err(err) => RenderFuture::Ready(Err(InternalError::Deserialize {
                         what: "boundary state json",
                         err: Box::new(err),
@@ -91,12 +89,10 @@ impl BoundaryRegistry {
             let result = scope
                 .run(async move { handler(state_json.get(), r).await })
                 .await;
-            let result = match result {
+            let Out { html, headers } = match result.and_then(|r| r.end()) {
                 Ok(result) => result,
                 Err(err) => return err_to_response(err),
             };
-
-            let Out { html, headers } = result.end();
             let mut res = Response::builder().header(
                 http::header::CONTENT_TYPE,
                 HeaderValue::from_static("text/html; charset=utf-8"),
