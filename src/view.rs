@@ -1,5 +1,6 @@
 pub mod boundary;
 mod boxed;
+pub mod error;
 mod future;
 mod iter;
 pub mod text;
@@ -15,11 +16,12 @@ pub use boundary::Boundary;
 pub use boxed::BoxedView;
 pub use future::FutureExt;
 use futures_util::future::Either;
-use http_error::{AnyHttpError, HttpError};
+use http_error::HttpError;
 pub use iter::IteratorExt;
 pub use update::UpdateView;
 
 use crate::render::{Escape, Renderer};
+use crate::view::error::ErrorView;
 
 // Implementation note: View must be kept object-safe to allow a simple boxed version
 // (`Box<dyn View>`).
@@ -45,13 +47,6 @@ where
         Self: Sized,
     {
         Boundary::new(self, args)
-    }
-}
-
-pub trait IntoView {
-    fn into_view(self) -> impl View;
-    fn should_render(&self) -> bool {
-        true
     }
 }
 
@@ -115,7 +110,7 @@ impl<V, E> View for Result<V, E>
 where
     V: View,
     Box<dyn HttpError + Send + 'static>: From<E>,
-    E: IntoView + Send + 'static,
+    E: ErrorView + Send + 'static,
 {
     fn render(self, r: Renderer, include_hash: bool) -> RenderFuture {
         match self {
@@ -136,14 +131,6 @@ where
         if let Ok(inner) = self {
             inner.prime().await;
         }
-    }
-}
-
-impl IntoView for AnyHttpError {
-    fn into_view(self) -> impl View {}
-
-    fn should_render(&self) -> bool {
-        false
     }
 }
 

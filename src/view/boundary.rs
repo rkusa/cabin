@@ -8,13 +8,14 @@ use http_error::HttpError;
 use script::Script;
 use serde::Serialize;
 
-use super::{BoxedView, IntoView, RenderFuture};
+use super::{BoxedView, RenderFuture};
 use crate::View;
 use crate::error::InternalError;
 use crate::html::Html;
 use crate::html::attributes::Attributes;
 use crate::html::script::{self, script};
 use crate::render::{ElementRenderer, Renderer};
+use crate::view::error::ErrorView;
 
 type BoundaryFn<Args> =
     dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = Boundary<Args>> + Send>>;
@@ -281,7 +282,7 @@ impl<Args, E> From<Result<Boundary<Args>, E>> for Boundary<Args>
 where
     Args: Clone + Serialize + Send + Sync + 'static,
     Box<dyn HttpError + Send + 'static>: From<E>,
-    E: IntoView + Send + 'static,
+    E: ErrorView + Send + 'static,
 {
     fn from(result: Result<Boundary<Args>, E>) -> Self {
         match result {
