@@ -10,11 +10,14 @@ use crate::event::Event;
 use crate::html::events::CustomEvent;
 use crate::view::RenderFuture;
 
+// This covers about 75% of [Renderer] usages in my largest app as per 2025-12-10.
+const DEFAULT_CAPACITY: usize = 128;
+
 pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
     hasher: XxHash32,
-    skip_hash: bool,
+    disable_hashes: bool,
     is_update: bool,
 }
 
@@ -30,10 +33,10 @@ impl Renderer {
 
     pub(crate) fn new_update() -> Self {
         Renderer {
-            out: String::with_capacity(256),
+            out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
             hasher: XxHash32::default(),
-            skip_hash: false,
+            disable_hashes: false,
             is_update: true,
         }
     }
@@ -53,11 +56,12 @@ impl Renderer {
         let parent_hasher = std::mem::take(&mut self.hasher);
         self.hasher.write(tag.as_bytes());
 
-        let should_write_id =
-            include_hash && !matches!(tag, "html" | "body" | "head" | "option") && !self.skip_hash;
-        let parent_skip_hash = self.skip_hash;
+        let should_write_id = include_hash
+            && !matches!(tag, "html" | "body" | "head" | "option")
+            && !self.disable_hashes;
+        let parent_skip_hash = self.disable_hashes;
         if matches!(tag, "head") {
-            self.skip_hash = true;
+            self.disable_hashes = true;
         }
 
         write!(&mut self.out, "<{tag}").unwrap();
@@ -75,7 +79,7 @@ impl Renderer {
         ElementRenderer {
             tag,
             parent_hasher,
-            parent_skip_hash,
+            parent_disable_hashes: parent_skip_hash,
             renderer: self,
             content_started: false,
             hash_offset,
@@ -100,7 +104,7 @@ impl Default for Renderer {
             out: String::with_capacity(256),
             headers: Default::default(),
             hasher: XxHash32::default(),
-            skip_hash: false,
+            disable_hashes: false,
             is_update: false,
         }
     }
@@ -110,7 +114,7 @@ pub struct ElementRenderer {
     tag: &'static str,
     renderer: Renderer,
     parent_hasher: XxHash32,
-    parent_skip_hash: bool,
+    parent_disable_hashes: bool,
     content_started: bool,
     hash_offset: Option<usize>,
 }
@@ -186,7 +190,7 @@ impl ElementRenderer {
             tag,
             mut renderer,
             parent_hasher,
-            parent_skip_hash,
+            parent_disable_hashes: parent_skip_hash,
             mut content_started,
             hash_offset,
         } = self;
@@ -202,7 +206,7 @@ impl ElementRenderer {
                     tag,
                     renderer,
                     parent_hasher,
-                    parent_skip_hash,
+                    parent_disable_hashes: parent_skip_hash,
                     content_started,
                     hash_offset,
                 }
@@ -214,7 +218,7 @@ impl ElementRenderer {
                     tag,
                     renderer: fut.await?,
                     parent_hasher,
-                    parent_skip_hash,
+                    parent_disable_hashes: parent_skip_hash,
                     content_started,
                     hash_offset,
                 }
@@ -235,8 +239,6 @@ impl ElementRenderer {
 
         self.parent_hasher.write_u32(hash);
         std::mem::swap(&mut self.renderer.hasher, &mut self.parent_hasher);
-
-        // if self.renderer.changed(hash, self.offset)? {
         // Handle void elements. Content is simply ignored.
         if is_void_element {
             write!(&mut self.renderer.out, "/>").map_err(crate::error::InternalError::from)?;
@@ -244,9 +246,8 @@ impl ElementRenderer {
             write!(&mut self.renderer.out, "</{}>", self.tag)
                 .map_err(crate::error::InternalError::from)?;
         }
-        // }
 
-        self.renderer.skip_hash = self.parent_skip_hash;
+        self.renderer.disable_hashes = self.parent_disable_hashes;
         Ok(self.renderer)
     }
 }
