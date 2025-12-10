@@ -99,8 +99,7 @@ impl<L: Attributes, R: Attributes> Attributes for Pair<L, R> {
 
 impl Attributes for (&'static str, Cow<'static, str>) {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
-        r.attribute(self.0, self.1)
-            .map_err(crate::error::InternalError::from)?;
+        r.attribute(self.0, self.1);
         Ok(())
     }
 

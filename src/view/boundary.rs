@@ -255,9 +255,8 @@ where
     Args: Send + Sync + 'static,
 {
     fn render(self, r: &mut ElementRenderer) -> Result<(), crate::Error> {
-        r.attribute("name", self.id).map_err(InternalError::from)?;
-        r.attribute("events", EventsList(self.events))
-            .map_err(InternalError::from)?;
+        r.attribute("name", self.id);
+        r.attribute("events", EventsList(self.events));
         Ok(())
     }
 }

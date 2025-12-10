@@ -115,7 +115,7 @@ pub struct ElementRenderer {
 }
 
 impl ElementRenderer {
-    pub fn attribute(&mut self, name: &str, value: impl Display + Hash) -> Result<(), fmt::Error> {
+    pub fn attribute(&mut self, name: &str, value: impl Display + Hash) {
         if self.content_started {
             todo!("throw error: content started");
         }
@@ -129,19 +129,15 @@ impl ElementRenderer {
         )
         .unwrap();
         write!(&mut self.renderer, r#"""#).unwrap();
-
-        Ok(())
     }
 
-    pub fn empty_attribute(&mut self, name: &str) -> Result<(), fmt::Error> {
+    pub fn empty_attribute(&mut self, name: &str) {
         if self.content_started {
             todo!("throw error: content started");
         }
         self.renderer.hasher.write(name.as_bytes());
 
         write!(&mut self.renderer, r#" {name}"#).unwrap();
-
-        Ok(())
     }
 
     pub fn event_attributes<E: serde::Serialize + Event>(

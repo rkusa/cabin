@@ -139,9 +139,7 @@ where
 {
     fn render(self, r: Renderer) -> RenderFuture {
         let mut el = r.element("cabin-keyed");
-        if let Err(err) = el.attribute("id", self.key) {
-            return RenderFuture::Ready(Err(crate::error::InternalError::from(err).into()));
-        }
+        el.attribute("id", self.key);
         el.content(self.view)
     }
 }
