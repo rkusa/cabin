@@ -17,12 +17,12 @@ struct Toggle(bool);
 fn dialog(content: impl View) -> impl View {
     let open = event::<Toggle>().unwrap_or_default();
 
-    (
+    view![
         open.0.then_some(
-            html::dialog((content, h::button("close").on_click(Toggle(false)))).with_open(open.0),
+            html::dialog![content, h::button("close").on_click(Toggle(false))].with_open(open.0),
         ),
         h::button("open").on_click(Toggle(true)),
-    )
+    ]
 }
 
 cabin::BOUNDARIES!();

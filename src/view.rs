@@ -142,27 +142,6 @@ impl Future for RenderFuture {
     }
 }
 
-macro_rules! impl_tuple {
-    ( $count:tt; $( $ix:tt ),*; $( $generic:tt ),* ) => {
-        impl<$( $generic: View ),*> View for ($($generic,)*) {
-            fn render(self, r: Renderer) -> RenderFuture {
-                view![$(self.$ix,)*].render(r)
-            }
-        }
-    };
-}
-
-impl_tuple!( 1; 0; V0);
-impl_tuple!( 2; 0, 1; V0, V1);
-impl_tuple!( 3; 0, 1, 2; V0, V1, V2);
-impl_tuple!( 4; 0, 1, 2, 3; V0, V1, V2, V3);
-impl_tuple!( 5; 0, 1, 2, 3, 4; V0, V1, V2, V3, V4);
-impl_tuple!( 6; 0, 1, 2, 3, 4, 5; V0, V1, V2, V3, V4, V5);
-impl_tuple!( 7; 0, 1, 2, 3, 4, 5, 6; V0, V1, V2, V3, V4, V5, V6);
-impl_tuple!( 8; 0, 1, 2, 3, 4, 5, 6, 7; V0, V1, V2, V3, V4, V5, V6, V7);
-impl_tuple!( 9; 0, 1, 2, 3, 4, 5, 6, 7, 8; V0, V1, V2, V3, V4, V5, V6, V7, V8);
-impl_tuple!(10; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9; V0, V1, V2, V3, V4, V5, V6, V7, V8, V9);
-
 #[macro_export]
 macro_rules! view {
     () => (

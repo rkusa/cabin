@@ -23,7 +23,7 @@ mod macros {
     #[macro_export]
     macro_rules! a {
         ($($x:tt)*) => {
-            $crate::html::elements::a::a($crate::view![$($x)*])
+            $crate::html::elements::anchor::a($crate::view![$($x)*])
         }
     }
 

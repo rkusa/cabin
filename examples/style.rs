@@ -31,13 +31,13 @@ async fn app() -> impl View {
 }
 
 fn document(content: impl View) -> impl View {
-    (
+    view![
         h::doctype(),
-        h::html((
-            h::head((STYLE_SHEET.link(), cabin_scripts())),
+        h::html![
+            h::head![STYLE_SHEET.link(), cabin_scripts()],
             h::body(content),
-        )),
-    )
+        ],
+    ]
 }
 
 cabin::BOUNDARIES!();

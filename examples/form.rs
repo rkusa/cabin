@@ -11,15 +11,15 @@ async fn app() -> impl View {
     let data = take_event::<Data>();
 
     let values = data.clone().unwrap_or_default();
-    basic_document((
-        h::form((
+    basic_document(view![
+        h::form![
             h::input().type_text().name("comment").value(values.comment),
             h::input()
                 .type_checkbox()
                 .name("highlighted")
                 .with_checked(values.highlighted),
             h::button("submit").type_submit(),
-        ))
+        ]
         .on_submit::<Data>(),
         data.map(|data| {
             h::text!(
@@ -28,7 +28,7 @@ async fn app() -> impl View {
                 data.highlighted
             )
         }),
-    ))
+    ])
 }
 
 #[derive(Default, Clone, Event, Serialize, Deserialize)]

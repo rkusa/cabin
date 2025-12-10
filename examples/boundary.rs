@@ -9,11 +9,11 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 
 async fn app() -> impl View {
-    basic_document((
+    basic_document(view![
         counter(1),
         counter(2),
         h::button("triger whole page update").on_click(()),
-    ))
+    ])
 }
 
 #[derive(Default, Clone, Copy, Event, Serialize, Deserialize)]

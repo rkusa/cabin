@@ -22,14 +22,14 @@ async fn search() -> impl View {
         .unwrap_or(Cow::Borrowed("Ge"));
     let items = search_countries(&query).await;
 
-    h::div((
+    h::div![
         h::div(
             h::input()
                 .on_input(Search(InputValue::placeholder()))
                 .value(query),
         ),
         h::div(h::ul(items.into_iter().map(h::li))),
-    ))
+    ]
 }
 
 async fn search_countries(query: &str) -> Vec<Cow<'static, str>> {
