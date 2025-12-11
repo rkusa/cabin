@@ -11,7 +11,7 @@ repository = "https://github.com/rkusa/cabin"
 members = ["cabin-macros", "cabin-service"]
 
 [features]
-default = ["livereload", "preflight"]
+default = ["livereload"]
 livereload = []
 preflight = []
 forms = []
