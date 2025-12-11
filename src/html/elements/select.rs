@@ -11,7 +11,7 @@ use crate::html::events::CustomEvent;
 use crate::html::{Aria, Html};
 
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
-#[crate::view_macro(cabin::html::elements::select)]
+#[crate::view_macro(crate::html::elements::select)]
 pub fn select(content: impl View) -> Html<marker::Select, ()> {
     Html::new("select", (), content)
 }

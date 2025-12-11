@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.
-#[crate::view_macro(cabin::html::elements::output)]
+#[crate::view_macro(crate::html::elements::output)]
 pub fn output(content: impl View) -> Html<marker::Output, ()> {
     Html::new("output", (), content)
 }

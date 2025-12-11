@@ -9,7 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `ins` element represents an addition to the document.
-#[crate::view_macro(cabin::html::elements::ins)]
+#[crate::view_macro(crate::html::elements::ins)]
 pub fn ins(content: impl View) -> Html<marker::Ins, ()> {
     Html::new("ins", (), content)
 }

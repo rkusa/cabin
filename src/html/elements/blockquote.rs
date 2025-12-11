@@ -11,7 +11,7 @@ use crate::html::{Aria, Html};
 /// The `blockquote` element represents a section that is quoted from another source.
 /// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,
 /// may be cited in the [Blockquote::cite] attribute.
-#[crate::view_macro(cabin::html::elements::blockquote)]
+#[crate::view_macro(crate::html::elements::blockquote)]
 pub fn blockquote(content: impl View) -> Html<marker::Blockquote, ()> {
     Html::new("blockquote", (), content)
 }

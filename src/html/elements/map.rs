@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.
-#[crate::view_macro(cabin::html::elements::map)]
+#[crate::view_macro(crate::html::elements::map)]
 pub fn map(content: impl View) -> Html<marker::Map, ()> {
     Html::new("map", (), content)
 }

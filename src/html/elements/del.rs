@@ -9,7 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `del` element represents a removal from the document.
-#[crate::view_macro(cabin::html::elements::del)]
+#[crate::view_macro(crate::html::elements::del)]
 pub fn del(content: impl View) -> Html<marker::Del, ()> {
     Html::new("del", (), content)
 }

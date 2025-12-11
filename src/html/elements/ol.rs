@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.
-#[crate::view_macro(cabin::html::elements::ol)]
+#[crate::view_macro(crate::html::elements::ol)]
 pub fn ol(content: impl View) -> Html<marker::Ol, ()> {
     Html::new("ol", (), content)
 }

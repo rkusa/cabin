@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.
-#[crate::view_macro(cabin::html::elements::time)]
+#[crate::view_macro(crate::html::elements::time)]
 pub fn time(content: impl View) -> Html<marker::Time, ()> {
     Html::new("time", (), content)
 }

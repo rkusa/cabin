@@ -18,7 +18,7 @@ use crate::html::{Aria, Html};
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a
 /// server for processing.
-#[crate::view_macro(cabin::html::elements::form)]
+#[crate::view_macro(crate::html::elements::form)]
 pub fn form(content: impl View) -> Html<marker::Form, ()> {
     Html::new("form", (), content)
 }

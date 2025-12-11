@@ -53,7 +53,15 @@ pub fn view_macro_attribute(attr: ModulePathAttribute, item: ItemFn) -> syn::Res
         return Err(Error::new(input.span(), "cannot have self argument"));
     }
 
-    let module = attr.path;
+    let module = if let Some(p) = attr.path.segments.first()
+        && p.ident == "crate"
+    {
+        let path = attr.path;
+        quote!($#path)
+    } else {
+        let path = attr.path;
+        quote!(#path)
+    };
     let module_ident = format_ident!("__view_macro_{}", ident);
 
     Ok(quote! {

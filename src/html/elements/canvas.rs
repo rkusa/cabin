@@ -8,7 +8,7 @@ use crate::html::{Aria, Html};
 /// The `canvas` element provides scripts with a resolution-dependent bitmap canvas, which can be
 /// used for rendering graphs, game graphics, art, or other visual images on the fly. The contents
 /// of the canvas element, if any, are the element's fallback content.
-#[crate::view_macro(cabin::html::elements::canvas)]
+#[crate::view_macro(crate::html::elements::canvas)]
 pub fn canvas(content: impl View) -> Html<marker::Canvas, ()> {
     Html::new("canvas", (), content)
 }

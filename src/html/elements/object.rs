@@ -14,7 +14,7 @@ use crate::html::{Aria, Html};
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.
-#[crate::view_macro(cabin::html::elements::object)]
+#[crate::view_macro(crate::html::elements::object)]
 pub fn object(content: impl View) -> Html<marker::Object, ()> {
     Html::new("object", (), content)
 }

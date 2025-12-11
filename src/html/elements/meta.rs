@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
 /// [super::script::script] elements.
-#[crate::view_macro(cabin::html::elements::meta)]
+#[crate::view_macro(crate::html::elements::meta)]
 pub fn meta(content: impl View) -> Html<marker::Meta, ()> {
     Html::new("meta", (), content)
 }

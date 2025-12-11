@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.
-#[crate::view_macro(cabin::html::elements::option)]
+#[crate::view_macro(crate::html::elements::option)]
 pub fn option(content: impl View) -> Html<marker::SelectOption, ()> {
     Html::new("option", (), content)
 }

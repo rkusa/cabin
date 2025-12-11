@@ -7,7 +7,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
-#[crate::view_macro(cabin::html::elements::dialog)]
+#[crate::view_macro(crate::html::elements::dialog)]
 pub fn dialog(content: impl View) -> Html<marker::Dialog, ()> {
     Html::new("dialog", (), content)
 }

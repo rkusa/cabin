@@ -9,7 +9,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `slot` element defines a slot. It is typically used in a shadow tree. A `slot` element
 /// represents its assigned nodes, if any, and its contents otherwise.
-#[crate::view_macro(cabin::html::elements::slot)]
+#[crate::view_macro(crate::html::elements::slot)]
 pub fn slot(content: impl View) -> Html<marker::Slot, ()> {
     Html::new("slot", (), content)
 }

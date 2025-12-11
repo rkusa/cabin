@@ -13,7 +13,7 @@ use crate::html::{Aria, Html};
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
-#[crate::view_macro(cabin::html::elements::anchor)]
+#[crate::view_macro(crate::html::elements::anchor)]
 pub fn a(content: impl View) -> Html<marker::Anchor, ()> {
     Html::new("a", (), content)
 }

@@ -10,7 +10,7 @@ use crate::html::{Aria, Html};
 
 /// A `label` element that represents a caption that can be associated with a specific form
 /// control.
-#[crate::view_macro(cabin::html::elements::label)]
+#[crate::view_macro(crate::html::elements::label)]
 pub fn label(content: impl View) -> Html<marker::Label, ()> {
     Html::new("label", (), content)
 }

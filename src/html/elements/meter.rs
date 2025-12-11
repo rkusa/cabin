@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population
 /// to have selected a particular candidate.
-#[crate::view_macro(cabin::html::elements::meter)]
+#[crate::view_macro(crate::html::elements::meter)]
 pub fn meter(content: impl View) -> Html<marker::Meter, ()> {
     Html::new("meter", (), content)
 }

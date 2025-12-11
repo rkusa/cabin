@@ -8,7 +8,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `q` element represents some phrasing content quoted from another source.
-#[crate::view_macro(cabin::html::elements::q)]
+#[crate::view_macro(crate::html::elements::q)]
 pub fn q(content: impl View) -> Html<marker::Q, ()> {
     Html::new("q", (), content)
 }

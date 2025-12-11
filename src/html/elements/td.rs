@@ -10,7 +10,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `td` element represents a data cell in a [super::table].
-#[crate::view_macro(cabin::html::elements::td)]
+#[crate::view_macro(crate::html::elements::td)]
 pub fn td(content: impl View) -> Html<marker::Td, ()> {
     Html::new("td", (), content)
 }

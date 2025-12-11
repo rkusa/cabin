@@ -4,7 +4,7 @@ use crate::html::{Global, Html};
 use crate::view::UpdateView;
 
 /// The `head` element represents a collection of metadata for the document.
-#[crate::view_macro(cabin::html::elements::head)]
+#[crate::view_macro(crate::html::elements::head)]
 pub fn head(content: impl View) -> UpdateView<Html<marker::Head, ()>> {
     UpdateView::hidden_on_update(Html::new("head", (), content))
 }

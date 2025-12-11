@@ -12,7 +12,7 @@ use crate::html::{Aria, Html};
 /// work remains to be done before the task is complete (e.g. because the task is waiting for a
 /// remote host to respond), or the progress is a number in the range zero to a maximum, giving the
 /// fraction of work that has so far been completed.
-#[crate::view_macro(cabin::html::elements::progress)]
+#[crate::view_macro(crate::html::elements::progress)]
 pub fn progress(content: impl View) -> Html<marker::Progress, ()> {
     Html::new("progress", (), content)
 }

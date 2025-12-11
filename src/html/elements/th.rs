@@ -12,7 +12,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `th` element represents a header cell in a [super::table].
-#[crate::view_macro(cabin::html::elements::th)]
+#[crate::view_macro(crate::html::elements::th)]
 pub fn th(content: impl View) -> Html<marker::Th, ()> {
     Html::new("th", (), content)
 }

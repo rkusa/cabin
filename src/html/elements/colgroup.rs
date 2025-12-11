@@ -7,7 +7,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 
 /// The `colgroup` element represents a group of one or more columns in the [super::table] that is
 /// its parent, if it has a parent and that is a [super::table] element.
-#[crate::view_macro(cabin::html::elements::colgroup)]
+#[crate::view_macro(crate::html::elements::colgroup)]
 pub fn colgroup(content: impl View) -> Html<marker::Colgroup, ()> {
     Html::new("colgroup", (), content)
 }

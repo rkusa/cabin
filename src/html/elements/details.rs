@@ -7,7 +7,7 @@ use crate::html::{Aria, Html};
 
 /// The `details` element represents a disclosure widget from which the user can obtain additional
 /// information or controls.
-#[crate::view_macro(cabin::html::elements::details)]
+#[crate::view_macro(crate::html::elements::details)]
 pub fn details(content: impl View) -> Html<marker::Details, ()> {
     Html::new("details", (), content)
 }

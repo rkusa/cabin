@@ -14,7 +14,7 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `iframe` element represents its content navigable.
-#[crate::view_macro(cabin::html::elements::iframe)]
+#[crate::view_macro(crate::html::elements::iframe)]
 pub fn iframe(content: impl View) -> Html<marker::IFrame, ()> {
     Html::new("iframe", (), content)
 }

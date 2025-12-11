@@ -12,7 +12,7 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// An `audio` element represents a sound or audio stream.
-#[crate::view_macro(cabin::html::elements::audio)]
+#[crate::view_macro(crate::html::elements::audio)]
 pub fn audio(content: impl View) -> Html<marker::Audio, ()> {
     Html::new("audio", (), content)
 }
