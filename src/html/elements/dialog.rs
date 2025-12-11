@@ -7,24 +7,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
+#[crate::view_macro(cabin::html::elements::dialog)]
 pub fn dialog(content: impl View) -> Html<marker::Dialog, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("dialog", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! dialog {
-        ($($x:tt)*) => {
-            $crate::html::elements::dialog::dialog($crate::view![$($x)*])
-        }
-    }
-
-    pub use dialog;
-}
-
-pub use macros::dialog;
 
 pub mod marker {
     pub struct Dialog;

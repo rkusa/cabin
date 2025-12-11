@@ -18,24 +18,12 @@ use crate::html::{Aria, Html};
 /// The `form` element represents a hyperlink that can be manipulated through a collection of
 /// form-associated elements, some of which can represent editable values that can be submitted to a
 /// server for processing.
+#[crate::view_macro(cabin::html::elements::form)]
 pub fn form(content: impl View) -> Html<marker::Form, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("form", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! form {
-        ($($x:tt)*) => {
-            $crate::html::elements::form::form($crate::view![$($x)*])
-        }
-    }
-
-    pub use form;
-}
-
-pub use macros::form;
 
 pub mod marker {
     pub struct Form;

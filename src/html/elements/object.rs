@@ -14,24 +14,12 @@ use crate::html::{Aria, Html};
 
 /// The `object` element can represent an external resource, which, depending on the type of the
 /// resource, will either be treated as an image or as a child navigable.
+#[crate::view_macro(cabin::html::elements::object)]
 pub fn object(content: impl View) -> Html<marker::Object, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("object", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! object {
-        ($($x:tt)*) => {
-            $crate::html::elements::object::object($crate::view![$($x)*])
-        }
-    }
-
-    pub use object;
-}
-
-pub use macros::object;
 
 pub mod marker {
     pub struct Object;

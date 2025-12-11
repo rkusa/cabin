@@ -4,6 +4,7 @@ mod derive_attribute;
 mod derive_event;
 mod styles_macro;
 mod tw_macro;
+mod view_macro_attribute;
 
 use proc_macro::TokenStream;
 use syn::punctuated::Punctuated;
@@ -43,6 +44,16 @@ pub fn wasm_boundary(attr: TokenStream, item: TokenStream) -> TokenStream {
     let events = parse_macro_input!(attr with Punctuated::<Type, Comma>::parse_terminated);
     let input = parse_macro_input!(item as ItemFn);
     match boundary_attribute::boundary_attribute(input, events, true) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
+
+#[proc_macro_attribute]
+pub fn view_macro(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let attr = parse_macro_input!(attr as view_macro_attribute::ModulePathAttribute);
+    let input = parse_macro_input!(item as ItemFn);
+    match view_macro_attribute::view_macro_attribute(attr, input) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

@@ -8,24 +8,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `q` element represents some phrasing content quoted from another source.
+#[crate::view_macro(cabin::html::elements::q)]
 pub fn q(content: impl View) -> Html<marker::Q, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("q", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! q {
-        ($($x:tt)*) => {
-            $crate::html::elements::q::q($crate::view![$($x)*])
-        }
-    }
-
-    pub use q;
-}
-
-pub use macros::q;
 
 pub mod marker {
     pub struct Q;

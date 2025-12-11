@@ -12,24 +12,12 @@ use crate::html::form::OnSubmit;
 use crate::html::{Aria, Html};
 
 /// The `button` element represents a button labeled by its contents.
+#[crate::view_macro(cabin::html::elements::button)]
 pub fn button(content: impl View) -> Html<marker::Button, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("button", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! button {
-        ($($x:tt)*) => {
-            $crate::html::elements::button::button($crate::view![$($x)*])
-        }
-    }
-
-    pub use button;
-}
-
-pub use macros::button;
 
 pub mod marker {
     pub struct Button;

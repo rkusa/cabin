@@ -9,24 +9,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `ins` element represents an addition to the document.
+#[crate::view_macro(cabin::html::elements::ins)]
 pub fn ins(content: impl View) -> Html<marker::Ins, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("ins", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! ins {
-        ($($x:tt)*) => {
-            $crate::html::elements::ins::ins($crate::view![$($x)*])
-        }
-    }
-
-    pub use ins;
-}
-
-pub use macros::ins;
 
 pub mod marker {
     pub struct Ins;

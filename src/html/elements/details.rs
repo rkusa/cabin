@@ -7,24 +7,12 @@ use crate::html::{Aria, Html};
 
 /// The `details` element represents a disclosure widget from which the user can obtain additional
 /// information or controls.
+#[crate::view_macro(cabin::html::elements::details)]
 pub fn details(content: impl View) -> Html<marker::Details, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("details", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! details {
-        ($($x:tt)*) => {
-            $crate::html::elements::details::details($crate::view![$($x)*])
-        }
-    }
-
-    pub use details;
-}
-
-pub use macros::details;
 
 pub mod marker {
     pub struct Details;

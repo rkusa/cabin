@@ -10,24 +10,12 @@ use crate::html::{Aria, Html};
 /// The `fieldset` element represents a set of form controls (or other content) grouped together,
 /// optionally with a caption. The caption is given by the first [super::legend] element that is a
 /// child of the [super::fieldset] element, if any. The remainder of the descendants form the group.
+#[crate::view_macro(cabin::html::elements::fieldset)]
 pub fn fieldset(content: impl View) -> Html<marker::Fieldset, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("fieldset", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! fieldset {
-        ($($x:tt)*) => {
-            $crate::html::elements::fieldset::fieldset($crate::view![$($x)*])
-        }
-    }
-
-    pub use fieldset;
-}
-
-pub use macros::fieldset;
 
 pub mod marker {
     pub struct Fieldset;

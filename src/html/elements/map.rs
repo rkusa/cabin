@@ -10,24 +10,12 @@ use crate::html::{Aria, Html};
 
 /// The `map` element, in conjunction with an [super::img] element and any [super::area] element
 /// descendants, defines an image map. The element represents its children.
+#[crate::view_macro(cabin::html::elements::map)]
 pub fn map(content: impl View) -> Html<marker::Map, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("map", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! map {
-        ($($x:tt)*) => {
-            $crate::html::elements::map::map($crate::view![$($x)*])
-        }
-    }
-
-    pub use map;
-}
-
-pub use macros::map;
 
 pub mod marker {
     pub struct Map;

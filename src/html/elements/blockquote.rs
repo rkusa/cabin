@@ -11,24 +11,12 @@ use crate::html::{Aria, Html};
 /// The `blockquote` element represents a section that is quoted from another source.
 /// Content inside a `blockquote` must be quoted from another source, whose address, if it has one,
 /// may be cited in the [Blockquote::cite] attribute.
+#[crate::view_macro(cabin::html::elements::blockquote)]
 pub fn blockquote(content: impl View) -> Html<marker::Blockquote, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("blockquote", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! blockquote {
-        ($($x:tt)*) => {
-            $crate::html::elements::blockquote::blockquote($crate::view![$($x)*])
-        }
-    }
-
-    pub use blockquote;
-}
-
-pub use macros::blockquote;
 
 pub mod marker {
     pub struct Blockquote;

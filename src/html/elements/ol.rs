@@ -10,24 +10,12 @@ use crate::html::{Aria, Html};
 
 /// The ol element represents a list of items, where the items have been intentionally ordered, such
 /// that changing the order would change the meaning of the document.
+#[crate::view_macro(cabin::html::elements::ol)]
 pub fn ol(content: impl View) -> Html<marker::Ol, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("ol", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! ol {
-        ($($x:tt)*) => {
-            $crate::html::elements::ol::ol($crate::view![$($x)*])
-        }
-    }
-
-    pub use ol;
-}
-
-pub use macros::ol;
 
 pub mod marker {
     pub struct Ol;

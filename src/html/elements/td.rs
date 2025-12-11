@@ -10,24 +10,12 @@ use crate::html::list::SpaceSeparated;
 use crate::html::{Aria, Html};
 
 /// The `td` element represents a data cell in a [super::table].
+#[crate::view_macro(cabin::html::elements::td)]
 pub fn td(content: impl View) -> Html<marker::Td, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("td", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! td {
-        ($($x:tt)*) => {
-            $crate::html::elements::td::td($crate::view![$($x)*])
-        }
-    }
-
-    pub use td;
-}
-
-pub use macros::td;
 
 pub mod marker {
     pub struct Td;

@@ -13,24 +13,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// A `video` element is used for playing videos or movies, and audio files with captions.
+#[crate::view_macro(cabin::html::elements::video)]
 pub fn video(content: impl View) -> Html<marker::Video, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("video", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! video {
-        ($($x:tt)*) => {
-            $crate::html::elements::video::video($crate::view![$($x)*])
-        }
-    }
-
-    pub use video;
-}
-
-pub use macros::video;
 
 pub mod marker {
     pub struct Video;

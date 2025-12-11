@@ -12,24 +12,12 @@ use crate::html::{Aria, Html};
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
 /// [super::script::script] elements.
+#[crate::view_macro(cabin::html::elements::meta)]
 pub fn meta(content: impl View) -> Html<marker::Meta, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("meta", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! meta {
-        ($($x:tt)*) => {
-            $crate::html::elements::meta::meta($crate::view![$($x)*])
-        }
-    }
-
-    pub use meta;
-}
-
-pub use macros::meta;
 
 pub mod marker {
     pub struct Meta;

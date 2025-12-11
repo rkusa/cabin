@@ -12,24 +12,12 @@ use crate::html::{Aria, Html};
 
 /// The `option` element represents an option in a [super::select] element or as part of a list of
 /// suggestions in a [super::datalist] element.
+#[crate::view_macro(cabin::html::elements::option)]
 pub fn option(content: impl View) -> Html<marker::SelectOption, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("option", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! option {
-        ($($x:tt)*) => {
-            $crate::html::elements::option::option($crate::view![$($x)*])
-        }
-    }
-
-    pub use option;
-}
-
-pub use macros::option;
 
 pub mod marker {
     pub struct SelectOption;

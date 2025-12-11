@@ -9,24 +9,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
+#[crate::view_macro(cabin::html::elements::optgroup)]
 pub fn optgroup(content: impl View) -> Html<marker::OptGroup, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("optgroup", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! optgroup {
-        ($($x:tt)*) => {
-            $crate::html::elements::optgroup::optgroup($crate::view![$($x)*])
-        }
-    }
-
-    pub use optgroup;
-}
-
-pub use macros::optgroup;
 
 pub mod marker {
     pub struct OptGroup;

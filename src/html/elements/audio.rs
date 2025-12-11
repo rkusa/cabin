@@ -12,24 +12,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// An `audio` element represents a sound or audio stream.
+#[crate::view_macro(cabin::html::elements::audio)]
 pub fn audio(content: impl View) -> Html<marker::Audio, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("audio", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! audio {
-        ($($x:tt)*) => {
-            $crate::html::elements::audio::audio($crate::view![$($x)*])
-        }
-    }
-
-    pub use audio;
-}
-
-pub use macros::audio;
 
 pub mod marker {
     pub struct Audio;

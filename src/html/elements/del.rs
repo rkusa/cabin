@@ -9,24 +9,12 @@ use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `del` element represents a removal from the document.
+#[crate::view_macro(cabin::html::elements::del)]
 pub fn del(content: impl View) -> Html<marker::Del, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("del", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! del {
-        ($($x:tt)*) => {
-            $crate::html::elements::del::del($crate::view![$($x)*])
-        }
-    }
-
-    pub use del;
-}
-
-pub use macros::del;
 
 pub mod marker {
     pub struct Del;

@@ -10,24 +10,12 @@ use crate::html::{Aria, Html};
 
 /// The `time` element represents a datetime, in machine-readable form as the `datetime` attribute,
 /// and in human-readable form as its content.
+#[crate::view_macro(cabin::html::elements::time)]
 pub fn time(content: impl View) -> Html<marker::Time, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("time", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! time {
-        ($($x:tt)*) => {
-            $crate::html::elements::time::time($crate::view![$($x)*])
-        }
-    }
-
-    pub use time;
-}
-
-pub use macros::time;
 
 pub mod marker {
     pub struct Time;

@@ -10,24 +10,12 @@ use crate::html::{Aria, Html};
 
 /// The output element represents the result of a calculation performed by the application, or the
 /// result of a user action.
+#[crate::view_macro(cabin::html::elements::output)]
 pub fn output(content: impl View) -> Html<marker::Output, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("output", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! output {
-        ($($x:tt)*) => {
-            $crate::html::elements::output::output($crate::view![$($x)*])
-        }
-    }
-
-    pub use output;
-}
-
-pub use macros::output;
 
 pub mod marker {
     pub struct Output;

@@ -12,24 +12,12 @@ use crate::html::{Aria, Html};
 /// The `meter` element represents a scalar measurement within a known range, or a fractional value;
 /// for example disk usage, the relevance of a query result, or the fraction of a voting population
 /// to have selected a particular candidate.
+#[crate::view_macro(cabin::html::elements::meter)]
 pub fn meter(content: impl View) -> Html<marker::Meter, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("meter", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! meter {
-        ($($x:tt)*) => {
-            $crate::html::elements::meter::meter($crate::view![$($x)*])
-        }
-    }
-
-    pub use meter;
-}
-
-pub use macros::meter;
 
 pub mod marker {
     pub struct Meter;

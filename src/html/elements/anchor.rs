@@ -13,24 +13,12 @@ use crate::html::{Aria, Html};
 
 /// An `a` element that – if `href` is specified – creates a hyperlink to anything a URL can
 /// address.
+#[crate::view_macro(cabin::html::elements::anchor)]
 pub fn a(content: impl View) -> Html<marker::Anchor, ()> {
     #[cfg(debug_assertions)]
     let content = content.boxed();
     Html::new("a", (), content)
 }
-
-mod macros {
-    #[macro_export]
-    macro_rules! a {
-        ($($x:tt)*) => {
-            $crate::html::elements::anchor::a($crate::view![$($x)*])
-        }
-    }
-
-    pub use a;
-}
-
-pub use macros::a;
 
 pub mod marker {
     pub struct Anchor;
