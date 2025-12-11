@@ -5,15 +5,6 @@
     if (openedOnce) {
       document.dispatchEvent(new CustomEvent("cabinRefresh"));
       {
-        // FIXME
-        // const link = document.getElementById("cabin-styles");
-        // if (link) {
-        //   const url = new URL(link.href, location.href);
-        //   url.searchParams.set("liveReload", Date.now());
-        //   link.href = url.href;
-        // }
-      }
-      {
         const link = document.querySelector(
           "link[rel='cabin-components'][type='application/wasm']",
         );

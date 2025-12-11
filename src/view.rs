@@ -6,7 +6,6 @@ mod future;
 mod iter;
 mod macros;
 pub mod text;
-mod update;
 
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -21,7 +20,6 @@ pub use future::FutureExt;
 use http_error::HttpError;
 pub use iter::IteratorExt;
 pub use macros::view;
-pub use update::UpdateView;
 
 pub use crate::pair::Pair;
 use crate::render::{Escape, Renderer};

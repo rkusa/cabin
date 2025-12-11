@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use cabin::cabin_scripts;
+use cabin::basic_document;
 use cabin::prelude::*;
 use cabin::scope::event;
 use http::Request;
@@ -9,7 +9,7 @@ use tokio::net::TcpListener;
 async fn app() -> impl View {
     let count = event::<usize>().unwrap_or(0);
 
-    document(
+    basic_document(
         h::button(h::text!("{}", count)).on_click(count + 1).class(
             // TODO: modifier groups?
             // TODO: autocomplate after XZY. (for modifiers)
@@ -25,15 +25,6 @@ async fn app() -> impl View {
             .append_when(count == 0, tw![tw::text::color("red")]),
         ),
     )
-    .await
-}
-
-async fn document(content: impl View) -> impl View {
-    let (content, styles) = content.into_any_view().collect_styles(true).await;
-    view![
-        h::doctype(),
-        h::html![h::head![styles, cabin_scripts()], h::body(content)],
-    ]
 }
 
 cabin::BOUNDARIES!();
