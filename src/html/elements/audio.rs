@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// An `audio` element represents a sound or audio stream.
 #[crate::view_macro(cabin::html::elements::audio)]
 pub fn audio(content: impl View) -> Html<marker::Audio, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("audio", (), content)
 }
 

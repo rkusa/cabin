@@ -13,8 +13,6 @@ use crate::html::{Aria, Html};
 /// The `select` element represents a control for selecting amongst a set of [super::option]s.
 #[crate::view_macro(cabin::html::elements::select)]
 pub fn select(content: impl View) -> Html<marker::Select, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("select", (), content)
 }
 

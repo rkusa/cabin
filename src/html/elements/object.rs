@@ -16,8 +16,6 @@ use crate::html::{Aria, Html};
 /// resource, will either be treated as an image or as a child navigable.
 #[crate::view_macro(cabin::html::elements::object)]
 pub fn object(content: impl View) -> Html<marker::Object, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("object", (), content)
 }
 

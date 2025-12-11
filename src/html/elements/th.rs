@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// The `th` element represents a header cell in a [super::table].
 #[crate::view_macro(cabin::html::elements::th)]
 pub fn th(content: impl View) -> Html<marker::Th, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("th", (), content)
 }
 

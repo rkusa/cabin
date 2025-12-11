@@ -9,8 +9,6 @@ use crate::html::{Aria, Html};
 /// information or controls.
 #[crate::view_macro(cabin::html::elements::details)]
 pub fn details(content: impl View) -> Html<marker::Details, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("details", (), content)
 }
 

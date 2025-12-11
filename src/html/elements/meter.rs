@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// to have selected a particular candidate.
 #[crate::view_macro(cabin::html::elements::meter)]
 pub fn meter(content: impl View) -> Html<marker::Meter, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("meter", (), content)
 }
 

@@ -6,8 +6,6 @@ use crate::view::UpdateView;
 /// The `html` element represents the root of an HTML document.
 #[crate::view_macro(cabin::html::elements::html)]
 pub fn html(content: impl View) -> UpdateView<Html<marker::Html, ()>> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     UpdateView::content_only_on_update(Html::new("html", (), content))
 }
 

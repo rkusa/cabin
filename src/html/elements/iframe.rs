@@ -16,8 +16,6 @@ use crate::html::{Aria, Html};
 /// The `iframe` element represents its content navigable.
 #[crate::view_macro(cabin::html::elements::iframe)]
 pub fn iframe(content: impl View) -> Html<marker::IFrame, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("iframe", (), content)
 }
 

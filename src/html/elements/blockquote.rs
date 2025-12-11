@@ -13,8 +13,6 @@ use crate::html::{Aria, Html};
 /// may be cited in the [Blockquote::cite] attribute.
 #[crate::view_macro(cabin::html::elements::blockquote)]
 pub fn blockquote(content: impl View) -> Html<marker::Blockquote, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("blockquote", (), content)
 }
 

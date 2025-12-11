@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// [super::script::script] elements.
 #[crate::view_macro(cabin::html::elements::meta)]
 pub fn meta(content: impl View) -> Html<marker::Meta, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("meta", (), content)
 }
 

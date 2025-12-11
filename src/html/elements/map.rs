@@ -12,8 +12,6 @@ use crate::html::{Aria, Html};
 /// descendants, defines an image map. The element represents its children.
 #[crate::view_macro(cabin::html::elements::map)]
 pub fn map(content: impl View) -> Html<marker::Map, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("map", (), content)
 }
 

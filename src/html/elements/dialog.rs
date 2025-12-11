@@ -9,8 +9,6 @@ use crate::html::{Aria, Html};
 /// A `dialog` element represents a transitory part of an application (e.g. dialog box).
 #[crate::view_macro(cabin::html::elements::dialog)]
 pub fn dialog(content: impl View) -> Html<marker::Dialog, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("dialog", (), content)
 }
 

@@ -11,8 +11,6 @@ use crate::html::{Aria, Html};
 /// The `ins` element represents an addition to the document.
 #[crate::view_macro(cabin::html::elements::ins)]
 pub fn ins(content: impl View) -> Html<marker::Ins, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("ins", (), content)
 }
 

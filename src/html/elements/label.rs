@@ -12,8 +12,6 @@ use crate::html::{Aria, Html};
 /// control.
 #[crate::view_macro(cabin::html::elements::label)]
 pub fn label(content: impl View) -> Html<marker::Label, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("label", (), content)
 }
 

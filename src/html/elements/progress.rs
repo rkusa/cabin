@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// fraction of work that has so far been completed.
 #[crate::view_macro(cabin::html::elements::progress)]
 pub fn progress(content: impl View) -> Html<marker::Progress, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("progress", (), content)
 }
 

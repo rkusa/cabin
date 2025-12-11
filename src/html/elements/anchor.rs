@@ -15,8 +15,6 @@ use crate::html::{Aria, Html};
 /// address.
 #[crate::view_macro(cabin::html::elements::anchor)]
 pub fn a(content: impl View) -> Html<marker::Anchor, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("a", (), content)
 }
 

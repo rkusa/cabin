@@ -11,8 +11,6 @@ use crate::html::{Aria, Html};
 /// The `optgroup` element represents a group of [super::option] elements with a common label.
 #[crate::view_macro(cabin::html::elements::optgroup)]
 pub fn optgroup(content: impl View) -> Html<marker::OptGroup, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("optgroup", (), content)
 }
 

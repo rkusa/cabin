@@ -10,8 +10,6 @@ use crate::html::{Aria, Html};
 /// of the canvas element, if any, are the element's fallback content.
 #[crate::view_macro(cabin::html::elements::canvas)]
 pub fn canvas(content: impl View) -> Html<marker::Canvas, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("canvas", (), content)
 }
 

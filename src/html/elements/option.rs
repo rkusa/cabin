@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// suggestions in a [super::datalist] element.
 #[crate::view_macro(cabin::html::elements::option)]
 pub fn option(content: impl View) -> Html<marker::SelectOption, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("option", (), content)
 }
 

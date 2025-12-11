@@ -14,8 +14,6 @@ use crate::html::{Aria, Html};
 /// The `button` element represents a button labeled by its contents.
 #[crate::view_macro(cabin::html::elements::button)]
 pub fn button(content: impl View) -> Html<marker::Button, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("button", (), content)
 }
 

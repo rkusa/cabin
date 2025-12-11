@@ -10,8 +10,6 @@ use crate::html::{Aria, Html};
 /// The `q` element represents some phrasing content quoted from another source.
 #[crate::view_macro(cabin::html::elements::q)]
 pub fn q(content: impl View) -> Html<marker::Q, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("q", (), content)
 }
 

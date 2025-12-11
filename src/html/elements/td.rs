@@ -12,8 +12,6 @@ use crate::html::{Aria, Html};
 /// The `td` element represents a data cell in a [super::table].
 #[crate::view_macro(cabin::html::elements::td)]
 pub fn td(content: impl View) -> Html<marker::Td, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("td", (), content)
 }
 

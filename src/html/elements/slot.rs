@@ -11,8 +11,6 @@ use crate::html::attributes::{Attributes, WithAttribute};
 /// represents its assigned nodes, if any, and its contents otherwise.
 #[crate::view_macro(cabin::html::elements::slot)]
 pub fn slot(content: impl View) -> Html<marker::Slot, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("slot", (), content)
 }
 

@@ -9,8 +9,6 @@ use crate::html::attributes::{Attributes, WithAttribute};
 /// its parent, if it has a parent and that is a [super::table] element.
 #[crate::view_macro(cabin::html::elements::colgroup)]
 pub fn colgroup(content: impl View) -> Html<marker::Colgroup, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("colgroup", (), content)
 }
 

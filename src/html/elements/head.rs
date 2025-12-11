@@ -6,8 +6,6 @@ use crate::view::UpdateView;
 /// The `head` element represents a collection of metadata for the document.
 #[crate::view_macro(cabin::html::elements::head)]
 pub fn head(content: impl View) -> UpdateView<Html<marker::Head, ()>> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     UpdateView::hidden_on_update(Html::new("head", (), content))
 }
 

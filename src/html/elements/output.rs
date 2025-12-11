@@ -12,8 +12,6 @@ use crate::html::{Aria, Html};
 /// result of a user action.
 #[crate::view_macro(cabin::html::elements::output)]
 pub fn output(content: impl View) -> Html<marker::Output, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("output", (), content)
 }
 

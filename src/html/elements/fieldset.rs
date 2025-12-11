@@ -12,8 +12,6 @@ use crate::html::{Aria, Html};
 /// child of the [super::fieldset] element, if any. The remainder of the descendants form the group.
 #[crate::view_macro(cabin::html::elements::fieldset)]
 pub fn fieldset(content: impl View) -> Html<marker::Fieldset, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("fieldset", (), content)
 }
 

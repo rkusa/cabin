@@ -11,8 +11,6 @@ use crate::html::{Aria, Html};
 /// The `del` element represents a removal from the document.
 #[crate::view_macro(cabin::html::elements::del)]
 pub fn del(content: impl View) -> Html<marker::Del, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("del", (), content)
 }
 

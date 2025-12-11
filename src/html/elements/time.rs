@@ -12,8 +12,6 @@ use crate::html::{Aria, Html};
 /// and in human-readable form as its content.
 #[crate::view_macro(cabin::html::elements::time)]
 pub fn time(content: impl View) -> Html<marker::Time, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("time", (), content)
 }
 

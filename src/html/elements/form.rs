@@ -20,8 +20,6 @@ use crate::html::{Aria, Html};
 /// server for processing.
 #[crate::view_macro(cabin::html::elements::form)]
 pub fn form(content: impl View) -> Html<marker::Form, ()> {
-    #[cfg(debug_assertions)]
-    let content = content.boxed();
     Html::new("form", (), content)
 }
 
