@@ -8,11 +8,13 @@ description = "Server-first toolkit to build web apps"
 repository = "https://github.com/rkusa/cabin"
 
 [workspace]
-members = ["cabin-tailwind", "cabin-macros", "cabin-service"]
+members = ["cabin-macros", "cabin-service"]
 
 [features]
-default = ["livereload"]
+default = ["livereload", "preflight"]
 livereload = []
+preflight = []
+forms = []
 
 [dependencies]
 bytes = "1.2"
@@ -43,8 +45,8 @@ twox-hash = { version = "2.0", default-features = false, features = [
 
 [dev-dependencies]
 axum = "0.8.0-rc.1"
-cabin-tailwind = { path = "./cabin-tailwind", default-features = false }
 cabin-service = { path = "./cabin-service" }
+insta = "1.36"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
     "std",
     "fmt",

@@ -22,12 +22,12 @@ pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
 
                 #[::cabin::private::linkme::distributed_slice(crate::STYLES)]
                 #[linkme(crate = ::cabin::private::linkme)]
-                fn __register(r: &mut ::cabin_tailwind::registry::StyleRegistry) {
+                fn __register(r: &mut ::cabin::tailwind::registry::StyleRegistry) {
                     let name = r.add(#pos, &[#(&#styles,)*]);
                     NAME.set(name).ok();
                 }
 
-                ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
+                ::cabin::tailwind::Class(::std::borrow::Cow::Borrowed(
                     NAME.get().map(|s| s.as_str()).unwrap_or_default()
                 ))
             }
@@ -35,9 +35,9 @@ pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
             {
                 static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
 
-                ::cabin_tailwind::Class(::std::borrow::Cow::Borrowed(
+                ::cabin::tailwind::Class(::std::borrow::Cow::Borrowed(
                     NAME.get_or_init(|| {
-                        let mut r = ::cabin_tailwind::registry::StyleRegistry::default();
+                        let mut r = ::cabin::tailwind::registry::StyleRegistry::default();
                         r.add(#pos, &[#(&#styles,)*])
                     }).as_str()
                 ))

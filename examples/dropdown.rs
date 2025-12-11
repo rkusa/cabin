@@ -35,7 +35,7 @@ fn dialog(count: usize, open: bool) -> Boundary<(usize, bool)> {
             )
             .style(
                 "position:absolute;top:20px;right:0;background:#ddd;list-style-type:none;padding:\
-        4px;",
+                 4px;",
             )
         }),
     ]

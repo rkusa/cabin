@@ -4,7 +4,7 @@ use std::task::{Context, Poll};
 
 use bytes::Bytes;
 use cabin::CABIN_JS;
-use cabin_tailwind::registry::StyleSheet;
+use cabin::tailwind::registry::StyleSheet;
 use http::{Method, Request, Response, header};
 use tokio_util::either::Either;
 use tower_layer::Layer;

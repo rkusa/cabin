@@ -43,4 +43,5 @@ pub use crate::html::elements::th::Th as _;
 pub use crate::html::elements::time::Time as _;
 pub use crate::html::h;
 pub use crate::pack::Pack as _;
+pub use crate::tailwind::{Responsive, Utility, tw, tw0, tw2, tw3, utilities as tw};
 pub use crate::view::view;

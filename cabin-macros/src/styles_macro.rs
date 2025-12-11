@@ -13,7 +13,7 @@ pub fn styles_macro() -> TokenStream {
         mod __styles {
             #[::cabin::private::linkme::distributed_slice]
             #[linkme(crate = ::cabin::private::linkme)]
-            pub static #ident: [fn(&mut ::cabin_tailwind::registry::StyleRegistry)] = [..];
+            pub static #ident: [fn(&mut ::cabin::tailwind::registry::StyleRegistry)] = [..];
         }
         #[cfg(not(target_arch = "wasm32"))]
         pub use __styles::#ident as STYLES;

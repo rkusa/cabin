@@ -16,8 +16,8 @@ impl Parse for ModulePathAttribute {
         };
         if !input.is_empty() {
             return Err(input.error(
-                "this macro accepts only a single module path as its \
-                attribute argument (e.g., #[view_macro(crate::foo::bar)])",
+                "this macro accepts only a single module path as its attribute argument (e.g., \
+                 #[view_macro(crate::foo::bar)])",
             ));
         }
 

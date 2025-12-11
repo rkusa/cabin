@@ -4,8 +4,7 @@ use std::sync::LazyLock;
 use cabin::cabin_scripts;
 use cabin::prelude::*;
 use cabin::scope::event;
-use cabin_tailwind::prelude::*;
-use cabin_tailwind::registry::{StyleRegistry, StyleSheet};
+use cabin::tailwind::registry::{StyleRegistry, StyleSheet};
 use http::Request;
 use tokio::net::TcpListener;
 
@@ -42,7 +41,7 @@ fn document(content: impl View) -> impl View {
 
 cabin::BOUNDARIES!();
 
-cabin_tailwind::STYLES!();
+cabin::tailwind::STYLES!();
 static STYLE_SHEET: LazyLock<StyleSheet> =
     LazyLock::new(|| StyleRegistry::default().with(&STYLES).build(true));
 
