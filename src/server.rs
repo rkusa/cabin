@@ -13,7 +13,6 @@ use multer::Multipart;
 use serde_json::value::RawValue;
 
 pub use crate::error::Error;
-use crate::html;
 use crate::render::Out;
 use crate::scope::{Payload, Scope};
 pub use crate::view::View;
@@ -22,10 +21,10 @@ pub static CABIN_JS: &str = include_str!("./cabin.js");
 pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
 
 pub fn cabin_scripts() -> impl View {
-    use html::elements::script::Script;
+    use crate::prelude::*;
 
-    html::view![
-        html::script("")
+    cabin::view![
+        h::script("")
             .src({
                 static PATH: LazyLock<&'static str> = LazyLock::new(|| {
                     let hash = content_hash(CABIN_JS.as_bytes());
@@ -35,7 +34,7 @@ pub fn cabin_scripts() -> impl View {
             })
             .defer(),
         #[cfg(feature = "livereload")]
-        html::script("")
+        h::script("")
             .src({
                 static PATH: LazyLock<&'static str> = LazyLock::new(|| {
                     let hash = content_hash(LIVERELOAD_JS.as_bytes());
@@ -59,9 +58,11 @@ pub struct Event {
 }
 
 pub fn basic_document(content: impl View) -> impl View {
-    html::view![
-        html::doctype(),
-        html::html![html::head(cabin_scripts()), html::body(content)],
+    use crate::prelude::*;
+
+    cabin::view![
+        h::doctype(),
+        h::html![h::head(cabin_scripts()), h::body(content)],
     ]
 }
 

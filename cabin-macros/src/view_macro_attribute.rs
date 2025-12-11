@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{Error, FnArg, ItemFn, Path, Signature};
@@ -54,6 +54,7 @@ pub fn view_macro_attribute(attr: ModulePathAttribute, item: ItemFn) -> syn::Res
     }
 
     let module = attr.path;
+    let module_ident = format_ident!("__view_macro_{}", ident);
 
     Ok(quote! {
         #(#attrs)*
@@ -61,7 +62,8 @@ pub fn view_macro_attribute(attr: ModulePathAttribute, item: ItemFn) -> syn::Res
             #block
         }
 
-        mod __view_macro {
+        mod #module_ident {
+            #[doc(hidden)]
             #[macro_export]
             macro_rules! #ident {
                 ($($x:tt)*) => {
@@ -72,6 +74,7 @@ pub fn view_macro_attribute(attr: ModulePathAttribute, item: ItemFn) -> syn::Res
             pub use #ident;
         }
 
-        pub use __view_macro::#ident;
+        #[doc(inline)]
+        pub use #module_ident::#ident;
     })
 }
