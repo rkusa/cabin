@@ -196,6 +196,14 @@
       const template = document.createElement("template");
       template.innerHTML = html;
 
+      if (template.content.firstElementChild instanceof HTMLStyleElement) {
+        const style = template.content.removeChild(template.content.firstElementChild);
+        const hash = style.getAttribute("hash");
+        if (!hash || !document.head.querySelector(`style[hash="${hash}"]`)) {
+          document.head.appendChild(style);
+        }
+      }
+
       patchChildren(target, template.content, {}, disabledBefore);
       console.timeEnd("patch");
 

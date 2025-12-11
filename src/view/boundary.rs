@@ -246,7 +246,7 @@ where
         if self.is_topmost {
             async move {
                 let (view, styles) = self.view.collect_styles(false).await;
-                crate::view![h::script(state).r#type("application/json"), styles, view]
+                crate::view![styles, h::script(state).r#type("application/json"), view]
             }
             .into_any_view()
             .render(r)
@@ -254,11 +254,7 @@ where
             Html::<(), _>::new(
                 "cabin-boundary",
                 boundary_ref,
-                crate::view![
-                    h::script(state).r#type("application/json"),
-                    h::style(""),
-                    self.view
-                ],
+                crate::view![h::script(state).r#type("application/json"), self.view],
             )
             .render(r)
         }
