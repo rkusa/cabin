@@ -16,32 +16,10 @@ pub fn tw_macro(item: TokenStream, pos: usize) -> TokenStream {
     // TODO: StyleRegistry::add below generates the style unnecessarily for wasm target
     quote! {
         {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
-
-                #[::cabin::private::linkme::distributed_slice(crate::STYLES)]
-                #[linkme(crate = ::cabin::private::linkme)]
-                fn __register(r: &mut ::cabin::tailwind::registry::StyleRegistry) {
-                    let name = r.add(#pos, &[#(&#styles,)*]);
-                    NAME.set(name).ok();
-                }
-
-                ::cabin::tailwind::Class(::std::borrow::Cow::Borrowed(
-                    NAME.get().map(|s| s.as_str()).unwrap_or_default()
-                ))
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                static NAME: ::cabin::private::OnceCell<String> = ::cabin::private::OnceCell::new();
-
-                ::cabin::tailwind::Class(::std::borrow::Cow::Borrowed(
-                    NAME.get_or_init(|| {
-                        let mut r = ::cabin::tailwind::registry::StyleRegistry::default();
-                        r.add(#pos, &[#(&#styles,)*])
-                    }).as_str()
-                ))
-            }
+            static STYLES: ::std::sync::OnceLock<Vec<Box<dyn ::cabin::tailwind::Utility>>> = ::std::sync::OnceLock::new();
+            ::cabin::tailwind::Tailwind::new(#pos, STYLES.get_or_init(|| {
+                vec![#(Box::new(#styles),)*]
+            }))
         }
     }
     .into()

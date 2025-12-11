@@ -1,10 +1,8 @@
 use std::net::SocketAddr;
-use std::sync::LazyLock;
 
 use cabin::cabin_scripts;
 use cabin::prelude::*;
 use cabin::scope::event;
-use cabin::tailwind::registry::{StyleRegistry, StyleSheet};
 use http::Request;
 use tokio::net::TcpListener;
 
@@ -27,23 +25,18 @@ async fn app() -> impl View {
             .append_when(count == 0, tw![tw::text::color("red")]),
         ),
     )
+    .await
 }
 
-fn document(content: impl View) -> impl View {
+async fn document(content: impl View) -> impl View {
+    let (content, styles) = content.into_any_view().collect_styles(true).await;
     view![
         h::doctype(),
-        h::html![
-            h::head![STYLE_SHEET.link(), cabin_scripts()],
-            h::body(content),
-        ],
+        h::html![h::head![styles, cabin_scripts()], h::body(content)],
     ]
 }
 
 cabin::BOUNDARIES!();
-
-cabin::tailwind::STYLES!();
-static STYLE_SHEET: LazyLock<StyleSheet> =
-    LazyLock::new(|| StyleRegistry::default().with(&STYLES).build(true));
 
 #[tokio::main]
 async fn main() {
@@ -65,7 +58,7 @@ async fn main() {
         .layer(cabin_service::redirects::layer())
         .layer(cabin_service::boundaries::layer(&BOUNDARIES))
         .layer(cabin_service::livereload::layer())
-        .layer(cabin_service::assets::layer_with_stylesheet(&STYLE_SHEET));
+        .layer(cabin_service::assets::layer());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{addr}");

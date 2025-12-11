@@ -10,6 +10,7 @@ use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
+use crate::tailwind::registry::StyleRegistry;
 use crate::view::RenderFuture;
 
 // This covers about 75% of [Renderer] usages in my largest app as per 2025-12-10.
@@ -18,6 +19,7 @@ const DEFAULT_CAPACITY: usize = 128;
 pub struct Renderer {
     out: SmallVec<u8, DEFAULT_CAPACITY>,
     headers: HeaderMap<HeaderValue>,
+    pub(crate) styles: StyleRegistry,
     hasher: XxHash32,
     is_update: bool,
     disable_hashes: bool,
@@ -33,6 +35,7 @@ impl Renderer {
         Self {
             out: SmallVec::new(),
             headers: Default::default(),
+            styles: StyleRegistry::default(),
             hasher: XxHash32::default(),
             disable_hashes,
             is_update,
@@ -48,7 +51,12 @@ impl Renderer {
         if self.headers.is_empty() {
             std::mem::swap(&mut self.headers, &mut other.headers);
         } else {
-            self.headers.extend(std::mem::take(&mut other.headers));
+            self.headers.extend(other.headers.drain());
+        }
+        if self.styles.is_empty() {
+            std::mem::swap(&mut self.styles, &mut other.styles);
+        } else {
+            self.styles.append(&mut other.styles);
         }
         let hash = other.hasher.finish() as u32;
         self.hasher.write_u32(hash);
@@ -108,7 +116,7 @@ impl Renderer {
 
 pub struct ElementRenderer {
     tag: &'static str,
-    renderer: Renderer,
+    pub(crate) renderer: Renderer,
     parent_hasher: XxHash32,
     content_started: bool,
     hash_offset: Option<usize>,

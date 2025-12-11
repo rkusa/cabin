@@ -1,7 +1,8 @@
-use crate::View;
+use crate::html::Common;
 use crate::render::Renderer;
 use crate::scope::Scope;
 use crate::view::RenderFuture;
+use crate::{View, h};
 
 pub struct AnyView {
     pub(crate) view: RenderFuture,
@@ -13,6 +14,30 @@ impl AnyView {
         let r = Scope::create_renderer_from_task();
         Self {
             view: view.render(r),
+        }
+    }
+
+    pub async fn collect_styles(self, is_page_style: bool) -> (Self, impl View) {
+        match self.view.await {
+            Ok(mut r) => {
+                let css = r.styles.build(is_page_style);
+                (
+                    Self {
+                        view: RenderFuture::Ready(Ok(r)),
+                    },
+                    if is_page_style {
+                        h::style(css).boxed()
+                    } else {
+                        h::style(css).id("cabin-styles").boxed()
+                    },
+                )
+            }
+            Err(err) => (
+                Self {
+                    view: RenderFuture::Ready(Err(err)),
+                },
+                h::style("").boxed(),
+            ),
         }
     }
 }

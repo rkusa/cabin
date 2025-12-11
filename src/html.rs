@@ -246,9 +246,12 @@ pub mod h {
     pub use super::elements::video::{self as video, Video, video};
     #[doc(inline)]
     pub use super::elements::wbr::wbr;
+    #[doc(inline)]
     pub use crate::html::raw;
     #[doc(inline)]
+    #[doc(inline)]
     pub use crate::view::text::{Text, text};
+    #[doc(inline)]
     pub use crate::view::view;
 
     pub fn doctype() -> impl crate::View {

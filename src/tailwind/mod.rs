@@ -1,15 +1,16 @@
 mod pseudo;
 pub mod registry;
+mod tailwind;
 pub mod utilities;
 
 use std::fmt;
 use std::hash::Hasher;
 
-pub use cabin::html::elements::common::Class;
-pub use cabin_macros::{STYLES, tw, tw0, tw2, tw3};
+pub use cabin_macros::{tw, tw0, tw2, tw3};
+pub use tailwind::Tailwind;
 pub use utilities as css;
 
-pub trait Utility {
+pub trait Utility: Send + Sync {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result;
 
     fn selector_prefix(&self, _f: &mut dyn fmt::Write) -> fmt::Result {
@@ -312,7 +313,7 @@ impl fmt::Display for Length {
     }
 }
 
-impl<V: fmt::Display, const ORDER: usize> Utility for Property<V, ORDER> {
+impl<V: fmt::Display + Send + Sync, const ORDER: usize> Utility for Property<V, ORDER> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.1)
     }
@@ -322,7 +323,7 @@ impl<V: fmt::Display, const ORDER: usize> Utility for Property<V, ORDER> {
     }
 }
 
-impl<V: fmt::Display, const ORDER: usize> Utility for PropertyTwice<V, ORDER> {
+impl<V: fmt::Display + Send + Sync, const ORDER: usize> Utility for PropertyTwice<V, ORDER> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "{}: {};", self.0, self.2)?;
         writeln!(f, "{}: {};", self.1, self.2)?;

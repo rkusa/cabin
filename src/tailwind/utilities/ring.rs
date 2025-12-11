@@ -51,7 +51,7 @@ pub mod offset {
         }
     }
 
-    impl<V: fmt::Display> Utility for RingOffsetColor<V> {
+    impl<V: fmt::Display + Send + Sync> Utility for RingOffsetColor<V> {
         fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
             writeln!(f, "--tw-ring-offset-color: {};", self.0)?;
             writeln!(
@@ -110,7 +110,7 @@ impl Utility for RingWidth {
     }
 }
 
-impl<V: fmt::Display> Utility for RingColor<V> {
+impl<V: fmt::Display + Send + Sync> Utility for RingColor<V> {
     fn declarations(&self, f: &mut dyn fmt::Write) -> fmt::Result {
         writeln!(f, "--tw-ring-color: {};", self.0)?;
         Ok(())
