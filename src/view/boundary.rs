@@ -8,14 +8,15 @@ use http_error::HttpError;
 use script::Script;
 use serde::Serialize;
 
-use super::{BoxedView, RenderFuture};
-use crate::View;
+use super::RenderFuture;
 use crate::error::InternalError;
 use crate::html::Html;
 use crate::html::attributes::Attributes;
-use crate::html::script::{self, script};
+use crate::html::script;
 use crate::render::{ElementRenderer, Renderer};
 use crate::view::error::ErrorView;
+use crate::view::{AnyView, FutureExt};
+use crate::{View, h};
 
 type BoundaryFn<Args> =
     dyn Send + Sync + Fn(Args) -> Pin<Box<dyn Future<Output = Boundary<Args>> + Send>>;
@@ -53,7 +54,7 @@ where
     }
 
     pub async fn with(&'static self, args: Args) -> Boundary<Args> {
-        self::internal::Boundary::upgrade((self.f)(args).await, self).into_update()
+        self::internal::Boundary::upgrade((self.f)(args).await, self).into_topmost()
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -155,8 +156,9 @@ where
     boundary_ref: Option<&'static BoundaryRef<Args>>,
     // TODO: take reference to args to avoid cloning them?
     args: Option<Args>,
-    view: BoxedView,
-    is_update: bool,
+    view: AnyView,
+    // Used to collect styles into top most boundary on updates
+    is_topmost: bool,
 }
 
 impl<Args> Boundary<Args>
@@ -167,8 +169,8 @@ where
         Boundary {
             boundary_ref: None,
             args: Some(args),
-            view: view.boxed(),
-            is_update: false,
+            view: view.into_any_view(),
+            is_topmost: false,
         }
     }
 }
@@ -210,8 +212,8 @@ impl<Args> Boundary<Args>
 where
     Args: Send + 'static,
 {
-    fn into_update(mut self) -> Self {
-        self.is_update = true;
+    fn into_topmost(mut self) -> Self {
+        self.is_topmost = true;
         self
     }
 }
@@ -241,11 +243,24 @@ where
             }
         };
 
-        let body = crate::view![script(state).r#type("application/json"), self.view];
-        if self.is_update {
-            body.render(r)
+        if self.is_topmost {
+            async move {
+                let (view, styles) = self.view.collect_styles(false).await;
+                crate::view![h::script(state).r#type("application/json"), styles, view]
+            }
+            .into_any_view()
+            .render(r)
         } else {
-            Html::<(), _>::new("cabin-boundary", boundary_ref, body).render(r)
+            Html::<(), _>::new(
+                "cabin-boundary",
+                boundary_ref,
+                crate::view![
+                    h::script(state).r#type("application/json"),
+                    h::style(""),
+                    self.view
+                ],
+            )
+            .render(r)
         }
     }
 }
@@ -289,8 +304,8 @@ where
             Err(err) => Boundary {
                 boundary_ref: None,
                 args: None,
-                view: View::boxed(Err::<Boundary<Args>, _>(err)),
-                is_update: false,
+                view: View::into_any_view(Err::<Boundary<Args>, _>(err)),
+                is_topmost: false,
             },
         }
     }

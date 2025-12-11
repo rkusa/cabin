@@ -26,9 +26,9 @@ impl AnyView {
                         view: RenderFuture::Ready(Ok(r)),
                     },
                     if is_page_style {
-                        h::style(css).boxed()
-                    } else {
                         h::style(css).id("cabin-styles").boxed()
+                    } else {
+                        h::style(css).boxed()
                     },
                 )
             }
