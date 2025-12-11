@@ -7,9 +7,7 @@
    * @return {Promise<WebAssembly.WebAssemblyInstantiatedSource?}
    */
   async function loadWasm() {
-    const path = document.querySelector(
-      "link[rel='cabin-components'][type='application/wasm']",
-    );
+    const path = document.querySelector("link[rel='cabin-components'][type='application/wasm']");
     if (path && path.href) {
       if (path.href === WASM.href) {
         return WASM.wasm;
@@ -20,11 +18,7 @@
           env: {
             error(msgPtr, msgLen) {
               loadWasm().then((wasm) => {
-                const data = new Uint8Array(
-                  wasm.instance.exports.memory.buffer,
-                  msgPtr,
-                  msgLen,
-                );
+                const data = new Uint8Array(wasm.instance.exports.memory.buffer, msgPtr, msgLen);
                 const msg = DECODER.decode(data);
                 wasm.instance.exports.dealloc(msgPtr, msgLen);
                 throw new Error(msg);
@@ -53,13 +47,7 @@
    * @param {AbortController | undefined} abortController
    * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
    */
-  async function update(
-    eventId,
-    payload,
-    target,
-    abortController,
-    disabledBefore,
-  ) {
+  async function update(eventId, payload, target, abortController, disabledBefore) {
     if (typeof eventId !== "string") {
       throw new TypeError("event id must be a string");
     }
@@ -82,11 +70,7 @@
       if (target instanceof CabinBoundary) {
         const name = target.getAttribute("name");
         const wasm = await loadWasm();
-        if (
-          wasm &&
-          wasm.instance.exports[name] &&
-          !(payload instanceof FormData)
-        ) {
+        if (wasm && wasm.instance.exports[name] && !(payload instanceof FormData)) {
           console.log("using wasm component");
 
           const event = `{"eventId":${JSON.stringify(eventId)},"payload":${JSON.stringify(payload)}${
@@ -94,26 +78,18 @@
           }}`;
           const eventUtf8 = ENCODER.encode(event);
           const eventPtr = wasm.instance.exports.alloc(eventUtf8.length);
-          new Uint8Array(
-            wasm.instance.exports.memory.buffer,
-            eventPtr,
-            eventUtf8.length,
-          ).set(eventUtf8);
-          const outPtr = wasm.instance.exports.alloc(4);
-          const len = wasm.instance.exports[name](
-            eventPtr,
-            eventUtf8.length,
-            outPtr,
+          new Uint8Array(wasm.instance.exports.memory.buffer, eventPtr, eventUtf8.length).set(
+            eventUtf8,
           );
+          const outPtr = wasm.instance.exports.alloc(4);
+          const len = wasm.instance.exports[name](eventPtr, eventUtf8.length, outPtr);
           wasm.instance.exports.dealloc(eventPtr, eventUtf8.length);
           if (len > 0) {
             const view = new DataView(wasm.instance.exports.memory.buffer);
             const ptr = view.getInt32(outPtr, true);
             wasm.instance.exports.dealloc(outPtr, 4);
 
-            const html = DECODER.decode(
-              wasm.instance.exports.memory.buffer.slice(ptr, ptr + len),
-            );
+            const html = DECODER.decode(wasm.instance.exports.memory.buffer.slice(ptr, ptr + len));
             wasm.instance.exports.dealloc(ptr, len);
 
             console.time("patch");
@@ -124,15 +100,9 @@
 
             return;
           } else {
-            console.warn(
-              "using wasm component failed, falling back to using serveer component",
-            );
+            console.warn("using wasm component failed, falling back to using serveer component");
           }
-        } else if (
-          wasm &&
-          wasm.instance.exports[name] &&
-          payload instanceof FormData
-        ) {
+        } else if (wasm && wasm.instance.exports[name] && payload instanceof FormData) {
           console.warn("cannot use wasm components for form submissions (yet)");
         }
       }
@@ -142,18 +112,13 @@
         if (payload instanceof FormData) {
           const formData = new FormData();
           formData.append("event_id", eventId);
-          formData.append(
-            "state",
-            new Blob([state ?? ""], { type: "application/json" }),
-          );
+          formData.append("state", new Blob([state ?? ""], { type: "application/json" }));
           formData.append(
             "payload",
             new Blob(
               [
                 new URLSearchParams(
-                  Array.from(payload.entries()).filter(
-                    ([, v]) => !(v instanceof File),
-                  ),
+                  Array.from(payload.entries()).filter(([, v]) => !(v instanceof File)),
                 ).toString(),
               ],
               {
@@ -230,14 +195,12 @@
       console.time("patch");
       const template = document.createElement("template");
       template.innerHTML = html;
+
       patchChildren(target, template.content, {}, disabledBefore);
       console.timeEnd("patch");
 
       const rewriteUrl = res.headers.get("location");
-      if (
-        rewriteUrl &&
-        `${location.pathname}${location.search}` !== rewriteUrl
-      ) {
+      if (rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
         history.pushState(null, undefined, rewriteUrl);
       }
 
@@ -283,9 +246,7 @@
       // Find first ascendant that defines the event
       do {
         eventId =
-          e.detail?.eventId ??
-          e.submitter?.getAttribute(attrName) ??
-          node.getAttribute(attrName);
+          e.detail?.eventId ?? e.submitter?.getAttribute(attrName) ?? node.getAttribute(attrName);
         if (!eventId) {
           continue;
         } else {
@@ -318,10 +279,7 @@
       // `abortController.abort()`, so ensure it stays before that
       e.stopPropagation();
       const isSubmitEvent = eventName === "submit";
-      if (
-        (opts.preventDefault && !(node instanceof HTMLInputElement)) ||
-        isSubmitEvent
-      ) {
+      if ((opts.preventDefault && !(node instanceof HTMLInputElement)) || isSubmitEvent) {
         e.preventDefault();
       }
 
@@ -374,8 +332,7 @@
         } else if (opts?.eventPayload) {
           payload = JSON.parse(
             Object.entries(opts.eventPayload(e)).reduce(
-              (result, [placeholder, value]) =>
-                result.replace(placeholder, value),
+              (result, [placeholder, value]) => result.replace(placeholder, value),
               node.getAttribute(`${attrName}-payload`),
             ),
           );
@@ -455,13 +412,7 @@
    * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
    * @param {WeakMap<HTMLElement, bool> | undefined} readOnlyBefore
    */
-  function patchChildren(
-    rootBefore,
-    rootAfter,
-    orphanKeyed,
-    disabledBefore,
-    readOnlyBefore,
-  ) {
+  function patchChildren(rootBefore, rootAfter, orphanKeyed, disabledBefore, readOnlyBefore) {
     // console.log("apply", rootBefore, rootAfter);
 
     let nodeBefore = rootBefore.firstChild;
@@ -520,14 +471,10 @@
         isKeyedElement(nodeAfter) &&
         (!isKeyedElement(nodeBefore) || nodeBefore.id !== nodeAfter.id)
       ) {
-        const previous =
-          document.getElementById(nodeAfter.id) ?? orphanKeyed[nodeAfter.id];
+        const previous = document.getElementById(nodeAfter.id) ?? orphanKeyed[nodeAfter.id];
         nextBefore = nodeBefore;
         nextAfter = nodeAfter.nextSibling;
-        if (
-          previous &&
-          (!previous.parentNode || previous.parentNode == nodeBefore.parentNode)
-        ) {
+        if (previous && (!previous.parentNode || previous.parentNode == nodeBefore.parentNode)) {
           // console.log(`found existing ${nodeAfter.id} and moved it into place`);
           rootBefore.insertBefore(previous, nodeBefore);
           delete orphanKeyed[nodeAfter.id];
@@ -573,19 +520,8 @@
           }
 
           // console.log("patch attributes");
-          patchAttributes(
-            nodeBefore,
-            nodeAfter,
-            disabledBefore,
-            readOnlyBefore,
-          );
-          patchChildren(
-            nodeBefore,
-            nodeAfter,
-            orphanKeyed,
-            disabledBefore,
-            readOnlyBefore,
-          );
+          patchAttributes(nodeBefore, nodeAfter, disabledBefore, readOnlyBefore);
+          patchChildren(nodeBefore, nodeAfter, orphanKeyed, disabledBefore, readOnlyBefore);
           break;
 
         case Node.TEXT_NODE:
@@ -600,8 +536,7 @@
     } while (
       (nextAfter !== null || nextBefore !== null
         ? ((nodeAfter = nextAfter), (nodeBefore = nextBefore))
-        : ((nodeAfter = nodeAfter?.nextSibling),
-          (nodeBefore = nodeBefore?.nextSibling)),
+        : ((nodeAfter = nodeAfter?.nextSibling), (nodeBefore = nodeBefore?.nextSibling)),
       nodeAfter || nodeBefore)
     );
   }
@@ -612,12 +547,7 @@
    * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
    * @param {WeakMap<HTMLElement, bool> | undefined} readOnlyBefore
    */
-  function patchAttributes(
-    childBefore,
-    childAfter,
-    disabledBefore,
-    readOnlyBefore,
-  ) {
+  function patchAttributes(childBefore, childAfter, disabledBefore, readOnlyBefore) {
     const oldAttributeNames = new Set(childBefore.getAttributeNames());
     if (childBefore instanceof HTMLInputElement) {
       if (childBefore.type === "checkbox" || childBefore.type === "radio") {
@@ -628,10 +558,7 @@
     } else if (childBefore instanceof HTMLOptionElement) {
       oldAttributeNames.add("selected");
     }
-    if (
-      childBefore instanceof HTMLInputElement ||
-      childBefore instanceof HTMLTextAreaElement
-    ) {
+    if (childBefore instanceof HTMLInputElement || childBefore instanceof HTMLTextAreaElement) {
       oldAttributeNames.add("disabled");
       oldAttributeNames.add("readonly");
     }
@@ -729,9 +656,7 @@
    * @return {boolean}
    */
   function isKeyedElement(node) {
-    return (
-      node.nodeType === Node.ELEMENT_NODE && node.nodeName === "CABIN-KEYED"
-    );
+    return node.nodeType === Node.ELEMENT_NODE && node.nodeName === "CABIN-KEYED";
   }
 
   /**
