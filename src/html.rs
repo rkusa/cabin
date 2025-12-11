@@ -255,7 +255,7 @@ pub mod h {
     pub use crate::view::view;
 
     pub fn doctype() -> impl crate::View {
-        super::raw("<!DOCTYPE html>")
+        crate::view::UpdateView::hidden_on_update(super::raw("<!DOCTYPE html>"))
     }
 }
 

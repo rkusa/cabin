@@ -16,7 +16,7 @@ pub use crate::error::Error;
 use crate::render::Out;
 use crate::scope::{Payload, Scope};
 pub use crate::view::View;
-use crate::view::{AnyView, FutureExt};
+use crate::view::{AnyView, FutureExt as _};
 
 pub static CABIN_JS: &str = include_str!("./cabin.js");
 pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
@@ -60,24 +60,15 @@ pub struct Event {
 
 pub fn basic_document(content: impl View) -> AnyView {
     use crate::prelude::*;
-    use crate::scope::is_update;
 
-    if is_update() {
-        async move {
-            let (content, styles) = content.into_any_view().collect_styles(true).await;
-            cabin::view![styles, content]
-        }
-        .into_any_view()
-    } else {
-        async move {
-            let (content, styles) = content.into_any_view().collect_styles(true).await;
-            cabin::view![
-                h::doctype(),
-                h::html![h::head![cabin_scripts(), styles], h::body(content)],
-            ]
-        }
-        .into_any_view()
+    async move {
+        let (content, styles) = content.into_any_view().collect_styles(true).await;
+        cabin::view![
+            h::doctype(),
+            h::html![h::head![cabin_scripts(), styles], h::body(content)],
+        ]
     }
+    .into_any_view()
 }
 
 pub async fn get_page<F, V>(render_fn: impl FnOnce() -> F + Send + 'static) -> Response<String>

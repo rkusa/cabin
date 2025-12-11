@@ -184,13 +184,6 @@ pub fn take_multipart() -> Option<Multipart<'static>> {
         .flatten()
 }
 
-pub fn is_update() -> bool {
-    SCOPE
-        .try_with(|scope| scope.is_update)
-        .ok()
-        .unwrap_or(false)
-}
-
 impl Scope {
     pub(crate) fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {

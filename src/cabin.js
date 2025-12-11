@@ -198,7 +198,16 @@
 
       if (template.content.firstElementChild instanceof HTMLStyleElement) {
         const style = template.content.removeChild(template.content.firstElementChild);
-        appendStyle(style);
+        const hash = style.getAttribute("hash");
+        if (!hash || !document.head.querySelector(`style[hash="${hash}"]`)) {
+          document.head.appendChild(style);
+        }
+      } else if (
+        template.content.firstElementChild instanceof HTMLTemplateElement &&
+        template.content.firstElementChild.id === "cabin-head"
+      ) {
+        const headTemplate = template.content.removeChild(template.content.firstElementChild);
+        patchChildren(document.head, headTemplate.content, {});
       }
 
       patchChildren(target, template.content, {}, disabledBefore);
@@ -219,24 +228,6 @@
       } else {
         throw err;
       }
-    }
-  }
-
-  /**
-   * @param {HTMLStyleElement} style
-   */
-  function appendStyle(style) {
-    if (style.id) {
-      const existing = document.getElementById(style.id);
-      if (existing instanceof HTMLStyleElement) {
-        existing.parentElement.replaceChild(style, existing);
-        return;
-      }
-    }
-
-    const hash = style.getAttribute("hash");
-    if (!hash || !document.head.querySelector(`style[hash="${hash}"]`)) {
-      document.head.appendChild(style);
     }
   }
 
