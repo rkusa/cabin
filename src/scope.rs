@@ -184,7 +184,6 @@ pub fn take_multipart() -> Option<Multipart<'static>> {
         .flatten()
 }
 
-// FIXME: implement builder to avoid locking over and over again
 impl Scope {
     pub(crate) fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {

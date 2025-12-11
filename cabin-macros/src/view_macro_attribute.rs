@@ -56,13 +56,21 @@ pub fn view_macro_attribute(attr: ModulePathAttribute, item: ItemFn) -> syn::Res
     let module = if let Some(p) = attr.path.segments.first()
         && p.ident == "crate"
     {
-        let path = attr.path;
+        let path = &attr.path;
         quote!($#path)
     } else {
-        let path = attr.path;
+        let path = &attr.path;
         quote!(#path)
     };
-    let module_ident = format_ident!("__view_macro_{}", ident);
+    let macro_name = format_ident!(
+        "__{}_{ident}",
+        attr.path
+            .segments
+            .into_iter()
+            .map(|s| s.ident.to_string())
+            .collect::<Vec<_>>()
+            .join("__")
+    );
 
     Ok(quote! {
         #(#attrs)*
@@ -70,19 +78,19 @@ pub fn view_macro_attribute(attr: ModulePathAttribute, item: ItemFn) -> syn::Res
             #block
         }
 
-        mod #module_ident {
+        mod #macro_name {
             #[doc(hidden)]
             #[macro_export]
-            macro_rules! #ident {
+            macro_rules! #macro_name {
                 ($($x:tt)*) => {
                     #module::#ident(cabin::view![$($x)*])
                 }
             }
 
-            pub use #ident;
+            pub use #macro_name;
         }
 
         #[doc(inline)]
-        pub use #module_ident::#ident;
+        pub use #macro_name::#macro_name as #ident;
     })
 }

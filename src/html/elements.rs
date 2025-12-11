@@ -56,7 +56,7 @@ macro_rules! vanilla_element {
             use crate::prelude::*;
 
             #[doc = $doc]
-            #[crate::view_macro($crate::html::elements::$method_name)]
+            #[crate::view_macro(crate::html::elements::$method_name)]
             pub fn $method_name(
                 content: impl $crate::View,
             ) -> $crate::html::Html<marker::$marker_name, ()> {
