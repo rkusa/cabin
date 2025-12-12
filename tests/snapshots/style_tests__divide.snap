@@ -1,13 +1,15 @@
 ---
 source: tests/style_tests.rs
-expression: r.build(false)
+expression: snapshot
 ---
 ._71366396 {
 display: flex;
 }
-._d208644a > :not([hidden]) ~ :not([hidden]) {
---tw-divide-x-reverse: 0;
-border-right-width: calc(0.25rem * var(--tw-divide-x-reverse));
-border-left-width: calc(0.25rem * calc(1 - var(--tw-divide-x-reverse)));
+:where(._4f2c810e > :not(:last-child)) {
 border-color: #000000;
+border-inline-start-width: 1px;
+}
+:where(._429ceb5f > :not(:last-child)) {
+border-inline-end-width: 1px;
+border-inline-style: dashed;
 }

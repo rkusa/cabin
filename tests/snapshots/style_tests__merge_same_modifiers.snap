@@ -2,7 +2,7 @@
 source: tests/style_tests.rs
 expression: c.build(false).unwrap()
 ---
-._a34dfac2 {
-display: inline-block;
-padding: 0.5rem 1rem;
+._9e363673:active {
+background-color: #3b82f6;
+border-color: #f87171;
 }

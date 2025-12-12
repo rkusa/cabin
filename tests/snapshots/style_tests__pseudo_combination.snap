@@ -1,0 +1,19 @@
+---
+source: tests/style_tests.rs
+expression: c.build(false).unwrap()
+---
+._51434695:focus:active {
+border-color: #000000;
+}
+._47fccaca:active {
+background-color: #3b82f6;
+}
+._3e957521:focus {
+border-color: #f87171;
+}
+:where(._fece1ef_:active > :not(:last-child)) {
+border-inline-start-width: 1px;
+}
+:where(._12fac486:focus:active > :not(:last-child)) {
+border-inline-start-width: 1px;
+}

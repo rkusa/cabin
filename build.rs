@@ -4,6 +4,8 @@ use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
+    write_theme();
+
     // TODO: customize based on env variable or custom config?
     let theme = Theme::default();
 
@@ -406,6 +408,486 @@ fn main() {
     }
 }
 
+fn write_theme() {
+    // TODO: customize based on env variable or custom config?
+    let theme = Theme::default();
+
+    let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("theme.rs");
+    let out = &mut File::create(path).unwrap();
+    writeln!(out, r#"pub trait ThemeExt: Style {{"#).unwrap();
+
+    // // breakpoints
+    // let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("responsive.rs");
+    // let out = &mut File::create(path).unwrap();
+    // writeln!(out, r#"pub trait Responsive {{"#).unwrap();
+    // for (ident, min_width_px) in theme.breakpoints {
+    //     writeln!(out, r#"/// `@media (min-width: {min_width_px}px)`"#).unwrap();
+    //     writeln!(
+    //         out,
+    //         r#"fn {ident}(self) -> pseudo::min_width::MinWidth<Self> where Self: Sized;"#
+    //     )
+    //     .unwrap();
+    // }
+    // for window in theme.breakpoints.windows(2) {
+    //     let &[(ident, _), (_, min_width_next_px)] = window else {
+    //         unreachable!()
+    //     };
+    //     let max_width_px = min_width_next_px.saturating_sub(1);
+    //     writeln!(out, r#"/// `@media (max-width: {max_width_px}px)`"#).unwrap();
+    //     writeln!(
+    //         out,
+    //         r#"fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> where Self: Sized;"#
+    //     )
+    //     .unwrap();
+    // }
+    // writeln!(out, r#"}}"#).unwrap();
+    // writeln!(out, r#"impl<T: Utility> Responsive for T {{"#).unwrap();
+    // for (ident, min_width_px) in theme.breakpoints {
+    //     writeln!(
+    //         out,
+    //         r#"
+    //             fn {ident}(self) -> pseudo::min_width::MinWidth<Self> {{
+    //                 pseudo::min_width::MinWidth::new({min_width_px}, self)
+    //             }}
+    //         "#
+    //     )
+    //     .unwrap();
+    // }
+    // for window in theme.breakpoints.windows(2) {
+    //     let &[(ident, _), (_, min_width_next_px)] = window else {
+    //         unreachable!()
+    //     };
+    //     let max_width_px = min_width_next_px.saturating_sub(1);
+    //     writeln!(
+    //         out,
+    //         r#"
+    //             fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> {{
+    //                 pseudo::max_width::MaxWidth::new({max_width_px}, self)
+    //             }}
+    //         "#
+    //     )
+    //     .unwrap();
+    // }
+    // writeln!(out, r#"}}"#).unwrap();
+
+    // color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r#"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// color: {color};
+            /// ```
+            fn text_{ident}(self) -> Self {{
+                self.text_color("{color}")
+            }}
+            "#
+        )
+        .unwrap();
+    }
+
+    // background-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r#"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// background-color: {color};
+            /// ```
+            fn bg_{ident}(self) -> Self {{
+                self.bg("{color}")
+            }}
+            "#
+        )
+        .unwrap();
+    }
+
+    // border-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r#"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-color: {color};
+            /// ```
+            fn border_{ident}(self) -> Self {{
+                self.border_color("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-inline-color: {color};
+            /// ```
+            fn border_x_{ident}(self) -> Self {{
+                self.border_color_x("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-block-color: {color};
+            /// ```
+            fn border_y_{ident}(self) -> Self {{
+                self.border_color_y("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-top-color: {color};
+            /// ```
+            fn border_t_{ident}(self) -> Self {{
+                self.border_color_t("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-right-color: {color};
+            /// ```
+            fn border_r_{ident}(self) -> Self {{
+                self.border_color_r("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-bottom-color: {color};
+            /// ```
+            fn border_b_{ident}(self) -> Self {{
+                self.border_color_b("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-left-color: {color};
+            /// ```
+            fn border_l_{ident}(self) -> Self {{
+                self.border_color_l("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-inline-start-color: {color};
+            /// ```
+            fn border_s_{ident}(self) -> Self {{
+                self.border_color_s("{color}")
+            }}
+
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// border-inline-end-color: {color};
+            /// ```
+            fn border_e_{ident}(self) -> Self {{
+                self.border_color_e("{color}")
+            }}
+            "#
+        )
+        .unwrap();
+    }
+
+    // outline-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// outline-color: {color};
+            /// ```
+            fn outline_{ident}(self) -> Self {{
+                self.outline_color("{color}")
+            }}
+        "##
+        )
+        .unwrap();
+    }
+
+    // ring-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// box-shadow: ... {color};
+            /// ```
+            fn ring_{ident}(self) -> Self {{
+                self.ring_color("{color}")
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    // shadow-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// <b style="color:{color}">⏺</b>
+            fn shadow_{ident}(self) -> Self {{
+                self.shadow_color("{color}")
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    // divide color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r#"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// & > :not(:last-child) {{
+            ///     border-color: {color};
+            /// }}
+            /// ```
+            fn divide_{ident}(self) -> Self {{
+                self.divide_color("{color}")
+            }}
+            "#
+        )
+        .unwrap();
+    }
+
+    // from-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// background-image: linear-gradient(..., {color}, ...);
+            /// ```
+            fn from_{ident}(self) -> Self {{
+                self.from("{color}")
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    // via-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// background-image: linear-gradient(..., ..., {color}, ...);
+            /// ```
+            fn via_{ident}(self) -> Self {{
+                self.via("{color}")
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    // to-color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// background-image: linear-gradient(..., ..., {color});
+            /// ```
+            fn to_{ident}(self) -> Self {{
+                self.to("{color}")
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    // font-size
+    for (ident, font_size, line_height) in theme.font_sizes {
+        let ident = ident.to_lowercase();
+        match line_height {
+            LineHeight::Length(line_height) => {
+                writeln!(
+                    out,
+                    r##"
+                    /// ```css
+                    /// font-size: {font_size};
+                    /// line-height: {line_height};
+                    /// ```
+                    fn text_{ident}(self) -> Self {{
+                        self.text_size({font_size:?}).leading({line_height:?})
+                    }}
+                    "##
+                )
+                .unwrap();
+            }
+            LineHeight::Multiple(multiple) => {
+                writeln!(
+                    out,
+                    r##"
+                    /// ```css
+                    /// font-size: {font_size};
+                    /// line-height: {line_height};
+                    /// ```
+                    fn text_{ident}(self) -> Self {{
+                        self.text_size({font_size:?}).leading_multiple({multiple:.2})
+                    }}
+                    "##,
+                    multiple = f32::from(*multiple)
+                )
+                .unwrap();
+            }
+        }
+    }
+
+    // font-family
+    for (ident, font_family) in theme.font_families {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// font-family: {font_family};
+            /// ```
+            fn {ident}(self) -> Self {{
+                self.font_family(r#"{font_family}"#)
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    // rounded
+    for (ident, size) in theme.rounded {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-radius: {size};
+            /// ```
+            fn rounded_{ident}(self) -> Self {{
+                self.rounded({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-top-right-radius: {size};
+            /// border-top-left-radius: {size};
+            /// ```
+            fn rounded_t_{ident}(self) -> Self {{
+                self.rounded_t({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-top-right-radius: {size};
+            /// border-bottom-right-radius: {size};
+            /// ```
+            fn rounded_r_{ident}(self) -> Self {{
+                self.rounded_r({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-bottom-right-radius: {size};
+            /// border-bottom-left-radius: {size};
+            /// ```
+            fn rounded_b_{ident}(self) -> Self {{
+                self.rounded_b({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-top-left-radius: {size};
+            /// border-bottom-left-radius: {size};
+            /// ```
+            fn rounded_l_{ident}(self) -> Self {{
+                self.rounded_l({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-top-left-radius: {size};
+            /// ```
+            fn rounded_tl_{ident}(self) -> Self {{
+                self.rounded_tl({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-top-right-radius: {size};
+            /// ```
+            fn rounded_tr_{ident}(self) -> Self {{
+                self.rounded_tr({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-bottom-right-radius: {size};
+            /// ```
+            fn rounded_br_{ident}(self) -> Self {{
+                self.rounded_br({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+        writeln!(
+            out,
+            r##"
+            /// ```css
+            /// border-bottom-left-radius: {size};
+            /// ```
+            fn rounded_bl_{ident}(self) -> Self {{
+                self.rounded_bl({size:?})
+            }}
+            "##
+        )
+        .unwrap();
+    }
+
+    writeln!(out, r#"}}"#).unwrap();
+}
+
 struct Theme {
     breakpoints: &'static [(&'static str, u32)],
     colors: &'static [(&'static str, &'static str)],
@@ -793,6 +1275,7 @@ impl fmt::Display for Length {
     }
 }
 
+// FIXME: delete
 impl fmt::Debug for LineHeight {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

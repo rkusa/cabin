@@ -24,6 +24,18 @@ pub trait Common: WithAttribute {
         self.with_attribute(class)
     }
 
+    /// Add the `group` class that can be used in combination with
+    /// [crate::style::Style::group_hover()].
+    fn group(mut self) -> Self::Output<Class> {
+        let class = if let Some(existing) = self.get_attribute_mut::<Class>() {
+            let existing = std::mem::take(existing);
+            existing.append(Class::from("group"))
+        } else {
+            Class::from("group")
+        };
+        self.with_attribute(class)
+    }
+
     fn on_click<E>(self, event: E) -> Self::Output<OnClick<E>>
     where
         E: serde::Serialize + Event + Send + 'static,
