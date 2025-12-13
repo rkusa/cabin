@@ -1,0 +1,13 @@
+---
+source: tests/style_tests.rs
+expression: r.build(false)
+---
+._71366396 {
+display: flex;
+}
+._d208644a > :not([hidden]) ~ :not([hidden]) {
+--tw-divide-x-reverse: 0;
+border-right-width: calc(0.25rem * var(--tw-divide-x-reverse));
+border-left-width: calc(0.25rem * calc(1 - var(--tw-divide-x-reverse)));
+border-color: #000000;
+}

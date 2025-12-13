@@ -1,0 +1,11 @@
+---
+source: tests/style_tests.rs
+expression: r.build(false)
+---
+._9911615d {
+display: inline-block;
+padding-left: 1rem;
+padding-right: 1rem;
+display: block;
+padding: 0.5rem;
+}

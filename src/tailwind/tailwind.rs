@@ -26,7 +26,7 @@ impl Tailwind {
         if !condition { self } else { self.append(other) }
     }
 
-    pub(crate) fn append_to(self, r: &mut StyleRegistry) -> String {
+    pub fn append_to(self, r: &mut StyleRegistry) -> String {
         // FIXME: avoid allocations?
         self.0
             .into_iter()
