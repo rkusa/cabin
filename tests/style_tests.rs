@@ -56,3 +56,10 @@ fn merge_same_modifiers() {
     let c = c.active(|s| s.bg_blue_500()).active(|s| s.border_red_400());
     insta::assert_snapshot!(c.build(false).unwrap());
 }
+
+#[test]
+fn max_page_width() {
+    let c = StyleCollector::default();
+    let c = c.max_page_width(1024, |s| s.w(24));
+    insta::assert_snapshot!(c.build(false).unwrap());
+}

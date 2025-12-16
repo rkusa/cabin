@@ -172,6 +172,82 @@ pub trait Style: Sized {
         )
     }
 
+    fn max_page_width<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        max_width: u32,
+        f: F,
+    ) -> Self {
+        self.substyle(
+            StyleModifier {
+                max_width: Some(max_width),
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
+    fn min_page_width<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        min_width: u32,
+        f: F,
+    ) -> Self {
+        self.substyle(
+            StyleModifier {
+                min_width: Some(min_width),
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
+    fn max_container_width<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        max_width: u32,
+        f: F,
+    ) -> Self {
+        self.substyle(
+            StyleModifier {
+                max_container_width: Some(max_width),
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
+    fn min_container_width<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        min_width: u32,
+        f: F,
+    ) -> Self {
+        self.substyle(
+            StyleModifier {
+                min_container_width: Some(min_width),
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
+    fn print<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+        self.substyle(
+            StyleModifier {
+                print: true,
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
+    fn dark<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+        self.substyle(
+            StyleModifier {
+                dark: true,
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
     /// Duration of CSS animations in milliseconds.
     /// ```css
     /// animation-duration: {ms}ms;

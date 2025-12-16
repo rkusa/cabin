@@ -371,7 +371,65 @@ impl StyleDefinition {
             group_hover,
             all_children,
             all_but_last_children,
+            max_width,
+            min_width,
+            max_container_width,
+            min_container_width,
+            print,
+            dark,
         } = self.modifier;
+
+        // @media {}
+        let has_media_query = print || dark || max_width.is_some() || min_width.is_some();
+        if has_media_query {
+            write!(out, "@media ").unwrap();
+            let mut write_and = false;
+            if print {
+                write!(out, "print").unwrap();
+                write_and = true;
+            }
+            if dark {
+                if write_and {
+                    write!(out, " and ").unwrap();
+                }
+                write!(out, "(prefers-color-scheme: dark)").unwrap();
+                write_and = true;
+            }
+            if let Some(min_width) = min_width {
+                if write_and {
+                    write!(out, " and ").unwrap();
+                }
+                write!(out, "(min-width: {min_width}px)").unwrap();
+                write_and = true;
+            }
+            if let Some(max_width) = max_width {
+                if write_and {
+                    write!(out, " and ").unwrap();
+                }
+                write!(out, "(max-width: {max_width}px)").unwrap();
+                // write_and = true;
+            }
+            write!(out, "{{ ").unwrap();
+        }
+
+        // @container {}
+        let has_container_query = max_container_width.is_some() || min_container_width.is_some();
+        if has_container_query {
+            write!(out, "@container ").unwrap();
+            let mut write_and = false;
+            if let Some(min_width) = min_container_width {
+                write!(out, "(min-width: {min_width}px)").unwrap();
+                write_and = true;
+            }
+            if let Some(max_width) = max_container_width {
+                if write_and {
+                    write!(out, " and ").unwrap();
+                }
+                write!(out, "(max-width: {max_width}px)").unwrap();
+                // write_and = true;
+            }
+            write!(out, "{{ ").unwrap();
+        }
 
         if group_hover {
             write!(out, ".group:hover ").unwrap();
@@ -407,6 +465,9 @@ impl StyleDefinition {
         if visited {
             write!(out, ":visited").unwrap();
         }
+        if dark {
+            write!(out, ":not(.force-light *)").unwrap();
+        }
         if after {
             write!(out, "::after").unwrap();
         }
@@ -422,7 +483,16 @@ impl StyleDefinition {
 
         writeln!(out, " {{").unwrap();
         write!(out, "{self}").unwrap();
-        writeln!(out, "}}").unwrap();
+        write!(out, "}}").unwrap();
+
+        if has_container_query {
+            write!(out, " }}").unwrap();
+        }
+        if has_media_query {
+            write!(out, " }}").unwrap();
+        }
+
+        writeln!(out, "").unwrap();
 
         // write actual class name, prepend `_` as it class names must not start with a number
         let hash = XxHash32::oneshot(0, &out[pos..]);
