@@ -1,3 +1,4 @@
+use crate::style::collector::StyleDelegate;
 use crate::style::units::length::Length;
 use crate::style::{Style, SubStyle};
 
