@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone, Copy)]
 pub enum Duration {
     Ms(u32),
     S(f32),

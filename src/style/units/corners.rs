@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub struct Corners<T> {
     pub top_left: Option<T>,
     pub top_right: Option<T>,

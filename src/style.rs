@@ -79,7 +79,7 @@ pub trait Style: Sized {
     /// ```css
     /// animation-iteration-count: infinite;
     /// ```
-    fn animation_iterations_infinite(mut self) -> Self {
+    fn animation_infinite(mut self) -> Self {
         self.style_mut().animation_iterations = Some(Iterations::Infinite);
         self
     }
@@ -1383,7 +1383,7 @@ pub trait Style: Sized {
     /// ```css
     /// container-type: inline-size;
     /// ```
-    fn container_inline_size(mut self) -> Self {
+    fn container(mut self) -> Self {
         self.style_mut().container = Some("inline-size");
         self
     }
@@ -2024,7 +2024,7 @@ pub trait Style: Sized {
     /// ```css
     /// display: none;
     /// ```
-    fn hidden(mut self) -> Self {
+    fn display_hidden(mut self) -> Self {
         self.style_mut().display = Some("none");
         self
     }
@@ -2094,7 +2094,7 @@ pub trait Style: Sized {
     /// ```css
     /// flex-grow: 1;
     /// ```
-    fn flex_grow(mut self) -> Self {
+    fn grow(mut self) -> Self {
         self.style_mut().flex_grow = Some(true);
         self
     }
@@ -2102,7 +2102,7 @@ pub trait Style: Sized {
     /// ```css
     /// flex-grow: 0;
     /// ```
-    fn flex_no_grow(mut self) -> Self {
+    fn no_grow(mut self) -> Self {
         self.style_mut().flex_grow = Some(false);
         self
     }
@@ -2110,7 +2110,7 @@ pub trait Style: Sized {
     /// ```css
     /// flex-shrink: 1;
     /// ```
-    fn flex_shrink(mut self) -> Self {
+    fn shrink(mut self) -> Self {
         self.style_mut().flex_shrink = Some(true);
         self
     }
@@ -2118,7 +2118,7 @@ pub trait Style: Sized {
     /// ```css
     /// flex-shrink: 0;
     /// ```
-    fn flex_no_shrink(mut self) -> Self {
+    fn no_shrink(mut self) -> Self {
         self.style_mut().flex_shrink = Some(false);
         self
     }
@@ -2888,6 +2888,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin: {x};
     /// ```
+    #[with_auto]
     fn m(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
             .margin
@@ -2903,6 +2904,7 @@ pub trait Style: Sized {
     /// margin-inline-start: {x};
     /// margin-inline-end: {x};
     /// ```
+    #[with_auto]
     #[with_horizontal_viewport_units]
     fn mx(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -2919,6 +2921,7 @@ pub trait Style: Sized {
     /// margin-block-start: {x};
     /// margin-block-end: {x};
     /// ```
+    #[with_auto]
     #[with_vertical_viewport_units]
     fn my(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -2933,6 +2936,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin-top: {x};
     /// ```
+    #[with_auto]
     #[with_vertical_viewport_units]
     fn mt(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -2947,6 +2951,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin-right: {x};
     /// ```
+    #[with_auto]
     #[with_horizontal_viewport_units]
     fn mr(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -2961,6 +2966,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin-bottom: {x};
     /// ```
+    #[with_auto]
     #[with_vertical_viewport_units]
     fn mb(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -2975,6 +2981,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin-left: {x};
     /// ```
+    #[with_auto]
     #[with_horizontal_viewport_units]
     fn ml(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -2989,6 +2996,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin-inline-start: {x};
     /// ```
+    #[with_auto]
     #[with_horizontal_viewport_units]
     fn ms(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -3003,6 +3011,7 @@ pub trait Style: Sized {
     /// ```css
     /// margin-inline-end: {x};
     /// ```
+    #[with_auto]
     #[with_horizontal_viewport_units]
     fn me(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
@@ -3931,7 +3940,7 @@ pub trait Style: Sized {
 
     /// Add a solid box-shadow.
     /// ```css
-    /// box-shadow: 0 0 0 {x} ...;
+    /// box-shadow: 0 0 0 {x}px ...;
     /// ```
     fn ring(mut self, x: i16) -> Self {
         self.style_mut()
@@ -3945,7 +3954,7 @@ pub trait Style: Sized {
 
     /// Add a solid box-shadow.
     /// ```css
-    /// box-shadow: 0 0 0 {x} ...;
+    /// box-shadow: 0 0 0 {x}px ...;
     /// ```
     fn ringf(mut self, x: f32) -> Self {
         self.style_mut()
@@ -4112,6 +4121,19 @@ pub trait Style: Sized {
     /// Rounds the corners of an element's outer border edge.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius>
     /// ```css
+    /// border-radius: 0;
+    /// ```
+    fn rounded_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set(Either::Left(Length::Px(0.0)));
+        self
+    }
+
+    /// Rounds the corners of an element's outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius>
+    /// ```css
     /// border-radius: calc(infinity * 1px);
     /// ```
     fn rounded_full(mut self) -> Self {
@@ -4149,6 +4171,21 @@ pub trait Style: Sized {
             .border_radius
             .get_or_insert_default()
             .set_t(Either::Left(Length::Rem(0.25)));
+        self
+    }
+
+    /// Rounds the corners of an element's top outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-right-radius>
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-left-radius>
+    /// ```css
+    /// border-top-right-radius: 0;
+    /// border-top-left-radius: 0;
+    /// ```
+    fn rounded_t_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_t(Either::Left(Length::Px(0.0)));
         self
     }
 
@@ -4201,6 +4238,21 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-right-radius>
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius>
     /// ```css
+    /// border-top-right-radius: 0;
+    /// border-bottom-right-radius: 0;
+    /// ```
+    fn rounded_r_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_r(Either::Left(Length::Px(0.0)));
+        self
+    }
+
+    /// Rounds the corners of an element's right outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-right-radius>
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius>
+    /// ```css
     /// border-top-right-radius: calc(infinity * 1px);
     /// border-bottom-right-radius: calc(infinity * 1px);
     /// ```
@@ -4239,6 +4291,21 @@ pub trait Style: Sized {
             .border_radius
             .get_or_insert_default()
             .set_b(Either::Left(Length::Rem(0.25)));
+        self
+    }
+
+    /// Rounds the corners of an element's bottom outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius>
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-left-radius>
+    /// ```css
+    /// border-bottom-right-radius: 0;
+    /// border-bottom-left-radius: 0;
+    /// ```
+    fn rounded_b_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_b(Either::Left(Length::Px(0.0)));
         self
     }
 
@@ -4291,6 +4358,21 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-left-radius>
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-left-radius>
     /// ```css
+    /// border-top-left-radius: 0;
+    /// border-bottom-left-radius: 0;
+    /// ```
+    fn rounded_l_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_l(Either::Left(Length::Px(0.0)));
+        self
+    }
+
+    /// Rounds the corners of an element's left outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-left-radius>
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-left-radius>
+    /// ```css
     /// border-top-left-radius: calc(infinity * 1px);
     /// border-bottom-left-radius: calc(infinity * 1px);
     /// ```
@@ -4325,6 +4407,19 @@ pub trait Style: Sized {
             .border_radius
             .get_or_insert_default()
             .set_tl(Either::Left(Length::Rem(0.25)));
+        self
+    }
+
+    /// Rounds the corners of an element's top left outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-left-radius>
+    /// ```css
+    /// border-top-left-radius: 0;
+    /// ```
+    fn rounded_tl_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_tl(Either::Left(Length::Px(0.0)));
         self
     }
 
@@ -4370,6 +4465,19 @@ pub trait Style: Sized {
     /// Rounds the corners of an element's top right outer border edge.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-right-radius>
     /// ```css
+    /// border-top-right-radius: 0;
+    /// ```
+    fn rounded_tr_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_tr(Either::Left(Length::Px(0.0)));
+        self
+    }
+
+    /// Rounds the corners of an element's top right outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-right-radius>
+    /// ```css
     /// border-top-right-radius: calc(infinity * 1px);
     /// ```
     fn rounded_tr_full(mut self) -> Self {
@@ -4409,6 +4517,19 @@ pub trait Style: Sized {
     /// Rounds the corners of an element's bottom right outer border edge.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius>
     /// ```css
+    /// border-bottom-right-radius: 0;
+    /// ```
+    fn rounded_br_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_br(Either::Left(Length::Px(0.0)));
+        self
+    }
+
+    /// Rounds the corners of an element's bottom right outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius>
+    /// ```css
     /// border-bottom-right-radius: calc(infinity * 1px);
     /// ```
     fn rounded_br_full(mut self) -> Self {
@@ -4442,6 +4563,19 @@ pub trait Style: Sized {
             .border_radius
             .get_or_insert_default()
             .set_bl(Either::Left(Length::Rem(0.25)));
+        self
+    }
+
+    /// Rounds the corners of an element's bottom left outer border edge.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-left-radius>
+    /// ```css
+    /// border-bottom-left-radius: 0;
+    /// ```
+    fn rounded_bl_none(mut self) -> Self {
+        self.style_mut()
+            .border_radius
+            .get_or_insert_default()
+            .set_bl(Either::Left(Length::Px(0.0)));
         self
     }
 

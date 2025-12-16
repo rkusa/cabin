@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub struct RowColumn<T> {
     pub row: Option<T>,
     pub column: Option<T>,

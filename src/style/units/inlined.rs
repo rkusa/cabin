@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub struct Inlined<T> {
     pub block_start: Option<T>,
     pub inline_end: Option<T>,

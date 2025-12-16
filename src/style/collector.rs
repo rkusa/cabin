@@ -4,7 +4,7 @@ use crate::error::InternalError;
 use crate::style::modifier::StyleModifier;
 use crate::style::{Style, StyleDefinition, SubStyle};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StyleCollector {
     styles: SmallVec<StyleDefinition, 1>,
 }
@@ -77,6 +77,20 @@ impl StyleCollector {
         Ok(str::from_utf8(&out)
             .map_err(InternalError::from)?
             .to_string())
+    }
+
+    pub fn combine(mut self, other: Self) -> Self {
+        self.styles.extend(other.styles);
+        self
+    }
+
+    pub fn combine_when(mut self, condition: bool, other: Self) -> Self {
+        if condition {
+            self.styles.extend(other.styles);
+            self
+        } else {
+            self
+        }
     }
 }
 

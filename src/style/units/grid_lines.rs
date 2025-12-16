@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub struct GridLines {
     pub start: Option<GridLine>,
     pub end: Option<GridLine>,

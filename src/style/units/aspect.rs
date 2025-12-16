@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub enum Aspect {
     Auto,
     Ratio(u32, u32),

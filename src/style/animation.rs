@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::style::{Style, StyleDefinition};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AnimationStyle(Box<StyleDefinition>);
 
 impl Style for AnimationStyle {

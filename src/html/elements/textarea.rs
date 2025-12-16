@@ -38,7 +38,7 @@ pub trait Textarea: WithAttribute {
     }
 
     /// Maximum number of characters per line.
-    fn cols(self, cols: u32) -> Self::Output<Cols> {
+    fn textarea_cols(self, cols: u32) -> Self::Output<Cols> {
         self.with_attribute(Cols(cols))
     }
 
@@ -103,7 +103,7 @@ pub trait Textarea: WithAttribute {
     }
 
     /// Number of lines to show.
-    fn rows(self, rows: u32) -> Self::Output<Rows> {
+    fn textarea_rows(self, rows: u32) -> Self::Output<Rows> {
         self.with_attribute(Rows(rows))
     }
 

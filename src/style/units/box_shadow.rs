@@ -3,13 +3,14 @@ use std::fmt;
 use crate::style::property_display::PropertyDisplay;
 use crate::style::units::length::Length;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct BoxShadow {
     pub ring: Option<Ring>,
     pub shadow_kind: Option<ShadowKind>,
     pub shadow_color: Option<&'static str>,
 }
 
+#[derive(Clone)]
 pub struct Ring {
     pub inset: bool,
     pub width: Length,

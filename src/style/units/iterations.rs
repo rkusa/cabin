@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone, Copy)]
 pub enum Iterations {
     Count(u16),
     Infinite,

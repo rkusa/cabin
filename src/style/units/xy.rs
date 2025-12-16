@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub struct Xy<T> {
     pub x: Option<T>,
     pub y: Option<T>,

@@ -2,6 +2,8 @@ use super::RenderFuture;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Common, Html, Raw};
 use crate::render::Renderer;
+use crate::style::collector::StyleDelegate;
+use crate::style::{Style, StyleDefinition, StyleModifier, SubStyle};
 use crate::{View, h};
 
 pub struct UpdateView<V> {
@@ -85,5 +87,26 @@ impl<V: WithAttribute> WithAttribute for UpdateView<V> {
 
     fn get_attribute_mut<T: 'static>(&mut self) -> Option<&mut T> {
         self.view.get_attribute_mut()
+    }
+}
+
+impl<El, A> Style for UpdateView<Html<El, A>> {
+    fn style_mut(&mut self) -> &mut StyleDefinition {
+        self.view.style_mut()
+    }
+}
+
+impl<El, A> SubStyle for UpdateView<Html<El, A>> {
+    fn style_mut_for(&mut self, modifier: StyleModifier) -> &mut StyleDefinition {
+        self.view.style_mut_for(modifier)
+    }
+
+    fn substyle<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        mut self,
+        modifier: StyleModifier,
+        f: F,
+    ) -> Self {
+        self.view = self.view.substyle(modifier, f);
+        self
     }
 }

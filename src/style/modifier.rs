@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::HashSet;
 
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct StyleModifier {
@@ -21,31 +22,33 @@ pub struct StyleModifier {
     pub min_container_width: Option<u32>,
     pub print: bool,
     pub dark: bool,
+    pub other_pseudo_elements: HashSet<&'static str>,
 }
 
 impl StyleModifier {
     pub fn merge_into(&self, other: &mut Self) {
-        *other = Self {
-            active: self.active || other.active,
-            disabled: self.disabled || other.disabled,
-            enabled: self.enabled || other.enabled,
-            focus: self.focus || other.focus,
-            focus_visible: self.focus_visible || other.focus_visible,
-            focus_within: self.focus_within || other.focus_within,
-            hover: self.hover || other.hover,
-            visited: self.visited || other.visited,
-            after: self.after || other.after,
-            before: self.before || other.before,
-            group_hover: self.group_hover || other.group_hover,
-            all_children: self.all_children || other.all_children,
-            all_but_last_children: self.all_but_last_children || other.all_but_last_children,
-            max_width: self.max_width.or(other.max_width),
-            min_width: self.min_width.or(other.min_width),
-            max_container_width: self.max_container_width.or(other.max_container_width),
-            min_container_width: self.min_container_width.or(other.min_container_width),
-            print: self.print || other.print,
-            dark: self.dark || other.dark,
-        };
+        other.active = self.active || other.active;
+        other.disabled = self.disabled || other.disabled;
+        other.enabled = self.enabled || other.enabled;
+        other.focus = self.focus || other.focus;
+        other.focus_visible = self.focus_visible || other.focus_visible;
+        other.focus_within = self.focus_within || other.focus_within;
+        other.hover = self.hover || other.hover;
+        other.visited = self.visited || other.visited;
+        other.after = self.after || other.after;
+        other.before = self.before || other.before;
+        other.group_hover = self.group_hover || other.group_hover;
+        other.all_children = self.all_children || other.all_children;
+        other.all_but_last_children = self.all_but_last_children || other.all_but_last_children;
+        other.max_width = self.max_width.or(other.max_width);
+        other.min_width = self.min_width.or(other.min_width);
+        other.max_container_width = self.max_container_width.or(other.max_container_width);
+        other.min_container_width = self.min_container_width.or(other.min_container_width);
+        other.print = self.print || other.print;
+        other.dark = self.dark || other.dark;
+        other
+            .other_pseudo_elements
+            .extend(&self.other_pseudo_elements);
     }
 }
 

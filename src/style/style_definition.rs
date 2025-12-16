@@ -26,7 +26,7 @@ use crate::style::units::transform::Transform;
 use crate::style::units::xy::Xy;
 
 // FIXME: move rarely used properties into sub struct indirected via Box?
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StyleDefinition {
     pub modifier: StyleModifier,
     pub animation_from: Option<AnimationStyle>,
@@ -382,6 +382,7 @@ impl StyleDefinition {
             min_container_width,
             print,
             dark,
+            ref other_pseudo_elements,
         } = self.modifier;
 
         // @keyframes
@@ -495,6 +496,9 @@ impl StyleDefinition {
         }
         if before {
             write!(out, "::before").unwrap();
+        }
+        for pseudo in other_pseudo_elements {
+            write!(out, "::{pseudo}").unwrap();
         }
 
         if all_children {

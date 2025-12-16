@@ -26,7 +26,7 @@ fn divide() {
 #[test]
 fn divide_space_merge() {
     let c = StyleCollector::default();
-    let c = c.block().divide_black().divide_y().space_y();
+    let c = c.block().divide_black().divide_y().space_y(1);
     insta::assert_snapshot!(c.build(false).unwrap());
 }
 

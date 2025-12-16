@@ -3,7 +3,7 @@ use std::fmt;
 use crate::style::property_display::PropertyDisplay;
 use crate::style::units::length::Length;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Gradient {
     pub gradient_line: Option<&'static str>,
     pub from_color: Option<&'static str>,

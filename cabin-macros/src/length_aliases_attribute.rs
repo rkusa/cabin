@@ -245,6 +245,52 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 }
             });
         }
+        if with_screen_horizontal {
+            items.push({
+                let alias_ident = format_ident!("{ident}_screen");
+                let doc = doc.replace("{x}", "100vw");
+                quote! {
+                    #[doc = #doc]
+                    #constness #asyncness #unsafety #abi
+                    fn #alias_ident #generics (#self_input) #variadic #output {
+                        self.#ident(Length::Vw(100))
+                    }
+                }
+            });
+            items.push({
+                let alias_ident = format_ident!("{ident}_screen_svw");
+                let doc = doc.replace("{x}", "100svw");
+                quote! {
+                    #[doc = #doc]
+                    #constness #asyncness #unsafety #abi
+                    fn #alias_ident #generics (#self_input) #variadic #output {
+                        self.#ident(Length::Svw(100))
+                    }
+                }
+            });
+            items.push({
+                let alias_ident = format_ident!("{ident}_screen_lvw");
+                let doc = doc.replace("{x}", "100lvw");
+                quote! {
+                    #[doc = #doc]
+                    #constness #asyncness #unsafety #abi
+                    fn #alias_ident #generics (#self_input) #variadic #output {
+                        self.#ident(Length::Lvw(100))
+                    }
+                }
+            });
+            items.push({
+                let alias_ident = format_ident!("{ident}_screen_dvw");
+                let doc = doc.replace("{x}", "100dvw");
+                quote! {
+                    #[doc = #doc]
+                    #constness #asyncness #unsafety #abi
+                    fn #alias_ident #generics (#self_input) #variadic #output {
+                        self.#ident(Length::Dvw(100))
+                    }
+                }
+            });
+        }
         if with_content {
             items.push({
                 let alias_ident = format_ident!("{ident}_min");

@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
 
+#[derive(Clone)]
 pub struct FourSided<T> {
     pub top: Option<T>,
     pub right: Option<T>,

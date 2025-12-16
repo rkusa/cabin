@@ -686,7 +686,7 @@ fn write_theme() {
             /// ```css
             /// font-family: {font_family};
             /// ```
-            fn {ident}(self) -> Self {{
+            fn font_{ident}(self) -> Self {{
                 self.font_family(r#"{font_family}"#)
             }}
             "##

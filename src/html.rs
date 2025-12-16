@@ -289,6 +289,18 @@ where
         self.is_void_element = true;
         self
     }
+
+    pub fn with_style(mut self, style: StyleCollector) -> Self {
+        match self.style.take() {
+            Some(existing) => {
+                self.style = Some(existing.combine(style));
+            }
+            None => {
+                self.style = Some(style);
+            }
+        }
+        self
+    }
 }
 
 impl<El, A> View for Html<El, A>

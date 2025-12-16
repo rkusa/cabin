@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::collector::StyleDelegate;
 use super::style_definition::StyleDefinition;
 use super::units::length::Length;
@@ -137,6 +139,20 @@ pub trait SubStyle: Style {
         style
     }
 
+    fn pseudo<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        pseudo: &'static str,
+        f: F,
+    ) -> Self {
+        self.substyle(
+            StyleModifier {
+                other_pseudo_elements: HashSet::from([pseudo]),
+                ..Default::default()
+            },
+            f,
+        )
+    }
+
     fn when_group_hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
         self,
         f: F,
@@ -219,7 +235,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn print<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_print<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 print: true,
@@ -229,7 +245,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn dark<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_dark<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 dark: true,
@@ -456,49 +472,17 @@ pub trait SubStyle: Style {
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     margin-inline-start: 1px;
+    ///     margin-inline-start: {x};
     /// }
     /// ```
-    fn space_x(mut self) -> Self {
+    fn space_x(mut self, x: impl Into<Length>) -> Self {
         self.style_mut_for(StyleModifier {
             all_but_last_children: true,
             ..Default::default()
         })
         .margin_inline
         .get_or_insert_default()
-        .set_inline_start(Length::Px(1.0));
-        self
-    }
-
-    /// ```css
-    /// & > :not(:last-child) {
-    ///     margin-inline-start: {px}px;
-    /// }
-    /// ```
-    fn space_x_px(mut self, px: i16) -> Self {
-        self.style_mut_for(StyleModifier {
-            all_but_last_children: true,
-            ..Default::default()
-        })
-        .margin_inline
-        .get_or_insert_default()
-        .set_inline_start(Length::Px(f32::from(px)));
-        self
-    }
-
-    /// ```css
-    /// & > :not(:last-child) {
-    ///     margin-inline-start: {px}px;
-    /// }
-    /// ```
-    fn space_x_pxf(mut self, px: f32) -> Self {
-        self.style_mut_for(StyleModifier {
-            all_but_last_children: true,
-            ..Default::default()
-        })
-        .margin_inline
-        .get_or_insert_default()
-        .set_inline_start(Length::Px(px));
+        .set_inline_start(x.into());
         self
     }
 
@@ -519,49 +503,17 @@ pub trait SubStyle: Style {
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     margin-block-start: 1px;
+    ///     margin-block-start: {x};
     /// }
     /// ```
-    fn space_y(mut self) -> Self {
+    fn space_y(mut self, x: impl Into<Length>) -> Self {
         self.style_mut_for(StyleModifier {
             all_but_last_children: true,
             ..Default::default()
         })
         .margin_inline
         .get_or_insert_default()
-        .set_block_start(Length::Px(1.0));
-        self
-    }
-
-    /// ```css
-    /// & > :not(:last-child) {
-    ///     margin-block-start: {px}px;
-    /// }
-    /// ```
-    fn space_y_px(mut self, px: i16) -> Self {
-        self.style_mut_for(StyleModifier {
-            all_but_last_children: true,
-            ..Default::default()
-        })
-        .margin_inline
-        .get_or_insert_default()
-        .set_block_start(Length::Px(f32::from(px)));
-        self
-    }
-
-    /// ```css
-    /// & > :not(:last-child) {
-    ///     margin-block-start: {px}px;
-    /// }
-    /// ```
-    fn space_y_pxf(mut self, px: f32) -> Self {
-        self.style_mut_for(StyleModifier {
-            all_but_last_children: true,
-            ..Default::default()
-        })
-        .margin_inline
-        .get_or_insert_default()
-        .set_block_start(Length::Px(px));
+        .set_block_start(x.into());
         self
     }
 
