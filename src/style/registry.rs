@@ -6,10 +6,6 @@ use std::hash::Hasher;
 
 use twox_hash::XxHash32;
 
-use super::Utility;
-
-type Order = (usize, usize, u32);
-
 pub struct StyleRegistry {
     classes: HashMap<String, Order>,
 }
@@ -175,58 +171,4 @@ impl Default for StyleRegistry {
             classes: HashMap::with_capacity(8),
         }
     }
-}
-
-fn hash_style(style: &dyn Utility) -> u64 {
-    struct HashWriter(DefaultHasher);
-
-    impl fmt::Write for HashWriter {
-        fn write_str(&mut self, s: &str) -> fmt::Result {
-            self.0.write(s.as_bytes());
-            Ok(())
-        }
-    }
-
-    let mut writer = HashWriter(DefaultHasher::default());
-    style.declarations(&mut writer).ok();
-    style.hash_modifier(&mut writer.0);
-    writer.0.finish()
-}
-
-#[test]
-fn test_deduplication() {
-    // Generate same class name if styles are the same just in a different order.
-
-    use crate::tailwind::utilities::{BLOCK, p};
-
-    let mut r = StyleRegistry {
-        classes: Default::default(),
-    };
-    let a = r.add(0, &[Box::new(BLOCK), Box::new(p(4))]);
-    let b = r.add(0, &[Box::new(p(4)), Box::new(BLOCK)]);
-    assert_eq!(a, b);
-    insta::assert_snapshot!(r.build(true));
-}
-
-#[test]
-fn test_order() {
-    // Test order of @media statements
-
-    use super::Responsive;
-    use crate::tailwind::utilities::BLOCK;
-
-    let mut r = StyleRegistry {
-        classes: Default::default(),
-    };
-    r.add(
-        0,
-        &[
-            Box::new(BLOCK.sm().max_md()),
-            Box::new(BLOCK.md()),
-            Box::new(BLOCK.max_sm()),
-            Box::new(BLOCK.max_md()),
-            Box::new(BLOCK.sm()),
-        ],
-    );
-    insta::assert_snapshot!(r.build(true));
 }

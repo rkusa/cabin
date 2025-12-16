@@ -1,9 +1,0 @@
----
-source: cabin-tailwind/src/registry.rs
-expression: r.out
----
-._fa8ecfbb {
-display: block;
-padding: 1rem;
-}
-

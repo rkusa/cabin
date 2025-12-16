@@ -10,20 +10,13 @@ async fn app() -> impl View {
     let count = event::<usize>().unwrap_or(0);
 
     basic_document(
-        h::button(h::text!("{}", count)).on_click(count + 1).class(
-            // TODO: modifier groups?
-            // TODO: autocomplate after XZY. (for modifiers)
-            // TODO: autocomplete after text::
-            tw![
-                tw::BLOCK,
-                tw::text::BLACK,
-                tw::text::SM,
-                tw::bg::BLACK.hover(),
-                tw::text::WHITE.hover(),
-                tw::text::XS.hover().focus(),
-            ]
-            .append_when(count == 0, tw![tw::text::color("red")]),
-        ),
+        h::button(h::text!("{}", count))
+            .on_click(count + 1)
+            .block()
+            .text_black()
+            .text_sm()
+            .when_hover(|s| s.bg_black().text_white().when_focus(|s| s.text_xs()))
+            .when(count == 0, |s| s.text_color("red")),
     )
 }
 

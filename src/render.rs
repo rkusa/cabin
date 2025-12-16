@@ -1,8 +1,10 @@
 use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
 use std::io::Write as _;
+use std::usize;
 
 use http::{HeaderMap, HeaderValue};
+use indexmap::IndexSet;
 use smallvec::SmallVec;
 use twox_hash::XxHash32;
 
@@ -10,7 +12,7 @@ use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
-use crate::tailwind::registry::StyleRegistry;
+use crate::style::collector::StyleCollector;
 use crate::view::RenderFuture;
 
 // This covers about 75% of [Renderer] usages in my largest app as per 2025-12-10.
@@ -19,7 +21,7 @@ const DEFAULT_CAPACITY: usize = 128;
 pub struct Renderer {
     out: SmallVec<u8, DEFAULT_CAPACITY>,
     headers: HeaderMap<HeaderValue>,
-    pub(crate) styles: StyleRegistry,
+    styles: IndexSet<SmallVec<u8, DEFAULT_CAPACITY>>,
     hasher: XxHash32,
     is_update: bool,
     disable_hashes: bool,
@@ -35,7 +37,7 @@ impl Renderer {
         Self {
             out: SmallVec::new(),
             headers: Default::default(),
-            styles: StyleRegistry::default(),
+            styles: Default::default(),
             hasher: XxHash32::default(),
             disable_hashes,
             is_update,
@@ -111,6 +113,46 @@ impl Renderer {
             hasher: Default::default(),
             renderer: self,
         }
+    }
+
+    pub fn append_style(&mut self, style: StyleCollector) -> SmallVec<&str, 4> {
+        let mut out = SmallVec::<u8, DEFAULT_CAPACITY>::new();
+        let class_positions = style.write_to(&mut out);
+        let (ix, _) = self.styles.insert_full(out);
+        let mut classes = SmallVec::<&str, 4>::new();
+        for pos in class_positions {
+            classes.push(str::from_utf8(&self.styles[ix][pos..pos + 9]).unwrap());
+        }
+        classes
+    }
+
+    pub(crate) fn build_styles(&mut self, include_base: bool) -> String {
+        let other: [&str; _] = [
+            #[cfg(not(test))]
+            include_str!("./style/base.css"),
+            #[cfg(all(feature = "preflight", not(test)))]
+            include_str!("./style/preflight/preflight-v3.2.4.css"),
+            #[cfg(all(feature = "forms", not(test)))]
+            include_str!("./style/forms/forms-v0.5.3.css"),
+        ];
+
+        let cap: usize = if include_base {
+            other.iter().map(|s| s.len()).sum::<usize>()
+        } else {
+            0
+        } + self.styles.iter().map(|s| s.len()).sum::<usize>();
+        let mut css = String::with_capacity(cap);
+        if include_base {
+            for s in other {
+                css += s;
+            }
+        }
+        for s in &self.styles {
+            // FIXME: avoid unwrap?
+            css += str::from_utf8(&s).unwrap();
+        }
+
+        css
     }
 }
 

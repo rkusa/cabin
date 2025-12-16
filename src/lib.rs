@@ -31,7 +31,6 @@ pub mod serde;
 #[cfg(not(target_arch = "wasm32"))]
 mod server;
 pub mod style;
-pub mod tailwind;
 pub mod view;
 #[cfg(target_arch = "wasm32")]
 mod wasm_exports;

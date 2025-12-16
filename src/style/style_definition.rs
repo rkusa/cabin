@@ -359,7 +359,7 @@ impl StyleDefinition {
         }
     }
 
-    pub(crate) fn write_to<const N: usize>(&self, out: &mut SmallVec<u8, N>) {
+    pub(crate) fn write_to<const N: usize>(&self, out: &mut SmallVec<u8, N>) -> usize {
         let pos = out.len();
 
         let StyleModifier {
@@ -535,5 +535,7 @@ impl StyleDefinition {
         if let Some(offset) = animation_name_offset2 {
             write!(WriteInto::new(out, offset), "_{hash:_<8x}").unwrap();
         }
+
+        pos + 1
     }
 }

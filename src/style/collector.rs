@@ -67,16 +67,26 @@ impl SubStyle for StyleCollector {
 }
 
 impl StyleCollector {
-    pub fn build(mut self, _include_base: bool) -> Result<String, crate::Error> {
+    pub fn build(mut self) -> Result<String, crate::Error> {
         self.styles.sort_by(|a, b| a.modifier.cmp(&b.modifier));
 
         let mut out = SmallVec::<u8, 32>::new();
-        for style in self.styles {
-            style.write_to(&mut out);
-        }
+        self.write_to(&mut out);
         Ok(str::from_utf8(&out)
             .map_err(InternalError::from)?
             .to_string())
+    }
+
+    pub(crate) fn write_to<const N: usize>(
+        mut self,
+        out: &mut SmallVec<u8, N>,
+    ) -> SmallVec<usize, 4> {
+        self.styles.sort_by(|a, b| a.modifier.cmp(&b.modifier));
+        let mut class_positions = SmallVec::<usize, 4>::new();
+        for style in self.styles {
+            class_positions.push(style.write_to(out));
+        }
+        class_positions
     }
 
     pub fn combine(mut self, other: Self) -> Self {

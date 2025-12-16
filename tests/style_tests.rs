@@ -5,7 +5,7 @@ use cabin::style::{Style as _, SubStyle as _, ThemeExt as _, ThemeSubExt as _};
 fn basic_properties() {
     let c = StyleCollector::default();
     let c = c.block().p(2).inline_block().px(4);
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }
 
 #[test]
@@ -14,11 +14,11 @@ fn divide() {
 
     let c = StyleCollector::default();
     let c = c.flex().divide_black().divide_x();
-    snapshot += &c.build(false).unwrap();
+    snapshot += &c.build().unwrap();
 
     let c = StyleCollector::default();
     let c = c.divide_x().divide_x_reverse().divide_dashed();
-    snapshot += &c.build(false).unwrap();
+    snapshot += &c.build().unwrap();
 
     insta::assert_snapshot!(snapshot);
 }
@@ -27,14 +27,14 @@ fn divide() {
 fn divide_space_merge() {
     let c = StyleCollector::default();
     let c = c.block().divide_black().divide_y().space_y(1);
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }
 
 #[test]
 fn pseudo_active() {
     let c = StyleCollector::default();
     let c = c.block().when_active(|s| s.bg_blue_500());
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn pseudo_combination() {
                 .when_focus(|s| s.border_black().divide_x())
         })
         .when_focus(|s| s.border_red_400());
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }
 
 #[test]
@@ -56,14 +56,14 @@ fn merge_same_modifiers() {
     let c = c
         .when_active(|s| s.bg_blue_500())
         .when_active(|s| s.border_red_400());
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }
 
 #[test]
 fn max_page_width() {
     let c = StyleCollector::default();
     let c = c.max_page_width(1024, |s| s.w(24));
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }
 
 #[test]
@@ -78,5 +78,5 @@ fn animation() {
                 .text_white()
                 .pointer_events_none()
         });
-    insta::assert_snapshot!(c.build(false).unwrap());
+    insta::assert_snapshot!(c.build().unwrap());
 }

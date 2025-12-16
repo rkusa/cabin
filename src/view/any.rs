@@ -20,7 +20,7 @@ impl AnyView {
     pub async fn collect_styles(self, is_page_style: bool) -> (Self, impl View) {
         match self.view.await {
             Ok(mut r) => {
-                let css = r.styles.build(is_page_style);
+                let css = r.build_styles(is_page_style);
                 (
                     Self {
                         view: RenderFuture::Ready(Ok(r)),

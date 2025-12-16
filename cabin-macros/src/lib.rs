@@ -3,7 +3,6 @@ mod boundary_attribute;
 mod derive_attribute;
 mod derive_event;
 mod length_aliases_attribute;
-mod tw_macro;
 mod view_macro_attribute;
 
 use proc_macro::TokenStream;
@@ -74,26 +73,6 @@ pub fn view_macro(attr: TokenStream, item: TokenStream) -> TokenStream {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }
-}
-
-#[proc_macro]
-pub fn tw0(item: TokenStream) -> TokenStream {
-    tw_macro::tw_macro(item, 0)
-}
-
-#[proc_macro]
-pub fn tw(item: TokenStream) -> TokenStream {
-    tw_macro::tw_macro(item, 1)
-}
-
-#[proc_macro]
-pub fn tw2(item: TokenStream) -> TokenStream {
-    tw_macro::tw_macro(item, 2)
-}
-
-#[proc_macro]
-pub fn tw3(item: TokenStream) -> TokenStream {
-    tw_macro::tw_macro(item, 2)
 }
 
 #[proc_macro]

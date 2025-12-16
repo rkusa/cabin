@@ -1,9 +1,0 @@
-:after,
-:before {
-    --tw-content: "";
-}
-
-cabin-keyed,
-cabin-boundary {
-    display: contents;
-}

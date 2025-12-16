@@ -17,6 +17,7 @@ pub use h::*;
 pub use raw::{Raw, raw};
 
 use self::attributes::{Attributes, WithAttribute};
+use crate::html::elements::common::Class;
 use crate::pair::Pair;
 use crate::render::Renderer;
 use crate::style::collector::{StyleCollector, StyleDelegate};
@@ -312,15 +313,38 @@ where
         let Html {
             tag,
             is_void_element,
-            attributes,
-            style: _,
+            mut attributes,
+            style,
             content,
             marker: _,
         } = self;
 
         let mut el = r.element(tag);
-        if let Err(err) = attributes.render(&mut el) {
-            return RenderFuture::Ready(Err(err));
+        if let Some(style) = style {
+            let style_classes = el.renderer.append_style(style);
+            let len: usize = style_classes.iter().map(|c| c.len()).sum();
+            let style_classes =
+                style_classes
+                    .into_iter()
+                    .fold(String::with_capacity(len), |mut acc, c| {
+                        acc += " ";
+                        acc += c;
+                        acc
+                    });
+            let class = if let Some(existing) = attributes.get_mut::<Class>() {
+                let existing = std::mem::take(existing);
+                existing.append(Class(style_classes.into()))
+            } else {
+                Class(style_classes.into())
+            };
+            let attributes = attributes.with(class);
+            if let Err(err) = attributes.render(&mut el) {
+                return RenderFuture::Ready(Err(err));
+            }
+        } else {
+            if let Err(err) = attributes.render(&mut el) {
+                return RenderFuture::Ready(Err(err));
+            }
         }
 
         if !is_void_element {

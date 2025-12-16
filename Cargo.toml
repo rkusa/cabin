@@ -26,6 +26,7 @@ http-body-util = "0.1"
 http-error = { version = "0.3.0-alpha.5", features = [
     "tracing",
 ] } #, path = "../http-error" }
+indexmap = "2.12"
 linkme = "0.3"
 mime = "0.3"
 multer = { version = "3.0", features = ["json"] }
