@@ -63,3 +63,30 @@ fn max_page_width() {
     let c = c.max_page_width(1024, |s| s.w(24));
     insta::assert_snapshot!(c.build(false).unwrap());
 }
+
+#[test]
+fn animation() {
+    use cabin::prelude::*;
+    use cabin::tailwind::registry::StyleRegistry;
+
+    let mut r = StyleRegistry::default();
+    tw![
+        tw::text::GRAY_700,
+        (
+            tw::bg::NONE,
+            tw::bg::WHITE,
+            tw::text::GRAY_700,
+            tw::pointer_events::NONE
+        )
+            .animate_from(),
+        (
+            tw::bg::NONE,
+            tw::bg::GREEN_500,
+            tw::text::WHITE,
+            tw::pointer_events::NONE
+        )
+            .animate_to()
+    ]
+    .append_to(&mut r);
+    insta::assert_snapshot!(r.build(false));
+}

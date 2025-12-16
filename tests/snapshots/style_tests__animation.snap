@@ -1,0 +1,22 @@
+---
+source: tests/style_tests.rs
+expression: r.build(false)
+---
+@keyframes 
+_3ee8df9b {  from {
+background-image: none;
+background-color: #ffffff;
+color: #374151;
+pointer-events: none;
+  }
+  to {
+background-image: none;
+background-color: #22c55e;
+color: #ffffff;
+pointer-events: none;
+  }
+}
+._3ee8df9b {
+animation: 250ms ease-in-out 1 forwards _3ee8df9b;
+color: #374151;
+}
