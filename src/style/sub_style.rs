@@ -14,7 +14,7 @@ pub trait SubStyle: Style {
         f: F,
     ) -> Self;
 
-    fn active<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_active<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 active: true,
@@ -24,7 +24,10 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn disabled<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_disabled<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        f: F,
+    ) -> Self {
         self.substyle(
             StyleModifier {
                 disabled: true,
@@ -34,7 +37,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn enabled<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_enabled<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 enabled: true,
@@ -44,7 +47,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn focus<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_focus<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 focus: true,
@@ -54,7 +57,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn focus_visible<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+    fn when_focus_visible<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
         self,
         f: F,
     ) -> Self {
@@ -67,7 +70,10 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn focus_within<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_focus_within<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        f: F,
+    ) -> Self {
         self.substyle(
             StyleModifier {
                 focus_within: true,
@@ -77,7 +83,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 hover: true,
@@ -87,7 +93,7 @@ pub trait SubStyle: Style {
         )
     }
 
-    fn visited<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_visited<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
         self.substyle(
             StyleModifier {
                 visited: true,
@@ -131,7 +137,10 @@ pub trait SubStyle: Style {
         style
     }
 
-    fn group_hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
+    fn when_group_hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        self,
+        f: F,
+    ) -> Self {
         self.substyle(
             StyleModifier {
                 group_hover: true,

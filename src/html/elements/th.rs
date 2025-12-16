@@ -29,7 +29,7 @@ impl<A: Attributes> Aria for Html<marker::Th, A> {}
 /// The `th` element represents a header cell in a [super::table].
 pub trait Th: WithAttribute {
     /// Number of columns that the cell is to span.
-    fn col_span(self, col_span: u32) -> Self::Output<ColSpan> {
+    fn th_col_span(self, col_span: u32) -> Self::Output<ColSpan> {
         self.with_attribute(ColSpan(col_span))
     }
 

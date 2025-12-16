@@ -26,6 +26,10 @@ use units::transform::Transform;
 pub trait Style: Sized {
     fn style_mut(&mut self) -> &mut StyleDefinition;
 
+    fn when(self, condition: bool, f: impl FnOnce(Self) -> Self) -> Self {
+        if !condition { (f)(self) } else { self }
+    }
+
     /// Duration of CSS animations in milliseconds.
     /// ```css
     /// animation-duration: {ms}ms;
@@ -1389,7 +1393,7 @@ pub trait Style: Sized {
     /// ```css
     /// content: {content};
     /// ```
-    fn content(mut self, content: &'static str) -> Self {
+    fn pseudo_content(mut self, content: &'static str) -> Self {
         self.style_mut().content = Some(content);
         self
     }

@@ -27,7 +27,7 @@ impl<A: Attributes> Aria for Html<marker::Td, A> {}
 /// The `td` element represents a data cell in a [super::table].
 pub trait Td: WithAttribute {
     /// Number of columns that the cell is to span.
-    fn col_span(self, col_span: u32) -> Self::Output<ColSpan> {
+    fn td_col_span(self, col_span: u32) -> Self::Output<ColSpan> {
         self.with_attribute(ColSpan(col_span))
     }
 
@@ -67,6 +67,7 @@ pub trait Td: WithAttribute {
 
 /// Number of columns that the cell is to span.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "colspan")]
 pub struct ColSpan(pub u32);
 
 /// Number of rows that the cell is to span.

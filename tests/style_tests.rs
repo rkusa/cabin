@@ -33,7 +33,7 @@ fn divide_space_merge() {
 #[test]
 fn pseudo_active() {
     let c = StyleCollector::default();
-    let c = c.block().active(|s| s.bg_blue_500());
+    let c = c.block().when_active(|s| s.bg_blue_500());
     insta::assert_snapshot!(c.build(false).unwrap());
 }
 
@@ -41,19 +41,21 @@ fn pseudo_active() {
 fn pseudo_combination() {
     let c = StyleCollector::default();
     let c = c
-        .active(|s| {
+        .when_active(|s| {
             s.bg_blue_500()
                 .divide_x()
-                .focus(|s| s.border_black().divide_x())
+                .when_focus(|s| s.border_black().divide_x())
         })
-        .focus(|s| s.border_red_400());
+        .when_focus(|s| s.border_red_400());
     insta::assert_snapshot!(c.build(false).unwrap());
 }
 
 #[test]
 fn merge_same_modifiers() {
     let c = StyleCollector::default();
-    let c = c.active(|s| s.bg_blue_500()).active(|s| s.border_red_400());
+    let c = c
+        .when_active(|s| s.bg_blue_500())
+        .when_active(|s| s.border_red_400());
     insta::assert_snapshot!(c.build(false).unwrap());
 }
 
