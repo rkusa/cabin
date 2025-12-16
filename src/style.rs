@@ -9,7 +9,6 @@ pub use style_definition::StyleDefinition;
 pub use theme::ThemeExt;
 
 use collector::StyleDelegate;
-use modifier::{ALL_BUT_LAST_CHILDREN, StyleModifiers};
 use units::aspect::Aspect;
 use units::box_shadow::ShadowKind;
 use units::duration::Duration;
@@ -21,53 +20,109 @@ use units::line_clamp::LineClamp;
 use units::track_repeat_equally::TrackRepeatEqually;
 use units::transform::Transform;
 
+use crate::style::modifier::StyleModifier;
+
 #[cabin_macros::length_aliases]
 pub trait Style: Sized {
     fn style_mut(&mut self) -> &mut StyleDefinition;
-    fn style_mut_for(&mut self, modifiers: StyleModifiers) -> &mut StyleDefinition;
+    fn style_mut_for(&mut self, modifier: StyleModifier) -> &mut StyleDefinition;
     fn substyle<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
         self,
-        modifiers: StyleModifiers,
+        modifier: StyleModifier,
         f: F,
     ) -> Self;
 
     fn active<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_ACTIVE]), f)
+        self.substyle(
+            StyleModifier {
+                active: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn disabled<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_DISABLED]), f)
+        self.substyle(
+            StyleModifier {
+                disabled: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn enabled<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_ENABLED]), f)
+        self.substyle(
+            StyleModifier {
+                enabled: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn focus<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_FOCUS]), f)
+        self.substyle(
+            StyleModifier {
+                focus: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
-    fn focus_visbile<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+    fn focus_visible<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
         self,
         f: F,
     ) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_FOCUS_VISIBLE]), f)
+        self.substyle(
+            StyleModifier {
+                focus_visible: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn focus_within<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_FOCUS_WITHIN]), f)
+        self.substyle(
+            StyleModifier {
+                focus_within: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_HOVER]), f)
+        self.substyle(
+            StyleModifier {
+                hover: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn visited<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::PSEUDO_VISITED]), f)
+        self.substyle(
+            StyleModifier {
+                visited: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn after<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        let mut style = self.substyle(StyleModifiers::new(&[modifier::PSEUDO_AFTER]), f);
+        let mut style = self.substyle(
+            StyleModifier {
+                after: true,
+                ..Default::default()
+            },
+            f,
+        );
         {
             let style = style.style_mut();
             if style.content.is_none() {
@@ -78,7 +133,13 @@ pub trait Style: Sized {
     }
 
     fn before<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        let mut style = self.substyle(StyleModifiers::new(&[modifier::PSEUDO_BEFORE]), f);
+        let mut style = self.substyle(
+            StyleModifier {
+                before: true,
+                ..Default::default()
+            },
+            f,
+        );
         {
             let style = style.style_mut();
             if style.content.is_none() {
@@ -89,14 +150,26 @@ pub trait Style: Sized {
     }
 
     fn group_hover<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::GROUP_HOVER]), f)
+        self.substyle(
+            StyleModifier {
+                group_hover: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     fn apply_to_children<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
         self,
         f: F,
     ) -> Self {
-        self.substyle(StyleModifiers::new(&[modifier::APPLY_TO_CHILDREN]), f)
+        self.substyle(
+            StyleModifier {
+                all_children: true,
+                ..Default::default()
+            },
+            f,
+        )
     }
 
     /// Duration of CSS animations in milliseconds.
@@ -2104,10 +2177,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_x(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_width
-            .get_or_insert_default()
-            .set_inline_start(Length::Px(1.0));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_width
+        .get_or_insert_default()
+        .set_inline_start(Length::Px(1.0));
         self
     }
 
@@ -2117,10 +2193,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_x_px(mut self, px: i16) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_width
-            .get_or_insert_default()
-            .set_inline_start(Length::Px(f32::from(px)));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_width
+        .get_or_insert_default()
+        .set_inline_start(Length::Px(f32::from(px)));
         self
     }
 
@@ -2130,10 +2209,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_x_pxf(mut self, px: f32) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_width
-            .get_or_insert_default()
-            .set_inline_start(Length::Px(px));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_width
+        .get_or_insert_default()
+        .set_inline_start(Length::Px(px));
         self
     }
 
@@ -2144,8 +2226,11 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_x_reverse(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .divide_x_reversed = true;
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .divide_x_reversed = true;
         self
     }
 
@@ -2155,10 +2240,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_y(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_width
-            .get_or_insert_default()
-            .set_block_start(Length::Px(1.0));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_width
+        .get_or_insert_default()
+        .set_block_start(Length::Px(1.0));
         self
     }
 
@@ -2168,10 +2256,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_y_px(mut self, px: i16) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_width
-            .get_or_insert_default()
-            .set_block_start(Length::Px(f32::from(px)));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_width
+        .get_or_insert_default()
+        .set_block_start(Length::Px(f32::from(px)));
         self
     }
 
@@ -2181,10 +2272,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_y_pxf(mut self, px: f32) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_width
-            .get_or_insert_default()
-            .set_block_start(Length::Px(px));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_width
+        .get_or_insert_default()
+        .set_block_start(Length::Px(px));
         self
     }
 
@@ -2195,17 +2289,23 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn divide_y_reverse(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .divide_y_reversed = true;
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .divide_y_reversed = true;
         self
     }
 
     /// Set a custom divide border color.
     fn divide_color(mut self, color: &'static str) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_color
-            .get_or_insert_default()
-            .set(color);
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_color
+        .get_or_insert_default()
+        .set(color);
         self
     }
 
@@ -2214,8 +2314,11 @@ pub trait Style: Sized {
     /// border-inline-style: none;
     /// ```
     fn divide_none(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_style = Some("none");
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_style = Some("none");
         self
     }
 
@@ -2223,8 +2326,11 @@ pub trait Style: Sized {
     /// border-inline-style: solid;
     /// ```
     fn divide_solid(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_style = Some("solid");
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_style = Some("solid");
         self
     }
 
@@ -2232,8 +2338,11 @@ pub trait Style: Sized {
     /// border-inline-style: dashed;
     /// ```
     fn divide_dashed(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_style = Some("dashed");
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_style = Some("dashed");
         self
     }
 
@@ -2241,8 +2350,11 @@ pub trait Style: Sized {
     /// border-inline-style: dotted;
     /// ```
     fn divide_dotted(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_style = Some("dotted");
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_style = Some("dotted");
         self
     }
 
@@ -2250,8 +2362,11 @@ pub trait Style: Sized {
     /// border-inline-style: double;
     /// ```
     fn divide_double(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .border_inline_style = Some("double");
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .border_inline_style = Some("double");
         self
     }
 
@@ -4902,10 +5017,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_x(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .margin_inline
-            .get_or_insert_default()
-            .set_inline_start(Length::Px(1.0));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .margin_inline
+        .get_or_insert_default()
+        .set_inline_start(Length::Px(1.0));
         self
     }
 
@@ -4915,10 +5033,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_x_px(mut self, px: i16) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .margin_inline
-            .get_or_insert_default()
-            .set_inline_start(Length::Px(f32::from(px)));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .margin_inline
+        .get_or_insert_default()
+        .set_inline_start(Length::Px(f32::from(px)));
         self
     }
 
@@ -4928,10 +5049,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_x_pxf(mut self, px: f32) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .margin_inline
-            .get_or_insert_default()
-            .set_inline_start(Length::Px(px));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .margin_inline
+        .get_or_insert_default()
+        .set_inline_start(Length::Px(px));
         self
     }
 
@@ -4942,8 +5066,11 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_x_reverse(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .space_x_reversed = true;
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .space_x_reversed = true;
         self
     }
 
@@ -4953,10 +5080,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_y(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .margin_inline
-            .get_or_insert_default()
-            .set_block_start(Length::Px(1.0));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .margin_inline
+        .get_or_insert_default()
+        .set_block_start(Length::Px(1.0));
         self
     }
 
@@ -4966,10 +5096,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_y_px(mut self, px: i16) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .margin_inline
-            .get_or_insert_default()
-            .set_block_start(Length::Px(f32::from(px)));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .margin_inline
+        .get_or_insert_default()
+        .set_block_start(Length::Px(f32::from(px)));
         self
     }
 
@@ -4979,10 +5112,13 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_y_pxf(mut self, px: f32) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .margin_inline
-            .get_or_insert_default()
-            .set_block_start(Length::Px(px));
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .margin_inline
+        .get_or_insert_default()
+        .set_block_start(Length::Px(px));
         self
     }
 
@@ -4993,8 +5129,11 @@ pub trait Style: Sized {
     /// }
     /// ```
     fn space_y_reverse(mut self) -> Self {
-        self.style_mut_for(StyleModifiers::new(&[ALL_BUT_LAST_CHILDREN]))
-            .space_y_reversed = true;
+        self.style_mut_for(StyleModifier {
+            all_but_last_children: true,
+            ..Default::default()
+        })
+        .space_y_reversed = true;
         self
     }
 

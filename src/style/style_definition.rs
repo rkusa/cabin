@@ -5,7 +5,7 @@ use smallvec::SmallVec;
 use twox_hash::XxHash32;
 
 use crate::render::WriteInto;
-use crate::style::modifier::StyleModifiers;
+use crate::style::modifier::StyleModifier;
 use crate::style::property_display::PropertyDisplay as _;
 use crate::style::units::aspect::Aspect;
 use crate::style::units::box_shadow::BoxShadow;
@@ -27,7 +27,7 @@ use crate::style::units::xy::Xy;
 // FIXME: move rarely used properties into sub struct indirected via Box?
 #[derive(Default)]
 pub struct StyleDefinition {
-    pub modifiers: StyleModifiers,
+    pub modifier: StyleModifier,
     //
     pub align_items: Option<&'static str>,
     pub align_self: Option<&'static str>,
@@ -196,7 +196,7 @@ impl fmt::Display for StyleDefinition {
             max_width,
             min_height,
             min_width,
-            modifiers: _,
+            modifier: _,
             object_fit,
             object_position,
             opacity,
@@ -347,9 +347,9 @@ impl fmt::Display for StyleDefinition {
 }
 
 impl StyleDefinition {
-    pub(crate) fn new(modifiers: StyleModifiers) -> Self {
+    pub(crate) fn new(modifier: StyleModifier) -> Self {
         Self {
-            modifiers,
+            modifier,
             ..Default::default()
         }
     }
@@ -357,14 +357,69 @@ impl StyleDefinition {
     pub(crate) fn write_to<const N: usize>(&self, out: &mut SmallVec<u8, N>) {
         let pos = out.len();
 
-        for modifier in self.modifiers.iter() {
-            modifier.selector_prefix(&mut FmtWrite(out)).unwrap();
+        let StyleModifier {
+            active,
+            disabled,
+            enabled,
+            focus,
+            focus_visible,
+            focus_within,
+            hover,
+            visited,
+            after,
+            before,
+            group_hover,
+            all_children,
+            all_but_last_children,
+        } = self.modifier;
+
+        if group_hover {
+            write!(out, ".group:hover ").unwrap();
         }
+        if all_children || all_but_last_children {
+            write!(out, ":where(").unwrap();
+        }
+
         let class_name_offset = out.len();
         write!(out, "          ").unwrap();
-        for modifier in self.modifiers.iter() {
-            modifier.selector_suffix(&mut FmtWrite(out)).unwrap();
+
+        if active {
+            write!(out, ":active").unwrap();
         }
+        if disabled {
+            write!(out, ":disabled").unwrap();
+        }
+        if enabled {
+            write!(out, ":enabled").unwrap();
+        }
+        if focus {
+            write!(out, ":focus").unwrap();
+        }
+        if focus_visible {
+            write!(out, ":focus-focus_visible").unwrap();
+        }
+        if focus_within {
+            write!(out, ":focus-within").unwrap();
+        }
+        if hover {
+            write!(out, ":hover").unwrap();
+        }
+        if visited {
+            write!(out, ":visited").unwrap();
+        }
+        if after {
+            write!(out, "::after").unwrap();
+        }
+        if before {
+            write!(out, "::before").unwrap();
+        }
+
+        if all_children {
+            write!(out, " > *)").unwrap();
+        } else if all_but_last_children {
+            write!(out, " > :not(:last-child))").unwrap();
+        }
+
         writeln!(out, " {{").unwrap();
         write!(out, "{self}").unwrap();
         writeln!(out, "}}").unwrap();
@@ -372,13 +427,5 @@ impl StyleDefinition {
         // write actual class name, prepend `_` as it class names must not start with a number
         let hash = XxHash32::oneshot(0, &out[pos..]);
         write!(WriteInto::new(out, class_name_offset), "._{hash:_<8x}").unwrap();
-    }
-}
-
-struct FmtWrite<'a, const N: usize>(&'a mut SmallVec<u8, N>);
-
-impl<const N: usize> fmt::Write for FmtWrite<'_, N> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.0.write_all(s.as_bytes()).map_err(|_| fmt::Error)
     }
 }
