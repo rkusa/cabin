@@ -19,6 +19,8 @@ pub use raw::{Raw, raw};
 use self::attributes::{Attributes, WithAttribute};
 use crate::pair::Pair;
 use crate::render::Renderer;
+use crate::style::collector::{StyleCollector, StyleDelegate};
+use crate::style::{StyleDefinition, StyleModifier};
 use crate::view::{AnyView, RenderFuture, View};
 
 pub mod h {
@@ -263,6 +265,7 @@ pub struct Html<El, A> {
     tag: &'static str,
     is_void_element: bool,
     attributes: A,
+    style: Option<StyleCollector>,
     pub(crate) content: AnyView,
     marker: PhantomData<El>,
 }
@@ -276,6 +279,7 @@ where
             tag,
             is_void_element: false,
             attributes,
+            style: None,
             content: content.into_any_view(),
             marker: PhantomData,
         }
@@ -297,6 +301,7 @@ where
             tag,
             is_void_element,
             attributes,
+            style: _,
             content,
             marker: _,
         } = self;
@@ -328,6 +333,7 @@ where
             tag: self.tag,
             is_void_element: self.is_void_element,
             attributes: self.attributes.with(attr),
+            style: self.style,
             content: self.content,
             marker: PhantomData,
         }
@@ -339,5 +345,27 @@ where
 
     fn get_attribute_mut<T: 'static>(&mut self) -> Option<&mut T> {
         self.attributes.get_mut()
+    }
+}
+
+impl<El, A> crate::style::Style for Html<El, A> {
+    fn style_mut(&mut self) -> &mut StyleDefinition {
+        self.style.get_or_insert_default().style_mut()
+    }
+}
+
+impl<El, A> crate::style::SubStyle for Html<El, A> {
+    fn style_mut_for(&mut self, modifier: StyleModifier) -> &mut StyleDefinition {
+        self.style.get_or_insert_default().style_mut_for(modifier)
+    }
+
+    fn substyle<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
+        mut self,
+        modifier: StyleModifier,
+        f: F,
+    ) -> Self {
+        let style = self.style.take().unwrap_or_default().substyle(modifier, f);
+        self.style = Some(style);
+        self
     }
 }

@@ -7,6 +7,7 @@ mod sub_style;
 mod theme;
 mod units;
 
+pub use modifier::StyleModifier;
 pub use style_definition::StyleDefinition;
 pub use sub_style::SubStyle;
 pub use theme::{ThemeExt, ThemeSubExt};
