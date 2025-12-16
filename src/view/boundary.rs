@@ -10,9 +10,8 @@ use serde::Serialize;
 
 use super::RenderFuture;
 use crate::error::InternalError;
-use crate::html::Html;
 use crate::html::attributes::Attributes;
-use crate::html::script;
+use crate::html::{Html, script};
 use crate::render::{ElementRenderer, Renderer};
 use crate::view::error::ErrorView;
 use crate::view::{AnyView, FutureExt};

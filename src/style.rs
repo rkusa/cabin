@@ -2589,8 +2589,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: normal;
@@ -2600,8 +2600,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: flex-start;
@@ -2611,8 +2611,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: flex-end;
@@ -2622,8 +2622,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: center;
@@ -2633,8 +2633,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: space-between;
@@ -2644,8 +2644,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: space-around;
@@ -2655,8 +2655,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: space-evenly;
@@ -2666,8 +2666,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Define how to distribute space between and around content items along the main-axis of a flex
-    /// container, and the inline axis of a grid container.
+    /// Define how to distribute space between and around content items along the main-axis of a
+    /// flex container, and the inline axis of a grid container.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content>
     /// ```css
     /// justify-content: stretch;
@@ -4947,8 +4947,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: {property};
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
@@ -4970,8 +4970,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: all;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
@@ -4984,8 +4984,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: color, background-color, border-color, text-decoration-color, fill,
     ///     stroke, opacity, box-shadow, transform, filter, backdrop-filter;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -4995,15 +4995,15 @@ pub trait Style: Sized {
         let style = self.style_mut();
         style.transition_property = Some(
             "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, \
-         box-shadow, transform, filter, backdrop-filter",
+             box-shadow, transform, filter, backdrop-filter",
         );
         style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
         style.transition_duration = Some(Duration::Ms(150));
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: color, background-color, border-color, text-decoration-color, fill,
     ///     stroke;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -5018,8 +5018,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: opacity;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
@@ -5032,8 +5032,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: box-shadow;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
@@ -5046,8 +5046,8 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set which properties to transition (and enable default values for transition timing and duration if not already set).
-    /// ```css
+    /// Set which properties to transition (and enable default values for transition timing and
+    /// duration if not already set). ```css
     /// transition-property: transform;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
