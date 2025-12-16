@@ -1,22 +1,19 @@
 ---
 source: tests/style_tests.rs
-expression: r.build(false)
+expression: c.build(false).unwrap()
 ---
-@keyframes 
-_3ee8df9b {  from {
-background-image: none;
+@keyframes _8d7c162c { from {
 background-color: #ffffff;
+background-image: none;
 color: #374151;
 pointer-events: none;
-  }
-  to {
-background-image: none;
+} to {
 background-color: #22c55e;
+background-image: none;
 color: #ffffff;
 pointer-events: none;
-  }
-}
-._3ee8df9b {
-animation: 250ms ease-in-out 1 forwards _3ee8df9b;
+} }
+._8d7c162c {
+animation: 250ms ease-in-out 1 forwards _8d7c162c;
 color: #374151;
 }

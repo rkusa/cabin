@@ -416,60 +416,6 @@ fn write_theme() {
     let out = &mut File::create(path).unwrap();
     writeln!(out, r#"pub trait ThemeExt: Style {{"#).unwrap();
 
-    // // breakpoints
-    // let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("responsive.rs");
-    // let out = &mut File::create(path).unwrap();
-    // writeln!(out, r#"pub trait Responsive {{"#).unwrap();
-    // for (ident, min_width_px) in theme.breakpoints {
-    //     writeln!(out, r#"/// `@media (min-width: {min_width_px}px)`"#).unwrap();
-    //     writeln!(
-    //         out,
-    //         r#"fn {ident}(self) -> pseudo::min_width::MinWidth<Self> where Self: Sized;"#
-    //     )
-    //     .unwrap();
-    // }
-    // for window in theme.breakpoints.windows(2) {
-    //     let &[(ident, _), (_, min_width_next_px)] = window else {
-    //         unreachable!()
-    //     };
-    //     let max_width_px = min_width_next_px.saturating_sub(1);
-    //     writeln!(out, r#"/// `@media (max-width: {max_width_px}px)`"#).unwrap();
-    //     writeln!(
-    //         out,
-    //         r#"fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> where Self: Sized;"#
-    //     )
-    //     .unwrap();
-    // }
-    // writeln!(out, r#"}}"#).unwrap();
-    // writeln!(out, r#"impl<T: Utility> Responsive for T {{"#).unwrap();
-    // for (ident, min_width_px) in theme.breakpoints {
-    //     writeln!(
-    //         out,
-    //         r#"
-    //             fn {ident}(self) -> pseudo::min_width::MinWidth<Self> {{
-    //                 pseudo::min_width::MinWidth::new({min_width_px}, self)
-    //             }}
-    //         "#
-    //     )
-    //     .unwrap();
-    // }
-    // for window in theme.breakpoints.windows(2) {
-    //     let &[(ident, _), (_, min_width_next_px)] = window else {
-    //         unreachable!()
-    //     };
-    //     let max_width_px = min_width_next_px.saturating_sub(1);
-    //     writeln!(
-    //         out,
-    //         r#"
-    //             fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> {{
-    //                 pseudo::max_width::MaxWidth::new({max_width_px}, self)
-    //             }}
-    //         "#
-    //     )
-    //     .unwrap();
-    // }
-    // writeln!(out, r#"}}"#).unwrap();
-
     // color
     for (ident, color) in theme.colors {
         let ident = ident.to_lowercase();
@@ -635,26 +581,6 @@ fn write_theme() {
                 self.shadow_color("{color}")
             }}
             "##
-        )
-        .unwrap();
-    }
-
-    // divide color
-    for (ident, color) in theme.colors {
-        let ident = ident.to_lowercase();
-        writeln!(
-            out,
-            r#"
-            /// <b style="color:{color}">⏺</b>
-            /// ```css
-            /// & > :not(:last-child) {{
-            ///     border-color: {color};
-            /// }}
-            /// ```
-            fn divide_{ident}(self) -> Self {{
-                self.divide_color("{color}")
-            }}
-            "#
         )
         .unwrap();
     }
@@ -881,6 +807,84 @@ fn write_theme() {
                 self.rounded_bl({size:?})
             }}
             "##
+        )
+        .unwrap();
+    }
+
+    writeln!(out, r#"}}"#).unwrap();
+
+    writeln!(out, r#"pub trait ThemeSubExt: SubStyle {{"#).unwrap();
+
+    // // breakpoints
+    // let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("responsive.rs");
+    // let out = &mut File::create(path).unwrap();
+    // writeln!(out, r#"pub trait Responsive {{"#).unwrap();
+    // for (ident, min_width_px) in theme.breakpoints {
+    //     writeln!(out, r#"/// `@media (min-width: {min_width_px}px)`"#).unwrap();
+    //     writeln!(
+    //         out,
+    //         r#"fn {ident}(self) -> pseudo::min_width::MinWidth<Self> where Self: Sized;"#
+    //     )
+    //     .unwrap();
+    // }
+    // for window in theme.breakpoints.windows(2) {
+    //     let &[(ident, _), (_, min_width_next_px)] = window else {
+    //         unreachable!()
+    //     };
+    //     let max_width_px = min_width_next_px.saturating_sub(1);
+    //     writeln!(out, r#"/// `@media (max-width: {max_width_px}px)`"#).unwrap();
+    //     writeln!(
+    //         out,
+    //         r#"fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> where Self: Sized;"#
+    //     )
+    //     .unwrap();
+    // }
+    // writeln!(out, r#"}}"#).unwrap();
+    // writeln!(out, r#"impl<T: Utility> Responsive for T {{"#).unwrap();
+    // for (ident, min_width_px) in theme.breakpoints {
+    //     writeln!(
+    //         out,
+    //         r#"
+    //             fn {ident}(self) -> pseudo::min_width::MinWidth<Self> {{
+    //                 pseudo::min_width::MinWidth::new({min_width_px}, self)
+    //             }}
+    //         "#
+    //     )
+    //     .unwrap();
+    // }
+    // for window in theme.breakpoints.windows(2) {
+    //     let &[(ident, _), (_, min_width_next_px)] = window else {
+    //         unreachable!()
+    //     };
+    //     let max_width_px = min_width_next_px.saturating_sub(1);
+    //     writeln!(
+    //         out,
+    //         r#"
+    //             fn max_{ident}(self) -> pseudo::max_width::MaxWidth<Self> {{
+    //                 pseudo::max_width::MaxWidth::new({max_width_px}, self)
+    //             }}
+    //         "#
+    //     )
+    //     .unwrap();
+    // }
+    // writeln!(out, r#"}}"#).unwrap();
+
+    // divide color
+    for (ident, color) in theme.colors {
+        let ident = ident.to_lowercase();
+        writeln!(
+            out,
+            r#"
+            /// <b style="color:{color}">⏺</b>
+            /// ```css
+            /// & > :not(:last-child) {{
+            ///     border-color: {color};
+            /// }}
+            /// ```
+            fn divide_{ident}(self) -> Self {{
+                self.divide_color("{color}")
+            }}
+            "#
         )
         .unwrap();
     }

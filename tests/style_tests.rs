@@ -1,5 +1,5 @@
 use cabin::style::collector::StyleCollector;
-use cabin::style::{Style as _, ThemeExt as _};
+use cabin::style::{Style as _, SubStyle as _, ThemeExt as _, ThemeSubExt as _};
 
 #[test]
 fn basic_properties() {
@@ -66,27 +66,15 @@ fn max_page_width() {
 
 #[test]
 fn animation() {
-    use cabin::prelude::*;
-    use cabin::tailwind::registry::StyleRegistry;
-
-    let mut r = StyleRegistry::default();
-    tw![
-        tw::text::GRAY_700,
-        (
-            tw::bg::NONE,
-            tw::bg::WHITE,
-            tw::text::GRAY_700,
-            tw::pointer_events::NONE
-        )
-            .animate_from(),
-        (
-            tw::bg::NONE,
-            tw::bg::GREEN_500,
-            tw::text::WHITE,
-            tw::pointer_events::NONE
-        )
-            .animate_to()
-    ]
-    .append_to(&mut r);
-    insta::assert_snapshot!(r.build(false));
+    let c = StyleCollector::default();
+    let c = c
+        .text_gray_700()
+        .animate_from(|s| s.bg_none().bg_white().text_gray_700().pointer_events_none())
+        .animate_to(|s| {
+            s.bg_none()
+                .bg_green_500()
+                .text_white()
+                .pointer_events_none()
+        });
+    insta::assert_snapshot!(c.build(false).unwrap());
 }

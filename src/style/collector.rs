@@ -2,7 +2,7 @@ use smallvec::SmallVec;
 
 use crate::error::InternalError;
 use crate::style::modifier::StyleModifier;
-use crate::style::{Style, StyleDefinition};
+use crate::style::{Style, StyleDefinition, SubStyle};
 
 #[derive(Default)]
 pub struct StyleCollector {
@@ -17,7 +17,9 @@ impl Style for StyleCollector {
         }
         self.styles.last_mut().unwrap()
     }
+}
 
+impl SubStyle for StyleCollector {
     fn style_mut_for(&mut self, modifier: StyleModifier) -> &mut StyleDefinition {
         let ix = self
             .styles
@@ -87,7 +89,9 @@ impl<'a> Style for StyleDelegate<'a> {
     fn style_mut(&mut self) -> &mut StyleDefinition {
         &mut self.style
     }
+}
 
+impl<'a> SubStyle for StyleDelegate<'a> {
     fn style_mut_for(&mut self, mut modifier: StyleModifier) -> &mut StyleDefinition {
         self.style.modifier.merge_into(&mut modifier);
         self.collector.style_mut_for(modifier)

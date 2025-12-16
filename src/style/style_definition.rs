@@ -5,6 +5,7 @@ use smallvec::SmallVec;
 use twox_hash::XxHash32;
 
 use crate::render::WriteInto;
+use crate::style::animation::AnimationStyle;
 use crate::style::modifier::StyleModifier;
 use crate::style::property_display::PropertyDisplay as _;
 use crate::style::units::aspect::Aspect;
@@ -28,6 +29,8 @@ use crate::style::units::xy::Xy;
 #[derive(Default)]
 pub struct StyleDefinition {
     pub modifier: StyleModifier,
+    pub animation_from: Option<AnimationStyle>,
+    pub animation_to: Option<AnimationStyle>,
     //
     pub align_items: Option<&'static str>,
     pub align_self: Option<&'static str>,
@@ -132,6 +135,9 @@ pub struct StyleDefinition {
 impl fmt::Display for StyleDefinition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let StyleDefinition {
+            modifier: _,
+            animation_from: _,
+            animation_to: _,
             align_items,
             align_self,
             animation_delay,
@@ -196,7 +202,6 @@ impl fmt::Display for StyleDefinition {
             max_width,
             min_height,
             min_width,
-            modifier: _,
             object_fit,
             object_position,
             opacity,
@@ -379,6 +384,23 @@ impl StyleDefinition {
             dark,
         } = self.modifier;
 
+        // @keyframes
+        let has_animation = self.animation_from.is_some() || self.animation_to.is_some();
+        let mut animation_name_offset1 = None;
+        if has_animation {
+            write!(out, "@keyframes ").unwrap();
+            animation_name_offset1 = Some(out.len());
+            writeln!(out, "          {{ from {{").unwrap();
+            if let Some(animation_from) = &self.animation_from {
+                write!(out, "{animation_from}").unwrap();
+            }
+            writeln!(out, "}} to {{").unwrap();
+            if let Some(animation_to) = &self.animation_to {
+                write!(out, "{animation_to}").unwrap();
+            }
+            writeln!(out, "}} }}").unwrap();
+        }
+
         // @media {}
         let has_media_query = print || dark || max_width.is_some() || min_width.is_some();
         if has_media_query {
@@ -482,6 +504,12 @@ impl StyleDefinition {
         }
 
         writeln!(out, " {{").unwrap();
+        let mut animation_name_offset2 = None;
+        if has_animation {
+            write!(out, "animation: 250ms ease-in-out 1 forwards ").unwrap();
+            animation_name_offset2 = Some(out.len());
+            writeln!(out, "         ;").unwrap();
+        }
         write!(out, "{self}").unwrap();
         write!(out, "}}").unwrap();
 
@@ -497,5 +525,11 @@ impl StyleDefinition {
         // write actual class name, prepend `_` as it class names must not start with a number
         let hash = XxHash32::oneshot(0, &out[pos..]);
         write!(WriteInto::new(out, class_name_offset), "._{hash:_<8x}").unwrap();
+        if let Some(offset) = animation_name_offset1 {
+            write!(WriteInto::new(out, offset), "_{hash:_<8x}").unwrap();
+        }
+        if let Some(offset) = animation_name_offset2 {
+            write!(WriteInto::new(out, offset), "_{hash:_<8x}").unwrap();
+        }
     }
 }
