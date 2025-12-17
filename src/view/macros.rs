@@ -7,7 +7,7 @@ macro_rules! view {
         $head
     );
     ($head:expr, $($tail:expr),+ $(,)?) => (
-        $crate::view::Pair::new($head, $crate::view::view![$($tail),+])
+        $crate::view::AnyView::new($head) $(.appended($tail))+
     );
 }
 

@@ -1,3 +1,5 @@
+use smallvec::SmallVec;
+
 use crate::html::Common;
 use crate::render::Renderer;
 use crate::scope::Scope;
@@ -5,7 +7,7 @@ use crate::view::RenderFuture;
 use crate::{View, h};
 
 pub struct AnyView {
-    pub(crate) view: RenderFuture,
+    pub(crate) views: SmallVec<RenderFuture, 1>,
 }
 
 impl AnyView {
@@ -13,17 +15,18 @@ impl AnyView {
     pub fn new(view: impl View) -> Self {
         let r = Scope::create_renderer_from_task();
         Self {
-            view: view.render(r),
+            views: smallvec::smallvec![view.render(r)],
         }
     }
 
     pub async fn collect_styles(self, is_page_style: bool) -> (Self, impl View) {
-        match self.view.await {
+        let r = Scope::create_renderer_from_task();
+        match self.render(r).await {
             Ok(mut r) => {
                 let css = r.build_styles(is_page_style);
                 (
                     Self {
-                        view: RenderFuture::Ready(Ok(r)),
+                        views: smallvec::smallvec![RenderFuture::Ready(Ok(r))],
                     },
                     if is_page_style {
                         h::style(css).id("cabin-styles").boxed()
@@ -34,28 +37,61 @@ impl AnyView {
             }
             Err(err) => (
                 Self {
-                    view: RenderFuture::Ready(Err(err)),
+                    views: smallvec::smallvec![RenderFuture::Ready(Err(err))],
                 },
                 h::style("").boxed(),
             ),
         }
     }
+
+    pub fn appended(mut self, other: impl View) -> Self {
+        let Some(last) = self.views.last_mut() else {
+            return self;
+        };
+        match std::mem::replace(
+            last,
+            RenderFuture::Ready(Err(crate::error::InternalError::FutureCompleted.into())),
+        ) {
+            RenderFuture::Ready(Ok(r)) => {
+                *last = other.render(r);
+            }
+            RenderFuture::Ready(Err(err)) => {
+                *last = RenderFuture::Ready(Err(err));
+            }
+            RenderFuture::Future(fut) => {
+                *last = RenderFuture::Future(fut);
+                self.views
+                    .push(other.render(Scope::create_renderer_from_task()));
+            }
+        }
+        self
+    }
 }
 
 impl View for AnyView {
     fn render(self, mut r: Renderer) -> RenderFuture {
-        match self.view {
-            RenderFuture::Ready(Ok(inner)) => {
-                r.append(inner);
-                RenderFuture::Ready(Ok(r))
+        let mut views = self.views.into_iter();
+        loop {
+            let Some(view) = views.next() else {
+                break;
+            };
+            match view {
+                RenderFuture::Ready(Ok(inner)) => {
+                    r.append(inner);
+                }
+                RenderFuture::Ready(Err(err)) => return RenderFuture::Ready(Err(err)),
+                RenderFuture::Future(fut) => {
+                    return RenderFuture::Future(Box::pin(async move {
+                        r.append(fut.await?);
+                        for view in views {
+                            r.append(view.await?);
+                        }
+                        Ok(r)
+                    }));
+                }
             }
-            RenderFuture::Ready(Err(err)) => RenderFuture::Ready(Err(err)),
-            RenderFuture::Future(fut) => RenderFuture::Future(Box::pin(async move {
-                let inner = fut.await?;
-                r.append(inner);
-                Ok(r)
-            })),
         }
+        RenderFuture::Ready(Ok(r))
     }
 }
 
@@ -66,19 +102,34 @@ impl Future for AnyView {
         self: std::pin::Pin<&mut Self>,
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Self::Output> {
-        match self.get_mut().view {
-            RenderFuture::Ready(ref mut result) => {
-                let result = std::mem::replace(
-                    result,
-                    Err(crate::error::InternalError::FutureCompleted.into()),
-                );
-                std::task::Poll::Ready(AnyView {
-                    view: RenderFuture::Ready(result),
-                })
+        let self_mut = self.get_mut();
+        for view in &mut self_mut.views {
+            match view {
+                RenderFuture::Ready(Err(err)) => {
+                    let err =
+                        std::mem::replace(err, crate::error::InternalError::FutureCompleted.into());
+                    return std::task::Poll::Ready(AnyView {
+                        views: smallvec::smallvec![RenderFuture::Ready(Err(err))],
+                    });
+                }
+                RenderFuture::Ready(Ok(_)) => {
+                    continue;
+                }
+                RenderFuture::Future(future) => match future.as_mut().poll(cx) {
+                    std::task::Poll::Ready(Err(err)) => {
+                        return std::task::Poll::Ready(AnyView {
+                            views: smallvec::smallvec![RenderFuture::Ready(Err(err))],
+                        });
+                    }
+                    std::task::Poll::Ready(Ok(r)) => {
+                        *view = RenderFuture::Ready(Ok(r));
+                    }
+                    std::task::Poll::Pending => return std::task::Poll::Pending,
+                },
             }
-            RenderFuture::Future(ref mut future) => future.as_mut().poll(cx).map(|view| AnyView {
-                view: RenderFuture::Ready(view),
-            }),
         }
+        std::task::Poll::Ready(AnyView {
+            views: std::mem::take(&mut self_mut.views),
+        })
     }
 }
