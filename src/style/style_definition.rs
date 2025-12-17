@@ -1,10 +1,6 @@
-use std::fmt::{self, Write as _};
-use std::io::Write as _;
+use std::fmt;
 
-use smallvec::SmallVec;
-use twox_hash::XxHash32;
-
-use crate::render::WriteInto;
+use crate::style::ClassName;
 use crate::style::animation::AnimationStyle;
 use crate::style::modifier::StyleModifier;
 use crate::style::property_display::PropertyDisplay as _;
@@ -13,6 +9,7 @@ use crate::style::units::box_shadow::BoxShadow;
 use crate::style::units::corners::Corners;
 use crate::style::units::duration::Duration;
 use crate::style::units::either::Either;
+use crate::style::units::float::Float;
 use crate::style::units::four_sided::FourSided;
 use crate::style::units::grid_lines::GridLines;
 use crate::style::units::image::Image;
@@ -26,7 +23,7 @@ use crate::style::units::transform::Transform;
 use crate::style::units::xy::Xy;
 
 // FIXME: move rarely used properties into sub struct indirected via Box?
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct StyleDefinition {
     pub modifier: StyleModifier,
     pub animation_from: Option<AnimationStyle>,
@@ -91,7 +88,7 @@ pub struct StyleDefinition {
     pub line_clamp: Option<LineClamp>,
     // FIXME: validate below assumption
     // NOTE: Should take precedence over text::LG etc.
-    pub line_height: Option<Either<Length, f32>>,
+    pub line_height: Option<Either<Length, Float>>,
     pub list_style_type: Option<&'static str>,
     pub margin: Option<FourSided<Length>>,
     pub margin_inline: Option<Inlined<Length>>,
@@ -340,7 +337,7 @@ impl fmt::Display for StyleDefinition {
         user_select.fmt_property("user-select", f)?;
         visibility.fmt_property("visibility", f)?;
         white_space.fmt_property("white-space", f)?;
-        width.fmt_property("visibility", f)?;
+        width.fmt_property("width", f)?;
         word_break.fmt_property("word-break", f)?;
         z_index.fmt_property("z-index", f)?;
         if *word_break == Some("normal") {
@@ -359,8 +356,322 @@ impl StyleDefinition {
         }
     }
 
-    pub(crate) fn write_to<const N: usize>(&self, out: &mut SmallVec<u8, N>) -> usize {
-        let pos = out.len();
+    pub fn class_name(&self) -> ClassName {
+        ClassName::new(self)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let Self {
+            modifier: _,
+            animation_from,
+            animation_to,
+            align_items,
+            align_self,
+            animation_delay,
+            animation_duration,
+            animation_iterations,
+            appearance,
+            aspect,
+            auto_cols,
+            auto_rows,
+            background_clip,
+            background_color,
+            background_image,
+            basis,
+            border_color,
+            border_inline_color,
+            border_inline_style,
+            border_inline_width,
+            border_radius,
+            border_style,
+            border_width,
+            box_shadow,
+            box_sizing,
+            break_after,
+            break_before,
+            break_inside,
+            clip_path,
+            color,
+            container,
+            content,
+            cursor,
+            decoration,
+            display,
+            divide_x_reversed: _,
+            divide_y_reversed: _,
+            flex_direction,
+            flex_grow,
+            flex_shrink,
+            flex_wrap,
+            font_family,
+            font_size,
+            font_style,
+            font_weight,
+            gap,
+            grid_auto_flow,
+            grid_column,
+            grid_row,
+            grid_template_columns,
+            grid_template_rows,
+            height,
+            inset,
+            inset_inline_end,
+            inset_inline_start,
+            justify_content,
+            justify_self,
+            letter_spacing,
+            line_clamp,
+            line_height,
+            list_style_type,
+            margin,
+            margin_inline,
+            max_height,
+            max_width,
+            min_height,
+            min_width,
+            object_fit,
+            object_position,
+            opacity,
+            order,
+            outline_color,
+            outline_offset,
+            outline_style,
+            outline_width,
+            overflow,
+            padding,
+            place_content,
+            place_items,
+            place_self,
+            pointer_events,
+            position,
+            space_x_reversed: _,
+            space_y_reversed: _,
+            text_align,
+            text_overflow,
+            text_transform,
+            transform,
+            transition_delay,
+            transition_duration,
+            transition_property,
+            transition_timing_function,
+            user_select,
+            visibility,
+            white_space,
+            width,
+            word_break,
+            z_index,
+        } = self;
+
+        animation_from.is_none()
+            && animation_to.is_none()
+            && align_items.is_none()
+            && align_self.is_none()
+            && animation_delay.is_none()
+            && animation_duration.is_none()
+            && animation_iterations.is_none()
+            && appearance.is_none()
+            && aspect.is_none()
+            && auto_cols.is_none()
+            && auto_rows.is_none()
+            && background_clip.is_none()
+            && background_color.is_none()
+            && background_image.is_none()
+            && basis.is_none()
+            && border_color.is_none()
+            && border_inline_color.is_none()
+            && border_inline_style.is_none()
+            && border_inline_width.is_none()
+            && border_radius.is_none()
+            && border_style.is_none()
+            && border_width.is_none()
+            && box_shadow.is_none()
+            && box_sizing.is_none()
+            && break_after.is_none()
+            && break_before.is_none()
+            && break_inside.is_none()
+            && clip_path.is_none()
+            && color.is_none()
+            && container.is_none()
+            && content.is_none()
+            && cursor.is_none()
+            && decoration.is_none()
+            && display.is_none()
+            && flex_direction.is_none()
+            && flex_grow.is_none()
+            && flex_shrink.is_none()
+            && flex_wrap.is_none()
+            && font_family.is_none()
+            && font_size.is_none()
+            && font_style.is_none()
+            && font_weight.is_none()
+            && gap.is_none()
+            && grid_auto_flow.is_none()
+            && grid_column.is_none()
+            && grid_row.is_none()
+            && grid_template_columns.is_none()
+            && grid_template_rows.is_none()
+            && height.is_none()
+            && inset.is_none()
+            && inset_inline_end.is_none()
+            && inset_inline_start.is_none()
+            && justify_content.is_none()
+            && justify_self.is_none()
+            && letter_spacing.is_none()
+            && line_clamp.is_none()
+            && line_height.is_none()
+            && list_style_type.is_none()
+            && margin.is_none()
+            && margin_inline.is_none()
+            && max_height.is_none()
+            && max_width.is_none()
+            && min_height.is_none()
+            && min_width.is_none()
+            && object_fit.is_none()
+            && object_position.is_none()
+            && opacity.is_none()
+            && order.is_none()
+            && outline_color.is_none()
+            && outline_offset.is_none()
+            && outline_style.is_none()
+            && outline_width.is_none()
+            && overflow.is_none()
+            && padding.is_none()
+            && place_content.is_none()
+            && place_items.is_none()
+            && place_self.is_none()
+            && pointer_events.is_none()
+            && position.is_none()
+            && text_align.is_none()
+            && text_overflow.is_none()
+            && text_transform.is_none()
+            && transform.is_none()
+            && transition_delay.is_none()
+            && transition_duration.is_none()
+            && transition_property.is_none()
+            && transition_timing_function.is_none()
+            && user_select.is_none()
+            && visibility.is_none()
+            && white_space.is_none()
+            && width.is_none()
+            && word_break.is_none()
+            && z_index.is_none()
+    }
+
+    pub fn merge_from(&mut self, other: Self) {
+        if other.is_empty() {
+            return;
+        }
+        if self.is_empty() {
+            *self = other;
+            return;
+        }
+        self.animation_from = other.animation_from.or(self.animation_from.take());
+        self.animation_to = other.animation_to.or(self.animation_to.take());
+        self.align_items = other.align_items.or(self.align_items);
+        self.align_self = other.align_self.or(self.align_self);
+        self.animation_delay = other.animation_delay.or(self.animation_delay);
+        self.animation_duration = other.animation_duration.or(self.animation_duration);
+        self.animation_iterations = other.animation_iterations.or(self.animation_iterations);
+        self.appearance = other.appearance.or(self.appearance);
+        self.aspect = other.aspect.or(self.aspect.take());
+        self.auto_cols = other.auto_cols.or(self.auto_cols);
+        self.auto_rows = other.auto_rows.or(self.auto_rows);
+        self.background_clip = other.background_clip.or(self.background_clip);
+        self.background_color = other.background_color.or(self.background_color);
+        self.background_image = other.background_image.or(self.background_image.take());
+        self.basis = other.basis.or(self.basis);
+        self.border_color = other.border_color.or(self.border_color.take());
+        self.border_inline_color = other
+            .border_inline_color
+            .or(self.border_inline_color.take());
+        self.border_inline_style = other.border_inline_style.or(self.border_inline_style);
+        self.border_inline_width = other
+            .border_inline_width
+            .or(self.border_inline_width.take());
+        self.border_radius = other.border_radius.or(self.border_radius.take());
+        self.border_style = other.border_style.or(self.border_style);
+        self.border_width = other.border_width.or(self.border_width.take());
+        self.box_shadow = other.box_shadow.or(self.box_shadow.take());
+        self.box_sizing = other.box_sizing.or(self.box_sizing);
+        self.break_after = other.break_after.or(self.break_after);
+        self.break_before = other.break_before.or(self.break_before);
+        self.break_inside = other.break_inside.or(self.break_inside);
+        self.clip_path = other.clip_path.or(self.clip_path);
+        self.color = other.color.or(self.color);
+        self.container = other.container.or(self.container);
+        self.content = other.content.or(self.content);
+        self.cursor = other.cursor.or(self.cursor);
+        self.decoration = other.decoration.or(self.decoration);
+        self.display = other.display.or(self.display);
+        self.divide_x_reversed = other.divide_x_reversed || self.divide_x_reversed;
+        self.divide_y_reversed = other.divide_y_reversed || self.divide_y_reversed;
+        self.flex_direction = other.flex_direction.or(self.flex_direction);
+        self.flex_grow = other.flex_grow.or(self.flex_grow);
+        self.flex_shrink = other.flex_shrink.or(self.flex_shrink);
+        self.flex_wrap = other.flex_wrap.or(self.flex_wrap);
+        self.font_family = other.font_family.or(self.font_family);
+        self.font_size = other.font_size.or(self.font_size);
+        self.font_style = other.font_style.or(self.font_style);
+        self.font_weight = other.font_weight.or(self.font_weight);
+        self.gap = other.gap.or(self.gap.take());
+        self.grid_auto_flow = other.grid_auto_flow.or(self.grid_auto_flow);
+        self.grid_column = other.grid_column.or(self.grid_column.take());
+        self.grid_row = other.grid_row.or(self.grid_row.take());
+        self.grid_template_columns = other.grid_template_columns.or(self.grid_template_columns);
+        self.grid_template_rows = other.grid_template_rows.or(self.grid_template_rows);
+        self.height = other.height.or(self.height);
+        self.inset = other.inset.or(self.inset.take());
+        self.inset_inline_end = other.inset_inline_end.or(self.inset_inline_end);
+        self.inset_inline_start = other.inset_inline_start.or(self.inset_inline_start);
+        self.justify_content = other.justify_content.or(self.justify_content);
+        self.justify_self = other.justify_self.or(self.justify_self);
+        self.letter_spacing = other.letter_spacing.or(self.letter_spacing);
+        self.line_clamp = other.line_clamp.or(self.line_clamp);
+        self.line_height = other.line_height.or(self.line_height);
+        self.list_style_type = other.list_style_type.or(self.list_style_type);
+        self.margin = other.margin.or(self.margin.take());
+        self.margin_inline = other.margin_inline.or(self.margin_inline.take());
+        self.max_height = other.max_height.or(self.max_height);
+        self.max_width = other.max_width.or(self.max_width);
+        self.min_height = other.min_height.or(self.min_height);
+        self.min_width = other.min_width.or(self.min_width);
+        self.object_fit = other.object_fit.or(self.object_fit);
+        self.object_position = other.object_position.or(self.object_position);
+        self.opacity = other.opacity.or(self.opacity);
+        self.order = other.order.or(self.order);
+        self.outline_color = other.outline_color.or(self.outline_color);
+        self.outline_offset = other.outline_offset.or(self.outline_offset);
+        self.outline_style = other.outline_style.or(self.outline_style);
+        self.outline_width = other.outline_width.or(self.outline_width);
+        self.overflow = other.overflow.or(self.overflow.take());
+        self.padding = other.padding.or(self.padding.take());
+        self.place_content = other.place_content.or(self.place_content);
+        self.place_items = other.place_items.or(self.place_items);
+        self.place_self = other.place_self.or(self.place_self);
+        self.pointer_events = other.pointer_events.or(self.pointer_events);
+        self.position = other.position.or(self.position);
+        self.space_x_reversed = other.space_x_reversed || self.space_x_reversed;
+        self.space_y_reversed = other.space_y_reversed || self.space_y_reversed;
+        self.text_align = other.text_align.or(self.text_align);
+        self.text_overflow = other.text_overflow.or(self.text_overflow);
+        self.text_transform = other.text_transform.or(self.text_transform);
+        self.transform = other.transform.or(self.transform.take());
+        self.transition_delay = other.transition_delay.or(self.transition_delay);
+        self.transition_duration = other.transition_duration.or(self.transition_duration);
+        self.transition_property = other.transition_property.or(self.transition_property);
+        self.transition_timing_function = other
+            .transition_timing_function
+            .or(self.transition_timing_function);
+        self.user_select = other.user_select.or(self.user_select);
+        self.visibility = other.visibility.or(self.visibility);
+        self.white_space = other.white_space.or(self.white_space);
+        self.width = other.width.or(self.width);
+        self.word_break = other.word_break.or(self.word_break);
+        self.z_index = other.z_index.or(self.z_index);
+    }
+
+    pub(crate) fn write_to(&self, out: &mut dyn fmt::Write) {
+        let class_name = self.class_name();
 
         let StyleModifier {
             active,
@@ -382,16 +693,13 @@ impl StyleDefinition {
             min_container_width,
             print,
             dark,
-            ref other_pseudo_elements,
+            other_pseudo_element,
         } = self.modifier;
 
         // @keyframes
         let has_animation = self.animation_from.is_some() || self.animation_to.is_some();
-        let mut animation_name_offset1 = None;
         if has_animation {
-            write!(out, "@keyframes ").unwrap();
-            animation_name_offset1 = Some(out.len());
-            writeln!(out, "          {{ from {{").unwrap();
+            write!(out, "@keyframes {class_name} {{ from {{").unwrap();
             if let Some(animation_from) = &self.animation_from {
                 write!(out, "{animation_from}").unwrap();
             }
@@ -461,8 +769,7 @@ impl StyleDefinition {
             write!(out, ":where(").unwrap();
         }
 
-        let class_name_offset = out.len();
-        write!(out, "          ").unwrap();
+        write!(out, ".{class_name}").unwrap();
 
         if active {
             write!(out, ":active").unwrap();
@@ -497,7 +804,7 @@ impl StyleDefinition {
         if before {
             write!(out, "::before").unwrap();
         }
-        for pseudo in other_pseudo_elements {
+        if let Some(pseudo) = other_pseudo_element {
             write!(out, "::{pseudo}").unwrap();
         }
 
@@ -508,11 +815,8 @@ impl StyleDefinition {
         }
 
         writeln!(out, " {{").unwrap();
-        let mut animation_name_offset2 = None;
         if has_animation {
-            write!(out, "animation: 250ms ease-in-out 1 forwards ").unwrap();
-            animation_name_offset2 = Some(out.len());
-            writeln!(out, "         ;").unwrap();
+            write!(out, "animation: 250ms ease-in-out 1 forwards {class_name};").unwrap();
         }
         write!(out, "{self}").unwrap();
         write!(out, "}}").unwrap();
@@ -525,17 +829,5 @@ impl StyleDefinition {
         }
 
         writeln!(out, "").unwrap();
-
-        // write actual class name, prepend `_` as it class names must not start with a number
-        let hash = XxHash32::oneshot(0, &out[pos..]);
-        write!(WriteInto::new(out, class_name_offset), "._{hash:_<8x}").unwrap();
-        if let Some(offset) = animation_name_offset1 {
-            write!(WriteInto::new(out, offset), "_{hash:_<8x}").unwrap();
-        }
-        if let Some(offset) = animation_name_offset2 {
-            write!(WriteInto::new(out, offset), "_{hash:_<8x}").unwrap();
-        }
-
-        pos + 1
     }
 }

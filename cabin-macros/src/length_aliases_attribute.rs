@@ -168,7 +168,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                     #[doc = #doc]
                     #constness #asyncness #unsafety #abi
                     fn #alias_ident #generics (#self_input) #variadic #output {
-                        self.#ident(Length::Px(0.0))
+                        self.#ident(Length::Px(Float::from(0i32)))
                     }
                 }
             });
@@ -194,7 +194,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                     #[doc = #doc]
                     #constness #asyncness #unsafety #abi
                     fn #alias_ident #generics (#self_input) #variadic #output {
-                        self.#ident(Length::Percent(100.0))
+                        self.#ident(Length::Percent(Float::from(100i32)))
                     }
                 }
             });
@@ -333,7 +333,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: i16) #variadic #output {
-                    self.#ident(Length::Unit(f32::from(#input_pat)))
+                    self.#ident(Length::Unit(Float::from(#input_pat)))
                 }
             }
         });
@@ -344,7 +344,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Unit(#input_pat))
+                    self.#ident(Length::Unit(Float::from(#input_pat)))
                 }
             }
         });
@@ -355,7 +355,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: i16) #variadic #output {
-                    self.#ident(Length::Rem(f32::from(#input_pat)))
+                    self.#ident(Length::Rem(Float::from(#input_pat)))
                 }
             }
         });
@@ -366,7 +366,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Rem(#input_pat))
+                    self.#ident(Length::Rem(Float::from(#input_pat)))
                 }
             }
         });
@@ -377,7 +377,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: i16) #variadic #output {
-                    self.#ident(Length::Em(f32::from(#input_pat)))
+                    self.#ident(Length::Em(Float::from(#input_pat)))
                 }
             }
         });
@@ -388,7 +388,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Em(#input_pat))
+                    self.#ident(Length::Em(Float::from(#input_pat)))
                 }
             }
         });
@@ -399,7 +399,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: i16) #variadic #output {
-                    self.#ident(Length::Px(f32::from(#input_pat)))
+                    self.#ident(Length::Px(Float::from(#input_pat)))
                 }
             }
         });
@@ -410,7 +410,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Px(#input_pat))
+                    self.#ident(Length::Px(Float::from(#input_pat)))
                 }
             }
         });
@@ -421,7 +421,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: i16) #variadic #output {
-                    self.#ident(Length::Percent(f32::from(#input_pat)))
+                    self.#ident(Length::Percent(Float::from(#input_pat)))
                 }
             }
         });
@@ -432,7 +432,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Percent(#input_pat))
+                    self.#ident(Length::Percent(Float::from(#input_pat)))
                 }
             }
         });
@@ -443,7 +443,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Mm(#input_pat))
+                    self.#ident(Length::Mm(Float::from(#input_pat)))
                 }
             }
         });
@@ -454,7 +454,7 @@ pub fn length_aliases_attribute(mut item: ItemTrait) -> syn::Result<TokenStream>
                 #[doc = #doc]
                 #constness #asyncness #unsafety #abi
                 fn #alias_ident #generics (#self_input, #input_pat: f32) #variadic #output {
-                    self.#ident(Length::Cm(#input_pat))
+                    self.#ident(Length::Cm(Float::from(#input_pat)))
                 }
             }
         });

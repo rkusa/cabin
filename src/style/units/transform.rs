@@ -3,7 +3,7 @@ use std::fmt;
 use crate::style::property_display::PropertyDisplay;
 use crate::style::units::length::Length;
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Transform {
     Rotate(i16),
     TranslateX(Length),

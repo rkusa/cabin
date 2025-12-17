@@ -1,11 +1,13 @@
 use std::fmt;
+use std::hash::Hash;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::units::float::Float;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Duration {
     Ms(u32),
-    S(f32),
+    S(Float),
 }
 
 impl PropertyDisplay for Duration {

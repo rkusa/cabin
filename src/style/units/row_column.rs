@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct RowColumn<T> {
     pub row: Option<T>,
     pub column: Option<T>,

@@ -1,15 +1,17 @@
 use std::fmt;
+use std::hash::Hash;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::units::float::Float;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Length {
     Auto,
     MinContent,
     MaxContent,
     FitContent,
     /// Multiple of `0.25rem` (`4px` by default)
-    Unit(f32),
+    Unit(Float),
     Vw(u16),
     Svw(u16),
     Lvw(u16),
@@ -18,19 +20,18 @@ pub enum Length {
     Svh(u16),
     Lvh(u16),
     Dvh(u16),
-    Px(f32),
-    Em(f32),
-    Rem(f32),
-    Percent(f32),
-    Mm(f32),
-    Cm(f32),
+    Px(Float),
+    Em(Float),
+    Rem(Float),
+    Percent(Float),
+    Mm(Float),
+    Cm(Float),
 }
 
 impl Length {
     fn is_zero(&self) -> bool {
         match self {
             Length::Auto | Length::MinContent | Length::MaxContent | Length::FitContent => false,
-            Length::Unit(v) => v.abs() < f32::EPSILON,
             Length::Vw(v)
             | Length::Svw(v)
             | Length::Lvw(v)
@@ -39,96 +40,26 @@ impl Length {
             | Length::Svh(v)
             | Length::Lvh(v)
             | Length::Dvh(v) => *v == 0,
-            Length::Px(v)
+            Length::Unit(v)
+            | Length::Px(v)
             | Length::Em(v)
             | Length::Rem(v)
             | Length::Percent(v)
             | Length::Mm(v)
-            | Length::Cm(v) => v.abs() < f32::EPSILON,
+            | Length::Cm(v) => v.is_zero(),
         }
-    }
-
-    /// `0`
-    pub const ZERO: Self = Self::Px(0.0);
-
-    /// `auto`
-    pub const AUTO: Self = Self::Auto;
-
-    /// `1px`
-    pub const PX: Length = Length::Px(1.0);
-
-    /// Multiple of `0.25rem` (`4px` by default):
-    /// `{x * 0.25}rem`
-    pub fn unit(x: i16) -> Self {
-        Length::Rem(f32::from(x) * 0.25)
-    }
-
-    /// Multiple of `0.25rem` (`4px` by default):
-    /// `{x * 0.25}rem`
-    pub fn unitf(x: f32) -> Self {
-        Length::Rem(x * 0.25)
-    }
-
-    /// `{x}rem`
-    pub fn rem(x: i16) -> Self {
-        Length::Rem(f32::from(x))
-    }
-
-    /// `{x}rem`
-    pub fn remf(x: f32) -> Self {
-        Length::Rem(x)
-    }
-
-    /// `{x}em`
-    pub fn em(x: i16) -> Self {
-        Length::Em(f32::from(x))
-    }
-
-    /// `{x}em`
-    pub fn emf(x: f32) -> Self {
-        Length::Em(x)
-    }
-
-    /// `{x}px`
-    pub fn px(x: i16) -> Self {
-        Length::Px(f32::from(x))
-    }
-
-    /// `{x}px`
-    pub fn pxf(x: f32) -> Self {
-        Length::Px(x)
-    }
-
-    /// `{x}%`
-    pub fn percent(x: i16) -> Self {
-        Length::Percent(f32::from(x))
-    }
-
-    /// `{x}%`
-    pub fn percentf(x: f32) -> Self {
-        Length::Percent(x)
-    }
-
-    /// `{x}mm`
-    pub fn mm(x: f32) -> Self {
-        Length::Mm(x)
-    }
-
-    /// `{x}cm`
-    pub fn cm(x: f32) -> Self {
-        Length::Cm(x)
     }
 }
 
 impl From<i16> for Length {
     fn from(x: i16) -> Self {
-        Length::Unit(f32::from(x))
+        Length::Unit(Float::from(x))
     }
 }
 
 impl From<f32> for Length {
     fn from(x: f32) -> Self {
-        Length::Unit(x)
+        Length::Unit(Float::from(x))
     }
 }
 
@@ -143,7 +74,7 @@ impl fmt::Display for Length {
             Length::MinContent => f.write_str("min-content"),
             Length::MaxContent => f.write_str("max-content"),
             Length::FitContent => f.write_str("fit-content"),
-            Length::Unit(v) => write!(f, "{}rem", f32::from(*v) * 0.25),
+            Length::Unit(v) => write!(f, "{}rem", *v * 0.25),
             Length::Vw(v) => write!(f, "{v}vw"),
             Length::Svw(v) => write!(f, "{v}svw"),
             Length::Lvw(v) => write!(f, "{v}lvw"),

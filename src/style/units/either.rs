@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Either<L, R = &'static str> {
     Left(L),
     Right(R),

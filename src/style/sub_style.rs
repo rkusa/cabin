@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use super::collector::StyleDelegate;
 use super::style_definition::StyleDefinition;
 use super::units::length::Length;
 use crate::style::Style;
 use crate::style::animation::AnimationStyle;
 use crate::style::modifier::StyleModifier;
+use crate::style::units::float::Float;
 
 #[cabin_macros::length_aliases]
 pub trait SubStyle: Style {
@@ -146,7 +145,7 @@ pub trait SubStyle: Style {
     ) -> Self {
         self.substyle(
             StyleModifier {
-                other_pseudo_elements: HashSet::from([pseudo]),
+                other_pseudo_element: Some(pseudo),
                 ..Default::default()
             },
             f,
@@ -283,7 +282,7 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_inline_start(Length::Px(1.0));
+        .set_inline_start(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -299,7 +298,7 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_inline_start(Length::Px(f32::from(px)));
+        .set_inline_start(Length::Px(Float::from(px)));
         self
     }
 
@@ -315,7 +314,7 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_inline_start(Length::Px(px));
+        .set_inline_start(Length::Px(Float::from(px)));
         self
     }
 
@@ -346,7 +345,7 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_block_start(Length::Px(1.0));
+        .set_block_start(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -362,7 +361,7 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_block_start(Length::Px(f32::from(px)));
+        .set_block_start(Length::Px(Float::from(px)));
         self
     }
 
@@ -378,7 +377,7 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_block_start(Length::Px(px));
+        .set_block_start(Length::Px(Float::from(px)));
         self
     }
 

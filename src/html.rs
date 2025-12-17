@@ -4,6 +4,7 @@ pub mod events;
 pub mod list;
 mod raw;
 
+use std::borrow::Cow;
 use std::marker::PhantomData;
 
 #[doc(inline)]
@@ -15,13 +16,15 @@ pub use elements::global::Global;
 #[doc(inline)]
 pub use h::*;
 pub use raw::{Raw, raw};
+use smallvec::SmallVec;
 
 use self::attributes::{Attributes, WithAttribute};
 use crate::html::elements::common::Class;
 use crate::pair::Pair;
 use crate::render::Renderer;
+use crate::style::class_name::ClassNames;
 use crate::style::collector::{StyleCollector, StyleDelegate};
-use crate::style::{StyleDefinition, StyleModifier};
+use crate::style::{ClassName, StyleDefinition, StyleModifier};
 use crate::view::{AnyView, RenderFuture, View};
 
 pub mod h {
@@ -321,23 +324,19 @@ where
 
         let mut el = r.element(tag);
         if let Some(style) = style {
-            let style_classes = el.renderer.append_style(style);
-            let len: usize = style_classes.iter().map(|c| c.len()).sum();
-            let style_classes =
-                style_classes
-                    .into_iter()
-                    .fold(String::with_capacity(len), |mut acc, c| {
-                        acc += " ";
-                        acc += c;
-                        acc
-                    });
-            let class = if let Some(existing) = attributes.get_mut::<Class>() {
+            let mut class_names = SmallVec::<ClassName, 4>::new();
+            for style in style.into_styles() {
+                class_names.push(style.class_name());
+                el.renderer.append_style(style);
+            }
+
+            let other = if let Some(existing) = attributes.get_mut::<Class>() {
                 let existing = std::mem::take(existing);
-                existing.append(Class(style_classes.into()))
+                existing.0
             } else {
-                Class(style_classes.into())
+                Cow::Borrowed("")
             };
-            let attributes = attributes.with(class);
+            let attributes = attributes.with(ClassNames { class_names, other });
             if let Err(err) = attributes.render(&mut el) {
                 return RenderFuture::Ready(Err(err));
             }

@@ -117,7 +117,9 @@ impl Class {
         match self.0 {
             Cow::Borrowed(s) => Class(Cow::Owned(format!("{s} {other}"))),
             Cow::Owned(mut s) => {
-                s += " ";
+                if !s.is_empty() {
+                    s += " ";
+                }
                 s += &other.0;
                 Class(Cow::Owned(s))
             }

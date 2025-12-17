@@ -3,7 +3,7 @@ use std::fmt;
 use crate::style::property_display::PropertyDisplay;
 use crate::style::units::gradient::Gradient;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub enum Image {
     #[default]
     None,

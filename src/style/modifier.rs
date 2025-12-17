@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
-use std::collections::HashSet;
 
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct StyleModifier {
     pub active: bool,
     pub disabled: bool,
@@ -22,7 +21,7 @@ pub struct StyleModifier {
     pub min_container_width: Option<u32>,
     pub print: bool,
     pub dark: bool,
-    pub other_pseudo_elements: HashSet<&'static str>,
+    pub other_pseudo_element: Option<&'static str>,
 }
 
 impl StyleModifier {
@@ -46,9 +45,7 @@ impl StyleModifier {
         other.min_container_width = self.min_container_width.or(other.min_container_width);
         other.print = self.print || other.print;
         other.dark = self.dark || other.dark;
-        other
-            .other_pseudo_elements
-            .extend(&self.other_pseudo_elements);
+        other.other_pseudo_element = self.other_pseudo_element.or(other.other_pseudo_element);
     }
 }
 

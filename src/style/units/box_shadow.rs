@@ -1,23 +1,24 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::units::float::Float;
 use crate::style::units::length::Length;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct BoxShadow {
     pub ring: Option<Ring>,
     pub shadow_kind: Option<ShadowKind>,
     pub shadow_color: Option<&'static str>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Ring {
     pub inset: bool,
     pub width: Length,
     pub color: &'static str,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ShadowKind {
     Xs2,
     Xs,
@@ -99,7 +100,7 @@ impl Default for Ring {
     fn default() -> Self {
         Self {
             inset: false,
-            width: Length::Px(1.0),
+            width: Length::Px(Float::from(1i32)),
             color: "currentColor",
         }
     }

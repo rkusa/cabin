@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct TrackRepeatEqually(pub u16);
 
 impl fmt::Display for TrackRepeatEqually {

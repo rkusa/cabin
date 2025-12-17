@@ -12,7 +12,7 @@ use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
-use crate::style::collector::StyleCollector;
+use crate::style::StyleDefinition;
 use crate::view::RenderFuture;
 
 // This covers about 75% of [Renderer] usages in my largest app as per 2025-12-10.
@@ -21,7 +21,7 @@ const DEFAULT_CAPACITY: usize = 128;
 pub struct Renderer {
     out: SmallVec<u8, DEFAULT_CAPACITY>,
     headers: HeaderMap<HeaderValue>,
-    styles: IndexSet<SmallVec<u8, DEFAULT_CAPACITY>>,
+    styles: IndexSet<StyleDefinition>,
     hasher: XxHash32,
     is_update: bool,
     disable_hashes: bool,
@@ -115,15 +115,10 @@ impl Renderer {
         }
     }
 
-    pub fn append_style(&mut self, style: StyleCollector) -> SmallVec<&str, 4> {
-        let mut out = SmallVec::<u8, DEFAULT_CAPACITY>::new();
-        let class_positions = style.write_to(&mut out);
-        let (ix, _) = self.styles.insert_full(out);
-        let mut classes = SmallVec::<&str, 4>::new();
-        for pos in class_positions {
-            classes.push(str::from_utf8(&self.styles[ix][pos..pos + 9]).unwrap());
-        }
-        classes
+    // FIXME: deduplicate not StyleCollector but each StyleDefinition
+    pub fn append_style(&mut self, style: StyleDefinition) {
+        self.styles
+            .insert_sorted_by(style, |a, b| a.modifier.cmp(&b.modifier));
     }
 
     pub(crate) fn build_styles(&mut self, include_base: bool) -> String {
@@ -140,7 +135,7 @@ impl Renderer {
             other.iter().map(|s| s.len()).sum::<usize>()
         } else {
             0
-        } + self.styles.iter().map(|s| s.len()).sum::<usize>();
+        } + self.styles.len() * 64;
         let mut css = String::with_capacity(cap);
         if include_base {
             for s in other {
@@ -148,8 +143,7 @@ impl Renderer {
             }
         }
         for s in &self.styles {
-            // FIXME: avoid unwrap?
-            css += str::from_utf8(&s).unwrap();
+            s.write_to(&mut css);
         }
 
         css

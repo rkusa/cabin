@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum LineClamp {
     Lines(u16),
     Disable,

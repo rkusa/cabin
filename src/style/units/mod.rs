@@ -3,6 +3,7 @@ pub mod box_shadow;
 pub mod corners;
 pub mod duration;
 pub mod either;
+pub mod float;
 pub mod four_sided;
 pub mod gradient;
 pub mod grid_lines;

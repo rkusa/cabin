@@ -1,4 +1,5 @@
 mod animation;
+pub(crate) mod class_name;
 pub mod collector;
 mod modifier;
 mod property_display;
@@ -7,6 +8,7 @@ mod sub_style;
 mod theme;
 mod units;
 
+pub use class_name::ClassName;
 pub use modifier::StyleModifier;
 pub use style_definition::StyleDefinition;
 pub use sub_style::SubStyle;
@@ -15,6 +17,7 @@ use units::aspect::Aspect;
 use units::box_shadow::ShadowKind;
 use units::duration::Duration;
 use units::either::Either;
+use units::float::Float;
 use units::grid_lines::GridLine;
 use units::iterations::Iterations;
 use units::length::Length;
@@ -27,7 +30,7 @@ pub trait Style: Sized {
     fn style_mut(&mut self) -> &mut StyleDefinition;
 
     fn when(self, condition: bool, f: impl FnOnce(Self) -> Self) -> Self {
-        if !condition { (f)(self) } else { self }
+        if condition { (f)(self) } else { self }
     }
 
     /// Duration of CSS animations in milliseconds.
@@ -44,7 +47,7 @@ pub trait Style: Sized {
     /// animation-duration: {s}s;
     /// ```
     fn animation_duration_s(mut self, s: f32) -> Self {
-        self.style_mut().animation_duration = Some(Duration::S(s));
+        self.style_mut().animation_duration = Some(Duration::S(Float::from(s)));
         self
     }
 
@@ -62,7 +65,7 @@ pub trait Style: Sized {
     /// animation-delay: {s}s;
     /// ```
     fn animation_delay_s(mut self, s: f32) -> Self {
-        self.style_mut().animation_duration = Some(Duration::S(s));
+        self.style_mut().animation_duration = Some(Duration::S(Float::from(s)));
         self
     }
 
@@ -150,7 +153,7 @@ pub trait Style: Sized {
     /// aspect-ratio: {ratio};
     /// ```
     fn aspect_ratiof(mut self, ratio: f32) -> Self {
-        self.style_mut().aspect = Some(Aspect::Ratiof(ratio));
+        self.style_mut().aspect = Some(Aspect::Ratiof(Float::from(ratio)));
         self
     }
 
@@ -576,7 +579,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set(Length::Px(1.0));
+            .set(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -589,7 +592,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set(Length::Px(f32::from(px)));
+            .set(Length::Px(Float::from(px)));
         self
     }
 
@@ -602,7 +605,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set(Length::Px(px));
+            .set(Length::Px(Float::from(px)));
         self
     }
 
@@ -615,7 +618,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_x(Length::Px(1.0));
+            .set_x(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -628,7 +631,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_x(Length::Px(f32::from(px)));
+            .set_x(Length::Px(Float::from(px)));
         self
     }
 
@@ -641,7 +644,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_x(Length::Px(px));
+            .set_x(Length::Px(Float::from(px)));
         self
     }
 
@@ -654,7 +657,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_y(Length::Px(1.0));
+            .set_y(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -667,7 +670,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_y(Length::Px(f32::from(px)));
+            .set_y(Length::Px(Float::from(px)));
         self
     }
 
@@ -680,7 +683,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_y(Length::Px(px));
+            .set_y(Length::Px(Float::from(px)));
         self
     }
 
@@ -693,7 +696,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_top(Length::Px(1.0));
+            .set_top(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -706,7 +709,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_top(Length::Px(f32::from(px)));
+            .set_top(Length::Px(Float::from(px)));
         self
     }
 
@@ -719,7 +722,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_top(Length::Px(px));
+            .set_top(Length::Px(Float::from(px)));
         self
     }
 
@@ -732,7 +735,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_right(Length::Px(1.0));
+            .set_right(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -745,7 +748,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_right(Length::Px(f32::from(px)));
+            .set_right(Length::Px(Float::from(px)));
         self
     }
 
@@ -758,7 +761,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_right(Length::Px(px));
+            .set_right(Length::Px(Float::from(px)));
         self
     }
 
@@ -771,7 +774,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_bottom(Length::Px(1.0));
+            .set_bottom(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -784,7 +787,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_bottom(Length::Px(f32::from(px)));
+            .set_bottom(Length::Px(Float::from(px)));
         self
     }
 
@@ -797,7 +800,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_bottom(Length::Px(px));
+            .set_bottom(Length::Px(Float::from(px)));
         self
     }
 
@@ -810,7 +813,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_left(Length::Px(1.0));
+            .set_left(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -823,7 +826,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_left(Length::Px(f32::from(px)));
+            .set_left(Length::Px(Float::from(px)));
         self
     }
 
@@ -836,7 +839,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_width
             .get_or_insert_default()
-            .set_left(Length::Px(px));
+            .set_left(Length::Px(Float::from(px)));
         self
     }
 
@@ -849,7 +852,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_inline_start(Length::Px(1.0));
+            .set_inline_start(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -862,7 +865,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_inline_start(Length::Px(f32::from(px)));
+            .set_inline_start(Length::Px(Float::from(px)));
         self
     }
 
@@ -875,7 +878,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_inline_start(Length::Px(px));
+            .set_inline_start(Length::Px(Float::from(px)));
         self
     }
 
@@ -888,7 +891,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_inline_end(Length::Px(1.0));
+            .set_inline_end(Length::Px(Float::from(1i32)));
         self
     }
 
@@ -901,7 +904,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_inline_end(Length::Px(f32::from(px)));
+            .set_inline_end(Length::Px(Float::from(px)));
         self
     }
 
@@ -914,7 +917,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_inline_width
             .get_or_insert_default()
-            .set_inline_end(Length::Px(px));
+            .set_inline_end(Length::Px(Float::from(px)));
         self
     }
 
@@ -2321,7 +2324,7 @@ pub trait Style: Sized {
             .background_image
             .get_or_insert_default()
             .linear_gradient()
-            .from_position = Some(Length::Percent(f32::from(x)));
+            .from_position = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -2334,7 +2337,7 @@ pub trait Style: Sized {
             .background_image
             .get_or_insert_default()
             .linear_gradient()
-            .from_position = Some(Length::Percent(x));
+            .from_position = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -2737,7 +2740,7 @@ pub trait Style: Sized {
     /// line-height: 1;
     /// ```
     fn leading_none(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(1.0));
+        self.style_mut().line_height = Some(Either::Right(Float::from(1.0)));
         self
     }
 
@@ -2747,7 +2750,7 @@ pub trait Style: Sized {
     /// line-height: 1.25;
     /// ```
     fn leading_tight(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(1.25));
+        self.style_mut().line_height = Some(Either::Right(Float::from(1.25)));
         self
     }
 
@@ -2757,7 +2760,7 @@ pub trait Style: Sized {
     /// line-height: 1.375;
     /// ```
     fn leading_snug(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(1.375));
+        self.style_mut().line_height = Some(Either::Right(Float::from(1.375)));
         self
     }
 
@@ -2767,7 +2770,7 @@ pub trait Style: Sized {
     /// line-height: 1.5;
     /// ```
     fn leading_normal(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(1.5));
+        self.style_mut().line_height = Some(Either::Right(Float::from(1.5)));
         self
     }
 
@@ -2777,7 +2780,7 @@ pub trait Style: Sized {
     /// line-height: 1.625;
     /// ```
     fn leading_relaxed(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(1.625));
+        self.style_mut().line_height = Some(Either::Right(Float::from(1.625)));
         self
     }
 
@@ -2787,7 +2790,7 @@ pub trait Style: Sized {
     /// line-height: 2;
     /// ```
     fn leading_loose(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(2.0));
+        self.style_mut().line_height = Some(Either::Right(Float::from(2.0)));
         self
     }
 
@@ -2797,7 +2800,7 @@ pub trait Style: Sized {
     /// line-height: {x};
     /// ```
     fn leading_multiple(mut self, x: f32) -> Self {
-        self.style_mut().line_height = Some(Either::Right(x));
+        self.style_mut().line_height = Some(Either::Right(Float::from(x)));
         self
     }
 
@@ -3266,7 +3269,7 @@ pub trait Style: Sized {
     /// ```
     fn outline(mut self, x: i16) -> Self {
         let style = self.style_mut();
-        style.outline_width = Some(Length::Px(f32::from(x)));
+        style.outline_width = Some(Length::Px(Float::from(x)));
         if style.outline_style.is_none() {
             self.outline_solid()
         } else {
@@ -3279,7 +3282,7 @@ pub trait Style: Sized {
     /// ```
     fn outlinef(mut self, x: f32) -> Self {
         let style = self.style_mut();
-        style.outline_width = Some(Length::Px(x));
+        style.outline_width = Some(Length::Px(Float::from(x)));
         if style.outline_style.is_none() {
             self.outline_solid()
         } else {
@@ -3294,10 +3297,10 @@ pub trait Style: Sized {
     /// ```
     fn outline_hidden(mut self) -> Self {
         let style = self.style_mut();
-        style.outline_width = Some(Length::Px(2.0));
+        style.outline_width = Some(Length::Px(Float::from(2i32)));
         style.outline_style = Some("solid");
         style.outline_color = Some("transparent");
-        style.outline_offset = Some(Length::Px(2.0));
+        style.outline_offset = Some(Length::Px(Float::from(2i32)));
         self
     }
 
@@ -3363,7 +3366,7 @@ pub trait Style: Sized {
     /// outline-offset: {x}px;
     /// ```
     fn outline_offset(mut self, x: i16) -> Self {
-        self.style_mut().outline_offset = Some(Length::Px(f32::from(x)));
+        self.style_mut().outline_offset = Some(Length::Px(Float::from(x)));
         self
     }
 
@@ -3371,7 +3374,7 @@ pub trait Style: Sized {
     /// outline-offset: {x}px;
     /// ```
     fn outline_offsetf(mut self, x: f32) -> Self {
-        self.style_mut().outline_offset = Some(Length::Px(x));
+        self.style_mut().outline_offset = Some(Length::Px(Float::from(x)));
         self
     }
 
@@ -3948,7 +3951,7 @@ pub trait Style: Sized {
             .get_or_insert_default()
             .ring
             .get_or_insert_default()
-            .width = Length::Px(f32::from(x));
+            .width = Length::Px(Float::from(x));
         self
     }
 
@@ -3962,7 +3965,7 @@ pub trait Style: Sized {
             .get_or_insert_default()
             .ring
             .get_or_insert_default()
-            .width = Length::Px(x);
+            .width = Length::Px(Float::from(x));
         self
     }
 
@@ -4114,7 +4117,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set(Either::Left(Length::Rem(0.25)));
+            .set(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4127,7 +4130,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set(Either::Left(Length::Px(0.0)));
+            .set(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4170,7 +4173,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_t(Either::Left(Length::Rem(0.25)));
+            .set_t(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4185,7 +4188,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_t(Either::Left(Length::Px(0.0)));
+            .set_t(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4230,7 +4233,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_r(Either::Left(Length::Rem(0.25)));
+            .set_r(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4245,7 +4248,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_r(Either::Left(Length::Px(0.0)));
+            .set_r(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4290,7 +4293,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_b(Either::Left(Length::Rem(0.25)));
+            .set_b(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4305,7 +4308,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_b(Either::Left(Length::Px(0.0)));
+            .set_b(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4350,7 +4353,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_l(Either::Left(Length::Rem(0.25)));
+            .set_l(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4365,7 +4368,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_l(Either::Left(Length::Px(0.0)));
+            .set_l(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4406,7 +4409,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_tl(Either::Left(Length::Rem(0.25)));
+            .set_tl(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4419,7 +4422,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_tl(Either::Left(Length::Px(0.0)));
+            .set_tl(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4458,7 +4461,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_tr(Either::Left(Length::Rem(0.25)));
+            .set_tr(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4471,7 +4474,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_tr(Either::Left(Length::Px(0.0)));
+            .set_tr(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4510,7 +4513,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_br(Either::Left(Length::Rem(0.25)));
+            .set_br(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4523,7 +4526,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_br(Either::Left(Length::Px(0.0)));
+            .set_br(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4562,7 +4565,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_bl(Either::Left(Length::Rem(0.25)));
+            .set_bl(Either::Left(Length::Rem(Float::from(0.25))));
         self
     }
 
@@ -4575,7 +4578,7 @@ pub trait Style: Sized {
         self.style_mut()
             .border_radius
             .get_or_insert_default()
-            .set_bl(Either::Left(Length::Px(0.0)));
+            .set_bl(Either::Left(Length::Px(Float::from(0i32))));
         self
     }
 
@@ -4982,7 +4985,7 @@ pub trait Style: Sized {
             .background_image
             .get_or_insert_default()
             .linear_gradient()
-            .to_position = Some(Length::Percent(f32::from(x)));
+            .to_position = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -4995,7 +4998,7 @@ pub trait Style: Sized {
             .background_image
             .get_or_insert_default()
             .linear_gradient()
-            .to_position = Some(Length::Percent(x));
+            .to_position = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -5032,7 +5035,7 @@ pub trait Style: Sized {
     /// letter-spacing: -0.05em;
     /// ```
     fn tracking_tighter(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(-0.05));
+        self.style_mut().letter_spacing = Some(Length::Em(Float::from(-0.05)));
         self
     }
 
@@ -5042,7 +5045,7 @@ pub trait Style: Sized {
     /// letter-spacing: -0.025em;
     /// ```
     fn tracking_tight(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(-0.025));
+        self.style_mut().letter_spacing = Some(Length::Em(Float::from(-0.025)));
         self
     }
 
@@ -5052,7 +5055,7 @@ pub trait Style: Sized {
     /// letter-spacing: 0.0em;
     /// ```
     fn tracking_normal(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(0.0));
+        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.0)));
         self
     }
 
@@ -5062,7 +5065,7 @@ pub trait Style: Sized {
     /// letter-spacing: 0.025em;
     /// ```
     fn tracking_wide(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(0.025));
+        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.025)));
         self
     }
 
@@ -5072,7 +5075,7 @@ pub trait Style: Sized {
     /// letter-spacing: 0.05em;
     /// ```
     fn tracking_wider(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(0.05));
+        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.05)));
         self
     }
 
@@ -5082,7 +5085,7 @@ pub trait Style: Sized {
     /// letter-spacing: 0.1em;
     /// ```
     fn tracking_widest(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(0.1));
+        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.1)));
         self
     }
 
@@ -5213,7 +5216,7 @@ pub trait Style: Sized {
     /// transition-duration: {s}s;
     /// ```
     fn duration_s(mut self, s: f32) -> Self {
-        self.style_mut().transition_duration = Some(Duration::S(s));
+        self.style_mut().transition_duration = Some(Duration::S(Float::from(s)));
         self
     }
 
@@ -5231,7 +5234,7 @@ pub trait Style: Sized {
     /// transition-delay: {s}s;
     /// ```
     fn delay_s(mut self, s: f32) -> Self {
-        self.style_mut().transition_duration = Some(Duration::S(s));
+        self.style_mut().transition_duration = Some(Duration::S(Float::from(s)));
         self
     }
 
@@ -5283,7 +5286,7 @@ pub trait Style: Sized {
             .background_image
             .get_or_insert_default()
             .linear_gradient()
-            .via_position = Some(Length::Percent(f32::from(x)));
+            .via_position = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -5296,7 +5299,7 @@ pub trait Style: Sized {
             .background_image
             .get_or_insert_default()
             .linear_gradient()
-            .via_position = Some(Length::Percent(x));
+            .via_position = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -5482,7 +5485,7 @@ pub trait Style: Sized {
     /// opacity: {x}%;
     /// ```
     fn opacity(mut self, x: i16) -> Self {
-        self.style_mut().opacity = Some(Length::Percent(f32::from(x)));
+        self.style_mut().opacity = Some(Length::Percent(Float::from(x)));
         self
     }
 
@@ -5490,7 +5493,7 @@ pub trait Style: Sized {
     /// opacity: {x}%;
     /// ```
     fn opacityf(mut self, x: f32) -> Self {
-        self.style_mut().opacity = Some(Length::Percent(x));
+        self.style_mut().opacity = Some(Length::Percent(Float::from(x)));
         self
     }
 }

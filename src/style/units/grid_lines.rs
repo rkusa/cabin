@@ -2,13 +2,13 @@ use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct GridLines {
     pub start: Option<GridLine>,
     pub end: Option<GridLine>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum GridLine {
     Auto,
     Nth(i16),

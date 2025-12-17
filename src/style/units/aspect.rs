@@ -1,12 +1,14 @@
 use std::fmt;
+use std::hash::Hash;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::units::float::Float;
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Aspect {
     Auto,
     Ratio(u32, u32),
-    Ratiof(f32),
+    Ratiof(Float),
 }
 
 impl PropertyDisplay for Aspect {
