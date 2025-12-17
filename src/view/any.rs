@@ -82,9 +82,12 @@ impl View for AnyView {
                 RenderFuture::Ready(Err(err)) => return RenderFuture::Ready(Err(err)),
                 RenderFuture::Future(fut) => {
                     return RenderFuture::Future(Box::pin(async move {
-                        r.append(fut.await?);
-                        for view in views {
-                            r.append(view.await?);
+                        let childs = futures_util::future::try_join_all(
+                            std::iter::once(RenderFuture::Future(fut)).chain(views),
+                        )
+                        .await?;
+                        for c in childs {
+                            r.append(c);
                         }
                         Ok(r)
                     }));
@@ -103,6 +106,7 @@ impl Future for AnyView {
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Self::Output> {
         let self_mut = self.get_mut();
+        let mut all_ready = true;
         for view in &mut self_mut.views {
             match view {
                 RenderFuture::Ready(Err(err)) => {
@@ -124,12 +128,20 @@ impl Future for AnyView {
                     std::task::Poll::Ready(Ok(r)) => {
                         *view = RenderFuture::Ready(Ok(r));
                     }
-                    std::task::Poll::Pending => return std::task::Poll::Pending,
+                    std::task::Poll::Pending => {
+                        all_ready = false;
+                        // continue with all child views to ensure all of them get polled in parallel
+                        continue;
+                    }
                 },
             }
         }
-        std::task::Poll::Ready(AnyView {
-            views: std::mem::take(&mut self_mut.views),
-        })
+        if all_ready {
+            std::task::Poll::Ready(AnyView {
+                views: std::mem::take(&mut self_mut.views),
+            })
+        } else {
+            std::task::Poll::Pending
+        }
     }
 }
