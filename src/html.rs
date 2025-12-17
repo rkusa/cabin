@@ -326,8 +326,7 @@ where
         if let Some(style) = style {
             let mut class_names = SmallVec::<ClassName, 4>::new();
             for style in style.into_styles() {
-                class_names.push(style.class_name());
-                el.renderer.append_style(style);
+                class_names.push(el.renderer.append_style(style));
             }
 
             let other = if let Some(existing) = attributes.get_mut::<Class>() {

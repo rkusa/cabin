@@ -130,7 +130,8 @@ impl Future for AnyView {
                     }
                     std::task::Poll::Pending => {
                         all_ready = false;
-                        // continue with all child views to ensure all of them get polled in parallel
+                        // continue with all child views to ensure all of them get polled in
+                        // parallel
                         continue;
                     }
                 },

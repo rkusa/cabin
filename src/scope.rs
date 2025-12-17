@@ -17,6 +17,7 @@ pub struct Scope {
     event: RefCell<Option<Event>>,
     multipart: RefCell<Option<Multipart<'static>>>,
     error: RefCell<Option<InternalError>>,
+    renderer_pool: RefCell<Vec<Renderer>>,
     is_update: bool,
     disable_hashes: bool,
 }
@@ -187,9 +188,10 @@ pub fn take_multipart() -> Option<Multipart<'static>> {
 impl Scope {
     pub(crate) fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {
-            event: RefCell::new(None),
-            multipart: RefCell::new(None),
-            error: RefCell::new(None),
+            event: Default::default(),
+            multipart: Default::default(),
+            error: Default::default(),
+            renderer_pool: Default::default(),
             is_update,
             disable_hashes,
         }
@@ -211,13 +213,25 @@ impl Scope {
     }
 
     pub(crate) fn create_renderer(&self) -> Renderer {
-        Renderer::new(self.is_update, self.disable_hashes)
+        self.renderer_pool
+            .borrow_mut()
+            .pop()
+            .unwrap_or_else(|| Renderer::new(self.is_update, self.disable_hashes))
     }
 
     pub(crate) fn create_renderer_from_task() -> Renderer {
         SCOPE
             .try_with(|c| c.create_renderer())
             .unwrap_or_else(|_| Renderer::new(false, false))
+    }
+
+    pub(crate) fn release_renderer(&self, mut r: Renderer) {
+        r.reset();
+        self.renderer_pool.borrow_mut().push(r);
+    }
+
+    pub(crate) fn release_renderer_to_task(r: Renderer) {
+        SCOPE.try_with(|c| c.release_renderer(r)).ok();
     }
 
     pub async fn run<T>(

@@ -1,27 +1,26 @@
+use std::collections::HashMap;
 use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
-use std::io::Write as _;
 use std::usize;
 
 use http::{HeaderMap, HeaderValue};
-use indexmap::IndexSet;
-use smallvec::SmallVec;
 use twox_hash::XxHash32;
 
 use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 use crate::html::events::CustomEvent;
-use crate::style::StyleDefinition;
+use crate::scope::Scope;
+use crate::style::{ClassName, StyleDefinition};
 use crate::view::RenderFuture;
 
 // This covers about 75% of [Renderer] usages in my largest app as per 2025-12-10.
 const DEFAULT_CAPACITY: usize = 128;
 
 pub struct Renderer {
-    out: SmallVec<u8, DEFAULT_CAPACITY>,
+    out: String,
     headers: HeaderMap<HeaderValue>,
-    styles: IndexSet<StyleDefinition>,
+    styles: HashMap<ClassName, StyleDefinition>,
     hasher: XxHash32,
     is_update: bool,
     disable_hashes: bool,
@@ -35,8 +34,11 @@ pub struct Out {
 impl Renderer {
     pub fn new(is_update: bool, disable_hashes: bool) -> Self {
         Self {
-            out: SmallVec::new(),
+            out: String::with_capacity(DEFAULT_CAPACITY),
             headers: Default::default(),
+            // Will stay empty for about 40% of renderers, and will grow to high numbers for about
+            // 15%. Thus decided to keep them empty by default and not reserve any
+            // capacity.
             styles: Default::default(),
             hasher: XxHash32::default(),
             disable_hashes,
@@ -44,31 +46,47 @@ impl Renderer {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.out.truncate(0);
+        self.headers.clear();
+        self.styles.clear();
+        self.hasher = XxHash32::default();
+    }
+
     pub fn append(&mut self, mut other: Renderer) {
         if self.out.is_empty() {
             std::mem::swap(&mut self.out, &mut other.out);
+        } else if other.out.capacity() > self.out.capacity() {
+            other.out.insert_str(0, &self.out);
+            std::mem::swap(&mut self.out, &mut other.out);
         } else {
-            self.out.append(&mut other.out);
+            self.out += &other.out;
         }
         if self.headers.is_empty() {
+            std::mem::swap(&mut self.headers, &mut other.headers);
+        } else if other.headers.capacity() > self.headers.capacity() {
+            other.headers.extend(self.headers.drain());
             std::mem::swap(&mut self.headers, &mut other.headers);
         } else {
             self.headers.extend(other.headers.drain());
         }
         if self.styles.is_empty() {
             std::mem::swap(&mut self.styles, &mut other.styles);
+        } else if other.styles.capacity() > self.styles.capacity() {
+            other.styles.extend(self.styles.drain());
+            std::mem::swap(&mut self.styles, &mut other.styles);
         } else {
-            self.styles.append(&mut other.styles);
+            self.styles.extend(other.styles.drain());
         }
         let hash = other.hasher.finish() as u32;
         self.hasher.write_u32(hash);
+        Scope::release_renderer_to_task(other);
     }
 
+    // FIXME: remove unnecessary error
     pub fn end(self) -> Result<Out, crate::Error> {
         Ok(Out {
-            html: str::from_utf8(&self.out)
-                .map_err(InternalError::from)?
-                .to_string(),
+            html: self.out,
             headers: self.headers,
         })
     }
@@ -115,10 +133,10 @@ impl Renderer {
         }
     }
 
-    // FIXME: deduplicate not StyleCollector but each StyleDefinition
-    pub fn append_style(&mut self, style: StyleDefinition) {
-        self.styles
-            .insert_sorted_by(style, |a, b| a.modifier.cmp(&b.modifier));
+    pub fn append_style(&mut self, style: StyleDefinition) -> ClassName {
+        let class_name = style.class_name();
+        self.styles.insert(class_name, style);
+        class_name
     }
 
     pub(crate) fn build_styles(&mut self, include_base: bool) -> String {
@@ -131,18 +149,22 @@ impl Renderer {
             include_str!("./style/forms/forms-v0.5.3.css"),
         ];
 
+        let mut styles = self.styles.drain().map(|(_, v)| v).collect::<Vec<_>>();
+        styles.sort_by(|a, b| a.modifier.cmp(&b.modifier));
+
         let cap: usize = if include_base {
             other.iter().map(|s| s.len()).sum::<usize>()
         } else {
             0
-        } + self.styles.len() * 64;
+        } + self.styles.len() * 128;
         let mut css = String::with_capacity(cap);
         if include_base {
             for s in other {
                 css += s;
             }
         }
-        for s in &self.styles {
+
+        for s in styles {
             s.write_to(&mut css);
         }
 
@@ -369,21 +391,21 @@ where
     }
 }
 
-pub struct WriteInto<'a, const N: usize> {
-    out: &'a mut SmallVec<u8, N>,
+pub struct WriteInto<'a> {
+    out: &'a mut String,
     offset: usize,
 }
 
-impl<'a, const N: usize> WriteInto<'a, N> {
-    pub fn new(out: &'a mut SmallVec<u8, N>, offset: usize) -> Self {
+impl<'a> WriteInto<'a> {
+    pub fn new(out: &'a mut String, offset: usize) -> Self {
         Self { out, offset }
     }
 }
 
-impl<const N: usize> fmt::Write for WriteInto<'_, N> {
+impl fmt::Write for WriteInto<'_> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.out
-            .splice(self.offset..self.offset + s.len(), s.bytes());
+            .replace_range(self.offset..self.offset + s.len(), s);
         self.offset += s.len();
 
         Ok(())
@@ -393,15 +415,13 @@ impl<const N: usize> fmt::Write for WriteInto<'_, N> {
 impl Write for TextRenderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.hasher.write(s.as_bytes());
-        self.renderer.out.extend_from_slice(s.as_bytes());
-        Ok(())
+        self.renderer.out.write_str(s)
     }
 }
 
 impl Write for Renderer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.out.extend_from_slice(s.as_bytes());
-        Ok(())
+        self.out.write_str(s)
     }
 }
 
