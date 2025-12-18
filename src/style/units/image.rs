@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 use crate::style::units::gradient::Gradient;
 
 #[derive(Default, Clone, Hash, PartialEq, Eq)]
@@ -31,6 +32,19 @@ impl PropertyDisplay for Image {
         match self {
             Image::None => writeln!(f, "{name}: none;"),
             Image::LinearGradient(gradient) => gradient.fmt_property(name, f),
+        }
+    }
+}
+
+impl MergeFrom for Image {
+    fn merge_from(&mut self, other: Self) {
+        match (self, other) {
+            (Image::LinearGradient(l), Image::LinearGradient(r)) => {
+                l.merge_from(r);
+            }
+            (l, r) => {
+                *l = r;
+            }
         }
     }
 }

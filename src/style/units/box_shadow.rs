@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 use crate::style::units::float::Float;
 use crate::style::units::length::Length;
 
@@ -103,5 +104,37 @@ impl Default for Ring {
             width: Length::Px(Float::from(1i32)),
             color: "currentColor",
         }
+    }
+}
+
+impl MergeFrom for BoxShadow {
+    fn merge_from(&mut self, other: Self) {
+        let Self {
+            ring,
+            shadow_kind,
+            shadow_color,
+        } = other;
+        self.ring.merge_from(ring);
+        self.shadow_kind.merge_from(shadow_kind);
+        self.shadow_color.merge_from(shadow_color);
+    }
+}
+
+impl MergeFrom for Ring {
+    fn merge_from(&mut self, other: Self) {
+        let Self {
+            inset,
+            width,
+            color,
+        } = other;
+        self.inset.merge_from(inset);
+        self.width.merge_from(width);
+        self.color.merge_from(color);
+    }
+}
+
+impl MergeFrom for ShadowKind {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

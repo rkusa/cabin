@@ -2,6 +2,7 @@ use std::fmt;
 use std::hash::Hash;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 use crate::style::units::float::Float;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -16,5 +17,11 @@ impl PropertyDisplay for Duration {
             Duration::Ms(ms) => writeln!(f, "{name}: {ms}ms;"),
             Duration::S(s) => writeln!(f, "{name}: {s}s;"),
         }
+    }
+}
+
+impl MergeFrom for Duration {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

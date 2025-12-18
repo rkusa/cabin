@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Either<L, R = &'static str> {
@@ -23,5 +24,11 @@ impl<L: fmt::Display, R: fmt::Display> fmt::Display for Either<L, R> {
             Either::Left(t) => t.fmt(f),
             Either::Right(c) => c.fmt(f),
         }
+    }
+}
+
+impl<L, R> MergeFrom for Either<L, R> {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

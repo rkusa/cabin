@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 use crate::style::units::length::Length;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -17,5 +18,11 @@ impl PropertyDisplay for Transform {
             Transform::TranslateX(x) => writeln!(f, "{name}: translateX({x});"),
             Transform::TranslateY(x) => writeln!(f, "{name}: translateY({x});"),
         }
+    }
+}
+
+impl MergeFrom for Transform {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

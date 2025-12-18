@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Iterations {
@@ -14,5 +15,11 @@ impl PropertyDisplay for Iterations {
             Iterations::Count(count) => writeln!(f, "{name}: {count};"),
             Iterations::Infinite => writeln!(f, "{name}: infinite;"),
         }
+    }
+}
+
+impl MergeFrom for Iterations {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

@@ -1,6 +1,7 @@
 use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Corners<T> {
@@ -120,5 +121,20 @@ impl<T> Default for Corners<T> {
             bottom_right: None,
             bottom_left: None,
         }
+    }
+}
+
+impl<T: MergeFrom> MergeFrom for Corners<T> {
+    fn merge_from(&mut self, other: Self) {
+        let Self {
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
+        } = other;
+        self.top_left.merge_from(top_left);
+        self.top_right.merge_from(top_right);
+        self.bottom_right.merge_from(bottom_right);
+        self.bottom_left.merge_from(bottom_left);
     }
 }

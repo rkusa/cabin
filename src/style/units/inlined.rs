@@ -1,6 +1,7 @@
 use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Inlined<T> {
@@ -105,5 +106,20 @@ impl<T> Default for Inlined<T> {
             block_end: None,
             inline_start: None,
         }
+    }
+}
+
+impl<T: MergeFrom> MergeFrom for Inlined<T> {
+    fn merge_from(&mut self, other: Self) {
+        let Self {
+            block_start,
+            inline_end,
+            block_end,
+            inline_start,
+        } = other;
+        self.block_start.merge_from(block_start);
+        self.inline_end.merge_from(inline_end);
+        self.block_end.merge_from(block_end);
+        self.inline_start.merge_from(inline_start);
     }
 }

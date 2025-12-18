@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::style::style_definition::MergeFrom;
+
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum LineClamp {
     Lines(u16),
@@ -23,5 +25,11 @@ impl fmt::Display for LineClamp {
             }
         }
         Ok(())
+    }
+}
+
+impl MergeFrom for LineClamp {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

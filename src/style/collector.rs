@@ -80,17 +80,22 @@ impl StyleCollector {
     }
 
     pub fn combine(mut self, other: Self) -> Self {
-        self.styles.extend(other.styles);
+        for other in other.styles {
+            let ix = self
+                .styles
+                .iter_mut()
+                .position(|style| style.modifier == other.modifier);
+            if let Some(ix) = ix {
+                self.styles[ix].merge_from(other);
+            } else {
+                self.styles.push(other);
+            }
+        }
         self
     }
 
-    pub fn combine_when(mut self, condition: bool, other: Self) -> Self {
-        if condition {
-            self.styles.extend(other.styles);
-            self
-        } else {
-            self
-        }
+    pub fn combine_when(self, condition: bool, other: Self) -> Self {
+        if condition { self.combine(other) } else { self }
     }
 }
 

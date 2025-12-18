@@ -1,6 +1,7 @@
 use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct RowColumn<T> {
@@ -47,5 +48,13 @@ impl<T> Default for RowColumn<T> {
             row: None,
             column: None,
         }
+    }
+}
+
+impl<T: MergeFrom> MergeFrom for RowColumn<T> {
+    fn merge_from(&mut self, other: Self) {
+        let Self { row, column } = other;
+        self.row.merge_from(row);
+        self.column.merge_from(column);
     }
 }

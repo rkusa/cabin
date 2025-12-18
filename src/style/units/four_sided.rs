@@ -1,6 +1,7 @@
 use std::fmt::{self, Display};
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct FourSided<T> {
@@ -114,5 +115,20 @@ impl<T> Default for FourSided<T> {
             bottom: None,
             left: None,
         }
+    }
+}
+
+impl<T: MergeFrom> MergeFrom for FourSided<T> {
+    fn merge_from(&mut self, other: Self) {
+        let Self {
+            top,
+            right,
+            bottom,
+            left,
+        } = other;
+        self.top.merge_from(top);
+        self.right.merge_from(right);
+        self.bottom.merge_from(bottom);
+        self.left.merge_from(left);
     }
 }

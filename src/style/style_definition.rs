@@ -571,109 +571,205 @@ impl StyleDefinition {
             *self = other;
             return;
         }
-        self.animation_from = other.animation_from.or(self.animation_from.take());
-        self.animation_to = other.animation_to.or(self.animation_to.take());
-        self.align_items = other.align_items.or(self.align_items);
-        self.align_self = other.align_self.or(self.align_self);
-        self.animation_delay = other.animation_delay.or(self.animation_delay);
-        self.animation_duration = other.animation_duration.or(self.animation_duration);
-        self.animation_iterations = other.animation_iterations.or(self.animation_iterations);
-        self.appearance = other.appearance.or(self.appearance);
-        self.aspect = other.aspect.or(self.aspect.take());
-        self.auto_cols = other.auto_cols.or(self.auto_cols);
-        self.auto_rows = other.auto_rows.or(self.auto_rows);
-        self.background_clip = other.background_clip.or(self.background_clip);
-        self.background_color = other.background_color.or(self.background_color);
-        self.background_image = other.background_image.or(self.background_image.take());
-        self.basis = other.basis.or(self.basis);
-        self.border_color = other.border_color.or(self.border_color.take());
-        self.border_inline_color = other
-            .border_inline_color
-            .or(self.border_inline_color.take());
-        self.border_inline_style = other.border_inline_style.or(self.border_inline_style);
-        self.border_inline_width = other
-            .border_inline_width
-            .or(self.border_inline_width.take());
-        self.border_radius = other.border_radius.or(self.border_radius.take());
-        self.border_style = other.border_style.or(self.border_style);
-        self.border_width = other.border_width.or(self.border_width.take());
-        self.box_shadow = other.box_shadow.or(self.box_shadow.take());
-        self.box_sizing = other.box_sizing.or(self.box_sizing);
-        self.break_after = other.break_after.or(self.break_after);
-        self.break_before = other.break_before.or(self.break_before);
-        self.break_inside = other.break_inside.or(self.break_inside);
-        self.clip_path = other.clip_path.or(self.clip_path);
-        self.color = other.color.or(self.color);
-        self.container = other.container.or(self.container);
-        self.content = other.content.or(self.content);
-        self.cursor = other.cursor.or(self.cursor);
-        self.decoration = other.decoration.or(self.decoration);
-        self.display = other.display.or(self.display);
-        self.divide_x_reversed = other.divide_x_reversed || self.divide_x_reversed;
-        self.divide_y_reversed = other.divide_y_reversed || self.divide_y_reversed;
-        self.flex_direction = other.flex_direction.or(self.flex_direction);
-        self.flex_grow = other.flex_grow.or(self.flex_grow);
-        self.flex_shrink = other.flex_shrink.or(self.flex_shrink);
-        self.flex_wrap = other.flex_wrap.or(self.flex_wrap);
-        self.font_family = other.font_family.or(self.font_family);
-        self.font_size = other.font_size.or(self.font_size);
-        self.font_style = other.font_style.or(self.font_style);
-        self.font_weight = other.font_weight.or(self.font_weight);
-        self.gap = other.gap.or(self.gap.take());
-        self.grid_auto_flow = other.grid_auto_flow.or(self.grid_auto_flow);
-        self.grid_column = other.grid_column.or(self.grid_column.take());
-        self.grid_row = other.grid_row.or(self.grid_row.take());
-        self.grid_template_columns = other.grid_template_columns.or(self.grid_template_columns);
-        self.grid_template_rows = other.grid_template_rows.or(self.grid_template_rows);
-        self.height = other.height.or(self.height);
-        self.inset = other.inset.or(self.inset.take());
-        self.inset_inline_end = other.inset_inline_end.or(self.inset_inline_end);
-        self.inset_inline_start = other.inset_inline_start.or(self.inset_inline_start);
-        self.justify_content = other.justify_content.or(self.justify_content);
-        self.justify_self = other.justify_self.or(self.justify_self);
-        self.letter_spacing = other.letter_spacing.or(self.letter_spacing);
-        self.line_clamp = other.line_clamp.or(self.line_clamp);
-        self.line_height = other.line_height.or(self.line_height);
-        self.list_style_type = other.list_style_type.or(self.list_style_type);
-        self.margin = other.margin.or(self.margin.take());
-        self.margin_inline = other.margin_inline.or(self.margin_inline.take());
-        self.max_height = other.max_height.or(self.max_height);
-        self.max_width = other.max_width.or(self.max_width);
-        self.min_height = other.min_height.or(self.min_height);
-        self.min_width = other.min_width.or(self.min_width);
-        self.object_fit = other.object_fit.or(self.object_fit);
-        self.object_position = other.object_position.or(self.object_position);
-        self.opacity = other.opacity.or(self.opacity);
-        self.order = other.order.or(self.order);
-        self.outline_color = other.outline_color.or(self.outline_color);
-        self.outline_offset = other.outline_offset.or(self.outline_offset);
-        self.outline_style = other.outline_style.or(self.outline_style);
-        self.outline_width = other.outline_width.or(self.outline_width);
-        self.overflow = other.overflow.or(self.overflow.take());
-        self.padding = other.padding.or(self.padding.take());
-        self.place_content = other.place_content.or(self.place_content);
-        self.place_items = other.place_items.or(self.place_items);
-        self.place_self = other.place_self.or(self.place_self);
-        self.pointer_events = other.pointer_events.or(self.pointer_events);
-        self.position = other.position.or(self.position);
-        self.space_x_reversed = other.space_x_reversed || self.space_x_reversed;
-        self.space_y_reversed = other.space_y_reversed || self.space_y_reversed;
-        self.text_align = other.text_align.or(self.text_align);
-        self.text_overflow = other.text_overflow.or(self.text_overflow);
-        self.text_transform = other.text_transform.or(self.text_transform);
-        self.transform = other.transform.or(self.transform.take());
-        self.transition_delay = other.transition_delay.or(self.transition_delay);
-        self.transition_duration = other.transition_duration.or(self.transition_duration);
-        self.transition_property = other.transition_property.or(self.transition_property);
-        self.transition_timing_function = other
-            .transition_timing_function
-            .or(self.transition_timing_function);
-        self.user_select = other.user_select.or(self.user_select);
-        self.visibility = other.visibility.or(self.visibility);
-        self.white_space = other.white_space.or(self.white_space);
-        self.width = other.width.or(self.width);
-        self.word_break = other.word_break.or(self.word_break);
-        self.z_index = other.z_index.or(self.z_index);
+        let StyleDefinition {
+            modifier: _,
+            animation_from,
+            animation_to,
+            align_items,
+            align_self,
+            animation_delay,
+            animation_duration,
+            animation_iterations,
+            appearance,
+            aspect,
+            auto_cols,
+            auto_rows,
+            background_clip,
+            background_color,
+            background_image,
+            basis,
+            border_color,
+            border_inline_color,
+            border_inline_style,
+            border_inline_width,
+            border_radius,
+            border_style,
+            border_width,
+            box_shadow,
+            box_sizing,
+            break_after,
+            break_before,
+            break_inside,
+            clip_path,
+            color,
+            container,
+            content,
+            cursor,
+            decoration,
+            display,
+            divide_x_reversed,
+            divide_y_reversed,
+            flex_direction,
+            flex_grow,
+            flex_shrink,
+            flex_wrap,
+            font_family,
+            font_size,
+            font_style,
+            font_weight,
+            gap,
+            grid_auto_flow,
+            grid_column,
+            grid_row,
+            grid_template_columns,
+            grid_template_rows,
+            height,
+            inset,
+            inset_inline_end,
+            inset_inline_start,
+            justify_content,
+            justify_self,
+            letter_spacing,
+            line_clamp,
+            line_height,
+            list_style_type,
+            margin,
+            margin_inline,
+            max_height,
+            max_width,
+            min_height,
+            min_width,
+            object_fit,
+            object_position,
+            opacity,
+            order,
+            outline_color,
+            outline_offset,
+            outline_style,
+            outline_width,
+            overflow,
+            padding,
+            place_content,
+            place_items,
+            place_self,
+            pointer_events,
+            position,
+            space_x_reversed,
+            space_y_reversed,
+            text_align,
+            text_overflow,
+            text_transform,
+            transform,
+            transition_delay,
+            transition_duration,
+            transition_property,
+            transition_timing_function,
+            user_select,
+            visibility,
+            white_space,
+            width,
+            word_break,
+            z_index,
+        } = other;
+
+        self.animation_from.merge_from(animation_from);
+        self.animation_to.merge_from(animation_to);
+        self.align_items.merge_from(align_items);
+        self.align_self.merge_from(align_self);
+        self.animation_delay.merge_from(animation_delay);
+        self.animation_duration.merge_from(animation_duration);
+        self.animation_iterations.merge_from(animation_iterations);
+        self.appearance.merge_from(appearance);
+        self.aspect.merge_from(aspect);
+        self.auto_cols.merge_from(auto_cols);
+        self.auto_rows.merge_from(auto_rows);
+        self.background_clip.merge_from(background_clip);
+        self.background_color.merge_from(background_color);
+        self.background_image.merge_from(background_image);
+        self.basis.merge_from(basis);
+        self.border_color.merge_from(border_color);
+        self.border_inline_color.merge_from(border_inline_color);
+        self.border_inline_style.merge_from(border_inline_style);
+        self.border_inline_width.merge_from(border_inline_width);
+        self.border_radius.merge_from(border_radius);
+        self.border_style.merge_from(border_style);
+        self.border_width.merge_from(border_width);
+        self.box_shadow.merge_from(box_shadow);
+        self.box_sizing.merge_from(box_sizing);
+        self.break_after.merge_from(break_after);
+        self.break_before.merge_from(break_before);
+        self.break_inside.merge_from(break_inside);
+        self.clip_path.merge_from(clip_path);
+        self.color.merge_from(color);
+        self.container.merge_from(container);
+        self.content.merge_from(content);
+        self.cursor.merge_from(cursor);
+        self.decoration.merge_from(decoration);
+        self.display.merge_from(display);
+        self.divide_x_reversed.merge_from(divide_x_reversed);
+        self.divide_y_reversed.merge_from(divide_y_reversed);
+        self.flex_direction.merge_from(flex_direction);
+        self.flex_grow.merge_from(flex_grow);
+        self.flex_shrink.merge_from(flex_shrink);
+        self.flex_wrap.merge_from(flex_wrap);
+        self.font_family.merge_from(font_family);
+        self.font_size.merge_from(font_size);
+        self.font_style.merge_from(font_style);
+        self.font_weight.merge_from(font_weight);
+        self.gap.merge_from(gap);
+        self.grid_auto_flow.merge_from(grid_auto_flow);
+        self.grid_column.merge_from(grid_column);
+        self.grid_row.merge_from(grid_row);
+        self.grid_template_columns.merge_from(grid_template_columns);
+        self.grid_template_rows.merge_from(grid_template_rows);
+        self.height.merge_from(height);
+        self.inset.merge_from(inset);
+        self.inset_inline_end.merge_from(inset_inline_end);
+        self.inset_inline_start.merge_from(inset_inline_start);
+        self.justify_content.merge_from(justify_content);
+        self.justify_self.merge_from(justify_self);
+        self.letter_spacing.merge_from(letter_spacing);
+        self.line_clamp.merge_from(line_clamp);
+        self.line_height.merge_from(line_height);
+        self.list_style_type.merge_from(list_style_type);
+        self.margin.merge_from(margin);
+        self.margin_inline.merge_from(margin_inline);
+        self.max_height.merge_from(max_height);
+        self.max_width.merge_from(max_width);
+        self.min_height.merge_from(min_height);
+        self.min_width.merge_from(min_width);
+        self.object_fit.merge_from(object_fit);
+        self.object_position.merge_from(object_position);
+        self.opacity.merge_from(opacity);
+        self.order.merge_from(order);
+        self.outline_color.merge_from(outline_color);
+        self.outline_offset.merge_from(outline_offset);
+        self.outline_style.merge_from(outline_style);
+        self.outline_width.merge_from(outline_width);
+        self.overflow.merge_from(overflow);
+        self.padding.merge_from(padding);
+        self.place_content.merge_from(place_content);
+        self.place_items.merge_from(place_items);
+        self.place_self.merge_from(place_self);
+        self.pointer_events.merge_from(pointer_events);
+        self.position.merge_from(position);
+        self.space_x_reversed.merge_from(space_x_reversed);
+        self.space_y_reversed.merge_from(space_y_reversed);
+        self.text_align.merge_from(text_align);
+        self.text_overflow.merge_from(text_overflow);
+        self.text_transform.merge_from(text_transform);
+        self.transform.merge_from(transform);
+        self.transition_delay.merge_from(transition_delay);
+        self.transition_duration.merge_from(transition_duration);
+        self.transition_property.merge_from(transition_property);
+        self.transition_timing_function
+            .merge_from(transition_timing_function);
+        self.user_select.merge_from(user_select);
+        self.visibility.merge_from(visibility);
+        self.white_space.merge_from(white_space);
+        self.width.merge_from(width);
+        self.word_break.merge_from(word_break);
+        self.z_index.merge_from(z_index);
     }
 
     pub(crate) fn write_to(&self, out: &mut dyn fmt::Write) {
@@ -835,5 +931,53 @@ impl StyleDefinition {
         }
 
         writeln!(out, "").unwrap();
+    }
+}
+
+pub trait MergeFrom {
+    fn merge_from(&mut self, other: Self);
+}
+
+impl MergeFrom for StyleDefinition {
+    fn merge_from(&mut self, other: Self) {
+        StyleDefinition::merge_from(self, other);
+    }
+}
+
+impl<T: MergeFrom> MergeFrom for Option<T> {
+    fn merge_from(&mut self, other: Self) {
+        let Some(other) = other else {
+            return;
+        };
+
+        if let Some(s) = self {
+            s.merge_from(other);
+        } else {
+            *self = Some(other);
+        }
+    }
+}
+
+impl MergeFrom for &'static str {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+impl MergeFrom for u16 {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+impl MergeFrom for i32 {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+impl MergeFrom for bool {
+    fn merge_from(&mut self, other: Self) {
+        *self = *self || other;
     }
 }

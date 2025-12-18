@@ -2,6 +2,7 @@ use std::fmt;
 use std::hash::Hash;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 use crate::style::units::float::Float;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -96,5 +97,11 @@ impl fmt::Display for Length {
 impl PropertyDisplay for Length {
     fn fmt_property(&self, name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{name}: {self};")
+    }
+}
+
+impl MergeFrom for Length {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

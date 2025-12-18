@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct GridLines {
@@ -62,5 +63,19 @@ impl Default for GridLines {
             start: None,
             end: None,
         }
+    }
+}
+
+impl MergeFrom for GridLines {
+    fn merge_from(&mut self, other: Self) {
+        let Self { start, end } = other;
+        self.start.merge_from(start);
+        self.end.merge_from(end);
+    }
+}
+
+impl MergeFrom for GridLine {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }

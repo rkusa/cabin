@@ -2,6 +2,7 @@ use std::fmt;
 use std::hash::Hash;
 
 use crate::style::property_display::PropertyDisplay;
+use crate::style::style_definition::MergeFrom;
 use crate::style::units::float::Float;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -18,5 +19,11 @@ impl PropertyDisplay for Aspect {
             Aspect::Ratio(w, h) => writeln!(f, "{name}: {w} / {h};"),
             Aspect::Ratiof(r) => writeln!(f, "{name}: {r};"),
         }
+    }
+}
+
+impl MergeFrom for Aspect {
+    fn merge_from(&mut self, other: Self) {
+        *self = other;
     }
 }
