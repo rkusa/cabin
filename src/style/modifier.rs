@@ -62,9 +62,9 @@ impl Ord for StyleModifier {
         } else if let Some((a, b)) = self.min_width.zip(other.min_width) {
             a.cmp(&b)
         } else if self.min_width.is_some() && other.min_width.is_none() {
-            Ordering::Less
-        } else if self.min_width.is_none() && other.min_width.is_some() {
             Ordering::Greater
+        } else if self.min_width.is_none() && other.min_width.is_some() {
+            Ordering::Less
         } else if let Some((a, b)) = self.max_width.zip(other.max_width) {
             a.cmp(&b)
         } else if self.max_width.is_some() && other.max_width.is_none() {
