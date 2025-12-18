@@ -272,7 +272,7 @@ pub trait SubStyle: Style {
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-inline-start-width: 1px;
+    ///     border-inline-end-width: 1px;
     /// }
     /// ```
     fn divide_x(mut self) -> Self {
@@ -282,13 +282,13 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_inline_start(Length::Px(Float::from(1i32)));
+        .set_inline_end(Length::Px(Float::from(1i32)));
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-inline-start-width: {px}px;
+    ///     border-inline-end-width: {px}px;
     /// }
     /// ```
     fn divide_x_px(mut self, px: i16) -> Self {
@@ -298,13 +298,13 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_inline_start(Length::Px(Float::from(px)));
+        .set_inline_end(Length::Px(Float::from(px)));
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-inline-start-width: {px}px;
+    ///     border-inline-end-width: {px}px;
     /// }
     /// ```
     fn divide_x_pxf(mut self, px: f32) -> Self {
@@ -314,14 +314,14 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_inline_start(Length::Px(Float::from(px)));
+        .set_inline_end(Length::Px(Float::from(px)));
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-inline-end-width: border-inline-start-width;
-    ///     border-inline-start-width: 0;
+    ///     border-inline-start-width: border-inline-end-width;
+    ///     border-inline-end-width: 0;
     /// }
     /// ```
     fn divide_x_reverse(mut self) -> Self {
@@ -335,7 +335,7 @@ pub trait SubStyle: Style {
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-block-start-width: 1px;
+    ///     border-block-end-width: 1px;
     /// }
     /// ```
     fn divide_y(mut self) -> Self {
@@ -345,13 +345,13 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_block_start(Length::Px(Float::from(1i32)));
+        .set_block_end(Length::Px(Float::from(1i32)));
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-block-start-width: {px}px;
+    ///     border-block-end-width: {px}px;
     /// }
     /// ```
     fn divide_y_px(mut self, px: i16) -> Self {
@@ -361,13 +361,13 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_block_start(Length::Px(Float::from(px)));
+        .set_block_end(Length::Px(Float::from(px)));
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-block-start-width: {px}px;
+    ///     border-block-end-width: {px}px;
     /// }
     /// ```
     fn divide_y_pxf(mut self, px: f32) -> Self {
@@ -377,14 +377,14 @@ pub trait SubStyle: Style {
         })
         .border_inline_width
         .get_or_insert_default()
-        .set_block_start(Length::Px(Float::from(px)));
+        .set_block_end(Length::Px(Float::from(px)));
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     border-block-end-width: border-block-start-width;
-    ///     border-block-start-width: 0;
+    ///     border-block-start-width: border-block-end-width;
+    ///     border-block-end-width: 0;
     /// }
     /// ```
     fn divide_y_reverse(mut self) -> Self {
@@ -471,7 +471,7 @@ pub trait SubStyle: Style {
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     margin-inline-start: {x};
+    ///     margin-inline-end: {x};
     /// }
     /// ```
     fn space_x(mut self, x: impl Into<Length>) -> Self {
@@ -481,14 +481,14 @@ pub trait SubStyle: Style {
         })
         .margin_inline
         .get_or_insert_default()
-        .set_inline_start(x.into());
+        .set_inline_end(x.into());
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     margin-inline-end: border-inline-start-width;
-    ///     margin-inline-start: 0;
+    ///     margin-inline-start: border-inline-end-width;
+    ///     margin-inline-end: 0;
     /// }
     /// ```
     fn space_x_reverse(mut self) -> Self {
@@ -502,7 +502,7 @@ pub trait SubStyle: Style {
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     margin-block-start: {x};
+    ///     margin-block-end: {x};
     /// }
     /// ```
     fn space_y(mut self, x: impl Into<Length>) -> Self {
@@ -512,14 +512,14 @@ pub trait SubStyle: Style {
         })
         .margin_inline
         .get_or_insert_default()
-        .set_block_start(x.into());
+        .set_block_end(x.into());
         self
     }
 
     /// ```css
     /// & > :not(:last-child) {
-    ///     margin-block-end: border-block-start-width;
-    ///     margin-block-start: 0;
+    ///     margin-block-start: border-block-end-width;
+    ///     margin-block-end: 0;
     /// }
     /// ```
     fn space_y_reverse(mut self) -> Self {
