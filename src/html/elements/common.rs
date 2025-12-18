@@ -71,8 +71,17 @@ pub struct Id(pub Cow<'static, str>);
 
 /// The various classes that the element belongs to.
 // FIXME: make it Copy
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Class(pub Cow<'static, str>);
+
+impl Attributes for Class {
+    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
+        if !self.0.is_empty() {
+            r.attribute("class", self.0);
+        }
+        Ok(())
+    }
+}
 
 pub struct OnClick<E>(CustomEvent<E>);
 
