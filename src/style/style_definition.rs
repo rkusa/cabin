@@ -334,7 +334,7 @@ impl fmt::Display for StyleDefinition {
         text_align.fmt_property("text-align", f)?;
         text_overflow.fmt_property("text-overflow", f)?;
         text_transform.fmt_property("text-transform", f)?;
-        transform.fmt_property("box-shadow", f)?;
+        transform.fmt_property("transform", f)?;
         transition_delay.fmt_property("transition-delay", f)?;
         transition_duration.fmt_property("transition-duration", f)?;
         transition_property.fmt_property("transition-property", f)?;

@@ -99,7 +99,7 @@ impl<T: PartialEq + Display> PropertyDisplay for Corners<T> {
                     writeln!(f, "{name}-top-left{suffix}: {top_left};")?
                 }
                 if let Some(top_right) = top_right {
-                    writeln!(f, "{name}-right-right{suffix}: {top_right};")?
+                    writeln!(f, "{name}-top-right{suffix}: {top_right};")?
                 }
                 if let Some(bottom_right) = bottom_right {
                     writeln!(f, "{name}-bottom-right{suffix}: {bottom_right};")?
