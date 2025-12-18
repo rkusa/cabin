@@ -3,7 +3,7 @@ use smallvec::SmallVec;
 use crate::style::modifier::StyleModifier;
 use crate::style::{Style, StyleDefinition, SubStyle};
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct StyleCollector {
     styles: SmallVec<Entry, 1>,
 }
@@ -12,6 +12,17 @@ pub struct StyleCollector {
 struct Entry {
     style: StyleDefinition,
     parent_modifier: Option<StyleModifier>,
+}
+
+impl Default for StyleCollector {
+    fn default() -> Self {
+        Self {
+            styles: smallvec::smallvec![Entry {
+                style: Default::default(),
+                parent_modifier: None
+            }],
+        }
+    }
 }
 
 impl Style for StyleCollector {
@@ -39,7 +50,7 @@ impl SubStyle for StyleCollector {
             let style = StyleDefinition::new(modifier);
             self.styles.push(Entry {
                 style,
-                parent_modifier: Some(self.styles[0].style.modifier.clone()),
+                parent_modifier: self.styles.first().map(|s| s.style.modifier.clone()),
             });
             &mut self.styles.last_mut().unwrap().style
         }
@@ -72,7 +83,7 @@ impl SubStyle for StyleCollector {
             let _ = (f)(delegate);
             self.styles.push(Entry {
                 style,
-                parent_modifier: Some(self.styles[0].style.modifier.clone()),
+                parent_modifier: self.styles.first().map(|s| s.style.modifier.clone()),
             });
             self
         }
