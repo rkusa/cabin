@@ -267,7 +267,13 @@ impl fmt::Display for StyleDefinition {
         clip_path.fmt_property("clip-path", f)?;
         color.fmt_property("color", f)?;
         container.fmt_property("container-type", f)?;
-        content.fmt_property("--tw-content", f)?;
+        if let Some(content) = content {
+            if content.is_empty() {
+                r#""""#.fmt_property("content", f)?;
+            } else {
+                content.fmt_property("content", f)?;
+            }
+        }
         cursor.fmt_property("cursor", f)?;
         decoration.fmt_property("text-decoration-line", f)?;
         if line_clamp.is_none() {
