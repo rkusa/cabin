@@ -143,10 +143,20 @@ impl Renderer {
         let other: [&str; _] = [
             #[cfg(not(test))]
             include_str!("./style/base.css"),
+            // preflight
+            #[cfg(all(feature = "preflight", not(test)))]
+            "@layer preflight {\n",
             #[cfg(all(feature = "preflight", not(test)))]
             include_str!("./style/preflight/preflight-v3.2.4.css"),
+            #[cfg(all(feature = "preflight", not(test)))]
+            "}\n",
+            // forms
+            #[cfg(all(feature = "forms", not(test)))]
+            "@layer forms {\n",
             #[cfg(all(feature = "forms", not(test)))]
             include_str!("./style/forms/forms-v0.5.3.css"),
+            #[cfg(all(feature = "forms", not(test)))]
+            "}\n",
         ];
 
         let mut styles = self.styles.drain().map(|(_, v)| v).collect::<Vec<_>>();
