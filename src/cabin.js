@@ -210,7 +210,18 @@
         patchChildren(document.head, headTemplate.content, {});
       }
 
-      patchChildren(target, template.content, {}, disabledBefore);
+      if (
+        template.content.firstElementChild instanceof HTMLTemplateElement &&
+        template.content.firstElementChild.id === "cabin-body"
+      ) {
+        const bodyTemplate = template.content.removeChild(template.content.firstElementChild);
+        bodyTemplate.removeAttribute("id");
+        patchAttributes(document.body, bodyTemplate.content);
+        patchChildren(document.body, bodyTemplate.content, disabledBefore);
+      } else {
+        patchChildren(target, template.content, {}, disabledBefore);
+      }
+
       console.timeEnd("patch");
 
       const rewriteUrl = res.headers.get("location");

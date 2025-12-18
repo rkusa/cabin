@@ -305,6 +305,10 @@ where
         }
         self
     }
+
+    pub(crate) fn change_tag(&mut self, tag: &'static str) {
+        self.tag = tag;
+    }
 }
 
 impl<El, A> View for Html<El, A>

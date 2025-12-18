@@ -1,10 +1,10 @@
 use super::RenderFuture;
+use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
-use crate::html::{Common, Html, Raw};
+use crate::html::{Html, Raw};
 use crate::render::Renderer;
 use crate::style::collector::StyleDelegate;
 use crate::style::{Style, StyleDefinition, StyleModifier, SubStyle};
-use crate::{View, h};
 
 pub struct UpdateView<V> {
     view: V,
@@ -45,12 +45,17 @@ where
     El: Send + 'static,
     A: Attributes,
 {
-    fn render(self, r: Renderer) -> RenderFuture {
+    fn render(mut self, r: Renderer) -> RenderFuture {
         if r.is_update() {
             match self.behaviour {
                 Behaviour::Hidden => RenderFuture::Ready(Ok(r)),
                 Behaviour::ContentOnly => self.view.content.render(r),
-                Behaviour::Template { id } => h::template(self.view.content).id(id).render(r),
+                Behaviour::Template { id } => {
+                    self.view.change_tag("template");
+                    self.view
+                        .with_attribute(crate::html::elements::common::Id(id.into()))
+                        .render(r)
+                }
             }
         } else {
             self.view.render(r)

@@ -6,8 +6,7 @@ use crate::view::UpdateView;
 /// The `body` element represents the body of an HTML document.
 #[crate::view_macro(crate::html::elements::body)]
 pub fn body(content: impl View) -> UpdateView<Html<marker::Body, ()>> {
-    // FIXME: body attributes like class are not updated on full page refreshes
-    UpdateView::content_only_on_update(Html::new("body", (), content))
+    UpdateView::template_on_update("cabin-body", Html::new("body", (), content))
 }
 
 pub mod marker {
