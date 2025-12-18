@@ -147,14 +147,14 @@ impl Renderer {
             #[cfg(all(feature = "preflight", not(test)))]
             "@layer preflight {\n",
             #[cfg(all(feature = "preflight", not(test)))]
-            include_str!("./style/preflight/preflight-v3.2.4.css"),
+            include_str!("./style/preflight/preflight-v4.1.18.css"),
             #[cfg(all(feature = "preflight", not(test)))]
             "}\n",
             // forms
             #[cfg(all(feature = "forms", not(test)))]
             "@layer forms {\n",
             #[cfg(all(feature = "forms", not(test)))]
-            include_str!("./style/forms/forms-v0.5.3.css"),
+            include_str!("./style/forms/forms-v0.5.11.css"),
             #[cfg(all(feature = "forms", not(test)))]
             "}\n",
         ];
