@@ -24,17 +24,19 @@ pub static LIVERELOAD_JS: &str = include_str!("./livereload.js");
 pub fn cabin_scripts() -> impl View {
     use crate::prelude::*;
 
-    cabin::view![
-        h::script("")
-            .src({
-                static PATH: LazyLock<&'static str> = LazyLock::new(|| {
-                    let hash = content_hash(CABIN_JS.as_bytes());
-                    Box::leak(format!("/cabin.js?{hash}").into_boxed_str())
-                });
-                *PATH
-            })
-            .defer(),
-        #[cfg(feature = "livereload")]
+    let scripts = h::script("")
+        .src({
+            static PATH: LazyLock<&'static str> = LazyLock::new(|| {
+                let hash = content_hash(CABIN_JS.as_bytes());
+                Box::leak(format!("/cabin.js?{hash}").into_boxed_str())
+            });
+            *PATH
+        })
+        .defer()
+        .into_any_view();
+
+    #[cfg(feature = "livereload")]
+    let scripts = scripts.appended(
         h::script("")
             .src({
                 static PATH: LazyLock<&'static str> = LazyLock::new(|| {
@@ -44,7 +46,9 @@ pub fn cabin_scripts() -> impl View {
                 *PATH
             })
             .defer(),
-    ]
+    );
+
+    scripts
 }
 
 pub fn content_hash(bytes: &[u8]) -> u32 {
