@@ -4,7 +4,7 @@ use crate::style::property_display::PropertyDisplay;
 use crate::style::style_definition::MergeFrom;
 use crate::style::units::length::Length;
 
-#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct Gradient {
     pub gradient_line: Option<&'static str>,
     pub from_color: Option<&'static str>,

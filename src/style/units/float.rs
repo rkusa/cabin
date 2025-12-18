@@ -2,7 +2,7 @@ use std::fmt::{self, Write as _};
 use std::ops::Mul;
 
 /// Three-places float.
-#[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Float(i32);
 
 impl Float {
@@ -46,6 +46,9 @@ impl fmt::Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let l = self.0 / 1000;
         let r = (self.0 % 1000).abs();
+        if l == 0 && self.0 < 0 {
+            write!(f, "-")?;
+        }
         if r == 0 {
             write!(f, "{l}")
         } else {
@@ -91,5 +94,8 @@ mod tests {
         assert_eq!(Float::from(1.004).to_string(), "1.004");
         assert_eq!(Float::from(1.0006).to_string(), "1.001");
         assert_eq!(Float::from(1.00006).to_string(), "1");
+        assert_eq!(Float::from(-1.0).to_string(), "-1");
+        assert_eq!(Float::from(-1.2).to_string(), "-1.2");
+        assert_eq!(Float::from(-0.5).to_string(), "-0.5");
     }
 }

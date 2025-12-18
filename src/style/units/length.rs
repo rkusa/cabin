@@ -5,7 +5,7 @@ use crate::style::property_display::PropertyDisplay;
 use crate::style::style_definition::MergeFrom;
 use crate::style::units::float::Float;
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Length {
     Auto,
     MinContent,
