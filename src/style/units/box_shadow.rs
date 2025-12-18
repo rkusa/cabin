@@ -22,8 +22,8 @@ pub struct Ring {
 #[derive(Default, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ShadowKind {
     Xs2,
-    Xs,
     #[default]
+    Xs,
     Sm,
     Md,
     Lg,
