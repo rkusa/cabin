@@ -1,10 +1,10 @@
 ---
 source: tests/style_tests.rs
-expression: c.build(false).unwrap()
+expression: c.build()
 ---
-._840eb35c {
+._74dbfed7 {
 display: block;
 }
-._47fccaca:active {
+._6a2a6a27:active {
 background-color: #3b82f6;
 }

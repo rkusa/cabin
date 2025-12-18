@@ -1,12 +1,12 @@
 ---
 source: tests/style_tests.rs
-expression: c.build(false).unwrap()
+expression: c.build()
 ---
-._840eb35c {
+._74dbfed7 {
 display: block;
 }
-:where(._4d291c54 > :not(:last-child)) {
+:where(._2e6b2ce8 > :not(:last-child)) {
 border-color: #000000;
-border-block-start-width: 1px;
-margin-block-start: 1px;
+border-block-end-width: 1px;
+margin-block-end: 0.25rem;
 }

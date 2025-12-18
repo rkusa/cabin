@@ -1,8 +1,8 @@
 ---
 source: tests/style_tests.rs
-expression: c.build(false).unwrap()
+expression: c.build()
 ---
-._a34dfac2 {
+._effdebdc {
 display: inline-block;
 padding: 0.5rem 1rem;
 }

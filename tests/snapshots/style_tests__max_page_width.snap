@@ -4,7 +4,6 @@ expression: c.build()
 ---
 ._6c308948 {
 }
-._d01f244_:active {
-background-color: #3b82f6;
-border-color: #f87171;
-}
+@media (max-width: 1024px){ ._e0151a40 {
+width: 6rem;
+} }

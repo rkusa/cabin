@@ -1,19 +1,21 @@
 ---
 source: tests/style_tests.rs
-expression: c.build(false).unwrap()
+expression: c.build()
 ---
-._51434695:focus:active {
+._6c308948 {
+}
+:where(._da8d8259:active > :not(:last-child)) {
+border-inline-end-width: 1px;
+}
+:where(._1d6ac6cc:active:focus > :not(:last-child)) {
+border-inline-end-width: 1px;
+}
+._44487497:active:focus {
 border-color: #000000;
 }
-._47fccaca:active {
+._6a2a6a27:active {
 background-color: #3b82f6;
 }
-._3e957521:focus {
+._d0d6b38b:focus {
 border-color: #f87171;
-}
-:where(._fece1ef_:active > :not(:last-child)) {
-border-inline-start-width: 1px;
-}
-:where(._12fac486:focus:active > :not(:last-child)) {
-border-inline-start-width: 1px;
 }
