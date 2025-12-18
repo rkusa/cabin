@@ -34,7 +34,7 @@ impl Style for StyleCollector {
                 parent_modifier: None,
             });
         }
-        &mut self.styles.last_mut().unwrap().style
+        &mut self.styles.first_mut().unwrap().style
     }
 }
 
