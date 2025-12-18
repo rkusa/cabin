@@ -170,9 +170,10 @@ impl<'a> SubStyle for StyleDelegate<'a> {
 
     fn substyle<F: for<'b> FnOnce(StyleDelegate<'b>) -> StyleDelegate<'b>>(
         self,
-        modifier: StyleModifier,
+        mut modifier: StyleModifier,
         f: F,
     ) -> Self {
+        self.style.modifier.merge_into(&mut modifier);
         let ix = self
             .collector
             .styles
