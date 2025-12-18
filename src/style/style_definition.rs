@@ -366,6 +366,14 @@ impl StyleDefinition {
         ClassName::new(self)
     }
 
+    pub fn inherit(&mut self, parent: &Self) {
+        if self.background_image.is_some() {
+            let mut background_image = parent.background_image.clone();
+            background_image.merge_from(self.background_image.take());
+            self.background_image = background_image;
+        }
+    }
+
     pub fn merge_from(&mut self, other: Self) {
         let StyleDefinition {
             modifier: _,

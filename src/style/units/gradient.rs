@@ -17,7 +17,6 @@ pub struct Gradient {
 
 impl PropertyDisplay for Gradient {
     fn fmt_property(&self, name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        dbg!(self);
         if let Some(((gradient_line, from_color), to_color)) =
             self.gradient_line.zip(self.from_color).zip(self.to_color)
         {
