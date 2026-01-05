@@ -92,11 +92,7 @@
             const html = DECODER.decode(wasm.instance.exports.memory.buffer.slice(ptr, ptr + len));
             wasm.instance.exports.dealloc(ptr, len);
 
-            console.time("patch");
-            const template = document.createElement("template");
-            template.innerHTML = html;
-            patchChildren(target, template.content, {}, disabledBefore);
-            console.timeEnd("patch");
+            patch(html, target, disabledBefore);
 
             return;
           } else {
@@ -191,38 +187,7 @@
       }
 
       const html = await res.text();
-
-      console.time("patch");
-      const template = document.createElement("template");
-      template.innerHTML = html;
-
-      if (template.content.firstElementChild instanceof HTMLStyleElement) {
-        const style = template.content.removeChild(template.content.firstElementChild);
-        const hash = style.getAttribute("hash");
-        if (!hash || !document.head.querySelector(`style[hash="${hash}"]`)) {
-          document.head.appendChild(style);
-        }
-      } else if (
-        template.content.firstElementChild instanceof HTMLTemplateElement &&
-        template.content.firstElementChild.id === "cabin-head"
-      ) {
-        const headTemplate = template.content.removeChild(template.content.firstElementChild);
-        patchChildren(document.head, headTemplate.content, {});
-      }
-
-      if (
-        template.content.firstElementChild instanceof HTMLTemplateElement &&
-        template.content.firstElementChild.id === "cabin-body"
-      ) {
-        const bodyTemplate = template.content.removeChild(template.content.firstElementChild);
-        bodyTemplate.removeAttribute("id");
-        patchAttributes(document.body, bodyTemplate);
-        patchChildren(document.body, bodyTemplate.content, disabledBefore);
-      } else {
-        patchChildren(target, template.content, {}, disabledBefore);
-      }
-
-      console.timeEnd("patch");
+      patch(html, target, disabledBefore);
 
       const rewriteUrl = res.headers.get("location");
       if (rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
@@ -240,6 +205,45 @@
         throw err;
       }
     }
+  }
+
+  /**
+   * @param {string} html
+   * @param {Node} target
+   * @param {Map<HTMLElement, bool>} disabledBefore
+   */
+  function patch(html, target, disabledBefore) {
+    console.time("patch");
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    if (template.content.firstElementChild instanceof HTMLStyleElement) {
+      const style = template.content.removeChild(template.content.firstElementChild);
+      const hash = style.getAttribute("hash");
+      if (!hash || !document.head.querySelector(`style[hash="${hash}"]`)) {
+        document.head.appendChild(style);
+      }
+    } else if (
+      template.content.firstElementChild instanceof HTMLTemplateElement &&
+      template.content.firstElementChild.id === "cabin-head"
+    ) {
+      const headTemplate = template.content.removeChild(template.content.firstElementChild);
+      patchChildren(document.head, headTemplate.content, {});
+    }
+
+    if (
+      template.content.firstElementChild instanceof HTMLTemplateElement &&
+      template.content.firstElementChild.id === "cabin-body"
+    ) {
+      const bodyTemplate = template.content.removeChild(template.content.firstElementChild);
+      bodyTemplate.removeAttribute("id");
+      patchAttributes(document.body, bodyTemplate);
+      patchChildren(document.body, bodyTemplate.content, disabledBefore);
+    } else {
+      patchChildren(target, template.content, {}, disabledBefore);
+    }
+
+    console.timeEnd("patch");
   }
 
   /**
