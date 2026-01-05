@@ -306,6 +306,10 @@ where
         self
     }
 
+    pub fn take_style(&mut self) -> Option<StyleCollector> {
+        self.style.take()
+    }
+
     pub(crate) fn change_tag(&mut self, tag: &'static str) {
         self.tag = tag;
     }
