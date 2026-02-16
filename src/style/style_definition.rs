@@ -734,7 +734,7 @@ impl StyleDefinition {
             write!(out, " }}").unwrap();
         }
 
-        writeln!(out, "").unwrap();
+        writeln!(out).unwrap();
     }
 }
 

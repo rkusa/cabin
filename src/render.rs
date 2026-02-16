@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
-use std::usize;
 
 use http::{HeaderMap, HeaderValue};
 use twox_hash::XxHash32;

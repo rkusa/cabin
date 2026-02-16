@@ -3,7 +3,7 @@ use std::fmt;
 use crate::style::property_display::PropertyDisplay;
 use crate::style::style_definition::MergeFrom;
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Default)]
 pub struct GridLines {
     pub start: Option<GridLine>,
     pub end: Option<GridLine>,
@@ -53,15 +53,6 @@ impl fmt::Display for GridLine {
             GridLine::Auto => f.write_str("auto"),
             GridLine::Nth(n) => write!(f, "{n}"),
             GridLine::Span(n) => write!(f, "span {n}"),
-        }
-    }
-}
-
-impl Default for GridLines {
-    fn default() -> Self {
-        Self {
-            start: None,
-            end: None,
         }
     }
 }

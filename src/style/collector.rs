@@ -158,7 +158,7 @@ pub struct StyleDelegate<'a> {
 
 impl<'a> Style for StyleDelegate<'a> {
     fn style_mut(&mut self) -> &mut StyleDefinition {
-        &mut self.style
+        self.style
     }
 }
 

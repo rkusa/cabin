@@ -10,7 +10,7 @@ impl Float {
         self.0 == 0
     }
 
-    pub fn to_f32(&self) -> f32 {
+    pub fn to_f32(self) -> f32 {
         (self.0 as f32) / 1000.0
     }
 }

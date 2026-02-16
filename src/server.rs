@@ -65,6 +65,7 @@ pub struct Event {
 pub fn basic_document(content: impl View) -> AnyView {
     use crate::prelude::*;
 
+    #[allow(clippy::async_yields_async)]
     async move {
         let (content, styles) = content.into_any_view().collect_styles(true).await;
         cabin::view![

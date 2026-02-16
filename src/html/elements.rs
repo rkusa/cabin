@@ -415,7 +415,11 @@ vanilla_element!(
     Small,
     "The `small` element represents side comments such as small print."
 );
-vanilla_element!(span, Span, "");
+vanilla_element!(
+    span,
+    Span,
+    "The `span` element represents generic inline container."
+);
 vanilla_element!(
     strong,
     Strong,

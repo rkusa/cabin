@@ -347,10 +347,8 @@ where
             if let Err(err) = attributes.render(&mut el) {
                 return RenderFuture::Ready(Err(err));
             }
-        } else {
-            if let Err(err) = attributes.render(&mut el) {
-                return RenderFuture::Ready(Err(err));
-            }
+        } else if let Err(err) = attributes.render(&mut el) {
+            return RenderFuture::Ready(Err(err));
         }
 
         if !is_void_element {

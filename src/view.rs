@@ -57,6 +57,7 @@ where
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum RenderFuture {
     Ready(Result<Renderer, crate::Error>),
     Future(Pin<Box<dyn Future<Output = Result<Renderer, crate::Error>> + Send>>),

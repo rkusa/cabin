@@ -2319,6 +2319,7 @@ pub trait Style: Sized {
     /// ```css
     /// background-image: linear-gradient(..., from_color {x}, ...);
     /// ```
+    #[allow(clippy::wrong_self_convention)]
     fn from_position(mut self, x: i16) -> Self {
         self.style_mut()
             .background_image
@@ -2332,6 +2333,7 @@ pub trait Style: Sized {
     /// ```css
     /// background-image: linear-gradient(..., from_color {x}, ...);
     /// ```
+    #[allow(clippy::wrong_self_convention)]
     fn from_positionf(mut self, x: f32) -> Self {
         self.style_mut()
             .background_image

@@ -243,6 +243,7 @@ where
         };
 
         if self.is_topmost {
+            #[allow(clippy::async_yields_async)]
             async move {
                 let (view, styles) = self.view.collect_styles(false).await;
                 crate::view![styles, h::script(state).r#type("application/json"), view]

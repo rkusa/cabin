@@ -9,6 +9,7 @@ fn main() {
 
     let path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("theme.rs");
     let out = &mut File::create(path).unwrap();
+    writeln!(out, r#"#[allow(clippy::wrong_self_convention)]"#).unwrap();
     writeln!(out, r#"pub trait ThemeExt: Style {{"#).unwrap();
 
     // color
