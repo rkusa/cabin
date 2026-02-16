@@ -2,6 +2,7 @@
   const ENCODER = new TextEncoder();
   const DECODER = new TextDecoder();
   const WASM = { href: null, wasm: null };
+  const REFRESH_SYMBOL = Symbol("REFRESH_SYMBOL");
 
   /**
    * @return {Promise<WebAssembly.WebAssemblyInstantiatedSource?}
@@ -41,13 +42,18 @@
   }
 
   /**
-   * @param {string} eventId
+   * @param {string | Symbol} eventId
    * @param {object | FormData} payload
    * @param {Node} target
    * @param {AbortController | undefined} abortController
    * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
    */
   async function update(eventId, payload, target, abortController, disabledBefore) {
+    const isRefresh = eventId == REFRESH_SYMBOL;
+    if (isRefresh) {
+      eventId = "";
+    }
+
     if (typeof eventId !== "string") {
       throw new TypeError("event id must be a string");
     }
@@ -190,7 +196,7 @@
       patch(html, target, disabledBefore);
 
       const rewriteUrl = res.headers.get("location");
-      if (rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
+      if (!isRefresh && rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
         history.pushState(null, undefined, rewriteUrl);
       }
 
@@ -765,7 +771,7 @@
         el.removeAttribute("hash");
       } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
     }
-    await update("", {}, document.body);
+    await update(REFRESH_SYMBOL, {}, document.body);
   });
 
   window.addEventListener("popstate", () => {
