@@ -244,7 +244,7 @@
       const bodyTemplate = template.content.removeChild(template.content.firstElementChild);
       bodyTemplate.removeAttribute("id");
       patchAttributes(document.body, bodyTemplate);
-      patchChildren(document.body, bodyTemplate.content, disabledBefore);
+      patchChildren(document.body, bodyTemplate.content, {}, disabledBefore);
     } else {
       patchChildren(target, template.content, {}, disabledBefore);
     }
