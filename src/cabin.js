@@ -174,17 +174,18 @@
         return;
       }
 
+      const headerEventId = res.headers.get("cabin-event");
+      const headerPayload = res.headers.get("cabin-event-payload");
+      if (headerEventId && headerPayload) {
+        target.dispatchEvent(
+          new CustomEvent("cabinFire", {
+            detail: { eventId: headerEventId, payload: JSON.parse(headerPayload) },
+            bubbles: true,
+          }),
+        );
+      }
+
       if (res.status === 204) {
-        const eventId = res.headers.get("cabin-event");
-        const payload = res.headers.get("cabin-event-payload");
-        if (eventId && payload) {
-          target.dispatchEvent(
-            new CustomEvent("cabinFire", {
-              detail: { eventId, payload: JSON.parse(payload) },
-              bubbles: true,
-            }),
-          );
-        }
         return;
       }
 
@@ -299,6 +300,44 @@
 
       if (opts.disable && node.disabled) {
         return;
+      }
+
+      // No ascendant found, look for top-level boundaries instead
+      if (eventName === "cabinFire" && el === document && !e.detail.isForwarded) {
+        let handled = false;
+        const boundaries = Array.from(document.querySelectorAll("cabin-boundary")).filter(
+          (boundary) => {
+            const events = new Set(
+              boundary
+                .getAttribute("events")
+                .split(",")
+                .filter((s) => s.length > 0),
+            );
+            return events.has(eventId);
+          },
+        );
+        let boundary;
+        outer: while ((boundary = boundaries.pop())) {
+          // ensure it's a top-level boundary (ie doesn't have a parent boundary with that handles
+          // the same event)
+          for (const b of boundaries) {
+            if (b.contains(boundary)) {
+              continue outer;
+            }
+          }
+
+          boundary.dispatchEvent(
+            new CustomEvent("cabinFire", {
+              detail: { ...e.detail, isForwarded: true },
+              bubbles: true,
+            }),
+          );
+
+          handled = true;
+        }
+        if (handled) {
+          return;
+        }
       }
 
       // The internal state/view of the boundary is possibly going to change due to this event. To
