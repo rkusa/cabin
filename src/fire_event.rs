@@ -3,6 +3,7 @@ use std::{error, fmt};
 use http::{HeaderName, HeaderValue, StatusCode};
 use http_error::HttpError;
 
+use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
 
@@ -27,6 +28,21 @@ impl FireEvent {
             })?)
             .map_err(InternalError::InvalidHeaderValue)?,
         })
+    }
+}
+
+impl View for FireEvent {
+    fn render(self, mut r: crate::render::Renderer) -> crate::view::RenderFuture {
+        let headers = r.headers_mut();
+        headers.insert(
+            HeaderName::from_static("cabin-event"),
+            self.event_id.clone(),
+        );
+        headers.insert(
+            HeaderName::from_static("cabin-event-payload"),
+            self.payload.clone(),
+        );
+        crate::view::RenderFuture::Ready(Ok(r))
     }
 }
 
