@@ -223,7 +223,17 @@ where
 {
     fn render(self, r: Renderer) -> RenderFuture {
         let Some(args) = self.args else {
-            return self.view.render(r);
+            return if self.is_topmost {
+                #[allow(clippy::async_yields_async)]
+                async move {
+                    let (view, styles) = self.view.collect_styles(false).await;
+                    crate::view![styles, view]
+                }
+                .into_any_view()
+                .render(r)
+            } else {
+                self.view.render(r)
+            };
         };
 
         // TODO: any way to make this a compile error?
