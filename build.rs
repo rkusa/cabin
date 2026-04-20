@@ -857,16 +857,6 @@ impl fmt::Display for Length {
     }
 }
 
-// FIXME: delete
-impl fmt::Debug for LineHeight {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            LineHeight::Length(x) => f.debug_tuple("LineHeight::Length").field(x).finish(),
-            LineHeight::Multiple(x) => f.debug_tuple("LineHeight::Multiple").field(x).finish(),
-        }
-    }
-}
-
 impl fmt::Display for LineHeight {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

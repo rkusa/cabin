@@ -82,12 +82,11 @@ impl Renderer {
         Scope::release_renderer_to_task(other);
     }
 
-    // FIXME: remove unnecessary error
-    pub fn end(self) -> Result<Out, crate::Error> {
-        Ok(Out {
+    pub fn end(self) -> Out {
+        Out {
             html: self.out,
             headers: self.headers,
-        })
+        }
     }
 
     pub fn is_update(&self) -> bool {

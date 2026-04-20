@@ -70,7 +70,6 @@ pub trait Common: WithAttribute {
 pub struct Id(pub Cow<'static, str>);
 
 /// The various classes that the element belongs to.
-// FIXME: make it Copy
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Class(pub Cow<'static, str>);
 
@@ -122,7 +121,6 @@ impl Class {
         } else if other.0.is_empty() {
             return self;
         }
-        // FIXME: avoid allocation
         match self.0 {
             Cow::Borrowed(s) => Class(Cow::Owned(format!("{s} {other}"))),
             Cow::Owned(mut s) => {

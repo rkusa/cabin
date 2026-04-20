@@ -22,7 +22,7 @@ use crate::style::units::track_repeat_equally::TrackRepeatEqually;
 use crate::style::units::transform::Transform;
 use crate::style::units::xy::Xy;
 
-// FIXME: move rarely used properties into sub struct indirected via Box?
+// TODO: move rarely used properties into sub struct indirected via Box?
 #[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct StyleDefinition {
     pub modifier: StyleModifier,
@@ -44,7 +44,7 @@ pub struct StyleDefinition {
     pub basis: Option<Length>,
     pub border_color: Option<FourSided<&'static str>>,
     pub border_inline_color: Option<Inlined<&'static str>>,
-    // FIXME: how to handle inline style vs border style?
+    // TODO: how to handle inline style vs border style?
     pub border_inline_style: Option<&'static str>,
     pub border_inline_width: Option<Inlined<Length>>,
     pub border_radius: Option<Corners<Either<Length>>>,
@@ -86,7 +86,6 @@ pub struct StyleDefinition {
     pub justify_self: Option<&'static str>,
     pub letter_spacing: Option<Length>,
     pub line_clamp: Option<LineClamp>,
-    // FIXME: validate below assumption
     // NOTE: Should take precedence over text::LG etc.
     pub line_height: Option<Either<Length, Float>>,
     pub list_style_type: Option<&'static str>,

@@ -145,7 +145,6 @@ mod tests {
                 .await
                 .unwrap()
                 .end()
-                .unwrap()
                 .html,
             r"<script>asd<\/script></script>"
         );
@@ -155,7 +154,6 @@ mod tests {
                 .await
                 .unwrap()
                 .end()
-                .unwrap()
                 .html,
             r"<script>asd<\!--</script>"
         );
@@ -165,7 +163,6 @@ mod tests {
                 .await
                 .unwrap()
                 .end()
-                .unwrap()
                 .html,
             r#"<script>if (1<2) alert("<\/script>")</script>"#
         );

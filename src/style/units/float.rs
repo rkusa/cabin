@@ -17,7 +17,6 @@ impl Float {
 
 impl From<f32> for Float {
     fn from(value: f32) -> Self {
-        // FIXME: handle overflow?
         Self((value * 1000.0).round() as i32)
     }
 }

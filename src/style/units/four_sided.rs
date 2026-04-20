@@ -68,7 +68,6 @@ impl<T: PartialEq + Display> PropertyDisplay for FourSided<T> {
                 writeln!(f, "{name}: {top} {right} {bottom} {left};")
             }
             (top, right, bottom, left) => {
-                // FIXME: generalize special handling?
                 if name == "inset" {
                     if let Some(top) = top {
                         writeln!(f, "top: {top};")?

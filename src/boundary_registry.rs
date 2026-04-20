@@ -91,7 +91,7 @@ impl BoundaryRegistry {
             let result = scope
                 .run(async move { handler(state_json.get(), r).await })
                 .await;
-            let Out { html, headers } = match result.and_then(|r| r.end()) {
+            let Out { html, headers } = match result.map(|r| r.end()) {
                 Ok(result) => result,
                 Err(err) => return err_to_response(err),
             };

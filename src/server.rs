@@ -90,7 +90,7 @@ where
             doc.render(r).await
         }))
         .await;
-    let Out { html, headers } = match result.and_then(|r| r.end()) {
+    let Out { html, headers } = match result.map(|r| r.end()) {
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
@@ -129,7 +129,7 @@ where
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move { render_fn().await.render(r).await }))
         .await;
-    let Out { html, headers } = match result.and_then(|r| r.end()) {
+    let Out { html, headers } = match result.map(|r| r.end()) {
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
