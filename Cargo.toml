@@ -33,7 +33,7 @@ num_cpus = "1.15"
 serde = { version = "1.0", features = ["derive"] }
 serde_html_form = { version = "0.4", default-features = false, features = ["std", "de"] }
 serde_json = { version = "1.0", features = ["raw_value"] }
-smallvec = { version = "2.0.0-alpha.12", features = ["std"] }
+smallvec = { version = "2.0.0-alpha.13", features = ["std"] }
 tokio = { version = "1.0", features = ["rt", "macros"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 tracing = "0.1"

@@ -15,7 +15,7 @@ impl AnyView {
     pub fn new(view: impl View) -> Self {
         let r = Scope::create_renderer_from_task();
         Self {
-            views: smallvec::smallvec![view.render(r)],
+            views: smallvec::SmallVec::from([view.render(r)]),
         }
     }
 
@@ -26,7 +26,7 @@ impl AnyView {
                 let css = r.build_styles(is_page_style);
                 (
                     Self {
-                        views: smallvec::smallvec![RenderFuture::Ready(Ok(r))],
+                        views: smallvec::SmallVec::from([RenderFuture::Ready(Ok(r))]),
                     },
                     if is_page_style {
                         h::style(css).id("cabin-styles").boxed()
@@ -37,7 +37,7 @@ impl AnyView {
             }
             Err(err) => (
                 Self {
-                    views: smallvec::smallvec![RenderFuture::Ready(Err(err))],
+                    views: smallvec::SmallVec::from([RenderFuture::Ready(Err(err))]),
                 },
                 h::style("").boxed(),
             ),
@@ -113,7 +113,7 @@ impl Future for AnyView {
                     let err =
                         std::mem::replace(err, crate::error::InternalError::FutureCompleted.into());
                     return std::task::Poll::Ready(AnyView {
-                        views: smallvec::smallvec![RenderFuture::Ready(Err(err))],
+                        views: smallvec::SmallVec::from([RenderFuture::Ready(Err(err))]),
                     });
                 }
                 RenderFuture::Ready(Ok(_)) => {
@@ -122,7 +122,7 @@ impl Future for AnyView {
                 RenderFuture::Future(future) => match future.as_mut().poll(cx) {
                     std::task::Poll::Ready(Err(err)) => {
                         return std::task::Poll::Ready(AnyView {
-                            views: smallvec::smallvec![RenderFuture::Ready(Err(err))],
+                            views: smallvec::SmallVec::from([RenderFuture::Ready(Err(err))]),
                         });
                     }
                     std::task::Poll::Ready(Ok(r)) => {

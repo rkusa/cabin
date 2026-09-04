@@ -17,10 +17,10 @@ struct Entry {
 impl Default for StyleCollector {
     fn default() -> Self {
         Self {
-            styles: smallvec::smallvec![Entry {
+            styles: smallvec::SmallVec::from([Entry {
                 style: Default::default(),
-                parent_modifier: None
-            }],
+                parent_modifier: None,
+            }]),
         }
     }
 }

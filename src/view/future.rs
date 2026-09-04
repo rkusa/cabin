@@ -22,12 +22,12 @@ where
 {
     fn into_any_view(self) -> AnyView {
         AnyView {
-            views: smallvec::smallvec![RenderFuture::Future(Box::pin(async move {
+            views: smallvec::SmallVec::from([RenderFuture::Future(Box::pin(async move {
                 self.into_future()
                     .await
                     .render(Scope::create_renderer_from_task())
                     .await
-            }))],
+            }))]),
         }
     }
 }
