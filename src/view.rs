@@ -4,7 +4,6 @@ mod boxed;
 pub mod error;
 mod future;
 mod iter;
-mod macros;
 pub mod text;
 mod update;
 
@@ -17,10 +16,10 @@ use std::task::{Context, Poll};
 pub use any::AnyView;
 pub use boundary::Boundary;
 pub use boxed::BoxedView;
+pub use cabin_macros::view;
 pub use future::FutureExt;
 use http_error::HttpError;
 pub use iter::IteratorExt;
-pub use macros::view;
 pub use update::UpdateView;
 
 pub use crate::pair::Pair;
