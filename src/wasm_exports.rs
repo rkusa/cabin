@@ -16,6 +16,7 @@ unsafe fn dealloc(ptr: *mut u8, size: usize) {
     }
 }
 
+#[link(wasm_import_module = "env")]
 unsafe extern "C" {
     fn error(msg: *mut u8, msg_len: usize);
 }
