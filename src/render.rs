@@ -46,7 +46,7 @@ impl Renderer {
     }
 
     pub fn reset(&mut self) {
-        self.out.truncate(0);
+        self.out.clear();
         self.headers.clear();
         self.styles.clear();
         self.hasher = XxHash32::default();
