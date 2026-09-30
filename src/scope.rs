@@ -43,61 +43,19 @@ where
             let event = event.as_mut()?;
             match event {
                 Event::Raw { id, payload } => {
-                    let event_id = E::ID;
-                    if *id != event_id {
+                    if *id != E::ID {
                         return None;
                     }
 
-                    match payload {
-                        Payload::Json(payload) => match serde_json::from_str(payload.get()) {
-                            Ok(payload) => {
-                                *event = Event::Deserialized(Box::new(payload));
-                                Some(payload)
-                            }
-                            Err(err) => {
-                                tracing::debug!(?payload, "event payload");
-                                (*scope.error.borrow_mut()) = Some(InternalError::Deserialize {
-                                    what: "event json payload",
-                                    err: Box::new(err),
-                                });
-                                None
-                            }
-                        },
-                        #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) if !payload.is_empty() => {
-                            match serde_html_form::from_str(payload) {
-                                Ok(payload) => {
-                                    *event = Event::Deserialized(Box::new(payload));
-                                    Some(payload)
-                                }
-                                Err(err) => {
-                                    tracing::debug!(payload, "event payload");
-                                    (*scope.error.borrow_mut()) =
-                                        Some(InternalError::Deserialize {
-                                            what: "event urlencoded payload",
-                                            err: Box::new(err),
-                                        });
-                                    None
-                                }
-                            }
+                    match deserialize_payload::<E>(payload) {
+                        Ok(payload) => {
+                            *event = Event::Deserialized(Box::new(payload));
+                            Some(payload)
                         }
-                        #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) => match serde_json::from_str("null")
-                            .or_else(|_| serde_json::from_str("{}"))
-                        {
-                            Ok(payload) => {
-                                *event = Event::Deserialized(Box::new(payload));
-                                Some(payload)
-                            }
-                            Err(err) => {
-                                tracing::debug!(payload, "event payload");
-                                (*scope.error.borrow_mut()) = Some(InternalError::Deserialize {
-                                    what: "event empty urlencoded payload",
-                                    err: Box::new(err),
-                                });
-                                None
-                            }
-                        },
+                        Err(err) => {
+                            (*scope.error.borrow_mut()) = Some(err);
+                            None
+                        }
                     }
                 }
                 Event::Deserialized(payload) => payload.downcast_ref::<E>().copied(),
@@ -116,53 +74,17 @@ where
             let mut event = scope.event.borrow_mut();
             match event.take()? {
                 Event::Raw { id, payload } => {
-                    let event_id = E::ID;
-                    if id != event_id {
+                    if id != E::ID {
                         *event = Some(Event::Raw { id, payload });
                         return None;
                     }
 
-                    match payload {
-                        Payload::Json(payload) => match serde_json::from_str(payload.get()) {
-                            Ok(payload) => Some(payload),
-                            Err(err) => {
-                                tracing::debug!(?payload, "event payload");
-                                (*scope.error.borrow_mut()) = Some(InternalError::Deserialize {
-                                    what: "event json payload",
-                                    err: Box::new(err),
-                                });
-                                None
-                            }
-                        },
-                        #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) if !payload.is_empty() => {
-                            match serde_html_form::from_str(&payload) {
-                                Ok(payload) => Some(payload),
-                                Err(err) => {
-                                    tracing::debug!(payload, "event payload");
-                                    (*scope.error.borrow_mut()) =
-                                        Some(InternalError::Deserialize {
-                                            what: "event urlencoded payload",
-                                            err: Box::new(err),
-                                        });
-                                    None
-                                }
-                            }
+                    match deserialize_payload::<E>(&payload) {
+                        Ok(payload) => Some(payload),
+                        Err(err) => {
+                            (*scope.error.borrow_mut()) = Some(err);
+                            None
                         }
-                        #[cfg(not(target_arch = "wasm32"))]
-                        Payload::UrlEncoded(payload) => match serde_json::from_str("null")
-                            .or_else(|_| serde_json::from_str("{}"))
-                        {
-                            Ok(payload) => Some(payload),
-                            Err(err) => {
-                                tracing::debug!(payload, "event payload");
-                                (*scope.error.borrow_mut()) = Some(InternalError::Deserialize {
-                                    what: "event empty urlencoded payload",
-                                    err: Box::new(err),
-                                });
-                                None
-                            }
-                        },
                     }
                 }
                 Event::Deserialized(payload) => match payload.downcast::<E>() {
@@ -176,6 +98,39 @@ where
         })
         .ok()
         .flatten()
+}
+
+pub(crate) fn deserialize_payload<E: DeserializeOwned>(
+    payload: &Payload,
+) -> Result<E, InternalError> {
+    match payload {
+        Payload::Json(payload) => serde_json::from_str(payload.get()).map_err(|err| {
+            tracing::debug!(?payload, "event payload");
+            InternalError::Deserialize {
+                what: "event json payload",
+                err: Box::new(err),
+            }
+        }),
+        #[cfg(not(target_arch = "wasm32"))]
+        Payload::UrlEncoded(payload) if !payload.is_empty() => serde_html_form::from_str(payload)
+            .map_err(|err| {
+                tracing::debug!(payload, "event payload");
+                InternalError::Deserialize {
+                    what: "event urlencoded payload",
+                    err: Box::new(err),
+                }
+            }),
+        #[cfg(not(target_arch = "wasm32"))]
+        Payload::UrlEncoded(payload) => serde_json::from_str("null")
+            .or_else(|_| serde_json::from_str("{}"))
+            .map_err(|err| {
+                tracing::debug!(payload, "event payload");
+                InternalError::Deserialize {
+                    what: "event empty urlencoded payload",
+                    err: Box::new(err),
+                }
+            }),
+    }
 }
 
 pub fn take_multipart() -> Option<Multipart<'static>> {
@@ -197,9 +152,29 @@ impl Scope {
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub(crate) fn with_event(self, id: String, payload: Payload) -> Self {
         *(self.event.borrow_mut()) = Some(Event::Raw { id, payload });
         self
+    }
+
+    /// Like [`Scope::with_event`], but if the event type is known (see
+    /// [`crate::private::EVENTS`]), deserializes the payload and validates it (see
+    /// [`crate::Exposed`]) right away.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) async fn with_validated_event(
+        self,
+        id: String,
+        payload: Payload,
+    ) -> Result<Self, crate::Error> {
+        let validate = crate::private::event_validator(&id)
+            .and_then(|validate| validate(crate::private::EventPayload(&payload)));
+        let event = match validate {
+            Some(validate) => Event::Deserialized(validate.await?),
+            None => Event::Raw { id, payload },
+        };
+        *(self.event.borrow_mut()) = Some(event);
+        Ok(self)
     }
 
     #[cfg(not(target_arch = "wasm32"))]

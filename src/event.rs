@@ -1,4 +1,14 @@
-pub trait Event {
+use crate::Exposed;
+
+/// An event that can be sent from the client, usually derived via `#[derive(Event)]`.
+///
+/// Since the client controls the payload, events must implement [`Exposed`]. Its `validate` runs
+/// before the event is handled. This only works for derived events: payloads of events that
+/// implement `Event` manually are not validated.
+///
+/// `#[derive(Event)]` also derives `Exposed` (and accepts its `#[exposed(..)]` attributes). To
+/// implement `Exposed` manually instead, add `#[event(manual_exposed)]`.
+pub trait Event: Exposed {
     // TODO: enforce restrictions on compile time?
     /// Must not contain a comma (',').
     const ID: &'static str;

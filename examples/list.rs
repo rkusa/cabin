@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use cabin::prelude::*;
 use cabin::scope::take_event;
 use cabin::view::{Boundary, IteratorExt};
-use cabin::{Event, basic_document};
+use cabin::{Event, Exposed, basic_document};
 use http::Request;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
@@ -12,7 +12,7 @@ async fn app() -> impl View {
     basic_document(list(vec![Item { id: 1, count: 1 }, Item { id: 2, count: 2 }]).await)
 }
 
-#[derive(Clone, Hash, Serialize, Deserialize)]
+#[derive(Clone, Hash, Exposed, Serialize, Deserialize)]
 struct Item {
     id: usize,
     count: usize,

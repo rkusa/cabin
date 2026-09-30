@@ -8,13 +8,13 @@ use http_body::Body;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-use crate::View;
 use crate::error::InternalError;
 use crate::render::{Out, Renderer};
 use crate::scope::Scope;
 use crate::server::{err_to_response, parse_body};
 use crate::view::RenderFuture;
 use crate::view::boundary::BoundaryRef;
+use crate::{Error, Exposed, View};
 
 type BoundaryHandler = dyn Send + Sync + Fn(&str, Renderer) -> RenderFuture;
 
@@ -32,22 +32,28 @@ impl BoundaryRegistry {
 
     pub fn register<Args>(&mut self, boundary: &'static BoundaryRef<Args>)
     where
-        Args: Clone + Serialize + DeserializeOwned + Send + Sync,
+        Args: Clone + Serialize + DeserializeOwned + Exposed + Send + Sync,
     {
         self.handler.insert(
             boundary.id,
-            Arc::new(
-                |args_json: &str, r: Renderer| match serde_json::from_str(args_json) {
-                    Ok(args) => {
-                        crate::view::FutureExt::into_any_view(boundary.with(args)).render(r)
+            Arc::new(move |args_json: &str, r: Renderer| {
+                let args: Args = match serde_json::from_str(args_json) {
+                    Ok(args) => args,
+                    Err(err) => {
+                        return RenderFuture::Ready(Err(bad_request(InternalError::Deserialize {
+                            what: "boundary state json",
+                            err: Box::new(err),
+                        })));
                     }
-                    Err(err) => RenderFuture::Ready(Err(InternalError::Deserialize {
-                        what: "boundary state json",
-                        err: Box::new(err),
-                    }
-                    .into())),
-                },
-            ),
+                };
+                RenderFuture::Future(Box::pin(async move {
+                    // The args come from the client, validate them before running the boundary.
+                    args.validate().await?;
+                    crate::view::FutureExt::into_any_view(boundary.with(args))
+                        .render(r)
+                        .await
+                }))
+            }),
         );
     }
 
@@ -80,10 +86,16 @@ impl BoundaryRegistry {
                 });
             let state_json = match result {
                 Ok(result) => result,
-                Err(err) => return err_to_response(err.into()),
+                Err(err) => return err_to_response(bad_request(err)),
             };
 
-            let mut scope = Scope::new(true, false).with_event(event.event_id, event.payload);
+            let mut scope = match Scope::new(true, false)
+                .with_validated_event(event.event_id, event.payload)
+                .await
+            {
+                Ok(scope) => scope,
+                Err(err) => return err_to_response(err),
+            };
             if let Some(multipart) = event.multipart {
                 scope = scope.with_multipart(multipart);
             }
@@ -107,4 +119,8 @@ impl BoundaryRegistry {
             res.body(html).unwrap()
         }
     }
+}
+
+fn bad_request(err: InternalError) -> Error {
+    Error::from(err).with_status(StatusCode::BAD_REQUEST)
 }

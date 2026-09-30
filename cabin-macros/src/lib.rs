@@ -2,6 +2,7 @@ mod boundaries_macro;
 mod boundary_attribute;
 mod derive_attribute;
 mod derive_event;
+mod derive_exposed;
 mod length_aliases_attribute;
 mod view_macro;
 mod view_macro_attribute;
@@ -20,10 +21,19 @@ pub fn derive_attribute(item: TokenStream) -> TokenStream {
     }
 }
 
-#[proc_macro_derive(Event)]
+#[proc_macro_derive(Event, attributes(event, exposed))]
 pub fn derive_event(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     match derive_event::derive_event(input) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
+}
+
+#[proc_macro_derive(Exposed, attributes(exposed))]
+pub fn derive_exposed(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    match derive_exposed::derive_exposed(input) {
         Ok(ts) => ts.into(),
         Err(err) => err.into_compile_error().into(),
     }

@@ -2,8 +2,9 @@
 
 extern crate self as cabin;
 
-pub use cabin_macros::{Attribute, BOUNDARIES, Event, boundary, view, view_macro};
+pub use cabin_macros::{Attribute, BOUNDARIES, Event, Exposed, boundary, view, view_macro};
 pub use error::Error;
+pub use exposed::Exposed;
 pub use html::h;
 pub use http::StatusCode;
 pub use redirect::Redirect;
@@ -17,6 +18,7 @@ pub use view::View;
 pub mod boundary_registry;
 pub mod error;
 pub mod event;
+pub mod exposed;
 pub mod fire_event;
 pub mod html;
 pub mod multipart;

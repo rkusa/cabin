@@ -120,7 +120,13 @@ where
         Ok(result) => result,
         Err(err) => return err_to_response(err),
     };
-    let mut scope = Scope::new(true, false).with_event(event.event_id, event.payload);
+    let mut scope = match Scope::new(true, false)
+        .with_validated_event(event.event_id, event.payload)
+        .await
+    {
+        Ok(scope) => scope,
+        Err(err) => return err_to_response(err),
+    };
     if let Some(multipart) = event.multipart {
         scope = scope.with_multipart(multipart);
     }

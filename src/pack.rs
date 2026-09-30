@@ -1,6 +1,8 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::Exposed;
+
 pub enum Bound<T: Pack<C>, C> {
     Packed(T::Packed),
     Unpacked(T),
@@ -18,6 +20,12 @@ impl<T: Pack<C>, C> Bound<T, C> {
 pub trait Pack<C>: Sized {
     type Packed: Serialize + DeserializeOwned;
     type Error;
+
+    /// Validates a packed value deserialized from client-supplied boundary state. Called before
+    /// the boundary runs, see [`Exposed`].
+    fn validate(_packed: &Self::Packed) -> impl Future<Output = Result<(), crate::Error>> + Send {
+        async { Ok(()) }
+    }
 
     fn pack(&self) -> Self::Packed;
     fn unpack(pack: Self::Packed, conn: &C) -> impl Future<Output = Result<Self, Self::Error>>;
@@ -49,6 +57,21 @@ impl<'de, T: Pack<C>, C> Deserialize<'de> for Bound<T, C> {
         D: Deserializer<'de>,
     {
         Ok(Bound::Packed(T::Packed::deserialize(deserializer)?))
+    }
+}
+
+impl<T, C> Exposed for Bound<T, C>
+where
+    T: Pack<C> + Sync,
+    T::Packed: Sync,
+    C: Sync,
+{
+    async fn validate(&self) -> Result<(), crate::Error> {
+        match self {
+            Bound::Packed(packed) => T::validate(packed).await,
+            // Only ever constructed on the server, never deserialized from client input.
+            Bound::Unpacked(_) => Ok(()),
+        }
     }
 }
 
