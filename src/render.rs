@@ -3,11 +3,11 @@ use std::fmt::{self, Display, Write};
 use std::hash::{Hash, Hasher};
 
 use http::{HeaderMap, HeaderValue};
-use twox_hash::XxHash32;
 
 use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
+use crate::hash::FxHasher;
 use crate::html::events::CustomEvent;
 use crate::scope::Scope;
 use crate::style::{ClassName, StyleDefinition};
@@ -20,7 +20,7 @@ pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
     styles: HashMap<ClassName, StyleDefinition>,
-    hasher: XxHash32,
+    hasher: FxHasher,
     is_update: bool,
     disable_hashes: bool,
 }
@@ -39,7 +39,7 @@ impl Renderer {
             // 15%. Thus decided to keep them empty by default and not reserve any
             // capacity.
             styles: Default::default(),
-            hasher: XxHash32::default(),
+            hasher: FxHasher::default(),
             disable_hashes,
             is_update,
         }
@@ -49,7 +49,7 @@ impl Renderer {
         self.out.clear();
         self.headers.clear();
         self.styles.clear();
-        self.hasher = XxHash32::default();
+        self.hasher = FxHasher::default();
     }
 
     pub fn append(&mut self, mut other: Renderer) {
@@ -77,7 +77,7 @@ impl Renderer {
         } else {
             self.styles.extend(other.styles.drain());
         }
-        let hash = other.hasher.finish() as u32;
+        let hash = other.hasher.finish_u32();
         self.hasher.write_u32(hash);
         Scope::release_renderer_to_task(other);
     }
@@ -183,7 +183,7 @@ impl Renderer {
 pub struct ElementRenderer {
     tag: &'static str,
     pub(crate) renderer: Renderer,
-    parent_hasher: XxHash32,
+    parent_hasher: FxHasher,
     content_started: bool,
     hash_offset: Option<usize>,
 }
@@ -293,7 +293,7 @@ impl ElementRenderer {
             write!(&mut self.renderer, ">").unwrap();
         }
 
-        let hash = self.renderer.hasher.finish() as u32;
+        let hash = self.renderer.hasher.finish_u32();
         if let Some(offset) = self.hash_offset {
             write!(WriteInto::new(&mut self.renderer.out, offset), "{hash:x}").unwrap();
         }
@@ -312,13 +312,13 @@ impl ElementRenderer {
 }
 
 pub struct TextRenderer {
-    hasher: XxHash32,
+    hasher: FxHasher,
     renderer: Renderer,
 }
 
 impl TextRenderer {
     pub fn end(mut self) -> Result<Renderer, crate::Error> {
-        let hash = self.hasher.finish() as u32;
+        let hash = self.hasher.finish_u32();
         self.renderer.hasher.write_u32(hash);
 
         Ok(self.renderer)

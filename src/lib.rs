@@ -20,6 +20,7 @@ pub mod error;
 pub mod event;
 pub mod exposed;
 pub mod fire_event;
+mod hash;
 pub mod html;
 pub mod multipart;
 pub mod pack;

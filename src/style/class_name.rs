@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 use std::fmt;
-use std::hash::{Hash, Hasher as _};
+use std::hash::Hash;
 
 use smallvec::SmallVec;
-use twox_hash::XxHash32;
 
+use crate::hash::FxHasher;
 use crate::html::attributes::Attributes;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -12,10 +12,11 @@ pub struct ClassName(u32);
 
 impl ClassName {
     pub(crate) fn new(style: &impl Hash) -> Self {
-        let mut s = XxHash32::default();
+        // A derived `Hash` on a `StyleDefinition` does many tiny writes, for which `FxHasher` is
+        // much faster than `XxHash32`.
+        let mut s = FxHasher::default();
         style.hash(&mut s);
-        let hash = s.finish();
-        Self(hash as u32)
+        Self(s.finish_u32())
     }
 }
 

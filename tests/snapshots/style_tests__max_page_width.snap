@@ -2,8 +2,8 @@
 source: tests/style_tests.rs
 expression: c.build()
 ---
-._6c308948 {
+._0_______ {
 }
-@media (max-width: 1024px){ ._e0151a40 {
+@media (max-width: 1024px){ ._7afe5d4_ {
 width: 6rem;
 } }

@@ -2,9 +2,9 @@
 source: tests/style_tests.rs
 expression: c.build()
 ---
-._74dbfed7 {
+._6300815e {
 display: block;
 }
-._6a2a6a27:active {
+._d0056d6a:active {
 background-color: #3b82f6;
 }
