@@ -10,7 +10,9 @@ pub struct StyleCollector {
 
 #[derive(Clone)]
 struct Entry {
-    style: StyleDefinition,
+    // Boxed, so moving a style through the collector and into the renderer doesn't copy the
+    // large `StyleDefinition`.
+    style: Box<StyleDefinition>,
     parent_modifier: Option<StyleModifier>,
 }
 
@@ -18,7 +20,7 @@ impl Default for StyleCollector {
     fn default() -> Self {
         Self {
             styles: smallvec::SmallVec::from([Entry {
-                style: Default::default(),
+                style: Box::default(),
                 parent_modifier: None,
             }]),
         }
@@ -28,9 +30,8 @@ impl Default for StyleCollector {
 impl Style for StyleCollector {
     fn style_mut(&mut self) -> &mut StyleDefinition {
         if self.styles.is_empty() {
-            let style = StyleDefinition::default();
             self.styles.push(Entry {
-                style,
+                style: Box::default(),
                 parent_modifier: None,
             });
         }
@@ -47,9 +48,8 @@ impl SubStyle for StyleCollector {
         if let Some(ix) = ix {
             &mut self.styles[ix].style
         } else {
-            let style = StyleDefinition::new(modifier);
             self.styles.push(Entry {
-                style,
+                style: Box::new(StyleDefinition::new(modifier)),
                 parent_modifier: self.styles.first().map(|s| s.style.modifier.clone()),
             });
             &mut self.styles.last_mut().unwrap().style
@@ -66,16 +66,16 @@ impl SubStyle for StyleCollector {
             .iter()
             .position(|style| style.style.modifier == modifier);
         if let Some(ix) = ix {
-            let mut style = std::mem::take(&mut self.styles[ix].style);
+            let mut style = std::mem::take(&mut *self.styles[ix].style);
             let delegate = StyleDelegate {
                 style: &mut style,
                 collector: &mut self,
             };
             let _ = (f)(delegate);
-            self.styles[ix].style = style;
+            *self.styles[ix].style = style;
             self
         } else {
-            let mut style = StyleDefinition::new(modifier);
+            let mut style = Box::new(StyleDefinition::new(modifier));
             let delegate = StyleDelegate {
                 style: &mut style,
                 collector: &mut self,
@@ -101,7 +101,7 @@ impl StyleCollector {
         out
     }
 
-    pub fn into_styles(mut self) -> impl Iterator<Item = StyleDefinition> {
+    pub fn into_styles(mut self) -> impl Iterator<Item = Box<StyleDefinition>> {
         for i in 0..self.styles.len() {
             let mut parent_modifier = self.styles[i].parent_modifier.clone();
             let mut infinite_loop_protection = self.styles.len();
@@ -138,7 +138,7 @@ impl StyleCollector {
                     && style.parent_modifier == other.parent_modifier
             });
             if let Some(ix) = ix {
-                self.styles[ix].style.merge_from(other.style);
+                self.styles[ix].style.merge_from(*other.style);
             } else {
                 self.styles.push(other);
             }
@@ -181,16 +181,16 @@ impl<'a> SubStyle for StyleDelegate<'a> {
             .position(|style| style.style.modifier == modifier);
 
         if let Some(ix) = ix {
-            let mut style = std::mem::take(&mut self.collector.styles[ix].style);
+            let mut style = std::mem::take(&mut *self.collector.styles[ix].style);
             let delegate = StyleDelegate {
                 style: &mut style,
                 collector: self.collector,
             };
             let _ = (f)(delegate);
-            self.collector.styles[ix].style = style;
+            *self.collector.styles[ix].style = style;
             self
         } else {
-            let mut style = StyleDefinition::new(modifier);
+            let mut style = Box::new(StyleDefinition::new(modifier));
             let delegate = StyleDelegate {
                 style: &mut style,
                 collector: self.collector,

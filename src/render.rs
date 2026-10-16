@@ -19,7 +19,7 @@ const DEFAULT_CAPACITY: usize = 128;
 pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
-    styles: HashMap<ClassName, StyleDefinition>,
+    styles: HashMap<ClassName, Box<StyleDefinition>>,
     hasher: FxHasher,
     is_update: bool,
     disable_hashes: bool,
@@ -131,9 +131,9 @@ impl Renderer {
         }
     }
 
-    pub fn append_style(&mut self, style: StyleDefinition) -> ClassName {
+    pub fn append_style(&mut self, style: Box<StyleDefinition>) -> ClassName {
         let class_name = style.class_name();
-        self.styles.insert(class_name, style);
+        self.styles.entry(class_name).or_insert(style);
         class_name
     }
 
