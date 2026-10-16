@@ -1,11 +1,14 @@
 use std::fmt;
 
+use smallvec::SmallVec;
+
 use crate::style::ClassName;
 use crate::style::animation::AnimationStyle;
 use crate::style::modifier::StyleModifier;
 use crate::style::property_display::PropertyDisplay as _;
 use crate::style::units::aspect::Aspect;
 use crate::style::units::box_shadow::BoxShadow;
+use crate::style::units::compact::Compact;
 use crate::style::units::corners::Corners;
 use crate::style::units::duration::Duration;
 use crate::style::units::either::Either;
@@ -22,330 +25,383 @@ use crate::style::units::track_repeat_equally::TrackRepeatEqually;
 use crate::style::units::transform::Transform;
 use crate::style::units::xy::Xy;
 
-// TODO: move rarely used properties into sub struct indirected via Box?
+// Large, rarely used values are boxed (`#[boxed]`), as the largest variant determines the size of
+// every `Property`.
+macro_rules! stored_ty {
+    (boxed $ty:ty) => { Box<$ty> };
+    ($ty:ty) => { $ty };
+}
+
+macro_rules! wrap_value {
+    (boxed $v:expr) => {
+        Box::new($v)
+    };
+    ($v:expr) => {
+        $v
+    };
+}
+
+macro_rules! unwrap_value {
+    (boxed $v:expr) => {
+        &mut **$v
+    };
+    ($v:expr) => {
+        $v
+    };
+}
+
+macro_rules! properties {
+    ($($(#[$boxed:ident])? $name:ident: $ty:ty,)*) => {
+        /// A single CSS property. The variants are declared (and thus sorted and written) in the
+        /// order in which they are written to CSS.
+        #[allow(non_camel_case_types)]
+        #[derive(Clone, Hash, PartialEq, Eq)]
+        pub(crate) enum Property {
+            $($name(stored_ty!($($boxed)? $ty)),)*
+        }
+
+        #[allow(non_camel_case_types)]
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+        pub(crate) enum PropertyKind {
+            $($name,)*
+        }
+
+        impl Property {
+            #[inline]
+            fn kind(&self) -> PropertyKind {
+                match self {
+                    $(Property::$name(_) => PropertyKind::$name,)*
+                }
+            }
+        }
+
+        impl MergeFrom for Property {
+            fn merge_from(&mut self, other: Self) {
+                match (self, other) {
+                    $((Property::$name(a), Property::$name(b)) => a.merge_from(b),)*
+                    (a, b) => *a = b,
+                }
+            }
+        }
+
+        impl StyleDefinition {
+            $(
+                #[inline]
+                pub fn $name(&mut self) -> Slot<'_, $ty> {
+                    Slot {
+                        properties: &mut self.properties,
+                        kind: PropertyKind::$name,
+                        wrap: |v| Property::$name(wrap_value!($($boxed)? v)),
+                        unwrap: |p| match p {
+                            Property::$name(v) => unwrap_value!($($boxed)? v),
+                            _ => unreachable!(),
+                        },
+                    }
+                }
+            )*
+        }
+    };
+}
+
+properties! {
+    align_items: &'static str,
+    align_self: &'static str,
+    animation_delay: Duration,
+    animation_duration: Duration,
+    animation_iterations: Iterations,
+    appearance: bool,
+    aspect: Aspect,
+    auto_cols: Either<Length>,
+    auto_rows: Either<Length>,
+    background_clip: &'static str,
+    background_color: &'static str,
+    #[boxed]
+    background_image: Image,
+    basis: Length,
+    border_color: Compact<FourSided<&'static str>>,
+    border_inline_color: Compact<Inlined<&'static str>>,
+    border_inline_style: &'static str,
+    border_inline_width: Inlined<Length>,
+    border_radius: Compact<Corners<Either<Length>>>,
+    border_style: &'static str,
+    border_width: FourSided<Length>,
+    #[boxed]
+    box_shadow: BoxShadow,
+    box_sizing: &'static str,
+    break_after: &'static str,
+    break_before: &'static str,
+    break_inside: &'static str,
+    clip_path: &'static str,
+    color: &'static str,
+    container: &'static str,
+    content: &'static str,
+    cursor: &'static str,
+    decoration: &'static str,
+    display: &'static str,
+    flex_direction: &'static str,
+    flex_grow: bool,
+    flex_shrink: bool,
+    flex_wrap: &'static str,
+    font_family: &'static str,
+    font_size: Length,
+    font_style: &'static str,
+    font_weight: u16,
+    gap: RowColumn<Length>,
+    grid_auto_flow: &'static str,
+    grid_column: GridLines,
+    grid_row: GridLines,
+    grid_template_columns: Either<TrackRepeatEqually>,
+    grid_template_rows: Either<TrackRepeatEqually>,
+    height: Length,
+    inset: FourSided<Length>,
+    inset_inline_end: Length,
+    inset_inline_start: Length,
+    justify_content: &'static str,
+    justify_self: &'static str,
+    letter_spacing: Length,
+    line_clamp: LineClamp,
+    line_height: Either<Length, Float>,
+    list_style_type: &'static str,
+    margin: FourSided<Length>,
+    margin_inline: Inlined<Length>,
+    max_height: Length,
+    max_width: Length,
+    min_height: Length,
+    min_width: Length,
+    object_fit: &'static str,
+    object_position: &'static str,
+    opacity: Length,
+    order: i32,
+    outline_color: &'static str,
+    outline_offset: Length,
+    outline_style: &'static str,
+    outline_width: Length,
+    overflow: Xy<&'static str>,
+    padding: FourSided<Length>,
+    place_content: &'static str,
+    place_items: &'static str,
+    place_self: &'static str,
+    pointer_events: &'static str,
+    position: &'static str,
+    text_align: &'static str,
+    text_overflow: &'static str,
+    text_transform: &'static str,
+    transform: Transform,
+    transition_delay: Duration,
+    transition_duration: Duration,
+    transition_property: &'static str,
+    transition_timing_function: &'static str,
+    user_select: &'static str,
+    visibility: &'static str,
+    white_space: &'static str,
+    width: Length,
+    word_break: &'static str,
+    z_index: Either<i32>,
+}
+
+const INLINE_PROPERTIES: usize = 8;
+
+/// The style of a single class. Only the properties that are set are stored, sorted by their
+/// [PropertyKind], which keeps the struct small and makes hashing (for the class name) cheap.
 #[derive(Default, Clone, Hash, PartialEq, Eq)]
 pub struct StyleDefinition {
     pub modifier: StyleModifier,
     pub animation_from: Option<AnimationStyle>,
     pub animation_to: Option<AnimationStyle>,
-    //
-    pub align_items: Option<&'static str>,
-    pub align_self: Option<&'static str>,
-    pub animation_delay: Option<Duration>,
-    pub animation_duration: Option<Duration>,
-    pub animation_iterations: Option<Iterations>,
-    pub appearance: Option<bool>,
-    pub aspect: Option<Aspect>,
-    pub auto_cols: Option<Either<Length>>,
-    pub auto_rows: Option<Either<Length>>,
-    pub background_clip: Option<&'static str>,
-    pub background_color: Option<&'static str>,
-    pub background_image: Option<Image>,
-    pub basis: Option<Length>,
-    pub border_color: Option<FourSided<&'static str>>,
-    pub border_inline_color: Option<Inlined<&'static str>>,
-    // TODO: how to handle inline style vs border style?
-    pub border_inline_style: Option<&'static str>,
-    pub border_inline_width: Option<Inlined<Length>>,
-    pub border_radius: Option<Corners<Either<Length>>>,
-    pub border_style: Option<&'static str>,
-    pub border_width: Option<FourSided<Length>>,
-    pub box_shadow: Option<BoxShadow>,
-    pub box_sizing: Option<&'static str>,
-    pub break_after: Option<&'static str>,
-    pub break_before: Option<&'static str>,
-    pub break_inside: Option<&'static str>,
-    pub clip_path: Option<&'static str>,
-    pub color: Option<&'static str>,
-    pub container: Option<&'static str>,
-    pub content: Option<&'static str>,
-    pub cursor: Option<&'static str>,
-    pub decoration: Option<&'static str>,
-    pub display: Option<&'static str>,
     pub divide_x_reversed: bool,
     pub divide_y_reversed: bool,
-    pub flex_direction: Option<&'static str>,
-    pub flex_grow: Option<bool>,
-    pub flex_shrink: Option<bool>,
-    pub flex_wrap: Option<&'static str>,
-    pub font_family: Option<&'static str>,
-    pub font_size: Option<Length>,
-    pub font_style: Option<&'static str>,
-    pub font_weight: Option<u16>,
-    pub gap: Option<RowColumn<Length>>,
-    pub grid_auto_flow: Option<&'static str>,
-    pub grid_column: Option<GridLines>,
-    pub grid_row: Option<GridLines>,
-    pub grid_template_columns: Option<Either<TrackRepeatEqually>>,
-    pub grid_template_rows: Option<Either<TrackRepeatEqually>>,
-    pub height: Option<Length>,
-    pub inset: Option<FourSided<Length>>,
-    pub inset_inline_end: Option<Length>,
-    pub inset_inline_start: Option<Length>,
-    pub justify_content: Option<&'static str>,
-    pub justify_self: Option<&'static str>,
-    pub letter_spacing: Option<Length>,
-    pub line_clamp: Option<LineClamp>,
-    // NOTE: Should take precedence over text::LG etc.
-    pub line_height: Option<Either<Length, Float>>,
-    pub list_style_type: Option<&'static str>,
-    pub margin: Option<FourSided<Length>>,
-    pub margin_inline: Option<Inlined<Length>>,
-    pub max_height: Option<Length>,
-    pub max_width: Option<Length>,
-    pub min_height: Option<Length>,
-    pub min_width: Option<Length>,
-    pub object_fit: Option<&'static str>,
-    pub object_position: Option<&'static str>,
-    pub opacity: Option<Length>,
-    pub order: Option<i32>,
-    pub outline_color: Option<&'static str>,
-    pub outline_offset: Option<Length>,
-    pub outline_style: Option<&'static str>,
-    pub outline_width: Option<Length>,
-    pub overflow: Option<Xy<&'static str>>,
-    pub padding: Option<FourSided<Length>>,
-    pub place_content: Option<&'static str>,
-    pub place_items: Option<&'static str>,
-    pub place_self: Option<&'static str>,
-    pub pointer_events: Option<&'static str>,
-    pub position: Option<&'static str>,
     pub space_x_reversed: bool,
     pub space_y_reversed: bool,
-    pub text_align: Option<&'static str>,
-    pub text_overflow: Option<&'static str>,
-    pub text_transform: Option<&'static str>,
-    pub transform: Option<Transform>,
-    pub transition_delay: Option<Duration>,
-    pub transition_duration: Option<Duration>,
-    pub transition_property: Option<&'static str>,
-    pub transition_timing_function: Option<&'static str>,
-    pub user_select: Option<&'static str>,
-    pub visibility: Option<&'static str>,
-    pub white_space: Option<&'static str>,
-    pub width: Option<Length>,
-    pub word_break: Option<&'static str>,
-    pub z_index: Option<Either<i32>>,
+    // Sorted by kind, at most one entry per kind, and never an entry for an unset property, as
+    // `Hash` and `Eq` (and thus class names) rely on it.
+    properties: SmallVec<Property, INLINE_PROPERTIES>,
+}
+
+/// Access to a single property of a [StyleDefinition].
+pub struct Slot<'a, T> {
+    properties: &'a mut SmallVec<Property, INLINE_PROPERTIES>,
+    kind: PropertyKind,
+    wrap: fn(T) -> Property,
+    unwrap: fn(&mut Property) -> &mut T,
+}
+
+impl<'a, T> Slot<'a, T> {
+    #[inline]
+    fn position(&self) -> Result<usize, usize> {
+        self.properties
+            .binary_search_by(|p| p.kind().cmp(&self.kind))
+    }
+
+    /// Set the property, replacing any previous value.
+    #[inline]
+    pub fn set(self, value: T) {
+        match self.position() {
+            Ok(ix) => self.properties[ix] = (self.wrap)(value),
+            Err(ix) => self.properties.insert(ix, (self.wrap)(value)),
+        }
+    }
+
+    /// Get the property, inserting its default value if it isn't set yet.
+    #[inline]
+    pub fn get_or_insert_default(self) -> &'a mut T
+    where
+        T: Default,
+    {
+        let ix = match self.position() {
+            Ok(ix) => ix,
+            Err(ix) => {
+                self.properties.insert(ix, (self.wrap)(T::default()));
+                ix
+            }
+        };
+        (self.unwrap)(&mut self.properties[ix])
+    }
+
+    /// Unset the property.
+    #[inline]
+    pub fn clear(self) {
+        if let Ok(ix) = self.position() {
+            self.properties.remove(ix);
+        }
+    }
+
+    #[inline]
+    pub fn is_set(&self) -> bool {
+        self.position().is_ok()
+    }
 }
 
 impl fmt::Display for StyleDefinition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let StyleDefinition {
-            modifier: _,
-            animation_from: _,
-            animation_to: _,
-            align_items,
-            align_self,
-            animation_delay,
-            animation_duration,
-            animation_iterations,
-            appearance,
-            aspect,
-            auto_cols,
-            auto_rows,
-            background_clip,
-            background_color,
-            background_image,
-            basis,
-            border_color,
-            border_inline_color,
-            border_inline_style,
-            border_inline_width,
-            border_radius,
-            border_style,
-            border_width,
-            box_shadow,
-            box_sizing,
-            break_after,
-            break_before,
-            break_inside,
-            clip_path,
-            color,
-            container,
-            content,
-            cursor,
-            decoration,
-            display,
-            divide_x_reversed,
-            divide_y_reversed,
-            flex_direction,
-            flex_grow,
-            flex_shrink,
-            flex_wrap,
-            font_family,
-            font_size,
-            font_style,
-            font_weight,
-            gap,
-            grid_auto_flow,
-            grid_column,
-            grid_row,
-            grid_template_columns,
-            grid_template_rows,
-            height,
-            inset,
-            inset_inline_end,
-            inset_inline_start,
-            justify_content,
-            justify_self,
-            letter_spacing,
-            line_clamp,
-            line_height,
-            list_style_type,
-            margin,
-            margin_inline,
-            max_height,
-            max_width,
-            min_height,
-            min_width,
-            object_fit,
-            object_position,
-            opacity,
-            order,
-            outline_color,
-            outline_offset,
-            outline_style,
-            outline_width,
-            overflow,
-            padding,
-            place_content,
-            place_items,
-            place_self,
-            pointer_events,
-            position,
-            space_x_reversed,
-            space_y_reversed,
-            text_align,
-            text_overflow,
-            text_transform,
-            transform,
-            transition_delay,
-            transition_duration,
-            transition_property,
-            transition_timing_function,
-            user_select,
-            visibility,
-            white_space,
-            width,
-            word_break,
-            z_index,
-        } = self;
-        align_items.fmt_property("align-items", f)?;
-        align_self.fmt_property("align-self", f)?;
-        animation_delay.fmt_property("animation-delay", f)?;
-        animation_duration.fmt_property("animation-duration", f)?;
-        animation_iterations.fmt_property("animation-iteration-count", f)?;
-        if let Some(appearance) = appearance {
-            let appearance = if *appearance { "auto" } else { "none" };
-            appearance.fmt_property("-webkit-appearance", f)?;
-            appearance.fmt_property("-moz-appearance", f)?;
-            appearance.fmt_property("appearance", f)?;
-        }
-        aspect.fmt_property("aspect-ratio", f)?;
-        auto_cols.fmt_property("grid-auto-columns", f)?;
-        auto_rows.fmt_property("grid-auto-rows", f)?;
-        background_clip.fmt_property("background-clip", f)?;
-        background_color.fmt_property("background-color", f)?;
-        background_image.fmt_property("background-image", f)?;
-        basis.fmt_property("flex-basis", f)?;
-        border_color.fmt_property("border-color", f)?;
-        border_inline_color.fmt_property("border-color", f)?;
-        border_inline_style.fmt_property("border-inline-style", f)?;
-        border_inline_width
-            .as_ref()
-            .map(|border_width| border_width.to_reversed(*divide_x_reversed, *divide_y_reversed))
-            .fmt_property("border-width", f)?;
-        border_radius.fmt_property("border-radius", f)?;
-        border_style.fmt_property("border-style", f)?;
-        border_width.fmt_property("border-width", f)?;
-        box_shadow.fmt_property("box-shadow", f)?;
-        box_sizing.fmt_property("box-sizing", f)?;
-        break_after.fmt_property("break-after", f)?;
-        break_before.fmt_property("break-before", f)?;
-        break_inside.fmt_property("break-inside", f)?;
-        clip_path.fmt_property("clip-path", f)?;
-        color.fmt_property("color", f)?;
-        container.fmt_property("container-type", f)?;
-        if let Some(content) = content {
-            if content.is_empty() {
-                r#""""#.fmt_property("content", f)?;
-            } else {
-                content.fmt_property("content", f)?;
+        let has_line_clamp = self.get(PropertyKind::line_clamp).is_some();
+        for property in &self.properties {
+            match property {
+                Property::align_items(v) => v.fmt_property("align-items", f)?,
+                Property::align_self(v) => v.fmt_property("align-self", f)?,
+                Property::animation_delay(v) => v.fmt_property("animation-delay", f)?,
+                Property::animation_duration(v) => v.fmt_property("animation-duration", f)?,
+                Property::animation_iterations(v) => {
+                    v.fmt_property("animation-iteration-count", f)?
+                }
+                Property::appearance(appearance) => {
+                    let appearance = if *appearance { "auto" } else { "none" };
+                    appearance.fmt_property("-webkit-appearance", f)?;
+                    appearance.fmt_property("-moz-appearance", f)?;
+                    appearance.fmt_property("appearance", f)?;
+                }
+                Property::aspect(v) => v.fmt_property("aspect-ratio", f)?,
+                Property::auto_cols(v) => v.fmt_property("grid-auto-columns", f)?,
+                Property::auto_rows(v) => v.fmt_property("grid-auto-rows", f)?,
+                Property::background_clip(v) => v.fmt_property("background-clip", f)?,
+                Property::background_color(v) => v.fmt_property("background-color", f)?,
+                Property::background_image(v) => v.fmt_property("background-image", f)?,
+                Property::basis(v) => v.fmt_property("flex-basis", f)?,
+                Property::border_color(v) => v.fmt_property("border-color", f)?,
+                Property::border_inline_color(v) => v.fmt_property("border-color", f)?,
+                Property::border_inline_style(v) => v.fmt_property("border-inline-style", f)?,
+                Property::border_inline_width(border_width) => border_width
+                    .to_reversed(self.divide_x_reversed, self.divide_y_reversed)
+                    .fmt_property("border-width", f)?,
+                Property::border_radius(v) => v.fmt_property("border-radius", f)?,
+                Property::border_style(v) => v.fmt_property("border-style", f)?,
+                Property::border_width(v) => v.fmt_property("border-width", f)?,
+                Property::box_shadow(v) => v.fmt_property("box-shadow", f)?,
+                Property::box_sizing(v) => v.fmt_property("box-sizing", f)?,
+                Property::break_after(v) => v.fmt_property("break-after", f)?,
+                Property::break_before(v) => v.fmt_property("break-before", f)?,
+                Property::break_inside(v) => v.fmt_property("break-inside", f)?,
+                Property::clip_path(v) => v.fmt_property("clip-path", f)?,
+                Property::color(v) => v.fmt_property("color", f)?,
+                Property::container(v) => v.fmt_property("container-type", f)?,
+                Property::content(content) => {
+                    if content.is_empty() {
+                        r#""""#.fmt_property("content", f)?;
+                    } else {
+                        content.fmt_property("content", f)?;
+                    }
+                }
+                Property::cursor(v) => v.fmt_property("cursor", f)?,
+                Property::decoration(v) => v.fmt_property("text-decoration-line", f)?,
+                Property::display(display) => {
+                    if !has_line_clamp {
+                        display.fmt_property("display", f)?;
+                    }
+                }
+                Property::flex_direction(v) => v.fmt_property("flex-direction", f)?,
+                Property::flex_grow(v) => v.fmt_property("flex-grow", f)?,
+                Property::flex_shrink(v) => v.fmt_property("flex-shrink", f)?,
+                Property::flex_wrap(v) => v.fmt_property("flex-wrap", f)?,
+                Property::font_family(v) => v.fmt_property("font-family", f)?,
+                Property::font_size(v) => v.fmt_property("font-size", f)?,
+                Property::font_style(v) => v.fmt_property("font-style", f)?,
+                Property::font_weight(v) => v.fmt_property("font-weight", f)?,
+                Property::gap(v) => v.fmt_property("gap", f)?,
+                Property::grid_auto_flow(v) => v.fmt_property("grid-auto-flow", f)?,
+                Property::grid_column(v) => v.fmt_property("grid-column", f)?,
+                Property::grid_row(v) => v.fmt_property("grid-row", f)?,
+                Property::grid_template_columns(v) => v.fmt_property("grid-template-columns", f)?,
+                Property::grid_template_rows(v) => v.fmt_property("grid-template-rows", f)?,
+                Property::height(v) => v.fmt_property("height", f)?,
+                Property::inset(v) => v.fmt_property("inset", f)?,
+                Property::inset_inline_end(v) => v.fmt_property("inset-inline-end", f)?,
+                Property::inset_inline_start(v) => v.fmt_property("inset-inline-start", f)?,
+                Property::justify_content(v) => v.fmt_property("justify-content", f)?,
+                Property::justify_self(v) => v.fmt_property("justify-self", f)?,
+                Property::letter_spacing(v) => v.fmt_property("letter-spacing", f)?,
+                Property::line_clamp(line_clamp) => fmt::Display::fmt(line_clamp, f)?,
+                Property::line_height(v) => v.fmt_property("line-height", f)?,
+                Property::list_style_type(v) => v.fmt_property("list-style-type", f)?,
+                Property::margin(v) => v.fmt_property("margin", f)?,
+                Property::margin_inline(margin_inline) => margin_inline
+                    .to_reversed(self.space_x_reversed, self.space_y_reversed)
+                    .fmt_property("margin", f)?,
+                Property::max_height(v) => v.fmt_property("max-height", f)?,
+                Property::max_width(v) => v.fmt_property("max-width", f)?,
+                Property::min_height(v) => v.fmt_property("min-height", f)?,
+                Property::min_width(v) => v.fmt_property("min-width", f)?,
+                Property::object_fit(v) => v.fmt_property("object-fit", f)?,
+                Property::object_position(v) => v.fmt_property("object-position", f)?,
+                Property::opacity(v) => v.fmt_property("opacity", f)?,
+                Property::order(v) => v.fmt_property("order", f)?,
+                Property::outline_color(v) => v.fmt_property("outline-color", f)?,
+                Property::outline_offset(v) => v.fmt_property("outline-offset", f)?,
+                Property::outline_style(v) => v.fmt_property("outline-style", f)?,
+                Property::outline_width(v) => v.fmt_property("outline-width", f)?,
+                Property::overflow(overflow) => {
+                    if !has_line_clamp {
+                        overflow.fmt_property("overflow", f)?;
+                    }
+                }
+                Property::padding(v) => v.fmt_property("padding", f)?,
+                Property::place_content(v) => v.fmt_property("place-content", f)?,
+                Property::place_items(v) => v.fmt_property("place-items", f)?,
+                Property::place_self(v) => v.fmt_property("place-self", f)?,
+                Property::pointer_events(v) => v.fmt_property("pointer-events", f)?,
+                Property::position(v) => v.fmt_property("position", f)?,
+                Property::text_align(v) => v.fmt_property("text-align", f)?,
+                Property::text_overflow(v) => v.fmt_property("text-overflow", f)?,
+                Property::text_transform(v) => v.fmt_property("text-transform", f)?,
+                Property::transform(v) => v.fmt_property("transform", f)?,
+                Property::transition_delay(v) => v.fmt_property("transition-delay", f)?,
+                Property::transition_duration(v) => v.fmt_property("transition-duration", f)?,
+                Property::transition_property(v) => v.fmt_property("transition-property", f)?,
+                Property::transition_timing_function(v) => {
+                    v.fmt_property("transition-timing-function", f)?
+                }
+                Property::user_select(user_select) => {
+                    user_select.fmt_property("-webkit-user-select", f)?;
+                    user_select.fmt_property("user-select", f)?;
+                }
+                Property::visibility(v) => v.fmt_property("visibility", f)?,
+                Property::white_space(v) => v.fmt_property("white-space", f)?,
+                Property::width(v) => v.fmt_property("width", f)?,
+                Property::word_break(v) => v.fmt_property("word-break", f)?,
+                Property::z_index(v) => v.fmt_property("z-index", f)?,
             }
         }
-        cursor.fmt_property("cursor", f)?;
-        decoration.fmt_property("text-decoration-line", f)?;
-        if line_clamp.is_none() {
-            display.fmt_property("display", f)?;
-        }
-        flex_direction.fmt_property("flex-direction", f)?;
-        flex_grow.fmt_property("flex-grow", f)?;
-        flex_shrink.fmt_property("flex-shrink", f)?;
-        flex_wrap.fmt_property("flex-wrap", f)?;
-        font_family.fmt_property("font-family", f)?;
-        font_size.fmt_property("font-size", f)?;
-        font_style.fmt_property("font-style", f)?;
-        font_weight.fmt_property("font-weight", f)?;
-        gap.fmt_property("gap", f)?;
-        grid_auto_flow.fmt_property("grid-auto-flow", f)?;
-        grid_column.fmt_property("grid-column", f)?;
-        grid_row.fmt_property("grid-row", f)?;
-        grid_template_columns.fmt_property("grid-template-columns", f)?;
-        grid_template_rows.fmt_property("grid-template-rows", f)?;
-        height.fmt_property("height", f)?;
-        inset.fmt_property("inset", f)?;
-        inset_inline_end.fmt_property("inset-inline-end", f)?;
-        inset_inline_start.fmt_property("inset-inline-start", f)?;
-        justify_content.fmt_property("justify-content", f)?;
-        justify_self.fmt_property("justify-self", f)?;
-        letter_spacing.fmt_property("letter-spacing", f)?;
-        if let Some(line_clamp) = line_clamp {
-            line_clamp.fmt(f)?;
-        }
-        line_height.fmt_property("line-height", f)?;
-        list_style_type.fmt_property("list-style-type", f)?;
-        margin.fmt_property("margin", f)?;
-        margin_inline
-            .as_ref()
-            .map(|margin_inline| margin_inline.to_reversed(*space_x_reversed, *space_y_reversed))
-            .fmt_property("margin", f)?;
-        max_height.fmt_property("max-height", f)?;
-        max_width.fmt_property("max-width", f)?;
-        min_height.fmt_property("min-height", f)?;
-        min_width.fmt_property("min-width", f)?;
-        object_fit.fmt_property("object-fit", f)?;
-        object_position.fmt_property("object-position", f)?;
-        opacity.fmt_property("opacity", f)?;
-        order.fmt_property("order", f)?;
-        outline_color.fmt_property("outline-color", f)?;
-        outline_offset.fmt_property("outline-offset", f)?;
-        outline_style.fmt_property("outline-style", f)?;
-        outline_width.fmt_property("outline-width", f)?;
-        if line_clamp.is_none() {
-            overflow.fmt_property("overflow", f)?;
-        }
-        padding.fmt_property("padding", f)?;
-        place_content.fmt_property("place-content", f)?;
-        place_items.fmt_property("place-items", f)?;
-        place_self.fmt_property("place-self", f)?;
-        pointer_events.fmt_property("pointer-events", f)?;
-        position.fmt_property("position", f)?;
-        text_align.fmt_property("text-align", f)?;
-        text_overflow.fmt_property("text-overflow", f)?;
-        text_transform.fmt_property("text-transform", f)?;
-        transform.fmt_property("transform", f)?;
-        transition_delay.fmt_property("transition-delay", f)?;
-        transition_duration.fmt_property("transition-duration", f)?;
-        transition_property.fmt_property("transition-property", f)?;
-        transition_timing_function.fmt_property("transition-timing-function", f)?;
-        user_select.fmt_property("-webkit-user-select", f)?;
-        user_select.fmt_property("user-select", f)?;
-        visibility.fmt_property("visibility", f)?;
-        white_space.fmt_property("white-space", f)?;
-        width.fmt_property("width", f)?;
-        word_break.fmt_property("word-break", f)?;
-        z_index.fmt_property("z-index", f)?;
-        if *word_break == Some("normal") {
+        if let Some(Property::word_break(word_break)) = self.get(PropertyKind::word_break)
+            && *word_break == "normal"
+        {
             word_break.fmt_property("overflow-wrap", f)?;
         }
 
@@ -361,15 +417,29 @@ impl StyleDefinition {
         }
     }
 
+    fn index_of(&self, kind: PropertyKind) -> Result<usize, usize> {
+        self.properties.binary_search_by(|p| p.kind().cmp(&kind))
+    }
+
+    fn get(&self, kind: PropertyKind) -> Option<&Property> {
+        self.index_of(kind).ok().map(|ix| &self.properties[ix])
+    }
+
     pub fn class_name(&self) -> ClassName {
         ClassName::new(self)
     }
 
     pub fn inherit(&mut self, parent: &Self) {
-        if self.background_image.is_some() {
-            let mut background_image = parent.background_image.clone();
-            background_image.merge_from(self.background_image.take());
-            self.background_image = background_image;
+        let Ok(ix) = self.index_of(PropertyKind::background_image) else {
+            return;
+        };
+        let Some(Property::background_image(parent)) = parent.get(PropertyKind::background_image)
+        else {
+            return;
+        };
+        if let Property::background_image(background_image) = &mut self.properties[ix] {
+            let own = std::mem::replace(background_image, parent.clone());
+            background_image.merge_from(own);
         }
     }
 
@@ -378,201 +448,25 @@ impl StyleDefinition {
             modifier: _,
             animation_from,
             animation_to,
-            align_items,
-            align_self,
-            animation_delay,
-            animation_duration,
-            animation_iterations,
-            appearance,
-            aspect,
-            auto_cols,
-            auto_rows,
-            background_clip,
-            background_color,
-            background_image,
-            basis,
-            border_color,
-            border_inline_color,
-            border_inline_style,
-            border_inline_width,
-            border_radius,
-            border_style,
-            border_width,
-            box_shadow,
-            box_sizing,
-            break_after,
-            break_before,
-            break_inside,
-            clip_path,
-            color,
-            container,
-            content,
-            cursor,
-            decoration,
-            display,
             divide_x_reversed,
             divide_y_reversed,
-            flex_direction,
-            flex_grow,
-            flex_shrink,
-            flex_wrap,
-            font_family,
-            font_size,
-            font_style,
-            font_weight,
-            gap,
-            grid_auto_flow,
-            grid_column,
-            grid_row,
-            grid_template_columns,
-            grid_template_rows,
-            height,
-            inset,
-            inset_inline_end,
-            inset_inline_start,
-            justify_content,
-            justify_self,
-            letter_spacing,
-            line_clamp,
-            line_height,
-            list_style_type,
-            margin,
-            margin_inline,
-            max_height,
-            max_width,
-            min_height,
-            min_width,
-            object_fit,
-            object_position,
-            opacity,
-            order,
-            outline_color,
-            outline_offset,
-            outline_style,
-            outline_width,
-            overflow,
-            padding,
-            place_content,
-            place_items,
-            place_self,
-            pointer_events,
-            position,
             space_x_reversed,
             space_y_reversed,
-            text_align,
-            text_overflow,
-            text_transform,
-            transform,
-            transition_delay,
-            transition_duration,
-            transition_property,
-            transition_timing_function,
-            user_select,
-            visibility,
-            white_space,
-            width,
-            word_break,
-            z_index,
+            properties,
         } = other;
 
         self.animation_from.merge_from(animation_from);
         self.animation_to.merge_from(animation_to);
-        self.align_items.merge_from(align_items);
-        self.align_self.merge_from(align_self);
-        self.animation_delay.merge_from(animation_delay);
-        self.animation_duration.merge_from(animation_duration);
-        self.animation_iterations.merge_from(animation_iterations);
-        self.appearance.merge_from(appearance);
-        self.aspect.merge_from(aspect);
-        self.auto_cols.merge_from(auto_cols);
-        self.auto_rows.merge_from(auto_rows);
-        self.background_clip.merge_from(background_clip);
-        self.background_color.merge_from(background_color);
-        self.background_image.merge_from(background_image);
-        self.basis.merge_from(basis);
-        self.border_color.merge_from(border_color);
-        self.border_inline_color.merge_from(border_inline_color);
-        self.border_inline_style.merge_from(border_inline_style);
-        self.border_inline_width.merge_from(border_inline_width);
-        self.border_radius.merge_from(border_radius);
-        self.border_style.merge_from(border_style);
-        self.border_width.merge_from(border_width);
-        self.box_shadow.merge_from(box_shadow);
-        self.box_sizing.merge_from(box_sizing);
-        self.break_after.merge_from(break_after);
-        self.break_before.merge_from(break_before);
-        self.break_inside.merge_from(break_inside);
-        self.clip_path.merge_from(clip_path);
-        self.color.merge_from(color);
-        self.container.merge_from(container);
-        self.content.merge_from(content);
-        self.cursor.merge_from(cursor);
-        self.decoration.merge_from(decoration);
-        self.display.merge_from(display);
         self.divide_x_reversed.merge_from(divide_x_reversed);
         self.divide_y_reversed.merge_from(divide_y_reversed);
-        self.flex_direction.merge_from(flex_direction);
-        self.flex_grow.merge_from(flex_grow);
-        self.flex_shrink.merge_from(flex_shrink);
-        self.flex_wrap.merge_from(flex_wrap);
-        self.font_family.merge_from(font_family);
-        self.font_size.merge_from(font_size);
-        self.font_style.merge_from(font_style);
-        self.font_weight.merge_from(font_weight);
-        self.gap.merge_from(gap);
-        self.grid_auto_flow.merge_from(grid_auto_flow);
-        self.grid_column.merge_from(grid_column);
-        self.grid_row.merge_from(grid_row);
-        self.grid_template_columns.merge_from(grid_template_columns);
-        self.grid_template_rows.merge_from(grid_template_rows);
-        self.height.merge_from(height);
-        self.inset.merge_from(inset);
-        self.inset_inline_end.merge_from(inset_inline_end);
-        self.inset_inline_start.merge_from(inset_inline_start);
-        self.justify_content.merge_from(justify_content);
-        self.justify_self.merge_from(justify_self);
-        self.letter_spacing.merge_from(letter_spacing);
-        self.line_clamp.merge_from(line_clamp);
-        self.line_height.merge_from(line_height);
-        self.list_style_type.merge_from(list_style_type);
-        self.margin.merge_from(margin);
-        self.margin_inline.merge_from(margin_inline);
-        self.max_height.merge_from(max_height);
-        self.max_width.merge_from(max_width);
-        self.min_height.merge_from(min_height);
-        self.min_width.merge_from(min_width);
-        self.object_fit.merge_from(object_fit);
-        self.object_position.merge_from(object_position);
-        self.opacity.merge_from(opacity);
-        self.order.merge_from(order);
-        self.outline_color.merge_from(outline_color);
-        self.outline_offset.merge_from(outline_offset);
-        self.outline_style.merge_from(outline_style);
-        self.outline_width.merge_from(outline_width);
-        self.overflow.merge_from(overflow);
-        self.padding.merge_from(padding);
-        self.place_content.merge_from(place_content);
-        self.place_items.merge_from(place_items);
-        self.place_self.merge_from(place_self);
-        self.pointer_events.merge_from(pointer_events);
-        self.position.merge_from(position);
         self.space_x_reversed.merge_from(space_x_reversed);
         self.space_y_reversed.merge_from(space_y_reversed);
-        self.text_align.merge_from(text_align);
-        self.text_overflow.merge_from(text_overflow);
-        self.text_transform.merge_from(text_transform);
-        self.transform.merge_from(transform);
-        self.transition_delay.merge_from(transition_delay);
-        self.transition_duration.merge_from(transition_duration);
-        self.transition_property.merge_from(transition_property);
-        self.transition_timing_function
-            .merge_from(transition_timing_function);
-        self.user_select.merge_from(user_select);
-        self.visibility.merge_from(visibility);
-        self.white_space.merge_from(white_space);
-        self.width.merge_from(width);
-        self.word_break.merge_from(word_break);
-        self.z_index.merge_from(z_index);
+        for property in properties {
+            match self.index_of(property.kind()) {
+                Ok(ix) => self.properties[ix].merge_from(property),
+                Err(ix) => self.properties.insert(ix, property),
+            }
+        }
     }
 
     pub(crate) fn write_to(&self, out: &mut dyn fmt::Write) {
@@ -744,6 +638,12 @@ pub trait MergeFrom {
 impl MergeFrom for StyleDefinition {
     fn merge_from(&mut self, other: Self) {
         StyleDefinition::merge_from(self, other);
+    }
+}
+
+impl<T: MergeFrom> MergeFrom for Box<T> {
+    fn merge_from(&mut self, other: Self) {
+        (**self).merge_from(*other);
     }
 }
 

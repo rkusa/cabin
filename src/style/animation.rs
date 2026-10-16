@@ -20,6 +20,6 @@ impl fmt::Display for AnimationStyle {
 
 impl MergeFrom for AnimationStyle {
     fn merge_from(&mut self, other: Self) {
-        self.0.merge_from(*other.0);
+        self.0.merge_from(other.0);
     }
 }

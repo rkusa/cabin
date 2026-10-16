@@ -1,5 +1,6 @@
 pub mod aspect;
 pub mod box_shadow;
+pub mod compact;
 pub mod corners;
 pub mod duration;
 pub mod either;

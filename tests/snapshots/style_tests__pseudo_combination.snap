@@ -4,18 +4,18 @@ expression: c.build()
 ---
 ._0_______ {
 }
-:where(._330e90b4:active > :not(:last-child)) {
+:where(._f12e0119:active > :not(:last-child)) {
 border-inline-end-width: 1px;
 }
-:where(._d5afdf54:active:focus > :not(:last-child)) {
+:where(._685eff63:active:focus > :not(:last-child)) {
 border-inline-end-width: 1px;
 }
-._e1587c97:active:focus {
+._5e6aca1d:active:focus {
 border-color: #000000;
 }
-._d0056d6a:active {
+._fc51e6f9:active {
 background-color: #3b82f6;
 }
-._521da62e:focus {
+._c58f3e98:focus {
 border-color: #f87171;
 }

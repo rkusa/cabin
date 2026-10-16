@@ -114,8 +114,8 @@ pub trait SubStyle: Style {
         );
         {
             let style = style.style_mut();
-            if style.content.is_none() {
-                style.content = Some("");
+            if !style.content().is_set() {
+                style.content().set("");
             }
         }
         style
@@ -131,8 +131,8 @@ pub trait SubStyle: Style {
         );
         {
             let style = style.style_mut();
-            if style.content.is_none() {
-                style.content = Some("");
+            if !style.content().is_set() {
+                style.content().set("");
             }
         }
         style
@@ -280,7 +280,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_width
+        .border_inline_width()
         .get_or_insert_default()
         .set_inline_end(Length::Px(Float::from(1i32)));
         self
@@ -296,7 +296,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_width
+        .border_inline_width()
         .get_or_insert_default()
         .set_inline_end(Length::Px(Float::from(px)));
         self
@@ -312,7 +312,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_width
+        .border_inline_width()
         .get_or_insert_default()
         .set_inline_end(Length::Px(Float::from(px)));
         self
@@ -343,7 +343,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_width
+        .border_inline_width()
         .get_or_insert_default()
         .set_block_end(Length::Px(Float::from(1i32)));
         self
@@ -359,7 +359,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_width
+        .border_inline_width()
         .get_or_insert_default()
         .set_block_end(Length::Px(Float::from(px)));
         self
@@ -375,7 +375,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_width
+        .border_inline_width()
         .get_or_insert_default()
         .set_block_end(Length::Px(Float::from(px)));
         self
@@ -402,7 +402,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_color
+        .border_color()
         .get_or_insert_default()
         .set(color);
         self
@@ -417,7 +417,8 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_style = Some("none");
+        .border_inline_style()
+        .set("none");
         self
     }
 
@@ -429,7 +430,8 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_style = Some("solid");
+        .border_inline_style()
+        .set("solid");
         self
     }
 
@@ -441,7 +443,8 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_style = Some("dashed");
+        .border_inline_style()
+        .set("dashed");
         self
     }
 
@@ -453,7 +456,8 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_style = Some("dotted");
+        .border_inline_style()
+        .set("dotted");
         self
     }
 
@@ -465,7 +469,8 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .border_inline_style = Some("double");
+        .border_inline_style()
+        .set("double");
         self
     }
 
@@ -479,7 +484,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .margin_inline
+        .margin_inline()
         .get_or_insert_default()
         .set_inline_end(x.into());
         self
@@ -510,7 +515,7 @@ pub trait SubStyle: Style {
             all_but_last_children: true,
             ..Default::default()
         })
-        .margin_inline
+        .margin_inline()
         .get_or_insert_default()
         .set_block_end(x.into());
         self

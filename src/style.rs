@@ -38,7 +38,7 @@ pub trait Style: Sized {
     /// animation-duration: {ms}ms;
     /// ```
     fn animation_duration_ms(mut self, ms: u32) -> Self {
-        self.style_mut().animation_duration = Some(Duration::Ms(ms));
+        self.style_mut().animation_duration().set(Duration::Ms(ms));
         self
     }
 
@@ -47,7 +47,9 @@ pub trait Style: Sized {
     /// animation-duration: {s}s;
     /// ```
     fn animation_duration_s(mut self, s: f32) -> Self {
-        self.style_mut().animation_duration = Some(Duration::S(Float::from(s)));
+        self.style_mut()
+            .animation_duration()
+            .set(Duration::S(Float::from(s)));
         self
     }
 
@@ -56,7 +58,7 @@ pub trait Style: Sized {
     /// animation-delay: {ms}ms;
     /// ```
     fn animation_delay_ms(mut self, ms: u32) -> Self {
-        self.style_mut().animation_duration = Some(Duration::Ms(ms));
+        self.style_mut().animation_duration().set(Duration::Ms(ms));
         self
     }
 
@@ -65,7 +67,9 @@ pub trait Style: Sized {
     /// animation-delay: {s}s;
     /// ```
     fn animation_delay_s(mut self, s: f32) -> Self {
-        self.style_mut().animation_duration = Some(Duration::S(Float::from(s)));
+        self.style_mut()
+            .animation_duration()
+            .set(Duration::S(Float::from(s)));
         self
     }
 
@@ -74,7 +78,9 @@ pub trait Style: Sized {
     /// animation-iteration-count: {n};
     /// ```
     fn animation_iterations(mut self, n: u16) -> Self {
-        self.style_mut().animation_iterations = Some(Iterations::Count(n));
+        self.style_mut()
+            .animation_iterations()
+            .set(Iterations::Count(n));
         self
     }
 
@@ -83,7 +89,9 @@ pub trait Style: Sized {
     /// animation-iteration-count: infinite;
     /// ```
     fn animation_infinite(mut self) -> Self {
-        self.style_mut().animation_iterations = Some(Iterations::Infinite);
+        self.style_mut()
+            .animation_iterations()
+            .set(Iterations::Infinite);
         self
     }
 
@@ -93,7 +101,7 @@ pub trait Style: Sized {
     /// appearance: none;
     /// ```
     fn appearance_none(mut self) -> Self {
-        self.style_mut().appearance = Some(false);
+        self.style_mut().appearance().set(false);
         self
     }
 
@@ -103,7 +111,7 @@ pub trait Style: Sized {
     /// appearance: auto;
     /// ```
     fn appearance_auto(mut self) -> Self {
-        self.style_mut().appearance = Some(true);
+        self.style_mut().appearance().set(true);
         self
     }
 
@@ -113,7 +121,7 @@ pub trait Style: Sized {
     /// aspect-ratio: auto;
     /// ```
     fn aspect_auto(mut self) -> Self {
-        self.style_mut().aspect = Some(Aspect::Auto);
+        self.style_mut().aspect().set(Aspect::Auto);
         self
     }
 
@@ -123,7 +131,7 @@ pub trait Style: Sized {
     /// aspect-ratio: 1 / 1;
     /// ```
     fn aspect_square(mut self) -> Self {
-        self.style_mut().aspect = Some(Aspect::Ratio(1, 1));
+        self.style_mut().aspect().set(Aspect::Ratio(1, 1));
         self
     }
 
@@ -133,7 +141,7 @@ pub trait Style: Sized {
     /// aspect-ratio: 19 / 9;
     /// ```
     fn aspect_video(mut self) -> Self {
-        self.style_mut().aspect = Some(Aspect::Ratio(16, 9));
+        self.style_mut().aspect().set(Aspect::Ratio(16, 9));
         self
     }
 
@@ -143,7 +151,7 @@ pub trait Style: Sized {
     /// aspect-ratio: {w} / {h};
     /// ```
     fn aspect_ratio(mut self, w: u32, h: u32) -> Self {
-        self.style_mut().aspect = Some(Aspect::Ratio(w, h));
+        self.style_mut().aspect().set(Aspect::Ratio(w, h));
         self
     }
 
@@ -153,7 +161,9 @@ pub trait Style: Sized {
     /// aspect-ratio: {ratio};
     /// ```
     fn aspect_ratiof(mut self, ratio: f32) -> Self {
-        self.style_mut().aspect = Some(Aspect::Ratiof(Float::from(ratio)));
+        self.style_mut()
+            .aspect()
+            .set(Aspect::Ratiof(Float::from(ratio)));
         self
     }
 
@@ -163,7 +173,7 @@ pub trait Style: Sized {
     /// grid-auto-columns: auto;
     /// ```
     fn auto_cols_auto(mut self) -> Self {
-        self.style_mut().auto_cols = Some(Either::Right("auto"));
+        self.style_mut().auto_cols().set(Either::Right("auto"));
         self
     }
 
@@ -173,7 +183,9 @@ pub trait Style: Sized {
     /// grid-auto-columns: min-content;
     /// ```
     fn auto_cols_min(mut self) -> Self {
-        self.style_mut().auto_cols = Some(Either::Left(Length::MinContent));
+        self.style_mut()
+            .auto_cols()
+            .set(Either::Left(Length::MinContent));
         self
     }
 
@@ -183,7 +195,9 @@ pub trait Style: Sized {
     /// grid-auto-columns: max-content;
     /// ```
     fn auto_cols_max(mut self) -> Self {
-        self.style_mut().auto_cols = Some(Either::Left(Length::MaxContent));
+        self.style_mut()
+            .auto_cols()
+            .set(Either::Left(Length::MaxContent));
         self
     }
 
@@ -193,7 +207,9 @@ pub trait Style: Sized {
     /// grid-auto-columns: minmax(0, 1fr);
     /// ```
     fn auto_cols_fr(mut self) -> Self {
-        self.style_mut().auto_cols = Some(Either::Right("minmax(0, 1fr)"));
+        self.style_mut()
+            .auto_cols()
+            .set(Either::Right("minmax(0, 1fr)"));
         self
     }
 
@@ -203,7 +219,7 @@ pub trait Style: Sized {
     /// grid-auto-columns: {auto_cols};
     /// ```
     fn auto_cols_with(mut self, auto_cols: &'static str) -> Self {
-        self.style_mut().auto_cols = Some(Either::Right(auto_cols));
+        self.style_mut().auto_cols().set(Either::Right(auto_cols));
         self
     }
 
@@ -215,7 +231,7 @@ pub trait Style: Sized {
     #[with_auto]
     #[with_horizontal_viewport_units]
     fn auto_cols(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().auto_cols = Some(Either::Left(x.into()));
+        self.style_mut().auto_cols().set(Either::Left(x.into()));
         self
     }
 
@@ -225,7 +241,7 @@ pub trait Style: Sized {
     /// grid-auto-rows: auto;
     /// ```
     fn auto_rows_auto(mut self) -> Self {
-        self.style_mut().auto_rows = Some(Either::Right("auto"));
+        self.style_mut().auto_rows().set(Either::Right("auto"));
         self
     }
 
@@ -235,7 +251,9 @@ pub trait Style: Sized {
     /// grid-auto-rows: min-content;
     /// ```
     fn auto_rows_min(mut self) -> Self {
-        self.style_mut().auto_rows = Some(Either::Left(Length::MinContent));
+        self.style_mut()
+            .auto_rows()
+            .set(Either::Left(Length::MinContent));
         self
     }
 
@@ -245,7 +263,9 @@ pub trait Style: Sized {
     /// grid-auto-rows: max-content;
     /// ```
     fn auto_rows_max(mut self) -> Self {
-        self.style_mut().auto_rows = Some(Either::Left(Length::MaxContent));
+        self.style_mut()
+            .auto_rows()
+            .set(Either::Left(Length::MaxContent));
         self
     }
 
@@ -255,7 +275,9 @@ pub trait Style: Sized {
     /// grid-auto-rows: minmax(0, 1fr);
     /// ```
     fn auto_rows_fr(mut self) -> Self {
-        self.style_mut().auto_rows = Some(Either::Right("minmax(0, 1fr)"));
+        self.style_mut()
+            .auto_rows()
+            .set(Either::Right("minmax(0, 1fr)"));
         self
     }
 
@@ -265,7 +287,7 @@ pub trait Style: Sized {
     /// grid-auto-rows: {auto_rows};
     /// ```
     fn auto_rows_with(mut self, auto_rows: &'static str) -> Self {
-        self.style_mut().auto_rows = Some(Either::Right(auto_rows));
+        self.style_mut().auto_rows().set(Either::Right(auto_rows));
         self
     }
 
@@ -277,7 +299,7 @@ pub trait Style: Sized {
     #[with_auto]
     #[with_vertical_viewport_units]
     fn auto_rows(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().auto_rows = Some(Either::Left(x.into()));
+        self.style_mut().auto_rows().set(Either::Left(x.into()));
         self
     }
 
@@ -292,7 +314,7 @@ pub trait Style: Sized {
     #[with_full]
     #[with_horizontal_viewport_units]
     fn basis(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().basis = Some(x.into());
+        self.style_mut().basis().set(x.into());
         self
     }
 
@@ -302,7 +324,7 @@ pub trait Style: Sized {
     /// background-clip: border-box;
     /// ```
     fn bg_border(mut self) -> Self {
-        self.style_mut().background_clip = Some("border-box");
+        self.style_mut().background_clip().set("border-box");
         self
     }
 
@@ -312,7 +334,7 @@ pub trait Style: Sized {
     /// background-clip: padding-box;
     /// ```
     fn bg_padding(mut self) -> Self {
-        self.style_mut().background_clip = Some("padding-box");
+        self.style_mut().background_clip().set("padding-box");
         self
     }
 
@@ -322,7 +344,7 @@ pub trait Style: Sized {
     /// background-clip: content-box;
     /// ```
     fn bg_content(mut self) -> Self {
-        self.style_mut().background_clip = Some("content-box");
+        self.style_mut().background_clip().set("content-box");
         self
     }
 
@@ -332,7 +354,7 @@ pub trait Style: Sized {
     /// background-clip: text;
     /// ```
     fn bg_text(mut self) -> Self {
-        self.style_mut().background_clip = Some("text");
+        self.style_mut().background_clip().set("text");
         self
     }
 
@@ -342,7 +364,7 @@ pub trait Style: Sized {
     /// background-color: {color};` <b style="color:{color}">⏺</b>
     /// ```
     fn bg(mut self, color: &'static str) -> Self {
-        self.style_mut().background_color = Some(color);
+        self.style_mut().background_color().set(color);
         self
     }
 
@@ -351,7 +373,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_none(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .set_none();
         self
@@ -362,7 +384,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_t(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to top");
@@ -374,7 +396,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_tr(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to top right");
@@ -386,7 +408,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_r(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to right");
@@ -398,7 +420,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_br(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to bottom right");
@@ -410,7 +432,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_b(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to bottom");
@@ -422,7 +444,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_bl(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to bottom left");
@@ -434,7 +456,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_l(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to left");
@@ -446,7 +468,7 @@ pub trait Style: Sized {
     /// ```
     fn bg_linear_to_tl(mut self) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .gradient_line = Some("to top left");
@@ -460,7 +482,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_color
+            .border_color()
             .get_or_insert_default()
             .set(color);
         self
@@ -473,7 +495,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_x(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_inline_color
+            .border_inline_color()
             .get_or_insert_default()
             .set_x(color);
         self
@@ -486,7 +508,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_y(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_inline_color
+            .border_inline_color()
             .get_or_insert_default()
             .set_y(color);
         self
@@ -499,7 +521,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_t(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_color
+            .border_color()
             .get_or_insert_default()
             .set_top(color);
         self
@@ -512,7 +534,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_r(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_color
+            .border_color()
             .get_or_insert_default()
             .set_right(color);
         self
@@ -525,7 +547,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_b(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_color
+            .border_color()
             .get_or_insert_default()
             .set_bottom(color);
         self
@@ -538,7 +560,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_l(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_color
+            .border_color()
             .get_or_insert_default()
             .set_left(color);
         self
@@ -551,7 +573,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_s(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_inline_color
+            .border_inline_color()
             .get_or_insert_default()
             .set_inline_start(color);
         self
@@ -564,7 +586,7 @@ pub trait Style: Sized {
     /// ```
     fn border_color_e(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .border_inline_color
+            .border_inline_color()
             .get_or_insert_default()
             .set_inline_end(color);
         self
@@ -577,7 +599,7 @@ pub trait Style: Sized {
     /// ```
     fn border(mut self) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set(Length::Px(Float::from(1i32)));
         self
@@ -590,7 +612,7 @@ pub trait Style: Sized {
     /// ```
     fn border_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set(Length::Px(Float::from(px)));
         self
@@ -603,7 +625,7 @@ pub trait Style: Sized {
     /// ```
     fn border_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set(Length::Px(Float::from(px)));
         self
@@ -616,7 +638,7 @@ pub trait Style: Sized {
     /// ```
     fn border_x(mut self) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_x(Length::Px(Float::from(1i32)));
         self
@@ -629,7 +651,7 @@ pub trait Style: Sized {
     /// ```
     fn border_x_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_x(Length::Px(Float::from(px)));
         self
@@ -642,7 +664,7 @@ pub trait Style: Sized {
     /// ```
     fn border_x_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_x(Length::Px(Float::from(px)));
         self
@@ -655,7 +677,7 @@ pub trait Style: Sized {
     /// ```
     fn border_y(mut self) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_y(Length::Px(Float::from(1i32)));
         self
@@ -668,7 +690,7 @@ pub trait Style: Sized {
     /// ```
     fn border_y_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_y(Length::Px(Float::from(px)));
         self
@@ -681,7 +703,7 @@ pub trait Style: Sized {
     /// ```
     fn border_y_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_y(Length::Px(Float::from(px)));
         self
@@ -694,7 +716,7 @@ pub trait Style: Sized {
     /// ```
     fn border_t(mut self) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_top(Length::Px(Float::from(1i32)));
         self
@@ -707,7 +729,7 @@ pub trait Style: Sized {
     /// ```
     fn border_t_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_top(Length::Px(Float::from(px)));
         self
@@ -720,7 +742,7 @@ pub trait Style: Sized {
     /// ```
     fn border_t_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_top(Length::Px(Float::from(px)));
         self
@@ -733,7 +755,7 @@ pub trait Style: Sized {
     /// ```
     fn border_r(mut self) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_right(Length::Px(Float::from(1i32)));
         self
@@ -746,7 +768,7 @@ pub trait Style: Sized {
     /// ```
     fn border_r_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_right(Length::Px(Float::from(px)));
         self
@@ -759,7 +781,7 @@ pub trait Style: Sized {
     /// ```
     fn border_r_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_right(Length::Px(Float::from(px)));
         self
@@ -772,7 +794,7 @@ pub trait Style: Sized {
     /// ```
     fn border_b(mut self) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_bottom(Length::Px(Float::from(1i32)));
         self
@@ -785,7 +807,7 @@ pub trait Style: Sized {
     /// ```
     fn border_b_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_bottom(Length::Px(Float::from(px)));
         self
@@ -798,7 +820,7 @@ pub trait Style: Sized {
     /// ```
     fn border_b_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_bottom(Length::Px(Float::from(px)));
         self
@@ -811,7 +833,7 @@ pub trait Style: Sized {
     /// ```
     fn border_l(mut self) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_left(Length::Px(Float::from(1i32)));
         self
@@ -824,7 +846,7 @@ pub trait Style: Sized {
     /// ```
     fn border_l_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_left(Length::Px(Float::from(px)));
         self
@@ -837,7 +859,7 @@ pub trait Style: Sized {
     /// ```
     fn border_l_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_width
+            .border_width()
             .get_or_insert_default()
             .set_left(Length::Px(Float::from(px)));
         self
@@ -850,7 +872,7 @@ pub trait Style: Sized {
     /// ```
     fn border_s(mut self) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_inline_start(Length::Px(Float::from(1i32)));
         self
@@ -863,7 +885,7 @@ pub trait Style: Sized {
     /// ```
     fn border_s_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_inline_start(Length::Px(Float::from(px)));
         self
@@ -876,7 +898,7 @@ pub trait Style: Sized {
     /// ```
     fn border_s_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_inline_start(Length::Px(Float::from(px)));
         self
@@ -889,7 +911,7 @@ pub trait Style: Sized {
     /// ```
     fn border_e(mut self) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_inline_end(Length::Px(Float::from(1i32)));
         self
@@ -902,7 +924,7 @@ pub trait Style: Sized {
     /// ```
     fn border_e_px(mut self, px: i16) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_inline_end(Length::Px(Float::from(px)));
         self
@@ -915,7 +937,7 @@ pub trait Style: Sized {
     /// ```
     fn border_e_pxf(mut self, px: f32) -> Self {
         self.style_mut()
-            .border_inline_width
+            .border_inline_width()
             .get_or_insert_default()
             .set_inline_end(Length::Px(Float::from(px)));
         self
@@ -926,7 +948,7 @@ pub trait Style: Sized {
     /// border-style: none;
     /// ```
     fn border_none(mut self) -> Self {
-        self.style_mut().border_style = Some("none");
+        self.style_mut().border_style().set("none");
         self
     }
 
@@ -934,7 +956,7 @@ pub trait Style: Sized {
     /// border-style: solid;
     /// ```
     fn border_solid(mut self) -> Self {
-        self.style_mut().border_style = Some("solid");
+        self.style_mut().border_style().set("solid");
         self
     }
 
@@ -942,7 +964,7 @@ pub trait Style: Sized {
     /// border-style: dashed;
     /// ```
     fn border_dashed(mut self) -> Self {
-        self.style_mut().border_style = Some("dashed");
+        self.style_mut().border_style().set("dashed");
         self
     }
 
@@ -950,7 +972,7 @@ pub trait Style: Sized {
     /// border-style: dotted;
     /// ```
     fn border_dotted(mut self) -> Self {
-        self.style_mut().border_style = Some("dotted");
+        self.style_mut().border_style().set("dotted");
         self
     }
 
@@ -958,7 +980,7 @@ pub trait Style: Sized {
     /// border-style: double;
     /// ```
     fn border_double(mut self) -> Self {
-        self.style_mut().border_style = Some("double");
+        self.style_mut().border_style().set("double");
         self
     }
 
@@ -966,7 +988,7 @@ pub trait Style: Sized {
     /// border-style: hidden;
     /// ```
     fn border_hidden(mut self) -> Self {
-        self.style_mut().border_style = Some("hidden");
+        self.style_mut().border_style().set("hidden");
         self
     }
 
@@ -981,7 +1003,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn bottom(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .inset
+            .inset()
             .get_or_insert_default()
             .set_bottom(x.into());
         self
@@ -993,7 +1015,7 @@ pub trait Style: Sized {
     /// box-sizing: border-box;
     /// ```
     fn box_border(mut self) -> Self {
-        self.style_mut().box_sizing = Some("border-box");
+        self.style_mut().box_sizing().set("border-box");
         self
     }
 
@@ -1003,7 +1025,7 @@ pub trait Style: Sized {
     /// box-sizing: content-box;
     /// ```
     fn box_content(mut self) -> Self {
-        self.style_mut().box_sizing = Some("content-box");
+        self.style_mut().box_sizing().set("content-box");
         self
     }
 
@@ -1015,7 +1037,7 @@ pub trait Style: Sized {
     /// word-break: normal;
     /// ```
     fn break_normal(mut self) -> Self {
-        self.style_mut().word_break = Some("normal");
+        self.style_mut().word_break().set("normal");
         self
     }
 
@@ -1025,7 +1047,7 @@ pub trait Style: Sized {
     /// word-break: break-wird;
     /// ```
     fn break_word(mut self) -> Self {
-        self.style_mut().word_break = Some("break-word");
+        self.style_mut().word_break().set("break-word");
         self
     }
 
@@ -1035,7 +1057,7 @@ pub trait Style: Sized {
     /// word-break: break-all;
     /// ```
     fn break_all(mut self) -> Self {
-        self.style_mut().word_break = Some("break-all");
+        self.style_mut().word_break().set("break-all");
         self
     }
 
@@ -1045,7 +1067,7 @@ pub trait Style: Sized {
     /// word-break: keep-all;
     /// ```
     fn break_keep(mut self) -> Self {
-        self.style_mut().word_break = Some("keep-all");
+        self.style_mut().word_break().set("keep-all");
         self
     }
 
@@ -1055,7 +1077,7 @@ pub trait Style: Sized {
     /// break-after: auto;
     /// ```
     fn break_after_auto(mut self) -> Self {
-        self.style_mut().break_after = Some("auto");
+        self.style_mut().break_after().set("auto");
         self
     }
 
@@ -1065,7 +1087,7 @@ pub trait Style: Sized {
     /// break-after: avoid;
     /// ```
     fn break_after_avoid(mut self) -> Self {
-        self.style_mut().break_after = Some("avoid");
+        self.style_mut().break_after().set("avoid");
         self
     }
 
@@ -1075,7 +1097,7 @@ pub trait Style: Sized {
     /// break-after: all;
     /// ```
     fn break_after_all(mut self) -> Self {
-        self.style_mut().break_after = Some("all");
+        self.style_mut().break_after().set("all");
         self
     }
 
@@ -1085,7 +1107,7 @@ pub trait Style: Sized {
     /// break-after: avoid-page;
     /// ```
     fn break_after_avoid_page(mut self) -> Self {
-        self.style_mut().break_after = Some("avoid-page");
+        self.style_mut().break_after().set("avoid-page");
         self
     }
 
@@ -1095,7 +1117,7 @@ pub trait Style: Sized {
     /// break-after: page;
     /// ```
     fn break_after_page(mut self) -> Self {
-        self.style_mut().break_after = Some("page");
+        self.style_mut().break_after().set("page");
         self
     }
 
@@ -1105,7 +1127,7 @@ pub trait Style: Sized {
     /// break-after: left;
     /// ```
     fn break_after_left(mut self) -> Self {
-        self.style_mut().break_after = Some("left");
+        self.style_mut().break_after().set("left");
         self
     }
 
@@ -1115,7 +1137,7 @@ pub trait Style: Sized {
     /// break-after: right;
     /// ```
     fn break_after_right(mut self) -> Self {
-        self.style_mut().break_after = Some("right");
+        self.style_mut().break_after().set("right");
         self
     }
 
@@ -1125,7 +1147,7 @@ pub trait Style: Sized {
     /// break-after: column;
     /// ```
     fn break_after_column(mut self) -> Self {
-        self.style_mut().break_after = Some("column");
+        self.style_mut().break_after().set("column");
         self
     }
 
@@ -1135,7 +1157,7 @@ pub trait Style: Sized {
     /// break-before: auto;
     /// ```
     fn break_before_auto(mut self) -> Self {
-        self.style_mut().break_before = Some("auto");
+        self.style_mut().break_before().set("auto");
         self
     }
 
@@ -1145,7 +1167,7 @@ pub trait Style: Sized {
     /// break-before: avoid;
     /// ```
     fn break_before_avoid(mut self) -> Self {
-        self.style_mut().break_before = Some("avoid");
+        self.style_mut().break_before().set("avoid");
         self
     }
 
@@ -1155,7 +1177,7 @@ pub trait Style: Sized {
     /// break-before: all;
     /// ```
     fn break_before_all(mut self) -> Self {
-        self.style_mut().break_before = Some("all");
+        self.style_mut().break_before().set("all");
         self
     }
 
@@ -1165,7 +1187,7 @@ pub trait Style: Sized {
     /// break-before: avoid-page;
     /// ```
     fn break_before_avoid_page(mut self) -> Self {
-        self.style_mut().break_before = Some("avoid-page");
+        self.style_mut().break_before().set("avoid-page");
         self
     }
 
@@ -1175,7 +1197,7 @@ pub trait Style: Sized {
     /// break-before: page;
     /// ```
     fn break_before_page(mut self) -> Self {
-        self.style_mut().break_before = Some("page");
+        self.style_mut().break_before().set("page");
         self
     }
 
@@ -1185,7 +1207,7 @@ pub trait Style: Sized {
     /// break-before: left;
     /// ```
     fn break_before_left(mut self) -> Self {
-        self.style_mut().break_before = Some("left");
+        self.style_mut().break_before().set("left");
         self
     }
 
@@ -1195,7 +1217,7 @@ pub trait Style: Sized {
     /// break-before: right;
     /// ```
     fn break_before_right(mut self) -> Self {
-        self.style_mut().break_before = Some("right");
+        self.style_mut().break_before().set("right");
         self
     }
 
@@ -1205,7 +1227,7 @@ pub trait Style: Sized {
     /// break-before: column;
     /// ```
     fn break_before_column(mut self) -> Self {
-        self.style_mut().break_before = Some("column");
+        self.style_mut().break_before().set("column");
         self
     }
 
@@ -1215,7 +1237,7 @@ pub trait Style: Sized {
     /// break-inside: auto;
     /// ```
     fn break_inside_auto(mut self) -> Self {
-        self.style_mut().break_inside = Some("auto");
+        self.style_mut().break_inside().set("auto");
         self
     }
 
@@ -1225,7 +1247,7 @@ pub trait Style: Sized {
     /// break-inside: avoid;
     /// ```
     fn break_inside_avoid(mut self) -> Self {
-        self.style_mut().break_inside = Some("avoid");
+        self.style_mut().break_inside().set("avoid");
         self
     }
 
@@ -1235,7 +1257,7 @@ pub trait Style: Sized {
     /// break-inside: page;
     /// ```
     fn break_inside_page(mut self) -> Self {
-        self.style_mut().break_inside = Some("page");
+        self.style_mut().break_inside().set("page");
         self
     }
 
@@ -1245,7 +1267,7 @@ pub trait Style: Sized {
     /// break-inside: column;
     /// ```
     fn break_inside_column(mut self) -> Self {
-        self.style_mut().break_inside = Some("column");
+        self.style_mut().break_inside().set("column");
         self
     }
 
@@ -1256,7 +1278,7 @@ pub trait Style: Sized {
     /// ```
     fn col_auto(mut self) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set(GridLine::Auto);
         self
@@ -1269,11 +1291,11 @@ pub trait Style: Sized {
     /// ```
     fn col_full(mut self) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set_start(GridLine::Nth(1));
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set_end(GridLine::Nth(-1));
         self
@@ -1286,7 +1308,7 @@ pub trait Style: Sized {
     /// ```
     fn col(mut self, n: i16) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set(GridLine::Nth(n));
         self
@@ -1299,11 +1321,11 @@ pub trait Style: Sized {
     /// ```
     fn col_span(mut self, n: u16) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set_start(GridLine::Span(n));
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set_end(GridLine::Span(n));
         self
@@ -1316,7 +1338,7 @@ pub trait Style: Sized {
     /// ```
     fn col_start_auto(mut self) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set(GridLine::Auto);
         self
@@ -1329,7 +1351,7 @@ pub trait Style: Sized {
     /// ```
     fn col_start(mut self, n: i16) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set_start(GridLine::Nth(n));
         self
@@ -1342,7 +1364,7 @@ pub trait Style: Sized {
     /// ```
     fn col_end_auto(mut self) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set(GridLine::Auto);
         self
@@ -1355,7 +1377,7 @@ pub trait Style: Sized {
     /// ```
     fn col_end(mut self, n: i16) -> Self {
         self.style_mut()
-            .grid_column
+            .grid_column()
             .get_or_insert_default()
             .set_end(GridLine::Nth(n));
         self
@@ -1367,7 +1389,7 @@ pub trait Style: Sized {
     /// container-type: normal;
     /// ```
     fn container_normal(mut self) -> Self {
-        self.style_mut().container = Some("normal");
+        self.style_mut().container().set("normal");
         self
     }
 
@@ -1377,7 +1399,7 @@ pub trait Style: Sized {
     /// container-type: size;
     /// ```
     fn container_size(mut self) -> Self {
-        self.style_mut().container = Some("size");
+        self.style_mut().container().set("size");
         self
     }
 
@@ -1387,7 +1409,7 @@ pub trait Style: Sized {
     /// container-type: inline-size;
     /// ```
     fn container(mut self) -> Self {
-        self.style_mut().container = Some("inline-size");
+        self.style_mut().container().set("inline-size");
         self
     }
 
@@ -1397,7 +1419,7 @@ pub trait Style: Sized {
     /// content: {content};
     /// ```
     fn pseudo_content(mut self, content: &'static str) -> Self {
-        self.style_mut().content = Some(content);
+        self.style_mut().content().set(content);
         self
     }
 
@@ -1407,7 +1429,7 @@ pub trait Style: Sized {
     /// cursor: auto;
     /// ```
     fn cursor_auto(mut self) -> Self {
-        self.style_mut().cursor = Some("auto");
+        self.style_mut().cursor().set("auto");
         self
     }
 
@@ -1417,7 +1439,7 @@ pub trait Style: Sized {
     /// cursor: default;
     /// ```
     fn cursor_default(mut self) -> Self {
-        self.style_mut().cursor = Some("default");
+        self.style_mut().cursor().set("default");
         self
     }
 
@@ -1427,7 +1449,7 @@ pub trait Style: Sized {
     /// cursor: pointer;
     /// ```
     fn cursor_pointer(mut self) -> Self {
-        self.style_mut().cursor = Some("pointer");
+        self.style_mut().cursor().set("pointer");
         self
     }
 
@@ -1437,7 +1459,7 @@ pub trait Style: Sized {
     /// cursor: wait;
     /// ```
     fn cursor_wait(mut self) -> Self {
-        self.style_mut().cursor = Some("wait");
+        self.style_mut().cursor().set("wait");
         self
     }
 
@@ -1447,7 +1469,7 @@ pub trait Style: Sized {
     /// cursor: text;
     /// ```
     fn cursor_text(mut self) -> Self {
-        self.style_mut().cursor = Some("text");
+        self.style_mut().cursor().set("text");
         self
     }
 
@@ -1457,7 +1479,7 @@ pub trait Style: Sized {
     /// cursor: move;
     /// ```
     fn cursor_move(mut self) -> Self {
-        self.style_mut().cursor = Some("move");
+        self.style_mut().cursor().set("move");
         self
     }
 
@@ -1467,7 +1489,7 @@ pub trait Style: Sized {
     /// cursor: help;
     /// ```
     fn cursor_help(mut self) -> Self {
-        self.style_mut().cursor = Some("help");
+        self.style_mut().cursor().set("help");
         self
     }
 
@@ -1477,7 +1499,7 @@ pub trait Style: Sized {
     /// cursor: not-allowed;
     /// ```
     fn cursor_not_allowed(mut self) -> Self {
-        self.style_mut().cursor = Some("not-allowed");
+        self.style_mut().cursor().set("not-allowed");
         self
     }
 
@@ -1487,7 +1509,7 @@ pub trait Style: Sized {
     /// cursor: none;
     /// ```
     fn cursor_none(mut self) -> Self {
-        self.style_mut().cursor = Some("none");
+        self.style_mut().cursor().set("none");
         self
     }
 
@@ -1497,7 +1519,7 @@ pub trait Style: Sized {
     /// cursor: context-menu;
     /// ```
     fn cursor_context_menu(mut self) -> Self {
-        self.style_mut().cursor = Some("context-menu");
+        self.style_mut().cursor().set("context-menu");
         self
     }
 
@@ -1507,7 +1529,7 @@ pub trait Style: Sized {
     /// cursor: progress;
     /// ```
     fn cursor_progress(mut self) -> Self {
-        self.style_mut().cursor = Some("progress");
+        self.style_mut().cursor().set("progress");
         self
     }
 
@@ -1517,7 +1539,7 @@ pub trait Style: Sized {
     /// cursor: cell;
     /// ```
     fn cursor_cell(mut self) -> Self {
-        self.style_mut().cursor = Some("cell");
+        self.style_mut().cursor().set("cell");
         self
     }
 
@@ -1527,7 +1549,7 @@ pub trait Style: Sized {
     /// cursor: crosshair;
     /// ```
     fn cursor_crosshair(mut self) -> Self {
-        self.style_mut().cursor = Some("crosshair");
+        self.style_mut().cursor().set("crosshair");
         self
     }
 
@@ -1537,7 +1559,7 @@ pub trait Style: Sized {
     /// cursor: vertical-text;
     /// ```
     fn cursor_vertical_text(mut self) -> Self {
-        self.style_mut().cursor = Some("vertical-text");
+        self.style_mut().cursor().set("vertical-text");
         self
     }
 
@@ -1547,7 +1569,7 @@ pub trait Style: Sized {
     /// cursor: alias;
     /// ```
     fn cursor_alias(mut self) -> Self {
-        self.style_mut().cursor = Some("alias");
+        self.style_mut().cursor().set("alias");
         self
     }
 
@@ -1557,7 +1579,7 @@ pub trait Style: Sized {
     /// cursor: copy;
     /// ```
     fn cursor_copy(mut self) -> Self {
-        self.style_mut().cursor = Some("copy");
+        self.style_mut().cursor().set("copy");
         self
     }
 
@@ -1567,7 +1589,7 @@ pub trait Style: Sized {
     /// cursor: no-drop;
     /// ```
     fn cursor_no_drop(mut self) -> Self {
-        self.style_mut().cursor = Some("no-drop");
+        self.style_mut().cursor().set("no-drop");
         self
     }
 
@@ -1577,7 +1599,7 @@ pub trait Style: Sized {
     /// cursor: grab;
     /// ```
     fn cursor_grab(mut self) -> Self {
-        self.style_mut().cursor = Some("grab");
+        self.style_mut().cursor().set("grab");
         self
     }
 
@@ -1587,7 +1609,7 @@ pub trait Style: Sized {
     /// cursor: grabbing;
     /// ```
     fn cursor_grabbing(mut self) -> Self {
-        self.style_mut().cursor = Some("grabbing");
+        self.style_mut().cursor().set("grabbing");
         self
     }
 
@@ -1597,7 +1619,7 @@ pub trait Style: Sized {
     /// cursor: all-scroll;
     /// ```
     fn cursor_all_scroll(mut self) -> Self {
-        self.style_mut().cursor = Some("all-scroll");
+        self.style_mut().cursor().set("all-scroll");
         self
     }
 
@@ -1607,7 +1629,7 @@ pub trait Style: Sized {
     /// cursor: col-resize;
     /// ```
     fn cursor_col_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("col-resize");
+        self.style_mut().cursor().set("col-resize");
         self
     }
 
@@ -1617,7 +1639,7 @@ pub trait Style: Sized {
     /// cursor: row-resize;
     /// ```
     fn cursor_row_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("row-resize");
+        self.style_mut().cursor().set("row-resize");
         self
     }
 
@@ -1627,7 +1649,7 @@ pub trait Style: Sized {
     /// cursor: n-resize;
     /// ```
     fn cursor_n_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("n-resize");
+        self.style_mut().cursor().set("n-resize");
         self
     }
 
@@ -1637,7 +1659,7 @@ pub trait Style: Sized {
     /// cursor: e-resize;
     /// ```
     fn cursor_e_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("e-resize");
+        self.style_mut().cursor().set("e-resize");
         self
     }
 
@@ -1647,7 +1669,7 @@ pub trait Style: Sized {
     /// cursor: s-resize;
     /// ```
     fn cursor_s_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("s-resize");
+        self.style_mut().cursor().set("s-resize");
         self
     }
 
@@ -1657,7 +1679,7 @@ pub trait Style: Sized {
     /// cursor: w-resize;
     /// ```
     fn cursor_w_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("w-resize");
+        self.style_mut().cursor().set("w-resize");
         self
     }
 
@@ -1667,7 +1689,7 @@ pub trait Style: Sized {
     /// cursor: ne-resize;
     /// ```
     fn cursor_ne_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("ne-resize");
+        self.style_mut().cursor().set("ne-resize");
         self
     }
 
@@ -1677,7 +1699,7 @@ pub trait Style: Sized {
     /// cursor: nw-resize;
     /// ```
     fn cursor_nw_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("nw-resize");
+        self.style_mut().cursor().set("nw-resize");
         self
     }
 
@@ -1687,7 +1709,7 @@ pub trait Style: Sized {
     /// cursor: se-resize;
     /// ```
     fn cursor_se_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("se-resize");
+        self.style_mut().cursor().set("se-resize");
         self
     }
 
@@ -1697,7 +1719,7 @@ pub trait Style: Sized {
     /// cursor: sw-resize;
     /// ```
     fn cursor_sw_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("sw-resize");
+        self.style_mut().cursor().set("sw-resize");
         self
     }
 
@@ -1707,7 +1729,7 @@ pub trait Style: Sized {
     /// cursor: ew-resize;
     /// ```
     fn cursor_ew_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("ew-resize");
+        self.style_mut().cursor().set("ew-resize");
         self
     }
 
@@ -1717,7 +1739,7 @@ pub trait Style: Sized {
     /// cursor: ns-resize;
     /// ```
     fn cursor_ns_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("ns-resize");
+        self.style_mut().cursor().set("ns-resize");
         self
     }
 
@@ -1727,7 +1749,7 @@ pub trait Style: Sized {
     /// cursor: nesw-resize;
     /// ```
     fn cursor_nesw_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("nesw-resize");
+        self.style_mut().cursor().set("nesw-resize");
         self
     }
 
@@ -1737,7 +1759,7 @@ pub trait Style: Sized {
     /// cursor: nwse-resize;
     /// ```
     fn cursor_nwse_resize(mut self) -> Self {
-        self.style_mut().cursor = Some("nwse-resize");
+        self.style_mut().cursor().set("nwse-resize");
         self
     }
 
@@ -1747,7 +1769,7 @@ pub trait Style: Sized {
     /// cursor: zoom-in;
     /// ```
     fn cursor_zoom_in(mut self) -> Self {
-        self.style_mut().cursor = Some("zoom-in");
+        self.style_mut().cursor().set("zoom-in");
         self
     }
 
@@ -1757,7 +1779,7 @@ pub trait Style: Sized {
     /// cursor: zoom-out;
     /// ```
     fn cursor_zoom_out(mut self) -> Self {
-        self.style_mut().cursor = Some("zoom-out");
+        self.style_mut().cursor().set("zoom-out");
         self
     }
 
@@ -1767,7 +1789,7 @@ pub trait Style: Sized {
     /// text-decoration-line: underline;
     /// ```
     fn underline(mut self) -> Self {
-        self.style_mut().decoration = Some("underline");
+        self.style_mut().decoration().set("underline");
         self
     }
 
@@ -1777,7 +1799,7 @@ pub trait Style: Sized {
     /// text-decoration-line: overline;
     /// ```
     fn overline(mut self) -> Self {
-        self.style_mut().decoration = Some("overline");
+        self.style_mut().decoration().set("overline");
         self
     }
 
@@ -1787,7 +1809,7 @@ pub trait Style: Sized {
     /// text-decoration-line: line-through;
     /// ```
     fn line_through(mut self) -> Self {
-        self.style_mut().decoration = Some("line-through");
+        self.style_mut().decoration().set("line-through");
         self
     }
 
@@ -1797,7 +1819,7 @@ pub trait Style: Sized {
     /// text-decoration-line: none;
     /// ```
     fn no_underline(mut self) -> Self {
-        self.style_mut().decoration = Some("none");
+        self.style_mut().decoration().set("none");
         self
     }
 
@@ -1808,7 +1830,7 @@ pub trait Style: Sized {
     /// display: block;
     /// ```
     fn block(mut self) -> Self {
-        self.style_mut().display = Some("block");
+        self.style_mut().display().set("block");
         self
     }
 
@@ -1819,7 +1841,7 @@ pub trait Style: Sized {
     /// display: inline-block;
     /// ```
     fn inline_block(mut self) -> Self {
-        self.style_mut().display = Some("inline-block");
+        self.style_mut().display().set("inline-block");
         self
     }
 
@@ -1830,7 +1852,7 @@ pub trait Style: Sized {
     /// display: inline;
     /// ```
     fn inline(mut self) -> Self {
-        self.style_mut().display = Some("inline");
+        self.style_mut().display().set("inline");
         self
     }
 
@@ -1841,7 +1863,7 @@ pub trait Style: Sized {
     /// display: flex;
     /// ```
     fn flex(mut self) -> Self {
-        self.style_mut().display = Some("flex");
+        self.style_mut().display().set("flex");
         self
     }
 
@@ -1852,7 +1874,7 @@ pub trait Style: Sized {
     /// display: inline-flex;
     /// ```
     fn inline_flex(mut self) -> Self {
-        self.style_mut().display = Some("inline-flex");
+        self.style_mut().display().set("inline-flex");
         self
     }
 
@@ -1863,7 +1885,7 @@ pub trait Style: Sized {
     /// display: table;
     /// ```
     fn table(mut self) -> Self {
-        self.style_mut().display = Some("table");
+        self.style_mut().display().set("table");
         self
     }
 
@@ -1874,7 +1896,7 @@ pub trait Style: Sized {
     /// display: inline-table;
     /// ```
     fn inline_table(mut self) -> Self {
-        self.style_mut().display = Some("inline-table");
+        self.style_mut().display().set("inline-table");
         self
     }
 
@@ -1885,7 +1907,7 @@ pub trait Style: Sized {
     /// display: table-caption;
     /// ```
     fn table_caption(mut self) -> Self {
-        self.style_mut().display = Some("table-caption");
+        self.style_mut().display().set("table-caption");
         self
     }
 
@@ -1896,7 +1918,7 @@ pub trait Style: Sized {
     /// display: table-cell;
     /// ```
     fn table_cell(mut self) -> Self {
-        self.style_mut().display = Some("table-cell");
+        self.style_mut().display().set("table-cell");
         self
     }
 
@@ -1907,7 +1929,7 @@ pub trait Style: Sized {
     /// display: table-column;
     /// ```
     fn table_column(mut self) -> Self {
-        self.style_mut().display = Some("table-column");
+        self.style_mut().display().set("table-column");
         self
     }
 
@@ -1918,7 +1940,7 @@ pub trait Style: Sized {
     /// display: table-column-group;
     /// ```
     fn table_column_group(mut self) -> Self {
-        self.style_mut().display = Some("table-column-group");
+        self.style_mut().display().set("table-column-group");
         self
     }
 
@@ -1929,7 +1951,7 @@ pub trait Style: Sized {
     /// display: table-footer-group;
     /// ```
     fn table_footer_group(mut self) -> Self {
-        self.style_mut().display = Some("table-footer-group");
+        self.style_mut().display().set("table-footer-group");
         self
     }
 
@@ -1940,7 +1962,7 @@ pub trait Style: Sized {
     /// display: table-header-group;
     /// ```
     fn table_header_group(mut self) -> Self {
-        self.style_mut().display = Some("table-header-group");
+        self.style_mut().display().set("table-header-group");
         self
     }
 
@@ -1951,7 +1973,7 @@ pub trait Style: Sized {
     /// display: table-row-group;
     /// ```
     fn table_row_group(mut self) -> Self {
-        self.style_mut().display = Some("table-row-group");
+        self.style_mut().display().set("table-row-group");
         self
     }
 
@@ -1962,7 +1984,7 @@ pub trait Style: Sized {
     /// display: table-row;
     /// ```
     fn table_row(mut self) -> Self {
-        self.style_mut().display = Some("table-row");
+        self.style_mut().display().set("table-row");
         self
     }
 
@@ -1973,7 +1995,7 @@ pub trait Style: Sized {
     /// display: flow-root;
     /// ```
     fn flow_root(mut self) -> Self {
-        self.style_mut().display = Some("flow-root");
+        self.style_mut().display().set("flow-root");
         self
     }
 
@@ -1984,7 +2006,7 @@ pub trait Style: Sized {
     /// display: grid;
     /// ```
     fn grid(mut self) -> Self {
-        self.style_mut().display = Some("grid");
+        self.style_mut().display().set("grid");
         self
     }
 
@@ -1995,7 +2017,7 @@ pub trait Style: Sized {
     /// display: inline-grid;
     /// ```
     fn inline_grid(mut self) -> Self {
-        self.style_mut().display = Some("inline-grid");
+        self.style_mut().display().set("inline-grid");
         self
     }
 
@@ -2006,7 +2028,7 @@ pub trait Style: Sized {
     /// display: contents;
     /// ```
     fn contents(mut self) -> Self {
-        self.style_mut().display = Some("contents");
+        self.style_mut().display().set("contents");
         self
     }
 
@@ -2017,7 +2039,7 @@ pub trait Style: Sized {
     /// display: list-item;
     /// ```
     fn list_item(mut self) -> Self {
-        self.style_mut().display = Some("list-item");
+        self.style_mut().display().set("list-item");
         self
     }
 
@@ -2028,7 +2050,7 @@ pub trait Style: Sized {
     /// display: none;
     /// ```
     fn display_hidden(mut self) -> Self {
-        self.style_mut().display = Some("none");
+        self.style_mut().display().set("none");
         self
     }
 
@@ -2038,7 +2060,7 @@ pub trait Style: Sized {
     /// transition-timing-function: {func};
     /// ```
     fn ease_custom(mut self, func: &'static str) -> Self {
-        self.style_mut().transition_timing_function = Some(func);
+        self.style_mut().transition_timing_function().set(func);
         self
     }
 
@@ -2048,7 +2070,7 @@ pub trait Style: Sized {
     /// transition-timing-function: linear;
     /// ```
     fn ease_linear(mut self) -> Self {
-        self.style_mut().transition_timing_function = Some("linear");
+        self.style_mut().transition_timing_function().set("linear");
         self
     }
 
@@ -2058,7 +2080,9 @@ pub trait Style: Sized {
     /// transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
     /// ```
     fn ease_in(mut self) -> Self {
-        self.style_mut().transition_timing_function = Some("cubic-bezier(0.4, 0, 1, 1)");
+        self.style_mut()
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 1, 1)");
         self
     }
 
@@ -2068,7 +2092,9 @@ pub trait Style: Sized {
     /// transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
     /// ```
     fn ease_out(mut self) -> Self {
-        self.style_mut().transition_timing_function = Some("cubic-bezier(0, 0, 0.2, 1)");
+        self.style_mut()
+            .transition_timing_function()
+            .set("cubic-bezier(0, 0, 0.2, 1)");
         self
     }
 
@@ -2078,7 +2104,9 @@ pub trait Style: Sized {
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// ```
     fn ease_in_out(mut self) -> Self {
-        self.style_mut().transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
+        self.style_mut()
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
         self
     }
 
@@ -2090,7 +2118,7 @@ pub trait Style: Sized {
     #[with_auto]
     #[with_full]
     fn end(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().inset_inline_end = Some(x.into());
+        self.style_mut().inset_inline_end().set(x.into());
         self
     }
 
@@ -2098,7 +2126,7 @@ pub trait Style: Sized {
     /// flex-grow: 1;
     /// ```
     fn grow(mut self) -> Self {
-        self.style_mut().flex_grow = Some(true);
+        self.style_mut().flex_grow().set(true);
         self
     }
 
@@ -2106,7 +2134,7 @@ pub trait Style: Sized {
     /// flex-grow: 0;
     /// ```
     fn no_grow(mut self) -> Self {
-        self.style_mut().flex_grow = Some(false);
+        self.style_mut().flex_grow().set(false);
         self
     }
 
@@ -2114,7 +2142,7 @@ pub trait Style: Sized {
     /// flex-shrink: 1;
     /// ```
     fn shrink(mut self) -> Self {
-        self.style_mut().flex_shrink = Some(true);
+        self.style_mut().flex_shrink().set(true);
         self
     }
 
@@ -2122,7 +2150,7 @@ pub trait Style: Sized {
     /// flex-shrink: 0;
     /// ```
     fn no_shrink(mut self) -> Self {
-        self.style_mut().flex_shrink = Some(false);
+        self.style_mut().flex_shrink().set(false);
         self
     }
 
@@ -2130,7 +2158,7 @@ pub trait Style: Sized {
     /// flex-wrap: wrap;
     /// ```
     fn flex_wrap(mut self) -> Self {
-        self.style_mut().flex_wrap = Some("wrap");
+        self.style_mut().flex_wrap().set("wrap");
         self
     }
 
@@ -2138,7 +2166,7 @@ pub trait Style: Sized {
     /// flex-wrap: wrap-reverse;
     /// ```
     fn flex_wrap_reverse(mut self) -> Self {
-        self.style_mut().flex_wrap = Some("wrap-reverse");
+        self.style_mut().flex_wrap().set("wrap-reverse");
         self
     }
 
@@ -2146,7 +2174,7 @@ pub trait Style: Sized {
     /// flex-wrap: nowrap;
     /// ```
     fn flex_nowrap(mut self) -> Self {
-        self.style_mut().flex_wrap = Some("nowrap");
+        self.style_mut().flex_wrap().set("nowrap");
         self
     }
 
@@ -2156,7 +2184,7 @@ pub trait Style: Sized {
     /// flex-direction: row;
     /// ```
     fn flex_row(mut self) -> Self {
-        self.style_mut().flex_direction = Some("row");
+        self.style_mut().flex_direction().set("row");
         self
     }
 
@@ -2166,7 +2194,7 @@ pub trait Style: Sized {
     /// flex-direction: row-reverse;
     /// ```
     fn flex_row_reverse(mut self) -> Self {
-        self.style_mut().flex_direction = Some("row-reverse");
+        self.style_mut().flex_direction().set("row-reverse");
         self
     }
 
@@ -2176,7 +2204,7 @@ pub trait Style: Sized {
     /// flex-direction: column;
     /// ```
     fn flex_col(mut self) -> Self {
-        self.style_mut().flex_direction = Some("column");
+        self.style_mut().flex_direction().set("column");
         self
     }
 
@@ -2186,13 +2214,13 @@ pub trait Style: Sized {
     /// flex-direction: column-reverse;
     /// ```
     fn flex_col_reverse(mut self) -> Self {
-        self.style_mut().flex_direction = Some("column-reverse");
+        self.style_mut().flex_direction().set("column-reverse");
         self
     }
 
     /// Set a custom font family.
     fn font_family(mut self, family: &'static str) -> Self {
-        self.style_mut().font_family = Some(family);
+        self.style_mut().font_family().set(family);
         self
     }
 
@@ -2200,7 +2228,7 @@ pub trait Style: Sized {
     /// font-style: italic;
     /// ```
     fn italic(mut self) -> Self {
-        self.style_mut().font_style = Some("italic");
+        self.style_mut().font_style().set("italic");
         self
     }
 
@@ -2208,7 +2236,7 @@ pub trait Style: Sized {
     /// font-style: normal;
     /// ```
     fn not_italic(mut self) -> Self {
-        self.style_mut().font_style = Some("normal");
+        self.style_mut().font_style().set("normal");
         self
     }
 
@@ -2218,7 +2246,7 @@ pub trait Style: Sized {
     /// font-weight: 100;
     /// ```
     fn font_thin(mut self) -> Self {
-        self.style_mut().font_weight = Some(100);
+        self.style_mut().font_weight().set(100);
         self
     }
 
@@ -2228,7 +2256,7 @@ pub trait Style: Sized {
     /// font-weight: 200;
     /// ```
     fn font_extralight(mut self) -> Self {
-        self.style_mut().font_weight = Some(200);
+        self.style_mut().font_weight().set(200);
         self
     }
 
@@ -2238,7 +2266,7 @@ pub trait Style: Sized {
     /// font-weight: 300;
     /// ```
     fn font_light(mut self) -> Self {
-        self.style_mut().font_weight = Some(300);
+        self.style_mut().font_weight().set(300);
         self
     }
 
@@ -2248,7 +2276,7 @@ pub trait Style: Sized {
     /// font-weight: 400;
     /// ```
     fn font_normal(mut self) -> Self {
-        self.style_mut().font_weight = Some(400);
+        self.style_mut().font_weight().set(400);
         self
     }
 
@@ -2258,7 +2286,7 @@ pub trait Style: Sized {
     /// font-weight: 500;
     /// ```
     fn font_medium(mut self) -> Self {
-        self.style_mut().font_weight = Some(500);
+        self.style_mut().font_weight().set(500);
         self
     }
 
@@ -2268,7 +2296,7 @@ pub trait Style: Sized {
     /// font-weight: 600;
     /// ```
     fn font_semibold(mut self) -> Self {
-        self.style_mut().font_weight = Some(600);
+        self.style_mut().font_weight().set(600);
         self
     }
 
@@ -2278,7 +2306,7 @@ pub trait Style: Sized {
     /// font-weight: 700;
     /// ```
     fn font_bold(mut self) -> Self {
-        self.style_mut().font_weight = Some(700);
+        self.style_mut().font_weight().set(700);
         self
     }
 
@@ -2288,7 +2316,7 @@ pub trait Style: Sized {
     /// font-weight: 800;
     /// ```
     fn font_extrabold(mut self) -> Self {
-        self.style_mut().font_weight = Some(800);
+        self.style_mut().font_weight().set(800);
         self
     }
 
@@ -2298,7 +2326,7 @@ pub trait Style: Sized {
     /// font-weight: 900;
     /// ```
     fn font_black(mut self) -> Self {
-        self.style_mut().font_weight = Some(900);
+        self.style_mut().font_weight().set(900);
         self
     }
 
@@ -2308,7 +2336,7 @@ pub trait Style: Sized {
     /// ```
     fn from(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .from_color = Some(color);
@@ -2322,7 +2350,7 @@ pub trait Style: Sized {
     #[allow(clippy::wrong_self_convention)]
     fn from_position(mut self, x: i16) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .from_position = Some(Length::Percent(Float::from(x)));
@@ -2336,7 +2364,7 @@ pub trait Style: Sized {
     #[allow(clippy::wrong_self_convention)]
     fn from_positionf(mut self, x: f32) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .from_position = Some(Length::Percent(Float::from(x)));
@@ -2349,7 +2377,7 @@ pub trait Style: Sized {
     /// gap: {x};
     /// ```
     fn gap(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().gap.get_or_insert_default().set(x.into());
+        self.style_mut().gap().get_or_insert_default().set(x.into());
         self
     }
 
@@ -2359,7 +2387,7 @@ pub trait Style: Sized {
     /// column-gap: {x};
     /// ```
     fn gap_x(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().gap.get_or_insert_default().set(x.into());
+        self.style_mut().gap().get_or_insert_default().set(x.into());
         self
     }
 
@@ -2369,7 +2397,7 @@ pub trait Style: Sized {
     /// row-gap: {x};
     /// ```
     fn gap_y(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().gap.get_or_insert_default().set(x.into());
+        self.style_mut().gap().get_or_insert_default().set(x.into());
         self
     }
 
@@ -2379,7 +2407,9 @@ pub trait Style: Sized {
     /// grid-template-columns: repeat({n}, minmax(0, 1fr));
     /// ```
     fn cols(mut self, n: u16) -> Self {
-        self.style_mut().grid_template_columns = Some(Either::Left(TrackRepeatEqually(n)));
+        self.style_mut()
+            .grid_template_columns()
+            .set(Either::Left(TrackRepeatEqually(n)));
         self
     }
 
@@ -2389,7 +2419,9 @@ pub trait Style: Sized {
     /// grid-template-columns: none;
     /// ```
     fn cols_none(mut self) -> Self {
-        self.style_mut().grid_template_columns = Some(Either::Right("none"));
+        self.style_mut()
+            .grid_template_columns()
+            .set(Either::Right("none"));
         self
     }
 
@@ -2399,7 +2431,9 @@ pub trait Style: Sized {
     /// grid-template-columns: {template};
     /// ```
     fn cols_custom(mut self, template: &'static str) -> Self {
-        self.style_mut().grid_template_columns = Some(Either::Right(template));
+        self.style_mut()
+            .grid_template_columns()
+            .set(Either::Right(template));
         self
     }
 
@@ -2409,7 +2443,9 @@ pub trait Style: Sized {
     /// grid-template-rows: repeat({n}, minmax(0, 1fr));
     /// ```
     fn rows(mut self, n: u16) -> Self {
-        self.style_mut().grid_template_rows = Some(Either::Left(TrackRepeatEqually(n)));
+        self.style_mut()
+            .grid_template_rows()
+            .set(Either::Left(TrackRepeatEqually(n)));
         self
     }
 
@@ -2419,7 +2455,9 @@ pub trait Style: Sized {
     /// grid-template-rows: none;
     /// ```
     fn rows_none(mut self) -> Self {
-        self.style_mut().grid_template_rows = Some(Either::Right("none"));
+        self.style_mut()
+            .grid_template_rows()
+            .set(Either::Right("none"));
         self
     }
 
@@ -2429,7 +2467,9 @@ pub trait Style: Sized {
     /// grid-template-rows: {template};
     /// ```
     fn rows_custom(mut self, template: &'static str) -> Self {
-        self.style_mut().grid_template_rows = Some(Either::Right(template));
+        self.style_mut()
+            .grid_template_rows()
+            .set(Either::Right(template));
         self
     }
 
@@ -2439,7 +2479,7 @@ pub trait Style: Sized {
     /// grid-auto-flow: row;
     /// ```
     fn grid_flow_row(mut self) -> Self {
-        self.style_mut().grid_auto_flow = Some("row");
+        self.style_mut().grid_auto_flow().set("row");
         self
     }
 
@@ -2449,7 +2489,7 @@ pub trait Style: Sized {
     /// grid-auto-flow: column;
     /// ```
     fn grid_flow_col(mut self) -> Self {
-        self.style_mut().grid_auto_flow = Some("column");
+        self.style_mut().grid_auto_flow().set("column");
         self
     }
 
@@ -2459,7 +2499,7 @@ pub trait Style: Sized {
     /// grid-auto-flow: dense;
     /// ```
     fn grid_flow_dense(mut self) -> Self {
-        self.style_mut().grid_auto_flow = Some("dense");
+        self.style_mut().grid_auto_flow().set("dense");
         self
     }
 
@@ -2469,7 +2509,7 @@ pub trait Style: Sized {
     /// grid-auto-flow: row dense;
     /// ```
     fn grid_flow_row_dense(mut self) -> Self {
-        self.style_mut().grid_auto_flow = Some("row dense");
+        self.style_mut().grid_auto_flow().set("row dense");
         self
     }
 
@@ -2479,7 +2519,7 @@ pub trait Style: Sized {
     /// grid-auto-flow: column dense;
     /// ```
     fn grid_flow_col_dense(mut self) -> Self {
-        self.style_mut().grid_auto_flow = Some("column dense");
+        self.style_mut().grid_auto_flow().set("column dense");
         self
     }
 
@@ -2494,7 +2534,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     #[with_content]
     fn h(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().height = Some(x.into());
+        self.style_mut().height().set(x.into());
         self
     }
 
@@ -2505,7 +2545,10 @@ pub trait Style: Sized {
     /// ```
     #[with_auto]
     fn inset(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().inset.get_or_insert_default().set(x.into());
+        self.style_mut()
+            .inset()
+            .get_or_insert_default()
+            .set(x.into());
         self
     }
 
@@ -2520,7 +2563,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn inset_x(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .inset
+            .inset()
             .get_or_insert_default()
             .set_x(x.into());
         self
@@ -2538,7 +2581,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn inset_y(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .inset
+            .inset()
             .get_or_insert_default()
             .set_y(x.into());
         self
@@ -2551,7 +2594,7 @@ pub trait Style: Sized {
     /// align-items: flex-start;
     /// ```
     fn items_start(mut self) -> Self {
-        self.style_mut().align_items = Some("flex-start");
+        self.style_mut().align_items().set("flex-start");
         self
     }
 
@@ -2562,7 +2605,7 @@ pub trait Style: Sized {
     /// align-items: flex-end;
     /// ```
     fn items_end(mut self) -> Self {
-        self.style_mut().align_items = Some("flex-end");
+        self.style_mut().align_items().set("flex-end");
         self
     }
 
@@ -2573,7 +2616,7 @@ pub trait Style: Sized {
     /// align-items: center
     /// ```
     fn items_center(mut self) -> Self {
-        self.style_mut().align_items = Some("center");
+        self.style_mut().align_items().set("center");
         self
     }
 
@@ -2584,7 +2627,7 @@ pub trait Style: Sized {
     /// align-items: baseline;
     /// ```
     fn items_baseline(mut self) -> Self {
-        self.style_mut().align_items = Some("baseline");
+        self.style_mut().align_items().set("baseline");
         self
     }
 
@@ -2595,7 +2638,7 @@ pub trait Style: Sized {
     /// align-items: stretch;
     /// ```
     fn items_stretch(mut self) -> Self {
-        self.style_mut().align_items = Some("stretch");
+        self.style_mut().align_items().set("stretch");
         self
     }
 
@@ -2606,7 +2649,7 @@ pub trait Style: Sized {
     /// justify-content: normal;
     /// ```
     fn justify_normal(mut self) -> Self {
-        self.style_mut().justify_content = Some("normal");
+        self.style_mut().justify_content().set("normal");
         self
     }
 
@@ -2617,7 +2660,7 @@ pub trait Style: Sized {
     /// justify-content: flex-start;
     /// ```
     fn justify_start(mut self) -> Self {
-        self.style_mut().justify_content = Some("flex-start");
+        self.style_mut().justify_content().set("flex-start");
         self
     }
 
@@ -2628,7 +2671,7 @@ pub trait Style: Sized {
     /// justify-content: flex-end;
     /// ```
     fn justify_end(mut self) -> Self {
-        self.style_mut().justify_content = Some("flex-end");
+        self.style_mut().justify_content().set("flex-end");
         self
     }
 
@@ -2639,7 +2682,7 @@ pub trait Style: Sized {
     /// justify-content: center;
     /// ```
     fn justify_center(mut self) -> Self {
-        self.style_mut().justify_content = Some("center");
+        self.style_mut().justify_content().set("center");
         self
     }
 
@@ -2650,7 +2693,7 @@ pub trait Style: Sized {
     /// justify-content: space-between;
     /// ```
     fn justify_between(mut self) -> Self {
-        self.style_mut().justify_content = Some("space-between");
+        self.style_mut().justify_content().set("space-between");
         self
     }
 
@@ -2661,7 +2704,7 @@ pub trait Style: Sized {
     /// justify-content: space-around;
     /// ```
     fn justify_around(mut self) -> Self {
-        self.style_mut().justify_content = Some("space-around");
+        self.style_mut().justify_content().set("space-around");
         self
     }
 
@@ -2672,7 +2715,7 @@ pub trait Style: Sized {
     /// justify-content: space-evenly;
     /// ```
     fn justify_evenly(mut self) -> Self {
-        self.style_mut().justify_content = Some("space-evenly");
+        self.style_mut().justify_content().set("space-evenly");
         self
     }
 
@@ -2683,7 +2726,7 @@ pub trait Style: Sized {
     /// justify-content: stretch;
     /// ```
     fn justify_stretch(mut self) -> Self {
-        self.style_mut().justify_content = Some("stretch");
+        self.style_mut().justify_content().set("stretch");
         self
     }
 
@@ -2693,7 +2736,7 @@ pub trait Style: Sized {
     /// justify-self: auto;
     /// ```
     fn justify_self_auto(mut self) -> Self {
-        self.style_mut().justify_self = Some("auto");
+        self.style_mut().justify_self().set("auto");
         self
     }
 
@@ -2703,7 +2746,7 @@ pub trait Style: Sized {
     /// justify-self: start;
     /// ```
     fn justify_self_start(mut self) -> Self {
-        self.style_mut().justify_self = Some("start");
+        self.style_mut().justify_self().set("start");
         self
     }
 
@@ -2713,7 +2756,7 @@ pub trait Style: Sized {
     /// justify-self: end;
     /// ```
     fn justify_self_end(mut self) -> Self {
-        self.style_mut().justify_self = Some("end");
+        self.style_mut().justify_self().set("end");
         self
     }
 
@@ -2723,7 +2766,7 @@ pub trait Style: Sized {
     /// justify-self: center;
     /// ```
     fn justify_self_center(mut self) -> Self {
-        self.style_mut().justify_self = Some("center");
+        self.style_mut().justify_self().set("center");
         self
     }
 
@@ -2733,7 +2776,7 @@ pub trait Style: Sized {
     /// justify-self: stretch;
     /// ```
     fn justify_self_stretch(mut self) -> Self {
-        self.style_mut().justify_self = Some("stretch");
+        self.style_mut().justify_self().set("stretch");
         self
     }
     /// Set the element's line height.
@@ -2742,7 +2785,9 @@ pub trait Style: Sized {
     /// line-height: 1;
     /// ```
     fn leading_none(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(1.0)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(1.0)));
         self
     }
 
@@ -2752,7 +2797,9 @@ pub trait Style: Sized {
     /// line-height: 1.25;
     /// ```
     fn leading_tight(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(1.25)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(1.25)));
         self
     }
 
@@ -2762,7 +2809,9 @@ pub trait Style: Sized {
     /// line-height: 1.375;
     /// ```
     fn leading_snug(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(1.375)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(1.375)));
         self
     }
 
@@ -2772,7 +2821,9 @@ pub trait Style: Sized {
     /// line-height: 1.5;
     /// ```
     fn leading_normal(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(1.5)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(1.5)));
         self
     }
 
@@ -2782,7 +2833,9 @@ pub trait Style: Sized {
     /// line-height: 1.625;
     /// ```
     fn leading_relaxed(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(1.625)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(1.625)));
         self
     }
 
@@ -2792,7 +2845,9 @@ pub trait Style: Sized {
     /// line-height: 2;
     /// ```
     fn leading_loose(mut self) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(2.0)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(2.0)));
         self
     }
 
@@ -2802,7 +2857,9 @@ pub trait Style: Sized {
     /// line-height: {x};
     /// ```
     fn leading_multiple(mut self, x: f32) -> Self {
-        self.style_mut().line_height = Some(Either::Right(Float::from(x)));
+        self.style_mut()
+            .line_height()
+            .set(Either::Right(Float::from(x)));
         self
     }
 
@@ -2813,7 +2870,7 @@ pub trait Style: Sized {
     /// ```
     #[without_zero]
     fn leading(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().line_height = Some(Either::Left(x.into()));
+        self.style_mut().line_height().set(Either::Left(x.into()));
         self
     }
 
@@ -2828,7 +2885,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn left(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .inset
+            .inset()
             .get_or_insert_default()
             .set_left(x.into());
         self
@@ -2842,7 +2899,7 @@ pub trait Style: Sized {
     /// -webkit-line-clamp: {n};
     /// ```
     fn line_clamp(mut self, n: u16) -> Self {
-        self.style_mut().line_clamp = Some(LineClamp::Lines(n));
+        self.style_mut().line_clamp().set(LineClamp::Lines(n));
         self
     }
 
@@ -2854,7 +2911,7 @@ pub trait Style: Sized {
     /// -webkit-line-clamp: none;
     /// ```
     fn line_clamp_none(mut self) -> Self {
-        self.style_mut().line_clamp = None;
+        self.style_mut().line_clamp().clear();
         self
     }
 
@@ -2864,7 +2921,7 @@ pub trait Style: Sized {
     /// list-style-type: none;
     /// ```
     fn list_none(mut self) -> Self {
-        self.style_mut().list_style_type = Some("none");
+        self.style_mut().list_style_type().set("none");
         self
     }
 
@@ -2874,7 +2931,7 @@ pub trait Style: Sized {
     /// list-style-type: disc;
     /// ```
     fn list_disc(mut self) -> Self {
-        self.style_mut().list_style_type = Some("disc");
+        self.style_mut().list_style_type().set("disc");
         self
     }
 
@@ -2884,7 +2941,7 @@ pub trait Style: Sized {
     /// list-style-type: decimnal;
     /// ```
     fn list_decimal(mut self) -> Self {
-        self.style_mut().list_style_type = Some("decimnal");
+        self.style_mut().list_style_type().set("decimnal");
         self
     }
 
@@ -2896,7 +2953,7 @@ pub trait Style: Sized {
     #[with_auto]
     fn m(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin
+            .margin()
             .get_or_insert_default()
             .set(x.into());
         self
@@ -2913,7 +2970,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn mx(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin_inline
+            .margin_inline()
             .get_or_insert_default()
             .set_x(x.into());
         self
@@ -2930,7 +2987,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn my(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin_inline
+            .margin_inline()
             .get_or_insert_default()
             .set_y(x.into());
         self
@@ -2945,7 +3002,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn mt(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin
+            .margin()
             .get_or_insert_default()
             .set_top(x.into());
         self
@@ -2960,7 +3017,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn mr(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin
+            .margin()
             .get_or_insert_default()
             .set_right(x.into());
         self
@@ -2975,7 +3032,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn mb(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin
+            .margin()
             .get_or_insert_default()
             .set_bottom(x.into());
         self
@@ -2990,7 +3047,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn ml(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin
+            .margin()
             .get_or_insert_default()
             .set_left(x.into());
         self
@@ -3005,7 +3062,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn ms(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin_inline
+            .margin_inline()
             .get_or_insert_default()
             .set_inline_start(x.into());
         self
@@ -3020,7 +3077,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn me(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .margin_inline
+            .margin_inline()
             .get_or_insert_default()
             .set_inline_end(x.into());
         self
@@ -3037,7 +3094,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     #[with_content]
     fn max_h(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().max_height = Some(x.into());
+        self.style_mut().max_height().set(x.into());
         self
     }
 
@@ -3052,7 +3109,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     #[with_content]
     fn max_w(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().max_width = Some(x.into());
+        self.style_mut().max_width().set(x.into());
         self
     }
 
@@ -3067,7 +3124,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     #[with_content]
     fn min_h(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().min_height = Some(x.into());
+        self.style_mut().min_height().set(x.into());
         self
     }
 
@@ -3082,7 +3139,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     #[with_content]
     fn min_w(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().min_width = Some(x.into());
+        self.style_mut().min_width().set(x.into());
         self
     }
 
@@ -3092,7 +3149,7 @@ pub trait Style: Sized {
     /// object-position: bottom;
     /// ```
     fn object_block(mut self) -> Self {
-        self.style_mut().object_position = Some("bottom");
+        self.style_mut().object_position().set("bottom");
         self
     }
 
@@ -3102,7 +3159,7 @@ pub trait Style: Sized {
     /// object-position: center;
     /// ```
     fn object_center(mut self) -> Self {
-        self.style_mut().object_position = Some("center");
+        self.style_mut().object_position().set("center");
         self
     }
 
@@ -3112,7 +3169,7 @@ pub trait Style: Sized {
     /// object-position: left;
     /// ```
     fn object_left(mut self) -> Self {
-        self.style_mut().object_position = Some("left");
+        self.style_mut().object_position().set("left");
         self
     }
 
@@ -3122,7 +3179,7 @@ pub trait Style: Sized {
     /// object-position: left bottom;
     /// ```
     fn object_left_bottom(mut self) -> Self {
-        self.style_mut().object_position = Some("left bottom");
+        self.style_mut().object_position().set("left bottom");
         self
     }
 
@@ -3132,7 +3189,7 @@ pub trait Style: Sized {
     /// object-position: left top;
     /// ```
     fn object_left_top(mut self) -> Self {
-        self.style_mut().object_position = Some("left top");
+        self.style_mut().object_position().set("left top");
         self
     }
 
@@ -3142,7 +3199,7 @@ pub trait Style: Sized {
     /// object-position: right;
     /// ```
     fn object_right(mut self) -> Self {
-        self.style_mut().object_position = Some("right");
+        self.style_mut().object_position().set("right");
         self
     }
 
@@ -3152,7 +3209,7 @@ pub trait Style: Sized {
     /// object-position: right bottom;
     /// ```
     fn object_right_bottom(mut self) -> Self {
-        self.style_mut().object_position = Some("right bottom");
+        self.style_mut().object_position().set("right bottom");
         self
     }
 
@@ -3162,7 +3219,7 @@ pub trait Style: Sized {
     /// object-position: right top;
     /// ```
     fn object_right_top(mut self) -> Self {
-        self.style_mut().object_position = Some("right top");
+        self.style_mut().object_position().set("right top");
         self
     }
 
@@ -3172,7 +3229,7 @@ pub trait Style: Sized {
     /// object-position: top;
     /// ```
     fn object_top(mut self) -> Self {
-        self.style_mut().object_position = Some("top");
+        self.style_mut().object_position().set("top");
         self
     }
 
@@ -3182,7 +3239,7 @@ pub trait Style: Sized {
     /// object-fit: contain;
     /// ```
     fn object_contain(mut self) -> Self {
-        self.style_mut().object_fit = Some("contain");
+        self.style_mut().object_fit().set("contain");
         self
     }
 
@@ -3192,7 +3249,7 @@ pub trait Style: Sized {
     /// object-fit: cover;
     /// ```
     fn object_cover(mut self) -> Self {
-        self.style_mut().object_fit = Some("cover");
+        self.style_mut().object_fit().set("cover");
         self
     }
 
@@ -3202,7 +3259,7 @@ pub trait Style: Sized {
     /// object-fit: fill;
     /// ```
     fn object_fill(mut self) -> Self {
-        self.style_mut().object_fit = Some("fill");
+        self.style_mut().object_fit().set("fill");
         self
     }
 
@@ -3212,7 +3269,7 @@ pub trait Style: Sized {
     /// object-fit: none;
     /// ```
     fn object_none(mut self) -> Self {
-        self.style_mut().object_fit = Some("none");
+        self.style_mut().object_fit().set("none");
         self
     }
 
@@ -3222,7 +3279,7 @@ pub trait Style: Sized {
     /// object-fit: scale-down;
     /// ```
     fn object_scale_down(mut self) -> Self {
-        self.style_mut().object_fit = Some("scale-down");
+        self.style_mut().object_fit().set("scale-down");
         self
     }
 
@@ -3232,7 +3289,7 @@ pub trait Style: Sized {
     /// order: {n};
     /// ```
     fn order(mut self, n: u16) -> Self {
-        self.style_mut().order = Some(i32::from(n));
+        self.style_mut().order().set(i32::from(n));
         self
     }
 
@@ -3242,7 +3299,7 @@ pub trait Style: Sized {
     /// order: -9999;
     /// ```
     fn order_first(mut self) -> Self {
-        self.style_mut().order = Some(-9999);
+        self.style_mut().order().set(-9999);
         self
     }
 
@@ -3252,7 +3309,7 @@ pub trait Style: Sized {
     /// order: 9999;
     /// ```
     fn order_last(mut self) -> Self {
-        self.style_mut().order = Some(9999);
+        self.style_mut().order().set(9999);
         self
     }
 
@@ -3262,7 +3319,7 @@ pub trait Style: Sized {
     /// order: 0;
     /// ```
     fn order_none(mut self) -> Self {
-        self.style_mut().order = Some(0);
+        self.style_mut().order().set(0);
         self
     }
 
@@ -3271,8 +3328,8 @@ pub trait Style: Sized {
     /// ```
     fn outline(mut self, x: i16) -> Self {
         let style = self.style_mut();
-        style.outline_width = Some(Length::Px(Float::from(x)));
-        if style.outline_style.is_none() {
+        style.outline_width().set(Length::Px(Float::from(x)));
+        if !style.outline_style().is_set() {
             self.outline_solid()
         } else {
             self
@@ -3284,8 +3341,8 @@ pub trait Style: Sized {
     /// ```
     fn outlinef(mut self, x: f32) -> Self {
         let style = self.style_mut();
-        style.outline_width = Some(Length::Px(Float::from(x)));
-        if style.outline_style.is_none() {
+        style.outline_width().set(Length::Px(Float::from(x)));
+        if !style.outline_style().is_set() {
             self.outline_solid()
         } else {
             self
@@ -3299,10 +3356,10 @@ pub trait Style: Sized {
     /// ```
     fn outline_hidden(mut self) -> Self {
         let style = self.style_mut();
-        style.outline_width = Some(Length::Px(Float::from(2i32)));
-        style.outline_style = Some("solid");
-        style.outline_color = Some("transparent");
-        style.outline_offset = Some(Length::Px(Float::from(2i32)));
+        style.outline_width().set(Length::Px(Float::from(2i32)));
+        style.outline_style().set("solid");
+        style.outline_color().set("transparent");
+        style.outline_offset().set(Length::Px(Float::from(2i32)));
         self
     }
 
@@ -3312,7 +3369,7 @@ pub trait Style: Sized {
     /// outline-style: none;
     /// ```
     fn outline_none(mut self) -> Self {
-        self.style_mut().outline_style = Some("none");
+        self.style_mut().outline_style().set("none");
         self
     }
 
@@ -3322,7 +3379,7 @@ pub trait Style: Sized {
     /// outline-style: solid;
     /// ```
     fn outline_solid(mut self) -> Self {
-        self.style_mut().outline_style = Some("solid");
+        self.style_mut().outline_style().set("solid");
         self
     }
 
@@ -3332,7 +3389,7 @@ pub trait Style: Sized {
     /// outline-style: dashed;
     /// ```
     fn outline_dashed(mut self) -> Self {
-        self.style_mut().outline_style = Some("dashed");
+        self.style_mut().outline_style().set("dashed");
         self
     }
 
@@ -3342,7 +3399,7 @@ pub trait Style: Sized {
     /// outline-style: dotted;
     /// ```
     fn outline_dotted(mut self) -> Self {
-        self.style_mut().outline_style = Some("dotted");
+        self.style_mut().outline_style().set("dotted");
         self
     }
 
@@ -3352,7 +3409,7 @@ pub trait Style: Sized {
     /// outline-style: double;
     /// ```
     fn outline_double(mut self) -> Self {
-        self.style_mut().outline_style = Some("double");
+        self.style_mut().outline_style().set("double");
         self
     }
 
@@ -3360,7 +3417,7 @@ pub trait Style: Sized {
     /// outline-color: {color};
     /// ```
     fn outline_color(mut self, color: &'static str) -> Self {
-        self.style_mut().outline_color = Some(color);
+        self.style_mut().outline_color().set(color);
         self
     }
 
@@ -3368,7 +3425,9 @@ pub trait Style: Sized {
     /// outline-offset: {x}px;
     /// ```
     fn outline_offset(mut self, x: i16) -> Self {
-        self.style_mut().outline_offset = Some(Length::Px(Float::from(x)));
+        self.style_mut()
+            .outline_offset()
+            .set(Length::Px(Float::from(x)));
         self
     }
 
@@ -3376,7 +3435,9 @@ pub trait Style: Sized {
     /// outline-offset: {x}px;
     /// ```
     fn outline_offsetf(mut self, x: f32) -> Self {
-        self.style_mut().outline_offset = Some(Length::Px(Float::from(x)));
+        self.style_mut()
+            .outline_offset()
+            .set(Length::Px(Float::from(x)));
         self
     }
 
@@ -3387,7 +3448,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_auto(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set("auto");
         self
@@ -3400,7 +3461,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_hidden(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set("hidden");
         self
@@ -3413,7 +3474,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_clip(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set("clip");
         self
@@ -3426,7 +3487,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_visible(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set("visible");
         self
@@ -3439,7 +3500,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_scroll(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set("scroll");
         self
@@ -3452,7 +3513,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_x_auto(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_x("auto");
         self
@@ -3465,7 +3526,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_x_hidden(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_x("hidden");
         self
@@ -3478,7 +3539,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_x_clip(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_x("clip");
         self
@@ -3491,7 +3552,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_x_visible(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_x("visible");
         self
@@ -3504,7 +3565,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_x_scroll(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_x("scroll");
         self
@@ -3517,7 +3578,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_y_auto(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_y("auto");
         self
@@ -3530,7 +3591,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_y_hidden(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_y("hidden");
         self
@@ -3543,7 +3604,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_y_clip(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_y("clip");
         self
@@ -3556,7 +3617,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_y_visible(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_y("visible");
         self
@@ -3569,7 +3630,7 @@ pub trait Style: Sized {
     /// ```
     fn overflow_y_scroll(mut self) -> Self {
         self.style_mut()
-            .overflow
+            .overflow()
             .get_or_insert_default()
             .set_y("scroll");
         self
@@ -3582,7 +3643,7 @@ pub trait Style: Sized {
     /// ```
     fn p(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set(x.into());
         self
@@ -3598,7 +3659,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn px(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set_x(x.into());
         self
@@ -3614,7 +3675,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn py(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set_y(x.into());
         self
@@ -3628,7 +3689,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn pt(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set_top(x.into());
         self
@@ -3642,7 +3703,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn pr(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set_right(x.into());
         self
@@ -3656,7 +3717,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn pb(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set_bottom(x.into());
         self
@@ -3670,7 +3731,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn pl(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .padding
+            .padding()
             .get_or_insert_default()
             .set_left(x.into());
         self
@@ -3682,7 +3743,7 @@ pub trait Style: Sized {
     /// place-self: auto;
     /// ```
     fn place_auto(mut self) -> Self {
-        self.style_mut().place_self = Some("auto");
+        self.style_mut().place_self().set("auto");
         self
     }
 
@@ -3692,7 +3753,7 @@ pub trait Style: Sized {
     /// place-self: start;
     /// ```
     fn place_start(mut self) -> Self {
-        self.style_mut().place_self = Some("start");
+        self.style_mut().place_self().set("start");
         self
     }
 
@@ -3702,7 +3763,7 @@ pub trait Style: Sized {
     /// place-self: end;
     /// ```
     fn place_end(mut self) -> Self {
-        self.style_mut().place_self = Some("end");
+        self.style_mut().place_self().set("end");
         self
     }
 
@@ -3712,7 +3773,7 @@ pub trait Style: Sized {
     /// place-self: center;
     /// ```
     fn place_center(mut self) -> Self {
-        self.style_mut().place_self = Some("center");
+        self.style_mut().place_self().set("center");
         self
     }
 
@@ -3722,7 +3783,7 @@ pub trait Style: Sized {
     /// place-self: stretch;
     /// ```
     fn place_stretch(mut self) -> Self {
-        self.style_mut().place_self = Some("stretch");
+        self.style_mut().place_self().set("stretch");
         self
     }
 
@@ -3732,7 +3793,7 @@ pub trait Style: Sized {
     /// place-content: center;
     /// ```
     fn place_content_center(mut self) -> Self {
-        self.style_mut().place_content = Some("center");
+        self.style_mut().place_content().set("center");
         self
     }
 
@@ -3742,7 +3803,7 @@ pub trait Style: Sized {
     /// place-content: start;
     /// ```
     fn place_content_start(mut self) -> Self {
-        self.style_mut().place_content = Some("start");
+        self.style_mut().place_content().set("start");
         self
     }
 
@@ -3752,7 +3813,7 @@ pub trait Style: Sized {
     /// place-content: end;
     /// ```
     fn place_content_end(mut self) -> Self {
-        self.style_mut().place_content = Some("end");
+        self.style_mut().place_content().set("end");
         self
     }
 
@@ -3762,7 +3823,7 @@ pub trait Style: Sized {
     /// place-content: space-between;
     /// ```
     fn place_content_between(mut self) -> Self {
-        self.style_mut().place_content = Some("space-between");
+        self.style_mut().place_content().set("space-between");
         self
     }
 
@@ -3772,7 +3833,7 @@ pub trait Style: Sized {
     /// place-content: space-around;
     /// ```
     fn place_content_around(mut self) -> Self {
-        self.style_mut().place_content = Some("space-around");
+        self.style_mut().place_content().set("space-around");
         self
     }
 
@@ -3782,7 +3843,7 @@ pub trait Style: Sized {
     /// place-content: space-evenly;
     /// ```
     fn place_content_evenly(mut self) -> Self {
-        self.style_mut().place_content = Some("space-evenly");
+        self.style_mut().place_content().set("space-evenly");
         self
     }
 
@@ -3792,7 +3853,7 @@ pub trait Style: Sized {
     /// place-content: baseline;
     /// ```
     fn place_content_baseline(mut self) -> Self {
-        self.style_mut().place_content = Some("baseline");
+        self.style_mut().place_content().set("baseline");
         self
     }
 
@@ -3802,7 +3863,7 @@ pub trait Style: Sized {
     /// place-content: stretch;
     /// ```
     fn place_content_stretch(mut self) -> Self {
-        self.style_mut().place_content = Some("stretch");
+        self.style_mut().place_content().set("stretch");
         self
     }
 
@@ -3812,7 +3873,7 @@ pub trait Style: Sized {
     /// place-items: start;
     /// ```
     fn place_items_start(mut self) -> Self {
-        self.style_mut().place_items = Some("start");
+        self.style_mut().place_items().set("start");
         self
     }
 
@@ -3822,7 +3883,7 @@ pub trait Style: Sized {
     /// place-items: end;
     /// ```
     fn place_items_end(mut self) -> Self {
-        self.style_mut().place_items = Some("end");
+        self.style_mut().place_items().set("end");
         self
     }
 
@@ -3832,7 +3893,7 @@ pub trait Style: Sized {
     /// place-items: center;
     /// ```
     fn place_items_center(mut self) -> Self {
-        self.style_mut().place_items = Some("center");
+        self.style_mut().place_items().set("center");
         self
     }
 
@@ -3842,7 +3903,7 @@ pub trait Style: Sized {
     /// place-items: baseline;
     /// ```
     fn place_items_baseline(mut self) -> Self {
-        self.style_mut().place_items = Some("baseline");
+        self.style_mut().place_items().set("baseline");
         self
     }
 
@@ -3852,7 +3913,7 @@ pub trait Style: Sized {
     /// place-items: stretch;
     /// ```
     fn place_items_stretch(mut self) -> Self {
-        self.style_mut().place_items = Some("stretch");
+        self.style_mut().place_items().set("stretch");
         self
     }
 
@@ -3862,7 +3923,7 @@ pub trait Style: Sized {
     /// pointer-events: none;
     /// ```
     fn pointer_events_none(mut self) -> Self {
-        self.style_mut().pointer_events = Some("none");
+        self.style_mut().pointer_events().set("none");
         self
     }
 
@@ -3872,7 +3933,7 @@ pub trait Style: Sized {
     /// pointer-events: auto;
     /// ```
     fn pointer_events_auto(mut self) -> Self {
-        self.style_mut().pointer_events = Some("auto");
+        self.style_mut().pointer_events().set("auto");
         self
     }
 
@@ -3882,7 +3943,7 @@ pub trait Style: Sized {
     /// position: static;
     /// ```
     fn static_(mut self) -> Self {
-        self.style_mut().position = Some("static");
+        self.style_mut().position().set("static");
         self
     }
 
@@ -3892,7 +3953,7 @@ pub trait Style: Sized {
     /// position: relative;
     /// ```
     fn relative(mut self) -> Self {
-        self.style_mut().position = Some("relative");
+        self.style_mut().position().set("relative");
         self
     }
 
@@ -3902,7 +3963,7 @@ pub trait Style: Sized {
     /// position: absolute;
     /// ```
     fn absolute(mut self) -> Self {
-        self.style_mut().position = Some("absolute");
+        self.style_mut().position().set("absolute");
         self
     }
 
@@ -3912,7 +3973,7 @@ pub trait Style: Sized {
     /// position: sticky;
     /// ```
     fn sticky(mut self) -> Self {
-        self.style_mut().position = Some("sticky");
+        self.style_mut().position().set("sticky");
         self
     }
 
@@ -3922,7 +3983,7 @@ pub trait Style: Sized {
     /// position: fixed;
     /// ```
     fn fixed(mut self) -> Self {
-        self.style_mut().position = Some("fixed");
+        self.style_mut().position().set("fixed");
         self
     }
 
@@ -3937,7 +3998,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     fn right(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .inset
+            .inset()
             .get_or_insert_default()
             .set_right(x.into());
         self
@@ -3949,7 +4010,7 @@ pub trait Style: Sized {
     /// ```
     fn ring(mut self, x: i16) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .ring
             .get_or_insert_default()
@@ -3963,7 +4024,7 @@ pub trait Style: Sized {
     /// ```
     fn ringf(mut self, x: f32) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .ring
             .get_or_insert_default()
@@ -3977,7 +4038,7 @@ pub trait Style: Sized {
     /// ```
     fn ring_inset(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .ring
             .get_or_insert_default()
@@ -3991,7 +4052,7 @@ pub trait Style: Sized {
     /// ```
     fn ring_color(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .ring
             .get_or_insert_default()
@@ -4005,7 +4066,7 @@ pub trait Style: Sized {
     /// transform: rotate({deg}deg);
     /// ```
     fn rotate(mut self, deg: i16) -> Self {
-        self.style_mut().transform = Some(Transform::Rotate(deg));
+        self.style_mut().transform().set(Transform::Rotate(deg));
         self
     }
 
@@ -4013,7 +4074,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_xs2(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Xs2);
         self
@@ -4023,7 +4084,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_xs(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Xs);
         self
@@ -4033,7 +4094,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_sm(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Sm);
         self
@@ -4043,7 +4104,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_md(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Md);
         self
@@ -4053,7 +4114,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_lg(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Lg);
         self
@@ -4063,7 +4124,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_xl(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Xl);
         self
@@ -4073,7 +4134,7 @@ pub trait Style: Sized {
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>
     fn shadow_xl2(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = Some(ShadowKind::Xl2);
         self
@@ -4082,7 +4143,7 @@ pub trait Style: Sized {
     /// Remove any existing shadow effects.
     fn shadow_none(mut self) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_kind = None;
         self
@@ -4091,7 +4152,7 @@ pub trait Style: Sized {
     /// Set the shadow's color.
     fn shadow_color(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .box_shadow
+            .box_shadow()
             .get_or_insert_default()
             .shadow_color = Some(color);
         self
@@ -4104,7 +4165,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set(Either::Left(x.into()));
         self
@@ -4117,7 +4178,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4130,7 +4191,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4143,7 +4204,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set(Either::Right("calc(infinity * 1px)"));
         self
@@ -4158,7 +4219,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_t(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_t(Either::Left(x.into()));
         self
@@ -4173,7 +4234,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_t_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_t(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4188,7 +4249,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_t_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_t(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4203,7 +4264,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_t_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_t(Either::Right("calc(infinity * 1px)"));
         self
@@ -4218,7 +4279,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_r(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_r(Either::Left(x.into()));
         self
@@ -4233,7 +4294,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_r_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_r(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4248,7 +4309,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_r_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_r(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4263,7 +4324,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_r_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_r(Either::Right("calc(infinity * 1px)"));
         self
@@ -4278,7 +4339,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_b(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_b(Either::Left(x.into()));
         self
@@ -4293,7 +4354,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_b_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_b(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4308,7 +4369,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_b_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_b(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4323,7 +4384,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_b_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_b(Either::Right("calc(infinity * 1px)"));
         self
@@ -4338,7 +4399,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_l(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_l(Either::Left(x.into()));
         self
@@ -4353,7 +4414,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_l_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_l(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4368,7 +4429,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_l_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_l(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4383,7 +4444,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_l_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_l(Either::Right("calc(infinity * 1px)"));
         self
@@ -4396,7 +4457,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tl(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tl(Either::Left(x.into()));
         self
@@ -4409,7 +4470,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tl_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tl(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4422,7 +4483,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tl_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tl(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4435,7 +4496,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tl_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tl(Either::Right("calc(infinity * 1px)"));
         self
@@ -4448,7 +4509,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tr(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tr(Either::Left(x.into()));
         self
@@ -4461,7 +4522,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tr_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tr(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4474,7 +4535,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tr_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tr(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4487,7 +4548,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_tr_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_tr(Either::Right("calc(infinity * 1px)"));
         self
@@ -4500,7 +4561,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_br(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_br(Either::Left(x.into()));
         self
@@ -4513,7 +4574,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_br_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_br(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4526,7 +4587,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_br_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_br(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4539,7 +4600,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_br_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_br(Either::Right("calc(infinity * 1px)"));
         self
@@ -4552,7 +4613,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_bl(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_bl(Either::Left(x.into()));
         self
@@ -4565,7 +4626,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_bl_default(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_bl(Either::Left(Length::Rem(Float::from(0.25))));
         self
@@ -4578,7 +4639,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_bl_none(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_bl(Either::Left(Length::Px(Float::from(0i32))));
         self
@@ -4591,7 +4652,7 @@ pub trait Style: Sized {
     /// ```
     fn rounded_bl_full(mut self) -> Self {
         self.style_mut()
-            .border_radius
+            .border_radius()
             .get_or_insert_default()
             .set_bl(Either::Right("calc(infinity * 1px)"));
         self
@@ -4604,7 +4665,7 @@ pub trait Style: Sized {
     /// ```
     fn row_auto(mut self) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set(GridLine::Auto);
         self
@@ -4617,11 +4678,11 @@ pub trait Style: Sized {
     /// ```
     fn row_full(mut self) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set_start(GridLine::Nth(1));
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set_end(GridLine::Nth(-1));
         self
@@ -4634,7 +4695,7 @@ pub trait Style: Sized {
     /// ```
     fn row(mut self, n: i16) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set(GridLine::Nth(n));
         self
@@ -4647,11 +4708,11 @@ pub trait Style: Sized {
     /// ```
     fn row_span(mut self, n: u16) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set_start(GridLine::Span(n));
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set_end(GridLine::Span(n));
         self
@@ -4664,7 +4725,7 @@ pub trait Style: Sized {
     /// ```
     fn row_start_auto(mut self) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set(GridLine::Auto);
         self
@@ -4677,7 +4738,7 @@ pub trait Style: Sized {
     /// ```
     fn row_start(mut self, n: i16) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set_start(GridLine::Nth(n));
         self
@@ -4690,7 +4751,7 @@ pub trait Style: Sized {
     /// ```
     fn row_end_auto(mut self) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set(GridLine::Auto);
         self
@@ -4703,7 +4764,7 @@ pub trait Style: Sized {
     /// ```
     fn row_end(mut self, n: i16) -> Self {
         self.style_mut()
-            .grid_row
+            .grid_row()
             .get_or_insert_default()
             .set_end(GridLine::Nth(n));
         self
@@ -4715,7 +4776,7 @@ pub trait Style: Sized {
     /// user-select: none;
     /// ```
     fn select_none(mut self) -> Self {
-        self.style_mut().user_select = Some("none");
+        self.style_mut().user_select().set("none");
         self
     }
 
@@ -4725,7 +4786,7 @@ pub trait Style: Sized {
     /// user-select: text;
     /// ```
     fn select_text(mut self) -> Self {
-        self.style_mut().user_select = Some("text");
+        self.style_mut().user_select().set("text");
         self
     }
 
@@ -4735,7 +4796,7 @@ pub trait Style: Sized {
     /// user-select: all;
     /// ```
     fn select_all(mut self) -> Self {
-        self.style_mut().user_select = Some("all");
+        self.style_mut().user_select().set("all");
         self
     }
 
@@ -4745,7 +4806,7 @@ pub trait Style: Sized {
     /// user-select: auto;
     /// ```
     fn select_auto(mut self) -> Self {
-        self.style_mut().user_select = Some("auto");
+        self.style_mut().user_select().set("auto");
         self
     }
 
@@ -4755,7 +4816,7 @@ pub trait Style: Sized {
     /// align-self: auto;
     /// ```
     fn self_auto(mut self) -> Self {
-        self.style_mut().align_self = Some("auto");
+        self.style_mut().align_self().set("auto");
         self
     }
 
@@ -4765,7 +4826,7 @@ pub trait Style: Sized {
     /// align-self: flex-start;
     /// ```
     fn self_start(mut self) -> Self {
-        self.style_mut().align_self = Some("flex-start");
+        self.style_mut().align_self().set("flex-start");
         self
     }
 
@@ -4775,7 +4836,7 @@ pub trait Style: Sized {
     /// align-self: flex-end;
     /// ```
     fn self_end(mut self) -> Self {
-        self.style_mut().align_self = Some("flex-end");
+        self.style_mut().align_self().set("flex-end");
         self
     }
 
@@ -4785,7 +4846,7 @@ pub trait Style: Sized {
     /// align-self: center;
     /// ```
     fn self_center(mut self) -> Self {
-        self.style_mut().align_self = Some("center");
+        self.style_mut().align_self().set("center");
         self
     }
 
@@ -4795,7 +4856,7 @@ pub trait Style: Sized {
     /// align-self: stretch;
     /// ```
     fn self_stretch(mut self) -> Self {
-        self.style_mut().align_self = Some("stretch");
+        self.style_mut().align_self().set("stretch");
         self
     }
 
@@ -4805,7 +4866,7 @@ pub trait Style: Sized {
     /// align-self: baseline;
     /// ```
     fn self_baseline(mut self) -> Self {
-        self.style_mut().align_self = Some("baseline");
+        self.style_mut().align_self().set("baseline");
         self
     }
 
@@ -4817,7 +4878,7 @@ pub trait Style: Sized {
     #[with_auto]
     #[with_full]
     fn start(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().inset_inline_start = Some(x.into());
+        self.style_mut().inset_inline_start().set(x.into());
         self
     }
 
@@ -4827,7 +4888,7 @@ pub trait Style: Sized {
     /// color: {color};
     /// ```
     fn text_color(mut self, color: &'static str) -> Self {
-        self.style_mut().color = Some(color);
+        self.style_mut().color().set(color);
         self
     }
 
@@ -4838,7 +4899,7 @@ pub trait Style: Sized {
     /// ```
     #[without_zero]
     fn text_size(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().font_size = Some(x.into());
+        self.style_mut().font_size().set(x.into());
         self
     }
 
@@ -4848,7 +4909,7 @@ pub trait Style: Sized {
     /// text-align: left;
     /// ```
     fn text_left(mut self) -> Self {
-        self.style_mut().text_align = Some("left");
+        self.style_mut().text_align().set("left");
         self
     }
 
@@ -4858,7 +4919,7 @@ pub trait Style: Sized {
     /// text-align: center;
     /// ```
     fn text_center(mut self) -> Self {
-        self.style_mut().text_align = Some("center");
+        self.style_mut().text_align().set("center");
         self
     }
 
@@ -4868,7 +4929,7 @@ pub trait Style: Sized {
     /// text-align: right;
     /// ```
     fn text_right(mut self) -> Self {
-        self.style_mut().text_align = Some("right");
+        self.style_mut().text_align().set("right");
         self
     }
 
@@ -4878,7 +4939,7 @@ pub trait Style: Sized {
     /// text-align: justify;
     /// ```
     fn text_justify(mut self) -> Self {
-        self.style_mut().text_align = Some("justify");
+        self.style_mut().text_align().set("justify");
         self
     }
 
@@ -4888,7 +4949,7 @@ pub trait Style: Sized {
     /// text-align: start;
     /// ```
     fn text_start(mut self) -> Self {
-        self.style_mut().text_align = Some("start");
+        self.style_mut().text_align().set("start");
         self
     }
 
@@ -4898,7 +4959,7 @@ pub trait Style: Sized {
     /// text-align: end;
     /// ```
     fn text_end(mut self) -> Self {
-        self.style_mut().text_align = Some("end");
+        self.style_mut().text_align().set("end");
         self
     }
 
@@ -4907,7 +4968,7 @@ pub trait Style: Sized {
     /// text-transform: uppercase;
     /// ```
     fn uppercase(mut self) -> Self {
-        self.style_mut().text_transform = Some("uppercase");
+        self.style_mut().text_transform().set("uppercase");
         self
     }
 
@@ -4916,7 +4977,7 @@ pub trait Style: Sized {
     /// text-transform: lowercase;
     /// ```
     fn lowercase(mut self) -> Self {
-        self.style_mut().text_transform = Some("lowercase");
+        self.style_mut().text_transform().set("lowercase");
         self
     }
 
@@ -4925,7 +4986,7 @@ pub trait Style: Sized {
     /// text-transform: capitalize;
     /// ```
     fn capitalize(mut self) -> Self {
-        self.style_mut().text_transform = Some("capitalize");
+        self.style_mut().text_transform().set("capitalize");
         self
     }
 
@@ -4934,7 +4995,7 @@ pub trait Style: Sized {
     /// text-transform: none;
     /// ```
     fn normal_case(mut self) -> Self {
-        self.style_mut().text_transform = Some("none");
+        self.style_mut().text_transform().set("none");
         self
     }
 
@@ -4943,7 +5004,7 @@ pub trait Style: Sized {
     /// text-overflow: ellipsis;
     /// ```
     fn text_ellipsis(mut self) -> Self {
-        self.style_mut().text_overflow = Some("ellipsis");
+        self.style_mut().text_overflow().set("ellipsis");
         self
     }
 
@@ -4952,7 +5013,7 @@ pub trait Style: Sized {
     /// text-overflow: clip;
     /// ```
     fn text_clip(mut self) -> Self {
-        self.style_mut().text_overflow = Some("clip");
+        self.style_mut().text_overflow().set("clip");
         self
     }
 
@@ -4971,7 +5032,7 @@ pub trait Style: Sized {
     /// ```
     fn to(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .to_color = Some(color);
@@ -4984,7 +5045,7 @@ pub trait Style: Sized {
     /// ```
     fn to_position(mut self, x: i16) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .to_position = Some(Length::Percent(Float::from(x)));
@@ -4997,7 +5058,7 @@ pub trait Style: Sized {
     /// ```
     fn to_positionf(mut self, x: f32) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .to_position = Some(Length::Percent(Float::from(x)));
@@ -5015,7 +5076,7 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     fn top(mut self, x: impl Into<Length>) -> Self {
         self.style_mut()
-            .inset
+            .inset()
             .get_or_insert_default()
             .set_top(x.into());
         self
@@ -5027,7 +5088,7 @@ pub trait Style: Sized {
     /// letter-spacing: {x};
     /// ```
     fn tracking(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().letter_spacing = Some(x.into());
+        self.style_mut().letter_spacing().set(x.into());
         self
     }
 
@@ -5037,7 +5098,9 @@ pub trait Style: Sized {
     /// letter-spacing: -0.05em;
     /// ```
     fn tracking_tighter(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(Float::from(-0.05)));
+        self.style_mut()
+            .letter_spacing()
+            .set(Length::Em(Float::from(-0.05)));
         self
     }
 
@@ -5047,7 +5110,9 @@ pub trait Style: Sized {
     /// letter-spacing: -0.025em;
     /// ```
     fn tracking_tight(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(Float::from(-0.025)));
+        self.style_mut()
+            .letter_spacing()
+            .set(Length::Em(Float::from(-0.025)));
         self
     }
 
@@ -5057,7 +5122,9 @@ pub trait Style: Sized {
     /// letter-spacing: 0.0em;
     /// ```
     fn tracking_normal(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.0)));
+        self.style_mut()
+            .letter_spacing()
+            .set(Length::Em(Float::from(0.0)));
         self
     }
 
@@ -5067,7 +5134,9 @@ pub trait Style: Sized {
     /// letter-spacing: 0.025em;
     /// ```
     fn tracking_wide(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.025)));
+        self.style_mut()
+            .letter_spacing()
+            .set(Length::Em(Float::from(0.025)));
         self
     }
 
@@ -5077,7 +5146,9 @@ pub trait Style: Sized {
     /// letter-spacing: 0.05em;
     /// ```
     fn tracking_wider(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.05)));
+        self.style_mut()
+            .letter_spacing()
+            .set(Length::Em(Float::from(0.05)));
         self
     }
 
@@ -5087,7 +5158,9 @@ pub trait Style: Sized {
     /// letter-spacing: 0.1em;
     /// ```
     fn tracking_widest(mut self) -> Self {
-        self.style_mut().letter_spacing = Some(Length::Em(Float::from(0.1)));
+        self.style_mut()
+            .letter_spacing()
+            .set(Length::Em(Float::from(0.1)));
         self
     }
 
@@ -5099,9 +5172,11 @@ pub trait Style: Sized {
     /// ```
     fn transition_property(mut self, property: &'static str) -> Self {
         let style = self.style_mut();
-        style.transition_property = Some(property);
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style.transition_property().set(property);
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5110,7 +5185,7 @@ pub trait Style: Sized {
     /// transition-property: none;
     /// ```
     fn transition_none(mut self) -> Self {
-        self.style_mut().transition_property = Some("none");
+        self.style_mut().transition_property().set("none");
         self
     }
 
@@ -5122,9 +5197,11 @@ pub trait Style: Sized {
     /// ```
     fn transition_all(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property = Some("all");
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style.transition_property().set("all");
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5137,12 +5214,14 @@ pub trait Style: Sized {
     /// ```
     fn transition(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property = Some(
+        style.transition_property().set(
             "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, \
              box-shadow, transform, filter, backdrop-filter",
         );
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5155,10 +5234,13 @@ pub trait Style: Sized {
     /// ```
     fn transition_colors(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property =
-            Some("color, background-color, border-color, text-decoration-color, fill, stroke");
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style
+            .transition_property()
+            .set("color, background-color, border-color, text-decoration-color, fill, stroke");
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5170,9 +5252,11 @@ pub trait Style: Sized {
     /// ```
     fn transition_opacity(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property = Some("opacity");
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style.transition_property().set("opacity");
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5184,9 +5268,11 @@ pub trait Style: Sized {
     /// ```
     fn transition_shadow(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property = Some("box-shadow");
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style.transition_property().set("box-shadow");
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5198,9 +5284,11 @@ pub trait Style: Sized {
     /// ```
     fn transition_transform(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property = Some("transform");
-        style.transition_timing_function = Some("cubic-bezier(0.4, 0, 0.2, 1)");
-        style.transition_duration = Some(Duration::Ms(150));
+        style.transition_property().set("transform");
+        style
+            .transition_timing_function()
+            .set("cubic-bezier(0.4, 0, 0.2, 1)");
+        style.transition_duration().set(Duration::Ms(150));
         self
     }
 
@@ -5209,7 +5297,7 @@ pub trait Style: Sized {
     /// transition-duration: {ms}ms;
     /// ```
     fn duration_ms(mut self, ms: u32) -> Self {
-        self.style_mut().transition_duration = Some(Duration::Ms(ms));
+        self.style_mut().transition_duration().set(Duration::Ms(ms));
         self
     }
 
@@ -5218,7 +5306,9 @@ pub trait Style: Sized {
     /// transition-duration: {s}s;
     /// ```
     fn duration_s(mut self, s: f32) -> Self {
-        self.style_mut().transition_duration = Some(Duration::S(Float::from(s)));
+        self.style_mut()
+            .transition_duration()
+            .set(Duration::S(Float::from(s)));
         self
     }
 
@@ -5227,7 +5317,7 @@ pub trait Style: Sized {
     /// transition-delay: {ms}ms;
     /// ```
     fn delay_ms(mut self, ms: u32) -> Self {
-        self.style_mut().transition_duration = Some(Duration::Ms(ms));
+        self.style_mut().transition_duration().set(Duration::Ms(ms));
         self
     }
 
@@ -5236,7 +5326,9 @@ pub trait Style: Sized {
     /// transition-delay: {s}s;
     /// ```
     fn delay_s(mut self, s: f32) -> Self {
-        self.style_mut().transition_duration = Some(Duration::S(Float::from(s)));
+        self.style_mut()
+            .transition_duration()
+            .set(Duration::S(Float::from(s)));
         self
     }
 
@@ -5249,7 +5341,9 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     #[with_screen_horizontal]
     fn translate_x(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().transform = Some(Transform::TranslateX(x.into()));
+        self.style_mut()
+            .transform()
+            .set(Transform::TranslateX(x.into()));
         self
     }
 
@@ -5262,7 +5356,9 @@ pub trait Style: Sized {
     #[with_vertical_viewport_units]
     #[with_screen_vertical]
     fn translate_y(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().transform = Some(Transform::TranslateY(x.into()));
+        self.style_mut()
+            .transform()
+            .set(Transform::TranslateY(x.into()));
         self
     }
 
@@ -5272,7 +5368,7 @@ pub trait Style: Sized {
     /// ```
     fn via(mut self, color: &'static str) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .via_color = Some(color);
@@ -5285,7 +5381,7 @@ pub trait Style: Sized {
     /// ```
     fn via_position(mut self, x: i16) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .via_position = Some(Length::Percent(Float::from(x)));
@@ -5298,7 +5394,7 @@ pub trait Style: Sized {
     /// ```
     fn via_positionf(mut self, x: f32) -> Self {
         self.style_mut()
-            .background_image
+            .background_image()
             .get_or_insert_default()
             .linear_gradient()
             .via_position = Some(Length::Percent(Float::from(x)));
@@ -5311,7 +5407,7 @@ pub trait Style: Sized {
     /// visibility: visible;
     /// ```
     fn visible(mut self) -> Self {
-        self.style_mut().visibility = Some("visible");
+        self.style_mut().visibility().set("visible");
         self
     }
 
@@ -5321,7 +5417,7 @@ pub trait Style: Sized {
     /// visibility: hidden;
     /// ```
     fn invisible(mut self) -> Self {
-        self.style_mut().visibility = Some("hidden");
+        self.style_mut().visibility().set("hidden");
         self
     }
 
@@ -5331,7 +5427,7 @@ pub trait Style: Sized {
     /// visibility: collapse;
     /// ```
     fn collapse(mut self) -> Self {
-        self.style_mut().visibility = Some("collapse");
+        self.style_mut().visibility().set("collapse");
         self
     }
 
@@ -5346,7 +5442,7 @@ pub trait Style: Sized {
     #[with_horizontal_viewport_units]
     #[with_content]
     fn w(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().width = Some(x.into());
+        self.style_mut().width().set(x.into());
         self
     }
 
@@ -5356,7 +5452,7 @@ pub trait Style: Sized {
     /// white-space: normal;
     /// ```
     fn whitespace_normal(mut self) -> Self {
-        self.style_mut().white_space = Some("normal");
+        self.style_mut().white_space().set("normal");
         self
     }
 
@@ -5366,7 +5462,7 @@ pub trait Style: Sized {
     /// white-space: nowrap;
     /// ```
     fn whitespace_nowrap(mut self) -> Self {
-        self.style_mut().white_space = Some("nowrap");
+        self.style_mut().white_space().set("nowrap");
         self
     }
 
@@ -5376,7 +5472,7 @@ pub trait Style: Sized {
     /// white-space: pre;
     /// ```
     fn whitespace_pre(mut self) -> Self {
-        self.style_mut().white_space = Some("pre");
+        self.style_mut().white_space().set("pre");
         self
     }
 
@@ -5386,7 +5482,7 @@ pub trait Style: Sized {
     /// white-space: pre-line;
     /// ```
     fn whitespace_pre_line(mut self) -> Self {
-        self.style_mut().white_space = Some("pre-line");
+        self.style_mut().white_space().set("pre-line");
         self
     }
 
@@ -5396,7 +5492,7 @@ pub trait Style: Sized {
     /// white-space: pre-wrap;
     /// ```
     fn whitespace_pre_wrap(mut self) -> Self {
-        self.style_mut().white_space = Some("pre-wrap");
+        self.style_mut().white_space().set("pre-wrap");
         self
     }
 
@@ -5406,7 +5502,7 @@ pub trait Style: Sized {
     /// white-space: break-spaces;
     /// ```
     fn whitespace_break_spaces(mut self) -> Self {
-        self.style_mut().white_space = Some("break-spaces");
+        self.style_mut().white_space().set("break-spaces");
         self
     }
 
@@ -5416,7 +5512,7 @@ pub trait Style: Sized {
     /// z-index: {x};
     /// ```
     fn z(mut self, x: i32) -> Self {
-        self.style_mut().z_index = Some(Either::Left(x));
+        self.style_mut().z_index().set(Either::Left(x));
         self
     }
 
@@ -5426,14 +5522,14 @@ pub trait Style: Sized {
     /// z-index: auto;
     /// ```
     fn z_auto(mut self) -> Self {
-        self.style_mut().z_index = Some(Either::Right("auto"));
+        self.style_mut().z_index().set(Either::Right("auto"));
         self
     }
     /// ```css
     /// clip-path: {clip_path};
     /// ```
     fn clip_path(mut self, clip_path: &'static str) -> Self {
-        self.style_mut().clip_path = Some(clip_path);
+        self.style_mut().clip_path().set(clip_path);
         self
     }
 
@@ -5487,7 +5583,9 @@ pub trait Style: Sized {
     /// opacity: {x}%;
     /// ```
     fn opacity(mut self, x: i16) -> Self {
-        self.style_mut().opacity = Some(Length::Percent(Float::from(x)));
+        self.style_mut()
+            .opacity()
+            .set(Length::Percent(Float::from(x)));
         self
     }
 
@@ -5495,7 +5593,9 @@ pub trait Style: Sized {
     /// opacity: {x}%;
     /// ```
     fn opacityf(mut self, x: f32) -> Self {
-        self.style_mut().opacity = Some(Length::Percent(Float::from(x)));
+        self.style_mut()
+            .opacity()
+            .set(Length::Percent(Float::from(x)));
         self
     }
 }

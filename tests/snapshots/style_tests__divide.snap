@@ -2,16 +2,16 @@
 source: tests/style_tests.rs
 expression: snapshot
 ---
-._d39cfa6c {
+._8fa4b0c2 {
 display: flex;
 }
-:where(._18a28154 > :not(:last-child)) {
+:where(._42be84af > :not(:last-child)) {
 border-color: #000000;
 border-inline-end-width: 1px;
 }
 ._0_______ {
 }
-:where(._20b81633 > :not(:last-child)) {
+:where(._c49fd15d > :not(:last-child)) {
 border-inline-style: dashed;
 border-inline-start-width: 1px;
 }
