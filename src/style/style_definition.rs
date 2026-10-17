@@ -588,7 +588,7 @@ impl StyleDefinition {
             write!(out, ":focus").unwrap();
         }
         if focus_visible {
-            write!(out, ":focus-focus_visible").unwrap();
+            write!(out, ":focus-visible").unwrap();
         }
         if focus_within {
             write!(out, ":focus-within").unwrap();
