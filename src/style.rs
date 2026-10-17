@@ -9,6 +9,30 @@ mod theme;
 mod units;
 
 pub use class_name::ClassName;
+
+/// The static CSS of every page (cabin's base styles, and preflight and forms if enabled). Served
+/// as a separate, cacheable stylesheet (`/cabin.css`) instead of being inlined into every page.
+pub fn static_css() -> &'static str {
+    static CSS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+        [
+            include_str!("./style/base.css"),
+            #[cfg(feature = "preflight")]
+            "@layer preflight {\n",
+            #[cfg(feature = "preflight")]
+            include_str!("./style/preflight/preflight-v4.1.18.css"),
+            #[cfg(feature = "preflight")]
+            "}\n",
+            #[cfg(feature = "forms")]
+            "@layer forms {\n",
+            #[cfg(feature = "forms")]
+            include_str!("./style/forms/forms-v0.5.11.css"),
+            #[cfg(feature = "forms")]
+            "}\n",
+        ]
+        .concat()
+    });
+    &CSS
+}
 pub use modifier::StyleModifier;
 pub use style_definition::StyleDefinition;
 pub use sub_style::SubStyle;

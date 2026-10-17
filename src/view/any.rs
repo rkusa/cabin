@@ -23,13 +23,24 @@ impl AnyView {
         let r = Scope::create_renderer_from_task();
         match self.render(r).await {
             Ok(mut r) => {
-                let css = r.build_styles(is_page_style);
+                let css = r.build_styles();
                 (
                     Self {
                         views: smallvec::SmallVec::from([RenderFuture::Ready(Ok(r))]),
                     },
                     if is_page_style {
-                        h::style(css).id("cabin-styles").boxed()
+                        // The static CSS is linked instead of inlined, so it is cached across
+                        // pages.
+                        #[cfg(not(target_arch = "wasm32"))]
+                        let static_css = {
+                            use crate::html::elements::link::{Link as _, Rel};
+                            h::link()
+                                .rel(Rel::StyleSheet)
+                                .href(crate::server::static_css_href())
+                        };
+                        #[cfg(target_arch = "wasm32")]
+                        let static_css = ();
+                        crate::view![static_css, h::style(css).id("cabin-styles")].boxed()
                     } else {
                         h::style(css).boxed()
                     },

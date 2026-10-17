@@ -139,40 +139,11 @@ impl Renderer {
         class_name
     }
 
-    pub(crate) fn build_styles(&mut self, include_base: bool) -> String {
-        let other: [&str; _] = [
-            #[cfg(not(test))]
-            include_str!("./style/base.css"),
-            // preflight
-            #[cfg(all(feature = "preflight", not(test)))]
-            "@layer preflight {\n",
-            #[cfg(all(feature = "preflight", not(test)))]
-            include_str!("./style/preflight/preflight-v4.1.18.css"),
-            #[cfg(all(feature = "preflight", not(test)))]
-            "}\n",
-            // forms
-            #[cfg(all(feature = "forms", not(test)))]
-            "@layer forms {\n",
-            #[cfg(all(feature = "forms", not(test)))]
-            include_str!("./style/forms/forms-v0.5.11.css"),
-            #[cfg(all(feature = "forms", not(test)))]
-            "}\n",
-        ];
-
+    pub(crate) fn build_styles(&mut self) -> String {
         let mut styles = self.styles.drain().map(|(_, v)| v).collect::<Vec<_>>();
         styles.sort_by(|a, b| a.modifier.cmp(&b.modifier));
 
-        let cap: usize = if include_base {
-            other.iter().map(|s| s.len()).sum::<usize>()
-        } else {
-            0
-        } + self.styles.len() * 128;
-        let mut css = String::with_capacity(cap);
-        if include_base {
-            for s in other {
-                css += s;
-            }
-        }
+        let mut css = String::with_capacity(styles.len() * 128);
 
         for s in styles {
             s.write_to(&mut css);

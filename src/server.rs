@@ -51,6 +51,15 @@ pub fn cabin_scripts() -> impl View {
     scripts
 }
 
+/// The URL of [crate::style::static_css], with its content hash for cache busting.
+pub(crate) fn static_css_href() -> &'static str {
+    static PATH: LazyLock<&'static str> = LazyLock::new(|| {
+        let hash = content_hash(crate::style::static_css().as_bytes());
+        Box::leak(format!("/cabin.css?{hash}").into_boxed_str())
+    });
+    *PATH
+}
+
 pub fn content_hash(bytes: &[u8]) -> u32 {
     twox_hash::XxHash32::oneshot(0, bytes)
 }
