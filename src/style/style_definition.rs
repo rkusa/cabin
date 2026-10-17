@@ -410,6 +410,11 @@ impl fmt::Display for StyleDefinition {
 }
 
 impl StyleDefinition {
+    /// Whether the style results in any CSS. The `*_reversed` flags don't on their own.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.properties.is_empty() && self.animation_from.is_none() && self.animation_to.is_none()
+    }
+
     pub(crate) fn new(modifier: StyleModifier) -> Self {
         Self {
             modifier,

@@ -9,8 +9,6 @@ display: flex;
 border-color: #000000;
 border-inline-end-width: 1px;
 }
-._0_______ {
-}
 :where(._c49fd15d > :not(:last-child)) {
 border-inline-style: dashed;
 border-inline-start-width: 1px;

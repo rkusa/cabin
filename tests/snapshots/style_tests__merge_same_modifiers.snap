@@ -2,8 +2,6 @@
 source: tests/style_tests.rs
 expression: c.build()
 ---
-._0_______ {
-}
 ._de3b6d63:active {
 background-color: #3b82f6;
 border-color: #f87171;

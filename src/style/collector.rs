@@ -128,7 +128,12 @@ impl StyleCollector {
                 }
             }
         }
-        self.styles.into_iter().map(|e| e.style)
+        // Empty styles (e.g. the base style when only modifiers are used) would only add a class
+        // name and an empty rule.
+        self.styles
+            .into_iter()
+            .map(|e| e.style)
+            .filter(|style| !style.is_empty())
     }
 
     pub fn combine(mut self, other: Self) -> Self {

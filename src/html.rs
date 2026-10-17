@@ -331,23 +331,28 @@ where
         } = self;
 
         let mut el = r.element(tag);
+        let mut class_names = SmallVec::<ClassName, 4>::new();
         if let Some(style) = style {
-            let mut class_names = SmallVec::<ClassName, 4>::new();
             for style in style.into_styles() {
                 class_names.push(el.renderer.append_style(style));
             }
+        }
 
+        // Empty if there are no styles, or all of them were empty.
+        let result = if class_names.is_empty() {
+            attributes.render(&mut el)
+        } else {
             let other = if let Some(existing) = attributes.get_mut::<Class>() {
                 let existing = std::mem::take(existing);
                 existing.0
             } else {
                 Cow::Borrowed("")
             };
-            let attributes = attributes.with(ClassNames { class_names, other });
-            if let Err(err) = attributes.render(&mut el) {
-                return RenderFuture::Ready(Err(err));
-            }
-        } else if let Err(err) = attributes.render(&mut el) {
+            attributes
+                .with(ClassNames { class_names, other })
+                .render(&mut el)
+        };
+        if let Err(err) = result {
             return RenderFuture::Ready(Err(err));
         }
 

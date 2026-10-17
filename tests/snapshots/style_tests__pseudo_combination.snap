@@ -2,8 +2,6 @@
 source: tests/style_tests.rs
 expression: c.build()
 ---
-._0_______ {
-}
 :where(._f12e0119:active > :not(:last-child)) {
 border-inline-end-width: 1px;
 }

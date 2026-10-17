@@ -80,3 +80,47 @@ fn animation() {
         });
     insta::assert_snapshot!(c.build());
 }
+
+#[test]
+fn skip_empty_base_style() {
+    let c = StyleCollector::default().when_hover(|s| s.bg_black());
+    let css = c.build();
+    assert_eq!(css.matches('{').count(), 1, "{css}");
+    assert!(css.contains(":hover"), "{css}");
+}
+
+#[test]
+fn skip_empty_nested_modifier() {
+    let c = StyleCollector::default().when_hover(|s| s.when_focus(|s| s.bg_black()));
+    let css = c.build();
+    assert_eq!(css.matches('{').count(), 1, "{css}");
+    assert!(css.contains(":focus:hover"), "{css}");
+}
+
+#[test]
+fn keep_animation_only_style() {
+    let c = StyleCollector::default().animate_from(|s| s.opacity(0));
+    let css = c.build();
+    assert!(css.contains("@keyframes"), "{css}");
+}
+
+fn render(view: impl cabin::View) -> String {
+    match view.render(cabin::render::Renderer::new(false, true)) {
+        cabin::view::RenderFuture::Ready(Ok(r)) => r.end().html,
+        _ => panic!("view didn't render synchronously"),
+    }
+}
+
+#[test]
+fn element_with_only_empty_styles() {
+    use cabin::html::{Common as _, h};
+
+    let html = render(h::div(()).class("x").when_hover(|s| s));
+    assert_eq!(html, r#"<div class="x"></div>"#);
+
+    let html = render(h::div(()).when_hover(|s| s));
+    assert_eq!(html, "<div></div>");
+
+    let html = render(h::div(()).class("x").when_hover(|s| s.bg_black()));
+    assert_eq!(html.matches(' ').count(), 2, "{html}");
+}
