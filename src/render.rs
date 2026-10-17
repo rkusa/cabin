@@ -10,6 +10,7 @@ use crate::event::Event;
 use crate::hash::FxHasher;
 use crate::html::events::CustomEvent;
 use crate::scope::Scope;
+use crate::style::class_name::ClassNames;
 use crate::style::{ClassName, StyleDefinition};
 use crate::view::RenderFuture;
 
@@ -204,6 +205,22 @@ impl ElementRenderer {
         )
         .unwrap();
         write!(&mut self.renderer, r#"""#).unwrap();
+    }
+
+    /// Like [Self::attribute], but skips escaping the generated class names, which never need it.
+    /// Writing them through the escaping writer was a considerable part of the render time, as
+    /// almost every element has a class attribute.
+    pub(crate) fn class_names_attribute(&mut self, class_names: &ClassNames) {
+        if self.content_started {
+            todo!("throw error: content started");
+        }
+        // Hashed the same way as [Self::attribute] would.
+        self.renderer.hasher.write(b"class");
+        class_names.hash(&mut self.renderer.hasher);
+
+        self.renderer.out.push_str(r#" class=""#);
+        class_names.write_to(&mut self.renderer.out);
+        self.renderer.out.push('"');
     }
 
     pub fn empty_attribute(&mut self, name: &str) {

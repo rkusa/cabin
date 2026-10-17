@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::fmt;
+use std::fmt::{self, Write};
 use std::hash::Hash;
 
 use smallvec::SmallVec;
@@ -34,8 +34,29 @@ pub struct ClassNames {
 
 impl Attributes for ClassNames {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
-        r.attribute("class", self);
+        r.class_names_attribute(&self);
         Ok(())
+    }
+}
+
+impl ClassNames {
+    /// Writes the attribute value. Only [Self::other] is escaped, the generated class names never
+    /// need escaping.
+    pub(crate) fn write_to(&self, out: &mut String) {
+        let mut add_space = false;
+        if !self.other.is_empty() {
+            crate::render::Escape::attribute_value(&mut *out)
+                .write_str(&self.other)
+                .unwrap();
+            add_space = true;
+        }
+        for class_name in &self.class_names {
+            if add_space {
+                out.push(' ');
+            }
+            write!(out, "{class_name}").unwrap();
+            add_space = true;
+        }
     }
 }
 
