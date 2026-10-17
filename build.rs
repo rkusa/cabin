@@ -4,6 +4,8 @@ use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
+    println!("cargo::rerun-if-changed=build.rs");
+
     // TODO: customize based on env variable or custom config?
     let theme = Theme::default();
 
