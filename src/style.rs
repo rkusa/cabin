@@ -2911,7 +2911,7 @@ pub trait Style: Sized {
     /// -webkit-line-clamp: none;
     /// ```
     fn line_clamp_none(mut self) -> Self {
-        self.style_mut().line_clamp().clear();
+        self.style_mut().line_clamp().set(LineClamp::Disable);
         self
     }
 
