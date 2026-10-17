@@ -1,11 +1,11 @@
-use std::hash::{Hash, Hasher};
+use std::fmt;
+use std::hash::Hash;
 use std::iter::{FilterMap, Map};
 use std::marker::PhantomData;
 
-use twox_hash::XxHash32;
-
 use super::RenderFuture;
 pub use super::View;
+use crate::hash::FxHasher;
 use crate::render::Renderer;
 
 pub trait IteratorExt
@@ -122,10 +122,21 @@ where
     // TODO: any way to prime without consuming the iterator?
 }
 
+// Platform-independent, so wasm and the server create the same ids for the same keys.
 fn hash(val: impl Hash) -> u32 {
-    let mut hasher = XxHash32::default();
+    let mut hasher = FxHasher::default();
     val.hash(&mut hasher);
-    hasher.finish() as u32
+    hasher.finish_u32()
+}
+
+/// The `id` of a keyed item. Prefixed, as ids are unique per document, not per list.
+#[derive(Hash)]
+struct KeyId(u32);
+
+impl fmt::Display for KeyId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "_k{:x}", self.0)
+    }
 }
 
 pub struct KeyedView<V> {
@@ -139,7 +150,7 @@ where
 {
     fn render(self, r: Renderer) -> RenderFuture {
         let mut el = r.element("cabin-keyed");
-        el.attribute("id", self.key);
+        el.attribute("id", KeyId(self.key));
         el.content(self.view)
     }
 }
