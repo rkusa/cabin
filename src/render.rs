@@ -192,9 +192,8 @@ pub struct ElementRenderer {
 
 impl ElementRenderer {
     pub fn attribute(&mut self, name: &str, value: impl Display + Hash) {
-        if self.content_started {
-            todo!("throw error: content started");
-        }
+        // Can't happen, as `content()` consumes the renderer.
+        debug_assert!(!self.content_started, "attribute written after content");
         self.renderer.hasher.write(name.as_bytes());
         value.hash(&mut self.renderer.hasher);
 
@@ -211,9 +210,8 @@ impl ElementRenderer {
     /// Writing them through the escaping writer was a considerable part of the render time, as
     /// almost every element has a class attribute.
     pub(crate) fn class_names_attribute(&mut self, class_names: &ClassNames) {
-        if self.content_started {
-            todo!("throw error: content started");
-        }
+        // Can't happen, as `content()` consumes the renderer.
+        debug_assert!(!self.content_started, "attribute written after content");
         // Hashed the same way as [Self::attribute] would.
         self.renderer.hasher.write(b"class");
         class_names.hash(&mut self.renderer.hasher);
@@ -224,9 +222,8 @@ impl ElementRenderer {
     }
 
     pub fn empty_attribute(&mut self, name: &str) {
-        if self.content_started {
-            todo!("throw error: content started");
-        }
+        // Can't happen, as `content()` consumes the renderer.
+        debug_assert!(!self.content_started, "attribute written after content");
         self.renderer.hasher.write(name.as_bytes());
 
         write!(&mut self.renderer, r#" {name}"#).unwrap();
