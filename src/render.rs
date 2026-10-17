@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{self, Display, Write};
-use std::hash::{Hash, Hasher};
+use std::hash::{BuildHasherDefault, Hash, Hasher};
 
 use http::{HeaderMap, HeaderValue};
 
@@ -19,7 +19,8 @@ const DEFAULT_CAPACITY: usize = 128;
 pub struct Renderer {
     out: String,
     headers: HeaderMap<HeaderValue>,
-    styles: HashMap<ClassName, Box<StyleDefinition>>,
+    // Keyed by an already hashed class name, so use the fast FxHasher instead of SipHash.
+    styles: HashMap<ClassName, Box<StyleDefinition>, BuildHasherDefault<FxHasher>>,
     hasher: FxHasher,
     is_update: bool,
     disable_hashes: bool,
