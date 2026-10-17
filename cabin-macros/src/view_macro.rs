@@ -44,13 +44,22 @@ fn split_lenient(input: TokenStream) -> Vec<TokenStream> {
             }
             TokenTree::Punct(p) if p.as_char() == '<' && (colon_run == 2 || angle_depth > 0) => {
                 angle_depth += 1;
-                chunks.last_mut().unwrap().extend(std::iter::once(tt.clone()));
+                chunks
+                    .last_mut()
+                    .unwrap()
+                    .extend(std::iter::once(tt.clone()));
             }
             TokenTree::Punct(p) if p.as_char() == '>' && angle_depth > 0 => {
                 angle_depth -= 1;
-                chunks.last_mut().unwrap().extend(std::iter::once(tt.clone()));
+                chunks
+                    .last_mut()
+                    .unwrap()
+                    .extend(std::iter::once(tt.clone()));
             }
-            _ => chunks.last_mut().unwrap().extend(std::iter::once(tt.clone())),
+            _ => chunks
+                .last_mut()
+                .unwrap()
+                .extend(std::iter::once(tt.clone())),
         }
         // track whether the last one or two tokens were `:`, to detect `::`
         colon_run = if is_colon { (colon_run + 1).min(2) } else { 0 };
