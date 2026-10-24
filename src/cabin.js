@@ -178,20 +178,23 @@
         return;
       }
 
-      if (res.redirected) {
-        const url = new URL(res.url);
-        if (url.pathname === "/client_redirect") {
-          // Only follow http(s) redirects (prevents e.g. `javascript:` URLs)
-          const to = new URL(url.search.substring(1), location.href);
-          if (to.protocol !== "http:" && to.protocol !== "https:") {
-            throw new Error(`refusing to follow redirect to ${to.href}`);
-          }
-          window.location = to.href;
-        } else {
-          // Some other redirect (e.g. to a login page) was followed, which isn't meant to be
-          // patched into the boundary
-          window.location = res.url;
+      // A `cabin::Redirect`, turned into a 204 by `cabin_service::redirects` so that `fetch`
+      // doesn't follow it
+      const redirectTo = res.headers.get("x-cabin-redirect");
+      if (redirectTo) {
+        // Only follow http(s) redirects (prevents e.g. `javascript:` URLs)
+        const to = new URL(redirectTo, location.href);
+        if (to.protocol !== "http:" && to.protocol !== "https:") {
+          throw new Error(`refusing to follow redirect to ${to.href}`);
         }
+        window.location = to.href;
+        return;
+      }
+
+      if (res.redirected) {
+        // Some other redirect (e.g. to a login page) was followed, which isn't meant to be
+        // patched into the boundary
+        window.location = res.url;
         return;
       }
 

@@ -19,10 +19,16 @@ impl HttpError for Redirect {
     }
 
     fn headers(&self) -> Option<Vec<(HeaderName, HeaderValue)>> {
-        match HeaderValue::from_str(&format!("/client_redirect?{}", self.0)) {
-            Ok(location) => Some(vec![(header::LOCATION, location)]),
+        // The `x-cabin-redirect` header marks the response as a cabin redirect, which
+        // `cabin_service::redirects` turns into a 204 for requests from cabin.js (so that `fetch`
+        // doesn't follow it and load the target).
+        match HeaderValue::from_str(&self.0) {
+            Ok(location) => Some(vec![
+                (header::LOCATION, location.clone()),
+                (HeaderName::from_static("x-cabin-redirect"), location),
+            ]),
             Err(err) => {
-                tracing::error!(%err, "invalid location header value for empty page error redirect");
+                tracing::error!(%err, "invalid location header value for redirect");
                 None
             }
         }

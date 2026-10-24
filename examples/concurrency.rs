@@ -63,8 +63,8 @@ async fn main() {
                 },
             ),
         )
-        .layer(cabin_service::redirects::layer())
         .layer(cabin_service::boundaries::layer(&BOUNDARIES))
+        .layer(cabin_service::redirects::layer())
         .layer(cabin_service::livereload::layer())
         .layer(cabin_service::assets::layer());
 
