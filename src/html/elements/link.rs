@@ -340,13 +340,14 @@ impl fmt::Display for As {
 }
 
 /// The element is potentially render-blocking.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Blocking(pub bool);
 
-impl fmt::Display for Blocking {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Attributes for Blocking {
+    fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
+        // `render` is the only blocking token so far.
         if self.0 {
-            f.write_str("render")?;
+            r.attribute("blocking", "render");
         }
         Ok(())
     }
@@ -374,5 +375,47 @@ impl fmt::Display for FetchPriority {
             Self::High => f.write_str("high"),
             Self::Low => f.write_str("low"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::View;
+    use crate::html::elements::script::{Script, script};
+    use crate::render::Renderer;
+
+    #[tokio::test]
+    async fn test_blocking() {
+        assert_eq!(
+            link()
+                .blocking()
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<link blocking="render"/>"#
+        );
+        assert_eq!(
+            script("")
+                .blocking()
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<script blocking="render"></script>"#
+        );
+        assert_eq!(
+            link()
+                .with_blocking(false)
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<link/>"#
+        );
     }
 }
