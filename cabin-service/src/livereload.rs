@@ -34,7 +34,7 @@ impl Body for Heartbeat {
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.as_mut().interval.poll_tick(cx) {
-            Poll::Ready(_) => Poll::Ready(Some(Ok(Frame::data(Bytes::from(": heartbeat"))))),
+            Poll::Ready(_) => Poll::Ready(Some(Ok(Frame::data(Bytes::from(": heartbeat\n\n"))))),
             Poll::Pending => Poll::Pending,
         }
     }
