@@ -257,3 +257,29 @@ async fn validates_mutually_recursive_types() {
         StatusCode::FORBIDDEN
     );
 }
+
+async fn put_multipart(body: &'static str) -> StatusCode {
+    let mut registry = BoundaryRegistry::default();
+    registry.add(&BOUNDARIES);
+    let req = Request::builder()
+        .method("PUT")
+        .header(
+            http::header::CONTENT_TYPE,
+            "multipart/form-data; boundary=X",
+        )
+        .body(Full::new(Bytes::from_static(body.as_bytes())))
+        .unwrap();
+    registry
+        .handle("boundary_validation::user", req)
+        .await
+        .status()
+}
+
+#[tokio::test]
+async fn malformed_multipart_is_bad_request() {
+    assert_eq!(put_multipart("garbage").await, StatusCode::BAD_REQUEST);
+    assert_eq!(
+        put_multipart("--X\r\nContent-Disposition: form-data; name=\"event_id\"\r\n\r\nfoo").await,
+        StatusCode::BAD_REQUEST
+    );
+}

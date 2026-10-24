@@ -252,9 +252,10 @@ where
 
         let mut multipart = Multipart::new(body, boundary);
         let event_id: String = {
-            let field = multipart.next_field().await.map_err(|err| {
-                Error::from_err(err).with_status(StatusCode::INTERNAL_SERVER_ERROR)
-            })?;
+            let field = multipart
+                .next_field()
+                .await
+                .map_err(|err| Error::from_err(err).with_status(StatusCode::BAD_REQUEST))?;
             let Some(field) = field else {
                 return Err(Error::from_status_code_and_reason(
                     StatusCode::BAD_REQUEST,
@@ -267,35 +268,27 @@ where
                     "first multipart field expected to be `event_id`",
                 ));
             }
-            field
-                .text()
-                .await
-                .map_err(|err| {
-                    Error::from_err(err)
-                        .with_status(StatusCode::BAD_REQUEST)
-                        .with_reason("payload is not a valid utf8 string")
-                })?
-                .parse()
-                .map_err(|err| {
-                    Error::from_err(err)
-                        .with_status(StatusCode::BAD_REQUEST)
-                        .with_reason("event_id is not a valid u32")
-                })?
+            field.text().await.map_err(|err| {
+                Error::from_err(err)
+                    .with_status(StatusCode::BAD_REQUEST)
+                    .with_reason("event_id is not a valid utf8 string")
+            })?
         };
         let state: Option<Box<RawValue>> = {
-            let field = multipart.next_field().await.map_err(|err| {
-                Error::from_err(err).with_status(StatusCode::INTERNAL_SERVER_ERROR)
-            })?;
+            let field = multipart
+                .next_field()
+                .await
+                .map_err(|err| Error::from_err(err).with_status(StatusCode::BAD_REQUEST))?;
             let Some(field) = field else {
                 return Err(Error::from_status_code_and_reason(
                     StatusCode::BAD_REQUEST,
-                    "first multipart field expected to be `state`",
+                    "second multipart field expected to be `state`",
                 ));
             };
             if field.name() != Some("state") {
                 return Err(Error::from_status_code_and_reason(
                     StatusCode::BAD_REQUEST,
-                    "first multipart field expected to be `state`",
+                    "second multipart field expected to be `state`",
                 ));
             }
             let data = field
@@ -317,19 +310,20 @@ where
             }
         };
         let payload: String = {
-            let field = multipart.next_field().await.map_err(|err| {
-                Error::from_err(err).with_status(StatusCode::INTERNAL_SERVER_ERROR)
-            })?;
+            let field = multipart
+                .next_field()
+                .await
+                .map_err(|err| Error::from_err(err).with_status(StatusCode::BAD_REQUEST))?;
             let Some(field) = field else {
                 return Err(Error::from_status_code_and_reason(
                     StatusCode::BAD_REQUEST,
-                    "first multipart field expected to be `payload`",
+                    "third multipart field expected to be `payload`",
                 ));
             };
             if field.name() != Some("payload") {
                 return Err(Error::from_status_code_and_reason(
                     StatusCode::BAD_REQUEST,
-                    "first multipart field expected to be `payload`",
+                    "third multipart field expected to be `payload`",
                 ));
             }
             field
