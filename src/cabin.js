@@ -600,7 +600,10 @@
 
       switch (nodeAfter.nodeType) {
         case Node.COMMENT_NODE:
-          throw new Error("unexpected comment");
+          if (nodeAfter.data !== nodeBefore.data) {
+            nodeBefore.data = nodeAfter.data;
+          }
+          break;
 
         case Node.ELEMENT_NODE:
           // skip sub-tree if hash is unchanged
