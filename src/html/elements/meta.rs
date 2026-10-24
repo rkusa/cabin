@@ -5,16 +5,14 @@ use cabin_macros::Attribute;
 
 use super::common::Common;
 use super::global::Global;
-use crate::View;
 use crate::html::attributes::{Attributes, WithAttribute};
 use crate::html::{Aria, Html};
 
 /// The `meta` element represents various kinds of metadata that cannot be expressed using the
 /// [super::title::title], [super::base::base], [super::link::link], [super::style::style], and
 /// [super::script::script] elements.
-#[crate::view_macro(crate::html::elements::meta)]
-pub fn meta(content: impl View) -> Html<marker::Meta, ()> {
-    Html::new("meta", (), content)
+pub fn meta() -> Html<marker::Meta, ()> {
+    Html::new("meta", (), ()).into_void_element()
 }
 
 pub mod marker {
@@ -60,8 +58,9 @@ pub trait Meta: WithAttribute {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Name(pub Cow<'static, str>);
 
-/// The referrer information send when following a hyperlink.
+/// Pragma directive.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "http-equiv")]
 pub enum HttpEquiv {
     /// This pragma sets the pragma-set default language.
     ContentLanguage,
@@ -118,3 +117,25 @@ impl fmt::Display for Charset {
 /// Applicable media.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Media(pub Cow<'static, str>);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::View;
+    use crate::render::Renderer;
+
+    #[tokio::test]
+    async fn test_meta() {
+        assert_eq!(
+            meta()
+                .http_equiv(HttpEquiv::Refresh)
+                .content("5")
+                .render(Renderer::new(false, false))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<meta content="5" http-equiv="refresh"/>"#
+        );
+    }
+}
