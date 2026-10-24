@@ -46,28 +46,28 @@ pub trait IFrame: WithAttribute {
     }
 
     /// Security rules for nested content.
-    fn sandbox(self, rel: impl Into<SpaceSeparated<Sandbox>>) -> Self::Output<SandboxList> {
-        self.with_attribute(SandboxList(rel.into()))
+    fn sandbox(self, sandbox: impl Into<SpaceSeparated<Sandbox>>) -> Self::Output<SandboxList> {
+        self.with_attribute(SandboxList(sandbox.into()))
     }
 
-    /// Appends a [Allow] to the security rules.
-    fn append_sandbox(mut self, rel: Sandbox) -> Self::Output<SandboxList> {
-        let rel_list = if let Some(list) = self.get_attribute_mut::<SandboxList>() {
+    /// Appends a [Sandbox] to the security rules.
+    fn append_sandbox(mut self, sandbox: Sandbox) -> Self::Output<SandboxList> {
+        let sandbox_list = if let Some(list) = self.get_attribute_mut::<SandboxList>() {
             SandboxList(
                 match std::mem::replace(&mut list.0, SpaceSeparated::Single(Sandbox::Downloads)) {
                     SpaceSeparated::Single(existing) => {
-                        SpaceSeparated::List([existing, rel].into())
+                        SpaceSeparated::List([existing, sandbox].into())
                     }
                     SpaceSeparated::List(mut list) => {
-                        list.insert(rel);
+                        list.insert(sandbox);
                         SpaceSeparated::List(list)
                     }
                 },
             )
         } else {
-            SandboxList(SpaceSeparated::Single(rel))
+            SandboxList(SpaceSeparated::Single(sandbox))
         };
-        self.with_attribute(rel_list)
+        self.with_attribute(sandbox_list)
     }
 
     /// Permissions policy to be applied to the iframe's contents.
@@ -114,13 +114,12 @@ pub struct SrcDoc(pub Cow<'static, str>);
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
 pub struct Name(pub Cow<'static, str>);
 
-/// Relationship between the location in the document containing the hyperlink and the
-/// destination resource.
+/// Security rules for nested content.
 #[derive(Debug, Clone, Hash, Attribute)]
-#[attribute(name = "rel")]
+#[attribute(name = "sandbox")]
 pub struct SandboxList(pub SpaceSeparated<Sandbox>);
 
-/// Relationship between the document and the linked resource.
+/// A security rule for nested content, lifting one of the `sandbox` restrictions.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Sandbox {
     Downloads,
@@ -183,5 +182,26 @@ impl fmt::Display for Loading {
             Self::Lazy => "lazy",
             Self::Eager => "eager",
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::render::Renderer;
+
+    #[tokio::test]
+    async fn test_sandbox() {
+        assert_eq!(
+            iframe(())
+                .sandbox(Sandbox::Scripts)
+                .append_sandbox(Sandbox::Forms)
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<iframe sandbox="allow-scripts allow-forms"></iframe>"#
+        );
     }
 }
