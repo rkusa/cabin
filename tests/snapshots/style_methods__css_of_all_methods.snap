@@ -1437,7 +1437,7 @@ box-shadow: 0 0 0 1px red;
 }
 == rotate
 ._X {
-transform: rotate(3deg);
+rotate: 3deg;
 }
 == shadow_xs2
 ._X {
@@ -1837,7 +1837,7 @@ transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 == transition
 ._X {
 transition-duration: 150ms;
-transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, translate, scale, rotate, filter, backdrop-filter;
 transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 == transition_colors
@@ -1861,7 +1861,7 @@ transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 == transition_transform
 ._X {
 transition-duration: 150ms;
-transition-property: transform;
+transition-property: transform, translate, scale, rotate;
 transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 == duration_ms
@@ -1882,11 +1882,11 @@ transition-delay: 1.5s;
 }
 == translate_x
 ._X {
-transform: translateX(0.5rem);
+translate: 0.5rem 0;
 }
 == translate_y
 ._X {
-transform: translateY(0.5rem);
+translate: 0 0.5rem;
 }
 == via
 ._X {
@@ -2121,14 +2121,15 @@ overflow-wrap: break-word;
 padding: 0;
 pointer-events: auto;
 position: static;
+rotate: 3deg;
 text-align: end;
 text-overflow: ellipsis;
 text-transform: none;
-transform: translateY(0.5rem);
 transition-delay: 1.5s;
 transition-duration: 1.5s;
-transition-property: transform;
+transition-property: transform, translate, scale, rotate;
 transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+translate: 0.5rem 0.5rem;
 -webkit-user-select: auto;
 user-select: auto;
 visibility: collapse;
@@ -2226,14 +2227,15 @@ overflow-wrap: normal;
 padding: 0.5rem;
 pointer-events: none;
 position: static;
+rotate: 3deg;
 text-align: left;
 text-overflow: ellipsis;
 text-transform: uppercase;
-transform: rotate(3deg);
 transition-delay: 5ms;
 transition-duration: 150ms;
 transition-property: red;
 transition-timing-function: red;
+translate: 0.5rem 0.5rem;
 -webkit-user-select: none;
 user-select: none;
 visibility: visible;

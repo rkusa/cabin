@@ -47,7 +47,7 @@ use units::iterations::Iterations;
 use units::length::Length;
 use units::line_clamp::LineClamp;
 use units::track_repeat_equally::TrackRepeatEqually;
-use units::transform::Transform;
+use units::transform::Deg;
 
 #[cabin_macros::length_aliases]
 pub trait Style: Sized {
@@ -4092,13 +4092,13 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set rotation transforms.
-    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>
+    /// Set the rotation.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/rotate>
     /// ```css
-    /// transform: rotate({deg}deg);
+    /// rotate: {deg}deg;
     /// ```
     fn rotate(mut self, deg: i16) -> Self {
-        self.style_mut().transform().set(Transform::Rotate(deg));
+        self.style_mut().rotate().set(Deg(deg));
         self
     }
 
@@ -5240,7 +5240,8 @@ pub trait Style: Sized {
     /// Set which properties to transition (and enable default values for transition timing and
     /// duration if not already set). ```css
     /// transition-property: color, background-color, border-color, text-decoration-color, fill,
-    ///     stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    ///     stroke, opacity, box-shadow, transform, translate, scale, rotate, filter,
+    ///     backdrop-filter;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
     /// ```
@@ -5248,7 +5249,7 @@ pub trait Style: Sized {
         let style = self.style_mut();
         style.transition_property().set(
             "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, \
-             box-shadow, transform, filter, backdrop-filter",
+             box-shadow, transform, translate, scale, rotate, filter, backdrop-filter",
         );
         style
             .transition_timing_function()
@@ -5310,13 +5311,15 @@ pub trait Style: Sized {
 
     /// Set which properties to transition (and enable default values for transition timing and
     /// duration if not already set). ```css
-    /// transition-property: transform;
+    /// transition-property: transform, translate, scale, rotate;
     /// transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     /// transition-duration: 150ms;
     /// ```
     fn transition_transform(mut self) -> Self {
         let style = self.style_mut();
-        style.transition_property().set("transform");
+        style
+            .transition_property()
+            .set("transform, translate, scale, rotate");
         style
             .transition_timing_function()
             .set("cubic-bezier(0.4, 0, 0.2, 1)");
@@ -5364,33 +5367,29 @@ pub trait Style: Sized {
         self
     }
 
-    /// Set translation transforms.
-    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>
+    /// Set the translation.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/translate>
     /// ```css
-    /// transform: translateX({x});
+    /// translate: {x} 0;
     /// ```
     #[with_full]
     #[with_horizontal_viewport_units]
     #[with_screen_horizontal]
     fn translate_x(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut()
-            .transform()
-            .set(Transform::TranslateX(x.into()));
+        self.style_mut().translate().get_or_insert_default().x = Some(x.into());
         self
     }
 
-    /// Set translation transforms.
-    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>
+    /// Set the translation.
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/translate>
     /// ```css
-    /// transform: translateY({x});
+    /// translate: 0 {x};
     /// ```
     #[with_full]
     #[with_vertical_viewport_units]
     #[with_screen_vertical]
     fn translate_y(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut()
-            .transform()
-            .set(Transform::TranslateY(x.into()));
+        self.style_mut().translate().get_or_insert_default().y = Some(x.into());
         self
     }
 

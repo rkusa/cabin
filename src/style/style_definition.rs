@@ -22,7 +22,7 @@ use crate::style::units::length::Length;
 use crate::style::units::line_clamp::LineClamp;
 use crate::style::units::row_column::RowColumn;
 use crate::style::units::track_repeat_equally::TrackRepeatEqually;
-use crate::style::units::transform::Transform;
+use crate::style::units::transform::{Deg, Translate};
 use crate::style::units::xy::Xy;
 
 // Large, rarely used values are boxed (`#[boxed]`), as the largest variant determines the size of
@@ -187,14 +187,15 @@ properties! {
     padding: FourSided<Length>,
     pointer_events: &'static str,
     position: &'static str,
+    rotate: Deg,
     text_align: &'static str,
     text_overflow: &'static str,
     text_transform: &'static str,
-    transform: Transform,
     transition_delay: Duration,
     transition_duration: Duration,
     transition_property: &'static str,
     transition_timing_function: &'static str,
+    translate: Translate,
     user_select: &'static str,
     visibility: &'static str,
     white_space: &'static str,
@@ -383,16 +384,17 @@ impl fmt::Display for StyleDefinition {
                 Property::place_self(v) => v.fmt_property("place-self", f)?,
                 Property::pointer_events(v) => v.fmt_property("pointer-events", f)?,
                 Property::position(v) => v.fmt_property("position", f)?,
+                Property::rotate(v) => v.fmt_property("rotate", f)?,
                 Property::text_align(v) => v.fmt_property("text-align", f)?,
                 Property::text_overflow(v) => v.fmt_property("text-overflow", f)?,
                 Property::text_transform(v) => v.fmt_property("text-transform", f)?,
-                Property::transform(v) => v.fmt_property("transform", f)?,
                 Property::transition_delay(v) => v.fmt_property("transition-delay", f)?,
                 Property::transition_duration(v) => v.fmt_property("transition-duration", f)?,
                 Property::transition_property(v) => v.fmt_property("transition-property", f)?,
                 Property::transition_timing_function(v) => {
                     v.fmt_property("transition-timing-function", f)?
                 }
+                Property::translate(v) => v.fmt_property("translate", f)?,
                 Property::user_select(user_select) => {
                     user_select.fmt_property("-webkit-user-select", f)?;
                     user_select.fmt_property("user-select", f)?;

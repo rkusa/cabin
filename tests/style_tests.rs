@@ -258,6 +258,17 @@ fn shadow_none_is_valid_css() {
 }
 
 #[test]
+fn transforms_compose() {
+    let css = StyleCollector::default()
+        .translate_x(2)
+        .translate_y(4)
+        .rotate(45)
+        .build();
+    assert!(css.contains("translate: 0.5rem 1rem;"), "{css}");
+    assert!(css.contains("rotate: 45deg;"), "{css}");
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))
