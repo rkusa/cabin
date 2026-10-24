@@ -82,8 +82,12 @@ impl PropertyDisplay for BoxShadow {
             }
         }
 
-        write!(f, ";")?;
-        Ok(())
+        if self.ring.is_none() && self.shadow_kind.is_none() {
+            // A transparent shadow instead of an invalid empty value, e.g. after `shadow_none()`.
+            write!(f, "0 0 #0000")?;
+        }
+
+        writeln!(f, ";")
     }
 }
 

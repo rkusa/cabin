@@ -252,6 +252,12 @@ fn axis_specific_methods_set_one_axis() {
 }
 
 #[test]
+fn shadow_none_is_valid_css() {
+    let css = StyleCollector::default().shadow_md().shadow_none().build();
+    assert!(css.contains("box-shadow: 0 0 #0000;\n"), "{css}");
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))

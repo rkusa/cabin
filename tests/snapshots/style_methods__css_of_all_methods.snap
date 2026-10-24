@@ -1421,47 +1421,60 @@ right: 0.5rem;
 }
 == ring
 ._X {
-box-shadow: 0 0 0 3px currentColor;}
+box-shadow: 0 0 0 3px currentColor;
+}
 == ringf
 ._X {
-box-shadow: 0 0 0 1.5px currentColor;}
+box-shadow: 0 0 0 1.5px currentColor;
+}
 == ring_inset
 ._X {
-box-shadow: inset 0 0 0 1px currentColor;}
+box-shadow: inset 0 0 0 1px currentColor;
+}
 == ring_color
 ._X {
-box-shadow: 0 0 0 1px red;}
+box-shadow: 0 0 0 1px red;
+}
 == rotate
 ._X {
 transform: rotate(3deg);
 }
 == shadow_xs2
 ._X {
-box-shadow: 0 1px rgb(0 0 0 / 0.05);}
+box-shadow: 0 1px rgb(0 0 0 / 0.05);
+}
 == shadow_xs
 ._X {
-box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);}
+box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
 == shadow_sm
 ._X {
-box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);}
+box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
 == shadow_md
 ._X {
-box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
+box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
 == shadow_lg
 ._X {
-box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);}
+box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
 == shadow_xl
 ._X {
-box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);}
+box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
 == shadow_xl2
 ._X {
-box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);}
+box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
 == shadow_none
 ._X {
-box-shadow: ;}
+box-shadow: 0 0 #0000;
+}
 == shadow_color
 ._X {
-box-shadow: ;}
+box-shadow: 0 0 #0000;
+}
 == rounded
 ._X {
 border-radius: 0.5rem;
@@ -2055,7 +2068,8 @@ border-style: hidden;
 border-width: 0;
 border-block-width: 1.5px;
 border-inline-width: 1.5px;
-box-shadow: inset 0 0 0 1.5px red;box-sizing: content-box;
+box-shadow: inset 0 0 0 1.5px red;
+box-sizing: content-box;
 break-after: column;
 break-before: column;
 break-inside: column;
@@ -2158,7 +2172,8 @@ border-style: none;
 border-width: 1px;
 border-block-width: 1px;
 border-inline-width: 1px;
-box-shadow: inset 0 0 0 3px red, 0 1px red;box-sizing: border-box;
+box-shadow: inset 0 0 0 3px red, 0 1px red;
+box-sizing: border-box;
 break-after: auto;
 break-before: auto;
 break-inside: auto;
