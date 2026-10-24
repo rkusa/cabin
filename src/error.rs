@@ -69,9 +69,9 @@ impl Error {
                 status: Some(status),
                 source,
             },
-            Inner::Other { source, .. } => Inner::Other {
+            Inner::Other { reason, source, .. } => Inner::Other {
                 status,
-                reason: None,
+                reason,
                 source,
             },
         };
@@ -325,5 +325,26 @@ impl fmt::Display for InnerHttpError {
 impl error::Error for InnerHttpError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         self.0.source()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct Reason<'a>(&'a Error);
+
+    impl fmt::Display for Reason<'_> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            self.0.reason(f)
+        }
+    }
+
+    #[test]
+    fn with_status_keeps_reason() {
+        let err = Error::from_status_code_and_reason(StatusCode::INTERNAL_SERVER_ERROR, "nope")
+            .with_status(StatusCode::BAD_REQUEST);
+        assert_eq!(err.status_code(), StatusCode::BAD_REQUEST);
+        assert_eq!(Reason(&err).to_string(), "nope");
     }
 }
