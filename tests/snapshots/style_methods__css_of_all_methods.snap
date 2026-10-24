@@ -12,11 +12,11 @@ animation-duration: 1.5s;
 }
 == animation_delay_ms
 ._X {
-animation-duration: 5ms;
+animation-delay: 5ms;
 }
 == animation_delay_s
 ._X {
-animation-duration: 1.5s;
+animation-delay: 1.5s;
 }
 == animation_iterations
 ._X {
@@ -1861,11 +1861,11 @@ transition-duration: 1.5s;
 }
 == delay_ms
 ._X {
-transition-duration: 5ms;
+transition-delay: 5ms;
 }
 == delay_s
 ._X {
-transition-duration: 1.5s;
+transition-delay: 1.5s;
 }
 == translate_x
 ._X {
@@ -2034,6 +2034,7 @@ place-items: stretch;
 place-self: stretch;
 align-items: stretch;
 align-self: baseline;
+animation-delay: 1.5s;
 animation-duration: 1.5s;
 animation-iteration-count: infinite;
 -webkit-appearance: auto;
@@ -2109,6 +2110,7 @@ text-align: end;
 text-overflow: ellipsis;
 text-transform: none;
 transform: translateY(0.5rem);
+transition-delay: 1.5s;
 transition-duration: 1.5s;
 transition-property: transform;
 transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -2135,6 +2137,7 @@ place-items: start;
 place-self: auto;
 align-items: flex-start;
 align-self: auto;
+animation-delay: 5ms;
 animation-duration: 5ms;
 animation-iteration-count: 4;
 -webkit-appearance: none;
@@ -2210,6 +2213,7 @@ text-align: left;
 text-overflow: ellipsis;
 text-transform: uppercase;
 transform: rotate(3deg);
+transition-delay: 5ms;
 transition-duration: 150ms;
 transition-property: red;
 transition-timing-function: red;

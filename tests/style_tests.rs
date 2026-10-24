@@ -215,6 +215,20 @@ fn shorthands_come_before_longhands() {
 }
 
 #[test]
+fn delays_set_delay() {
+    let css = StyleCollector::default()
+        .animation_duration_ms(100)
+        .animation_delay_ms(200)
+        .duration_ms(300)
+        .delay_s(0.4)
+        .build();
+    assert!(css.contains("animation-duration: 100ms;"), "{css}");
+    assert!(css.contains("animation-delay: 200ms;"), "{css}");
+    assert!(css.contains("transition-duration: 300ms;"), "{css}");
+    assert!(css.contains("transition-delay: 0.4s;"), "{css}");
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))

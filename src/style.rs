@@ -82,7 +82,7 @@ pub trait Style: Sized {
     /// animation-delay: {ms}ms;
     /// ```
     fn animation_delay_ms(mut self, ms: u32) -> Self {
-        self.style_mut().animation_duration().set(Duration::Ms(ms));
+        self.style_mut().animation_delay().set(Duration::Ms(ms));
         self
     }
 
@@ -92,7 +92,7 @@ pub trait Style: Sized {
     /// ```
     fn animation_delay_s(mut self, s: f32) -> Self {
         self.style_mut()
-            .animation_duration()
+            .animation_delay()
             .set(Duration::S(Float::from(s)));
         self
     }
@@ -5341,7 +5341,7 @@ pub trait Style: Sized {
     /// transition-delay: {ms}ms;
     /// ```
     fn delay_ms(mut self, ms: u32) -> Self {
-        self.style_mut().transition_duration().set(Duration::Ms(ms));
+        self.style_mut().transition_delay().set(Duration::Ms(ms));
         self
     }
 
@@ -5351,7 +5351,7 @@ pub trait Style: Sized {
     /// ```
     fn delay_s(mut self, s: f32) -> Self {
         self.style_mut()
-            .transition_duration()
+            .transition_delay()
             .set(Duration::S(Float::from(s)));
         self
     }
