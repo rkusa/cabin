@@ -66,8 +66,15 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
     let field = fields.unnamed.first().unwrap();
     let (_, kind) = extract_inner_type(&field.ty)?;
 
+    if opts.explicit_bool && !matches!(kind, Kind::Bool) {
+        return Err(Error::new(
+            field.ty.span(),
+            "explicit_bool can only be used with a bool field",
+        ));
+    }
+
     match kind {
-        Kind::Bool => Ok(quote! {
+        Kind::Bool if !opts.explicit_bool => Ok(quote! {
             #[automatically_derived]
             impl ::cabin::html::attributes::Attributes for #ident {
                 fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
@@ -78,7 +85,8 @@ pub fn derive_attribute(input: DeriveInput) -> syn::Result<TokenStream> {
                 }
             }
         }),
-        Kind::Other => Ok(quote! {
+        // An explicit bool is rendered via its `Display` as `name="true"` or `name="false"`.
+        Kind::Bool | Kind::Other => Ok(quote! {
             #[automatically_derived]
             impl ::cabin::html::attributes::Attributes for #ident {
                 fn render(self, r: &mut ::cabin::render::ElementRenderer) -> Result<(), ::cabin::Error> {
@@ -109,6 +117,9 @@ pub(crate) fn extract_inner_type(ty: &Type) -> syn::Result<(&Type, Kind)> {
 struct Opts {
     name: Option<String>,
     outer: bool,
+    /// Render a bool as `"true"`/`"false"` instead of as a present or absent boolean attribute,
+    /// e.g. for ARIA states or enumerated attributes like `draggable`.
+    explicit_bool: bool,
 }
 
 fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
@@ -133,6 +144,9 @@ fn extract_options(attrs: &[Attribute]) -> syn::Result<Opts> {
             }
         } else if opt.key == format_ident!("outer") {
             opts.outer = true;
+            continue;
+        } else if opt.key == format_ident!("explicit_bool") {
+            opts.explicit_bool = true;
             continue;
         }
         return Err(Error::new(opt.key.span(), "unknown element option"));

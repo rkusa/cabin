@@ -1021,7 +1021,7 @@ pub struct AriaActiveDescendant(pub Cow<'static, str>);
 ///
 /// <https://w3c.github.io/aria/#aria-atomic>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-atomic")]
+#[attribute(name = "aria-atomic", explicit_bool)]
 pub struct AriaAtomic(pub bool);
 
 /// Defines a string value that labels the current element, which is intended to be converted
@@ -1045,7 +1045,7 @@ pub struct AriaBrailleRoleDescription(pub Cow<'static, str>);
 ///
 /// <https://w3c.github.io/aria/#aria-busy>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-busy")]
+#[attribute(name = "aria-busy", explicit_bool)]
 pub struct AriaBusy(pub bool);
 
 /// Defines the total number of columns in a table, grid, or treegrid. See related
@@ -1117,7 +1117,7 @@ pub struct AriaDetails(pub Cow<'static, str>);
 ///
 /// <https://w3c.github.io/aria/#aria-disabled>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-disabled")]
+#[attribute(name = "aria-disabled", explicit_bool)]
 pub struct AriaDisabled(pub bool);
 
 /// Identifies the element (or elements) that provides an error message for an object. See
@@ -1133,7 +1133,7 @@ pub struct AriaErrorMessage(pub Cow<'static, str>);
 ///
 /// <https://w3c.github.io/aria/#aria-expanded>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-expanded")]
+#[attribute(name = "aria-expanded", explicit_bool)]
 pub struct AriaExpanded(pub bool);
 
 /// Identifies the next element (or elements) in an alternate reading order of content which,
@@ -1150,7 +1150,7 @@ pub struct AriaFlowTo(pub Cow<'static, str>);
 ///
 /// <https://w3c.github.io/aria/#aria-hidden>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-hidden")]
+#[attribute(name = "aria-hidden", explicit_bool)]
 pub struct AriaHidden(pub bool);
 
 /// Defines keyboard shortcuts that an author has implemented to activate or give focus to an
@@ -1187,14 +1187,14 @@ pub struct AriaLevel(pub u32);
 ///
 /// <https://w3c.github.io/aria/#aria-modal>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-modal")]
+#[attribute(name = "aria-modal", explicit_bool)]
 pub struct AriaModal(pub bool);
 
 /// Indicates whether a text box accepts multiple lines of input or only a single line.
 ///
 /// <https://w3c.github.io/aria/#aria-multiline>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-multiline")]
+#[attribute(name = "aria-multiline", explicit_bool)]
 pub struct AriaMultiLine(pub bool);
 
 /// Indicates that the user can select more than one item from the current selectable
@@ -1202,7 +1202,7 @@ pub struct AriaMultiLine(pub bool);
 ///
 /// <https://w3c.github.io/aria/#aria-multiselectable>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-multiselectable")]
+#[attribute(name = "aria-multiselectable", explicit_bool)]
 pub struct AriaMultiSelectable(pub bool);
 
 /// Identifies an element (or elements) in order to define a visual, functional, or contextual
@@ -1236,14 +1236,14 @@ pub struct AriaPosInset(pub u32);
 ///
 /// <https://w3c.github.io/aria/#aria-readonly>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-readonly")]
+#[attribute(name = "aria-readonly", explicit_bool)]
 pub struct AriaReadonly(pub bool);
 
 /// Indicates that user input is required on the element before a form can be submitted.
 ///
 /// <https://w3c.github.io/aria/#aria-required>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-required")]
+#[attribute(name = "aria-required", explicit_bool)]
 pub struct AriaRequired(pub bool);
 
 /// Defines a human-readable, author-localized description for the role of an element.
@@ -1288,7 +1288,7 @@ pub struct AriaRowSpan(pub u32);
 ///
 /// <https://w3c.github.io/aria/#aria-selected>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
-#[attribute(name = "aria-selected")]
+#[attribute(name = "aria-selected", explicit_bool)]
 pub struct AriaSelected(pub bool);
 
 /// Defines the number of items in the current set of listitems or treeitems. Not required if
@@ -1708,6 +1708,21 @@ mod tests {
                 .end()
                 .html,
             r#"<div aria-autocomplete="list"></div>"#
+        );
+    }
+
+    #[tokio::test]
+    async fn test_bool_states_are_explicit() {
+        assert_eq!(
+            h::div(())
+                .aria_hidden(true)
+                .with_aria_expanded(false)
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<div aria-expanded="false" aria-hidden="true"></div>"#
         );
     }
 }

@@ -181,10 +181,12 @@ pub struct AutoFocus(pub bool);
 
 /// Indicating whether the element should be editable by the user.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(explicit_bool)]
 pub struct ContentEditable(pub bool);
 
 /// Indicate whether the element can be dragged.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(explicit_bool)]
 pub struct Draggable(pub bool);
 
 /// Mark the element as not presently accessible (e.g. when overlayed by a loading state).
@@ -237,6 +239,7 @@ pub struct Slot(pub Cow<'static, str>);
 
 /// Explicitly enable or disable spelling and grammar checking for the element's contents.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(explicit_bool)]
 pub struct Spellcheck(pub bool);
 
 /// Inline CSS.
@@ -429,5 +432,28 @@ impl fmt::Display for Translate {
             f.write_str("no")?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::render::Renderer;
+    use crate::{View, h};
+
+    #[tokio::test]
+    async fn test_enumerated_bools_are_explicit() {
+        assert_eq!(
+            h::div(())
+                .draggable()
+                .spellcheck(false)
+                .with_content_editable(false)
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<div contenteditable="false" spellcheck="false" draggable="true"></div>"#
+        );
     }
 }
