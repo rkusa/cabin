@@ -145,11 +145,11 @@ impl AutoCompleteBuilder<Section> {
     }
 
     /// The field describes a pager's or beeper's contact details.
-    pub fn page(self) -> AutoCompleteBuilder<()> {
+    pub fn pager(self) -> AutoCompleteBuilder<()> {
         AutoCompleteBuilder {
             a: self.a,
             b: self.b,
-            c: Some("page"),
+            c: Some("pager"),
             d: self.d,
             marker: PhantomData,
         }
@@ -225,11 +225,11 @@ impl AutoCompleteBuilder<AddrKind> {
     }
 
     /// The field describes a pager's or beeper's contact details.
-    pub fn page(self) -> AutoCompleteBuilder<()> {
+    pub fn pager(self) -> AutoCompleteBuilder<()> {
         AutoCompleteBuilder {
             a: self.a,
             b: self.b,
-            c: Some("page"),
+            c: Some("pager"),
             d: self.d,
             marker: PhantomData,
         }
@@ -283,11 +283,11 @@ impl AutoCompleteBuilder<TelKind> {
     }
 
     /// The field describes a pager's or beeper's contact details.
-    pub fn page(self) -> AutoCompleteBuilder<()> {
+    pub fn pager(self) -> AutoCompleteBuilder<()> {
         AutoCompleteBuilder {
             a: self.a,
             b: self.b,
-            c: Some("page"),
+            c: Some("pager"),
             d: self.d,
             marker: PhantomData,
         }
@@ -888,5 +888,18 @@ impl fmt::Display for AutoComplete {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pager() {
+        assert_eq!(
+            AutoComplete::builder().billing().pager().tel().to_string(),
+            "billing pager tel"
+        );
     }
 }
