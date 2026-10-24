@@ -99,20 +99,10 @@ where
             doc.render(r).await
         }))
         .await;
-    let Out { html, headers } = match result.map(|r| r.end()) {
-        Ok(result) => result,
-        Err(err) => return err_to_response(err),
-    };
-    let mut res = Response::builder().header(
-        http::header::CONTENT_TYPE,
-        HeaderValue::from_static("text/html; charset=utf-8"),
-    );
-    for (key, value) in headers {
-        if let Some(key) = key {
-            res = res.header(key, value);
-        }
+    match result {
+        Ok(r) => html_response(r.end()),
+        Err(err) => err_to_response(err),
     }
-    res.body(html).unwrap()
 }
 
 pub async fn put_page<F, V, B>(
@@ -144,20 +134,22 @@ where
         // Explicitly put future on heap (Box) to prevent stack overflow for very large futures.
         .run(Box::pin(async move { render_fn().await.render(r).await }))
         .await;
-    let Out { html, headers } = match result.map(|r| r.end()) {
-        Ok(result) => result,
-        Err(err) => return err_to_response(err),
-    };
-    let mut res = Response::builder().header(
-        http::header::CONTENT_TYPE,
-        HeaderValue::from_static("text/html; charset=utf-8"),
-    );
-    for (key, value) in headers {
-        if let Some(key) = key {
-            res = res.header(key, value);
-        }
+    match result {
+        Ok(r) => html_response(r.end()),
+        Err(err) => err_to_response(err),
     }
-    res.body(html).unwrap()
+}
+
+/// Builds an HTML response, keeping all rendered headers (including repeated ones like
+/// `Set-Cookie`).
+pub(crate) fn html_response(out: Out) -> Response<String> {
+    let Out { html, mut headers } = out;
+    headers
+        .entry(http::header::CONTENT_TYPE)
+        .or_insert_with(|| HeaderValue::from_static("text/html; charset=utf-8"));
+    let mut res = Response::new(html);
+    *res.headers_mut() = headers;
+    res
 }
 
 pub fn err_to_response(err: Error) -> Response<String> {
@@ -384,6 +376,7 @@ mod de {
 
 #[cfg(test)]
 mod tests {
+    use http::{HeaderMap, HeaderValue, header};
     use serde::Deserialize;
     use serde_json::value::RawValue;
 
@@ -416,6 +409,23 @@ mod tests {
                 .unwrap()
                 .get(),
             r#"null"#
+        );
+    }
+
+    #[test]
+    fn html_response_keeps_repeated_headers() {
+        let mut headers = HeaderMap::new();
+        headers.append(header::SET_COOKIE, HeaderValue::from_static("a=1"));
+        headers.append(header::SET_COOKIE, HeaderValue::from_static("b=2"));
+        let res = super::html_response(super::Out {
+            html: String::new(),
+            headers,
+        });
+        let cookies: Vec<_> = res.headers().get_all(header::SET_COOKIE).iter().collect();
+        assert_eq!(cookies, ["a=1", "b=2"]);
+        assert_eq!(
+            res.headers()[header::CONTENT_TYPE],
+            "text/html; charset=utf-8"
         );
     }
 }

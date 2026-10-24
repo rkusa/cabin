@@ -300,7 +300,7 @@ impl From<Error> for Response<String> {
                 if let Some(headers) = source.headers() {
                     let h = res.headers_mut();
                     for (name, value) in headers {
-                        h.insert(name, value);
+                        h.append(name, value);
                     }
                 }
                 res

@@ -3,15 +3,15 @@ use std::future::Future;
 use std::sync::Arc;
 
 use bytes::Bytes;
-use http::{HeaderValue, Request, Response, StatusCode};
+use http::{Request, Response, StatusCode};
 use http_body::Body;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::error::InternalError;
-use crate::render::{Out, Renderer};
+use crate::render::Renderer;
 use crate::scope::Scope;
-use crate::server::{err_to_response, parse_body};
+use crate::server::{err_to_response, html_response, parse_body};
 use crate::view::RenderFuture;
 use crate::view::boundary::BoundaryRef;
 use crate::{Error, Exposed, View};
@@ -103,20 +103,10 @@ impl BoundaryRegistry {
             let result = scope
                 .run(async move { handler(state_json.get(), r).await })
                 .await;
-            let Out { html, headers } = match result.map(|r| r.end()) {
-                Ok(result) => result,
-                Err(err) => return err_to_response(err),
-            };
-            let mut res = Response::builder().header(
-                http::header::CONTENT_TYPE,
-                HeaderValue::from_static("text/html; charset=utf-8"),
-            );
-            for (key, value) in headers {
-                if let Some(key) = key {
-                    res = res.header(key, value);
-                }
+            match result {
+                Ok(r) => html_response(r.end()),
+                Err(err) => err_to_response(err),
             }
-            res.body(html).unwrap()
         }
     }
 }
