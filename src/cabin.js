@@ -46,9 +46,10 @@
    * @param {object | FormData} payload
    * @param {Node} target
    * @param {AbortController | undefined} abortController
-   * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
+   * @param {Map<HTMLElement, bool> | undefined} disabledBefore
+   * @param {Map<HTMLElement, bool> | undefined} readOnlyBefore
    */
-  async function update(eventId, payload, target, abortController, disabledBefore) {
+  async function update(eventId, payload, target, abortController, disabledBefore, readOnlyBefore) {
     const isRefresh = eventId == REFRESH_SYMBOL;
     if (isRefresh) {
       eventId = "";
@@ -98,7 +99,7 @@
             const html = DECODER.decode(wasm.instance.exports.memory.buffer.slice(ptr, ptr + len));
             wasm.instance.exports.dealloc(ptr, len);
 
-            patch(html, target, disabledBefore);
+            patch(html, target, disabledBefore, readOnlyBefore);
 
             return;
           } else {
@@ -194,7 +195,7 @@
       }
 
       const html = await res.text();
-      patch(html, target, disabledBefore);
+      patch(html, target, disabledBefore, readOnlyBefore);
 
       const rewriteUrl = res.headers.get("location");
       if (!isRefresh && rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
@@ -217,9 +218,10 @@
   /**
    * @param {string} html
    * @param {Node} target
-   * @param {Map<HTMLElement, bool>} disabledBefore
+   * @param {Map<HTMLElement, bool> | undefined} disabledBefore
+   * @param {Map<HTMLElement, bool> | undefined} readOnlyBefore
    */
-  function patch(html, target, disabledBefore) {
+  function patch(html, target, disabledBefore, readOnlyBefore) {
     console.time("patch");
     const template = document.createElement("template");
     template.innerHTML = html;
@@ -244,10 +246,10 @@
     ) {
       const bodyTemplate = template.content.removeChild(template.content.firstElementChild);
       bodyTemplate.removeAttribute("id");
-      patchAttributes(document.body, bodyTemplate);
-      patchChildren(document.body, bodyTemplate.content, {}, disabledBefore);
+      patchAttributes(document.body, bodyTemplate, disabledBefore, readOnlyBefore);
+      patchChildren(document.body, bodyTemplate.content, {}, disabledBefore, readOnlyBefore);
     } else {
-      patchChildren(target, template.content, {}, disabledBefore);
+      patchChildren(target, template.content, {}, disabledBefore, readOnlyBefore);
     }
 
     console.timeEnd("patch");
@@ -486,8 +488,8 @@
    * @param {Node} rootBefore
    * @param {Node} rootAfter
    * @param {Record<string, Node>} orphanKeyed
-   * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
-   * @param {WeakMap<HTMLElement, bool> | undefined} readOnlyBefore
+   * @param {Map<HTMLElement, bool> | undefined} disabledBefore
+   * @param {Map<HTMLElement, bool> | undefined} readOnlyBefore
    */
   function patchChildren(rootBefore, rootAfter, orphanKeyed, disabledBefore, readOnlyBefore) {
     // console.log("apply", rootBefore, rootAfter);
@@ -621,8 +623,8 @@
   /**
    * @param {Element} childBefore
    * @param {Element} childAfter
-   * @param {WeakMap<HTMLElement, bool> | undefined} disabledBefore
-   * @param {WeakMap<HTMLElement, bool> | undefined} readOnlyBefore
+   * @param {Map<HTMLElement, bool> | undefined} disabledBefore
+   * @param {Map<HTMLElement, bool> | undefined} readOnlyBefore
    */
   function patchAttributes(childBefore, childAfter, disabledBefore, readOnlyBefore) {
     const oldAttributeNames = new Set(childBefore.getAttributeNames());
@@ -671,11 +673,17 @@
           }
           break;
         case "disabled":
-          disabledBefore?.set(childBefore, childAfter.disabled);
+        case "readonly": {
+          // Elements temporarily disabled/made read-only while an event is handled get restored
+          // afterwards, so update the state to restore to instead of the element itself.
+          const before = name === "disabled" ? disabledBefore : readOnlyBefore;
+          if (before?.has(childBefore)) {
+            before.set(childBefore, true);
+          } else if (childBefore.getAttribute(name) !== newValue) {
+            childBefore.setAttribute(name, newValue);
+          }
           break;
-        case "readonly":
-          readOnlyBefore?.set(childBefore, childAfter.readOnly);
-          break;
+        }
         default:
           if (childBefore.getAttribute(name) !== newValue) {
             // console.log("update attribute", name);
@@ -709,13 +717,15 @@
           childBefore.selected = false;
           break;
         case "disabled":
-          childBefore.disabled = false;
-          disabledBefore?.set(childBefore, false);
+        case "readonly": {
+          const before = name === "disabled" ? disabledBefore : readOnlyBefore;
+          if (before?.has(childBefore)) {
+            before.set(childBefore, false);
+          } else {
+            childBefore.removeAttribute(name);
+          }
           break;
-        case "readonly":
-          childBefore.readOnly = false;
-          readOnlyBefore?.set(childBefore, false);
-          break;
+        }
         default:
           childBefore.removeAttribute(name);
           break;
