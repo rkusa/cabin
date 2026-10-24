@@ -404,9 +404,12 @@
         if (isSubmitEvent && !node.hasAttribute(`${attrName}-payload`)) {
           payload = new FormData(node);
         } else if (opts?.eventPayload) {
+          // Placeholders are matched including their quotes and replaced with the JSON encoded
+          // value. A replacer function is used so that `$` patterns in values aren't interpreted.
           payload = JSON.parse(
             Object.entries(opts.eventPayload(e)).reduce(
-              (result, [placeholder, value]) => result.replace(placeholder, value),
+              (result, [placeholder, value]) =>
+                result.replaceAll(placeholder, () => JSON.stringify(value)),
               node.getAttribute(`${attrName}-payload`),
             ),
           );
@@ -768,7 +771,7 @@
     setUpEventListener(el, "change", {
       events,
       eventPayload: (e) => ({
-        "_##InputValue": e.target.value,
+        '"_##InputValue"': e.target.value,
         '"_##InputChecked"': e.target.checked,
       }),
       disableForm: true,
@@ -777,7 +780,7 @@
       events,
       debounce: 500,
       eventPayload: (e) => ({
-        "_##InputValue": e.target.value,
+        '"_##InputValue"': e.target.value,
         '"_##InputChecked"': e.target.checked,
       }),
     });
