@@ -2,14 +2,14 @@
 source: tests/style_tests.rs
 expression: snapshot
 ---
-._8fa4b0c2 {
+._1b0160f0 {
 display: flex;
 }
-:where(._42be84af > :not(:last-child)) {
+:where(._5074b9be > :not(:last-child)) {
 border-color: #000000;
 border-inline-end-width: 1px;
 }
-:where(._c49fd15d > :not(:last-child)) {
+:where(._32baf718 > :not(:last-child)) {
 border-inline-style: dashed;
 border-inline-start-width: 1px;
 }

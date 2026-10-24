@@ -53,7 +53,8 @@ macro_rules! unwrap_value {
 macro_rules! properties {
     ($($(#[$boxed:ident])? $name:ident: $ty:ty,)*) => {
         /// A single CSS property. The variants are declared (and thus sorted and written) in the
-        /// order in which they are written to CSS.
+        /// order in which they are written to CSS, so shorthands must come before the longhands
+        /// they cover.
         #[allow(non_camel_case_types)]
         #[derive(Clone, Hash, PartialEq, Eq)]
         pub(crate) enum Property {
@@ -104,6 +105,10 @@ macro_rules! properties {
 }
 
 properties! {
+    // Before `align-*` and `justify-*`, as these shorthands would override them otherwise.
+    place_content: &'static str,
+    place_items: &'static str,
+    place_self: &'static str,
     align_items: &'static str,
     align_self: &'static str,
     animation_delay: Duration,
@@ -120,11 +125,12 @@ properties! {
     basis: Length,
     border_color: Compact<FourSided<&'static str>>,
     border_inline_color: Compact<Inlined<&'static str>>,
-    border_inline_style: &'static str,
-    border_inline_width: Inlined<Length>,
     border_radius: Compact<Corners<Either<Length>>>,
     border_style: &'static str,
     border_width: FourSided<Length>,
+    // After the `border-style` and `border-width` shorthands, so they don't override these.
+    border_inline_style: &'static str,
+    border_inline_width: Inlined<Length>,
     #[boxed]
     box_shadow: BoxShadow,
     box_sizing: &'static str,
@@ -178,9 +184,6 @@ properties! {
     outline_width: Length,
     overflow: Xy<&'static str>,
     padding: FourSided<Length>,
-    place_content: &'static str,
-    place_items: &'static str,
-    place_self: &'static str,
     pointer_events: &'static str,
     position: &'static str,
     text_align: &'static str,

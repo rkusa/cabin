@@ -2029,6 +2029,9 @@ margin-block-end: 0.5rem;
 == space_y_reverse
 == chain
 ._X {
+place-content: stretch;
+place-items: stretch;
+place-self: stretch;
 align-items: stretch;
 align-self: baseline;
 animation-duration: 1.5s;
@@ -2046,11 +2049,11 @@ flex-basis: 0.5rem;
 border-color: red;
 border-block-color: red;
 border-inline-color: red;
-border-block-width: 1.5px;
-border-inline-width: 1.5px;
 border-radius: calc(infinity * 1px);
 border-style: hidden;
 border-width: 0;
+border-block-width: 1.5px;
+border-inline-width: 1.5px;
 box-shadow: inset 0 0 0 1.5px red;box-sizing: content-box;
 break-after: column;
 break-before: column;
@@ -2100,9 +2103,6 @@ outline-offset: 1.5px;
 outline-style: double;
 outline-width: 2px;
 padding: 0;
-place-content: stretch;
-place-items: stretch;
-place-self: stretch;
 pointer-events: auto;
 position: static;
 text-align: end;
@@ -2130,6 +2130,9 @@ margin-inline-start: 0.5rem;
 }
 == reverse chain
 ._X {
+place-content: center;
+place-items: start;
+place-self: auto;
 align-items: flex-start;
 align-self: auto;
 animation-duration: 5ms;
@@ -2147,11 +2150,11 @@ flex-basis: 0.5rem;
 border-color: red;
 border-block-color: red;
 border-inline-color: red;
-border-block-width: 1px;
-border-inline-width: 1px;
 border-radius: 0.5rem;
 border-style: none;
 border-width: 1px;
+border-block-width: 1px;
+border-inline-width: 1px;
 box-shadow: inset 0 0 0 3px red, 0 1px red;box-sizing: border-box;
 break-after: auto;
 break-before: auto;
@@ -2201,9 +2204,6 @@ outline-offset: 2px;
 outline-style: solid;
 outline-width: 3px;
 padding: 0.5rem;
-place-content: center;
-place-items: start;
-place-self: auto;
 pointer-events: none;
 position: static;
 text-align: left;

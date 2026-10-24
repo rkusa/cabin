@@ -2,7 +2,7 @@
 source: tests/style_tests.rs
 expression: c.build()
 ---
-._f777cd46 {
+._74992525 {
 display: inline-block;
 padding: 0.5rem 1rem;
 }

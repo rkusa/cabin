@@ -197,6 +197,24 @@ fn pseudo_element_content_is_set_on_pseudo_element() {
 }
 
 #[test]
+fn shorthands_come_before_longhands() {
+    let css = StyleCollector::default().border_x().border().build();
+    assert!(
+        position(&css, "border-width:") < position(&css, "border-inline-width:"),
+        "{css}"
+    );
+
+    let css = StyleCollector::default()
+        .items_center()
+        .place_items_center()
+        .build();
+    assert!(
+        position(&css, "place-items:") < position(&css, "align-items:"),
+        "{css}"
+    );
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))
