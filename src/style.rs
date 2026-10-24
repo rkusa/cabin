@@ -2968,10 +2968,10 @@ pub trait Style: Sized {
     /// Set the bullet/number style of a list.
     /// <https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type>
     /// ```css
-    /// list-style-type: decimnal;
+    /// list-style-type: decimal;
     /// ```
     fn list_decimal(mut self) -> Self {
-        self.style_mut().list_style_type().set("decimnal");
+        self.style_mut().list_style_type().set("decimal");
         self
     }
 

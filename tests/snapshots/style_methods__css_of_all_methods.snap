@@ -1050,7 +1050,7 @@ list-style-type: disc;
 }
 == list_decimal
 ._X {
-list-style-type: decimnal;
+list-style-type: decimal;
 }
 == m
 ._X {
@@ -2101,7 +2101,7 @@ justify-content: stretch;
 justify-self: stretch;
 letter-spacing: 0.1em;
 overflow: visible;display: block;-webkit-box-orient: horizontal;-webkit-line-clamp: none;line-height: 0.5rem;
-list-style-type: decimnal;
+list-style-type: decimal;
 margin: 0;
 margin-block: 0.5rem;
 margin-inline: 0.5rem;
