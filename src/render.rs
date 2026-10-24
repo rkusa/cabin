@@ -140,12 +140,15 @@ impl Renderer {
     }
 
     pub(crate) fn build_styles(&mut self) -> String {
-        let mut styles = self.styles.drain().map(|(_, v)| v).collect::<Vec<_>>();
-        styles.sort_by(|a, b| a.modifier.cmp(&b.modifier));
+        let mut styles = self.styles.drain().collect::<Vec<_>>();
+        // Sort by class name too, so the output doesn't depend on the map's iteration order.
+        styles.sort_by(|(a_name, a), (b_name, b)| {
+            a.modifier.cmp(&b.modifier).then(a_name.cmp(b_name))
+        });
 
         let mut css = String::with_capacity(styles.len() * 128);
 
-        for s in styles {
+        for (_, s) in styles {
             s.write_to(&mut css);
         }
 

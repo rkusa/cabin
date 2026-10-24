@@ -7,7 +7,7 @@ use smallvec::SmallVec;
 use crate::hash::FxHasher;
 use crate::html::attributes::Attributes;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ClassName(u32);
 
 impl ClassName {

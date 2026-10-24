@@ -155,6 +155,29 @@ fn narrower_max_container_width_comes_later() {
 }
 
 #[test]
+fn pseudo_class_order() {
+    // Declared in reverse, the output order must still follow the fixed variant order.
+    let c = StyleCollector::default()
+        .when_disabled(|s| s.w(6))
+        .when_enabled(|s| s.w(5))
+        .when_active(|s| s.w(4))
+        .when_focus_visible(|s| s.w(3))
+        .when_focus(|s| s.w(2))
+        .when_hover(|s| s.w(1));
+    let css = c.build();
+    let order = [
+        ":hover",
+        ":focus {",
+        ":focus-visible",
+        ":active",
+        ":enabled",
+        ":disabled",
+    ]
+    .map(|needle| position(&css, needle));
+    assert!(order.is_sorted(), "{css}");
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))
