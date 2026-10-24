@@ -316,28 +316,35 @@ impl TextRenderer {
 
 pub struct Escape<W> {
     wr: W,
-    escape_fn: fn(char, &str) -> Option<&'static str>,
+    mode: EscapeMode,
+}
+
+#[derive(Clone, Copy)]
+enum EscapeMode {
+    AttributeValue,
+    Content,
+    Script,
 }
 
 impl<W> Escape<W> {
     pub fn attribute_value(wr: W) -> Self {
         Escape {
             wr,
-            escape_fn: escape_attribute_value_char,
+            mode: EscapeMode::AttributeValue,
         }
     }
 
     pub fn content(wr: W) -> Self {
         Escape {
             wr,
-            escape_fn: escape_content_char,
+            mode: EscapeMode::Content,
         }
     }
 
     pub fn script(wr: W) -> Self {
         Escape {
             wr,
-            escape_fn: escape_script_char,
+            mode: EscapeMode::Script,
         }
     }
 }
@@ -347,26 +354,41 @@ where
     W: fmt::Write,
 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        let mut replacements = s
-            .char_indices()
-            .filter_map(|(i, ch)| (self.escape_fn)(ch, &s[i + ch.len_utf8()..]).map(|s| (i, s)))
-            .peekable();
-        if replacements.peek().is_none() {
-            return self.wr.write_str(s);
+        // Dispatch once per write instead of per byte, so that each loop gets its escape function
+        // inlined.
+        match self.mode {
+            EscapeMode::AttributeValue => write_escaped(&mut self.wr, s, escape_attribute_value),
+            EscapeMode::Content => write_escaped(&mut self.wr, s, escape_content),
+            EscapeMode::Script => write_escaped(&mut self.wr, s, escape_script),
         }
+    }
+}
 
-        let mut pos = 0;
-        for (i, sub) in replacements {
+/// Writes `s` to `wr`, replacing each byte for which `escape` returns a replacement. Scans bytes
+/// instead of chars, as only ASCII bytes are ever replaced, and those never occur inside a
+/// multi-byte UTF-8 sequence. Thus, all slice boundaries are char boundaries.
+#[inline(always)]
+fn write_escaped(
+    wr: &mut impl fmt::Write,
+    s: &str,
+    escape: impl Fn(u8, &[u8]) -> Option<&'static str>,
+) -> fmt::Result {
+    let bytes = s.as_bytes();
+    let mut pos = 0;
+    for (i, &b) in bytes.iter().enumerate() {
+        if let Some(sub) = escape(b, &bytes[i + 1..]) {
             if i > pos {
-                self.wr.write_str(&s[pos..i])?;
+                wr.write_str(&s[pos..i])?;
             }
-            self.wr.write_str(sub)?;
+            wr.write_str(sub)?;
             pos = i + 1;
         }
-        if pos < s.len() {
-            self.wr.write_str(&s[pos..s.len()])?;
-        }
-
+    }
+    if pos == 0 {
+        wr.write_str(s)
+    } else if pos < s.len() {
+        wr.write_str(&s[pos..])
+    } else {
         Ok(())
     }
 }
@@ -420,19 +442,19 @@ impl Write for Renderer {
     }
 }
 
-fn escape_attribute_value_char(ch: char, _rest: &str) -> Option<&'static str> {
+fn escape_attribute_value(b: u8, _rest: &[u8]) -> Option<&'static str> {
     // Not escaping ' -> because cabin always warps attribute values in double-quotes
-    match ch {
-        '"' => Some("&quot;"),
-        '&' => Some("&amp;"),
+    match b {
+        b'"' => Some("&quot;"),
+        b'&' => Some("&amp;"),
         _ => None,
     }
 }
 
-fn escape_content_char(ch: char, _rest: &str) -> Option<&'static str> {
-    match ch {
-        '<' => Some("&lt;"),
-        '&' => Some("&amp;"),
+fn escape_content(b: u8, _rest: &[u8]) -> Option<&'static str> {
+    match b {
+        b'<' => Some("&lt;"),
+        b'&' => Some("&amp;"),
         _ => None,
     }
 }
@@ -441,11 +463,10 @@ fn escape_content_char(ch: char, _rest: &str) -> Option<&'static str> {
 /// its escaped state (`<!--`), in which a later `<script` would hide the closing tag. Anything else
 /// is kept as is, so that e.g. `a<!b` or `a</b` in JavaScript stays intact. The script content is
 /// written in one go, so a sequence can't be split across two writes.
-fn escape_script_char(ch: char, rest: &str) -> Option<&'static str> {
-    if ch != '<' {
+fn escape_script(b: u8, rest: &[u8]) -> Option<&'static str> {
+    if b != b'<' {
         return None;
     }
-    let rest = rest.as_bytes();
     let is_script_end =
         rest.len() >= 7 && rest[0] == b'/' && rest[1..7].eq_ignore_ascii_case(b"script");
     if is_script_end || rest.starts_with(b"!--") {
@@ -459,6 +480,27 @@ fn escape_script_char(ch: char, rest: &str) -> Option<&'static str> {
 mod tests {
     use super::*;
     use crate::h;
+
+    fn escape(escape: fn(String) -> Escape<String>, s: &str) -> String {
+        let mut escape = escape(String::new());
+        escape.write_str(s).unwrap();
+        escape.wr
+    }
+
+    #[test]
+    fn test_escape() {
+        assert_eq!(escape(Escape::content, "äb€"), "äb€");
+        assert_eq!(escape(Escape::content, "<ä&>\"€<"), "&lt;ä&amp;>\"€&lt;");
+        assert_eq!(
+            escape(Escape::attribute_value, "\"ä&<'€\""),
+            "&quot;ä&amp;<'€&quot;"
+        );
+        assert_eq!(
+            escape(Escape::script, "ä</script>€<!--"),
+            r"ä<\/script>€<\!--"
+        );
+        assert_eq!(escape(Escape::script, "<"), "<");
+    }
 
     #[tokio::test]
     async fn test_hashes_are_zero_padded() {
