@@ -1333,6 +1333,7 @@ pub struct AriaValueText(pub Cow<'static, str>);
 ///
 /// <https://w3c.github.io/aria/#aria-autocomplete>
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "aria-autocomplete")]
 pub enum AutoAutocomplete {
     /// When a user is providing input, text suggesting one way to complete the provided input
     /// might be dynamically inserted after the caret.
@@ -1687,5 +1688,26 @@ where
 impl fmt::Display for Number {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::render::Renderer;
+    use crate::{View, h};
+
+    #[tokio::test]
+    async fn test_aria_autocomplete() {
+        assert_eq!(
+            h::div(())
+                .aria_autocomplete(AutoAutocomplete::List)
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<div aria-autocomplete="list"></div>"#
+        );
     }
 }

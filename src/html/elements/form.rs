@@ -153,6 +153,7 @@ pub trait Form: WithAttribute {
 
 /// Character encodings to use for form submission.
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Attribute)]
+#[attribute(name = "accept-charset")]
 pub enum AcceptCharset {
     #[default]
     Utf8,
@@ -294,5 +295,25 @@ pub struct OnSubmitWith<E>(CustomEvent<E>);
 impl<E: serde::Serialize + Event + Send + 'static> Attributes for OnSubmitWith<E> {
     fn render(self, r: &mut crate::render::ElementRenderer) -> Result<(), crate::Error> {
         self.0.render(r)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::render::Renderer;
+
+    #[tokio::test]
+    async fn test_accept_charset() {
+        assert_eq!(
+            form(())
+                .accept_charset(AcceptCharset::Utf8)
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r#"<form accept-charset="UTF-8"></form>"#
+        );
     }
 }
