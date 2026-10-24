@@ -66,7 +66,8 @@ impl Ord for StyleModifier {
         } else if self.min_width.is_none() && other.min_width.is_some() {
             Ordering::Less
         } else if let Some((a, b)) = self.max_width.zip(other.max_width) {
-            a.cmp(&b)
+            // Narrower max widths come later, so they override wider ones.
+            b.cmp(&a)
         } else if self.max_width.is_some() && other.max_width.is_none() {
             Ordering::Greater
         } else if self.max_width.is_none() && other.max_width.is_some() {
@@ -74,11 +75,11 @@ impl Ord for StyleModifier {
         } else if let Some((a, b)) = self.min_container_width.zip(other.min_container_width) {
             a.cmp(&b)
         } else if self.min_container_width.is_some() && other.min_container_width.is_none() {
-            Ordering::Less
-        } else if self.min_container_width.is_none() && other.min_container_width.is_some() {
             Ordering::Greater
+        } else if self.min_container_width.is_none() && other.min_container_width.is_some() {
+            Ordering::Less
         } else if let Some((a, b)) = self.max_container_width.zip(other.max_container_width) {
-            a.cmp(&b)
+            b.cmp(&a)
         } else if self.max_container_width.is_some() && other.max_container_width.is_none() {
             Ordering::Greater
         } else if self.max_container_width.is_none() && other.max_container_width.is_some() {

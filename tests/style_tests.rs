@@ -124,3 +124,44 @@ fn element_with_only_empty_styles() {
     let html = render(h::div(()).class("x").when_hover(|s| s.bg_black()));
     assert_eq!(html.matches(' ').count(), 2, "{html}");
 }
+
+fn position(css: &str, needle: &str) -> usize {
+    css.find(needle)
+        .unwrap_or_else(|| panic!("{needle} not found in {css}"))
+}
+
+#[test]
+fn narrower_max_page_width_comes_later() {
+    let c = StyleCollector::default()
+        .max_page_width(640, |s| s.w(1))
+        .max_page_width(1024, |s| s.w(2));
+    let css = c.build();
+    assert!(
+        position(&css, "max-width: 1024px") < position(&css, "max-width: 640px"),
+        "{css}"
+    );
+}
+
+#[test]
+fn narrower_max_container_width_comes_later() {
+    let c = StyleCollector::default()
+        .max_container_width(640, |s| s.w(1))
+        .max_container_width(1024, |s| s.w(2));
+    let css = c.build();
+    assert!(
+        position(&css, "max-width: 1024px") < position(&css, "max-width: 640px"),
+        "{css}"
+    );
+}
+
+#[test]
+fn min_container_width_comes_after_base() {
+    let c = StyleCollector::default()
+        .min_container_width(640, |s| s.w(1))
+        .w(2);
+    let css = c.build();
+    assert!(
+        position(&css, "width: 0.5rem") < position(&css, "@container"),
+        "{css}"
+    );
+}
