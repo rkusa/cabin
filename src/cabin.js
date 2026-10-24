@@ -265,7 +265,6 @@
    * @param {HTMLElement} el
    * @param {string} eventName
    * @param {Object} opts
-   * @param {Set<string>?} opts.events - list of events the boundary should handle
    * @param {bool?} opts.preventDefault - whether the default of the event should be prevented
    * @param {bool?} opts.disable - whether the element should be disabled while the event is handled
    * @param {bool?} opts.disableForm - whether to disable the target's form (but only up to the next
@@ -301,9 +300,13 @@
         return;
       }
 
-      // The boundary only intercepts certain events
-      if (opts.events && !opts.events.has(eventId)) {
-        return;
+      // The boundary only intercepts certain events (read on each event, as the attribute might
+      // have been patched)
+      if (el instanceof CabinBoundary) {
+        const events = boundaryEvents(el);
+        if (events.size > 0 && !events.has(eventId)) {
+          return;
+        }
       }
 
       if (opts.disable && node.disabled) {
@@ -314,15 +317,7 @@
       if (eventName === "cabinFire" && el === document && !e.detail.isForwarded) {
         let handled = false;
         const boundaries = Array.from(document.querySelectorAll("cabin-boundary")).filter(
-          (boundary) => {
-            const events = new Set(
-              boundary
-                .getAttribute("events")
-                .split(",")
-                .filter((s) => s.length > 0),
-            );
-            return events.has(eventId);
-          },
+          (boundary) => boundaryEvents(boundary).has(eventId),
         );
         let boundary;
         outer: while ((boundary = boundaries.pop())) {
@@ -764,39 +759,28 @@
   }
 
   /**
+   * @param {Element} boundary
+   * @return {Set<string>} the events the boundary handles
+   */
+  function boundaryEvents(boundary) {
+    return new Set(
+      (boundary.getAttribute("events") ?? "").split(",").filter((s) => s.length > 0),
+    );
+  }
+
+  /**
    * @param {HTMLElement} el
    */
   function setupEventListeners(el) {
-    let events =
-      el instanceof CabinBoundary
-        ? new Set(
-            el
-              .getAttribute("events")
-              .split(",")
-              .filter((s) => s.length > 0),
-          )
-        : null;
-    if (events && events.size === 0) {
-      events = undefined;
-    }
-
     setUpEventListener(el, "click", {
-      events,
       preventDefault: true,
       disable: true,
     });
 
-    setUpEventListener(el, "mouseup", {
-      events,
-    });
-    setUpEventListener(el, "transitionend", {
-      events,
-    });
-    setUpEventListener(el, "animationend", {
-      events,
-    });
+    setUpEventListener(el, "mouseup", {});
+    setUpEventListener(el, "transitionend", {});
+    setUpEventListener(el, "animationend", {});
     setUpEventListener(el, "change", {
-      events,
       eventPayload: (e) => ({
         '"_##InputValue"': e.target.value,
         '"_##InputChecked"': e.target.checked,
@@ -804,7 +788,6 @@
       disableForm: true,
     });
     setUpEventListener(el, "input", {
-      events,
       debounce: 500,
       eventPayload: (e) => ({
         '"_##InputValue"': e.target.value,
@@ -812,13 +795,10 @@
       }),
     });
     setUpEventListener(el, "submit", {
-      events,
       preventDefault: true,
       disableForm: true,
     });
-    setUpEventListener(el, "cabinFire", {
-      events,
-    });
+    setUpEventListener(el, "cabinFire", {});
   }
 
   class CabinBoundary extends HTMLElement {
