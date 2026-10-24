@@ -283,3 +283,28 @@ async fn malformed_multipart_is_bad_request() {
         StatusCode::BAD_REQUEST
     );
 }
+
+#[cabin::boundary(usize)]
+fn counter(count: usize) -> Boundary<usize> {
+    let count = event::<usize>().unwrap_or(count);
+    h::text!("{count}").boundary(count)
+}
+
+#[tokio::test]
+async fn invalid_unregistered_event_json_is_bad_request() {
+    let mut registry = BoundaryRegistry::default();
+    registry.add(&BOUNDARIES);
+    let req = |payload: &str| {
+        Request::builder()
+            .method("PUT")
+            .header(http::header::CONTENT_TYPE, "application/json")
+            .body(Full::new(Bytes::from(format!(
+                r#"{{"eventId":"usize","state":1,"payload":{payload}}}"#
+            ))))
+            .unwrap()
+    };
+    let res = registry.handle("boundary_validation::counter", req("2"));
+    assert_eq!(res.await.status(), StatusCode::OK);
+    let res = registry.handle("boundary_validation::counter", req(r#""x""#));
+    assert_eq!(res.await.status(), StatusCode::BAD_REQUEST);
+}

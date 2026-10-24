@@ -16,7 +16,7 @@ tokio::task_local! {
 pub struct Scope {
     event: RefCell<Option<Event>>,
     multipart: RefCell<Option<Multipart<'static>>>,
-    error: RefCell<Option<InternalError>>,
+    error: RefCell<Option<crate::Error>>,
     renderer_pool: RefCell<Vec<Renderer>>,
     is_update: bool,
     disable_hashes: bool,
@@ -53,7 +53,7 @@ where
                             Some(payload)
                         }
                         Err(err) => {
-                            (*scope.error.borrow_mut()) = Some(err);
+                            (*scope.error.borrow_mut()) = Some(bad_request(err));
                             None
                         }
                     }
@@ -82,7 +82,7 @@ where
                     match deserialize_payload::<E>(&payload) {
                         Ok(payload) => Some(payload),
                         Err(err) => {
-                            (*scope.error.borrow_mut()) = Some(err);
+                            (*scope.error.borrow_mut()) = Some(bad_request(err));
                             None
                         }
                     }
@@ -98,6 +98,11 @@ where
         })
         .ok()
         .flatten()
+}
+
+/// Payloads come from the client, so failing to deserialize them is a client error.
+fn bad_request(err: InternalError) -> crate::Error {
+    crate::Error::from(err).with_status(http::StatusCode::BAD_REQUEST)
 }
 
 pub(crate) fn deserialize_payload<E: DeserializeOwned>(
