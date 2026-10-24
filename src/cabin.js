@@ -692,7 +692,15 @@
       // console.log("remove attribute", name);
       switch (name) {
         case "value":
-          childBefore.value = "";
+          childBefore.removeAttribute("value");
+          // Only form controls have a value that is detached from the attribute
+          if (
+            childBefore instanceof HTMLInputElement ||
+            childBefore instanceof HTMLTextAreaElement ||
+            childBefore instanceof HTMLSelectElement
+          ) {
+            childBefore.value = "";
+          }
           break;
         case "checked":
           childBefore.checked = false;
