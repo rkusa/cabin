@@ -5595,7 +5595,7 @@ pub trait Style: Sized {
     /// padding: 0;
     /// margin: 0;
     /// overflow: visible;
-    /// clip: auto;
+    /// clip-path: none;
     /// white-space: normal;
     /// ```
     fn not_sr_only(self) -> Self {
@@ -5605,7 +5605,7 @@ pub trait Style: Sized {
             .p(0)
             .m_px(0)
             .overflow_visible()
-            .clip_path("auto")
+            .clip_path("none")
             .whitespace_normal()
     }
 

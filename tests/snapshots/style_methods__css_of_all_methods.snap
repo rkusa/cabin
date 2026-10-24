@@ -1963,7 +1963,7 @@ width: 1px;
 }
 == not_sr_only
 ._X {
-clip-path: auto;
+clip-path: none;
 height: auto;
 margin: 0;
 overflow: visible;
@@ -2073,7 +2073,7 @@ box-sizing: content-box;
 break-after: column;
 break-before: column;
 break-inside: column;
-clip-path: auto;
+clip-path: none;
 color: red;
 container-type: inline-size;
 content: red;
