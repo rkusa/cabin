@@ -468,6 +468,8 @@
           readOnlyBefore,
         );
 
+        // Restore disabled states first, as disabled controls are not validated
+        abortController.abort();
         if (isSubmitEvent && node.parentNode) {
           node.reportValidity();
         }
