@@ -178,6 +178,25 @@ fn pseudo_class_order() {
 }
 
 #[test]
+fn pseudo_element_content_is_set_on_pseudo_element() {
+    let c = StyleCollector::default().w(1).after(|s| s.w(2));
+    let css = c.build();
+    assert_eq!(css.matches("content:").count(), 1, "{css}");
+    assert!(
+        position(&css, "::after") < position(&css, "content:"),
+        "{css}"
+    );
+
+    let c = StyleCollector::default().before(|s| s.w(2));
+    let css = c.build();
+    assert_eq!(css.matches('{').count(), 1, "{css}");
+    assert!(
+        position(&css, "::before") < position(&css, "content:"),
+        "{css}"
+    );
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))

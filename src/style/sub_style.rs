@@ -105,37 +105,37 @@ pub trait SubStyle: Style {
     }
 
     fn after<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        let mut style = self.substyle(
+        self.substyle(
             StyleModifier {
                 after: true,
                 ..Default::default()
             },
-            f,
-        );
-        {
-            let style = style.style_mut();
-            if !style.content().is_set() {
-                style.content().set("");
-            }
-        }
-        style
+            |s| {
+                let mut s = f(s);
+                let style = s.style_mut();
+                if !style.content().is_set() {
+                    style.content().set("");
+                }
+                s
+            },
+        )
     }
 
     fn before<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(self, f: F) -> Self {
-        let mut style = self.substyle(
+        self.substyle(
             StyleModifier {
                 before: true,
                 ..Default::default()
             },
-            f,
-        );
-        {
-            let style = style.style_mut();
-            if !style.content().is_set() {
-                style.content().set("");
-            }
-        }
-        style
+            |s| {
+                let mut s = f(s);
+                let style = s.style_mut();
+                if !style.content().is_set() {
+                    style.content().set("");
+                }
+                s
+            },
+        )
     }
 
     fn pseudo<F: for<'a> FnOnce(StyleDelegate<'a>) -> StyleDelegate<'a>>(
