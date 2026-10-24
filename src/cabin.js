@@ -404,7 +404,8 @@
       try {
         let payload;
         if (isSubmitEvent && !node.hasAttribute(`${attrName}-payload`)) {
-          payload = new FormData(node);
+          // Include the submitter's name/value (only supported for SubmitEvents)
+          payload = new FormData(node, e instanceof SubmitEvent ? e.submitter : undefined);
         } else if (opts?.eventPayload) {
           // Placeholders are matched including their quotes and replaced with the JSON encoded
           // value. A replacer function is used so that `$` patterns in values aren't interpreted.
