@@ -15,35 +15,42 @@
   async function loadWasm() {
     const path = document.querySelector("link[rel='cabin-components'][type='application/wasm']");
     if (path && path.href) {
-      if (path.href === WASM.href) {
-        return WASM.wasm;
-      }
-
-      try {
-        const wasm = await WebAssembly.instantiateStreaming(fetch(path.href), {
-          env: {
-            error(msgPtr, msgLen) {
-              loadWasm().then((wasm) => {
-                const data = new Uint8Array(wasm.instance.exports.memory.buffer, msgPtr, msgLen);
-                const msg = DECODER.decode(data);
-                wasm.instance.exports.dealloc(msgPtr, msgLen);
-                throw new Error(msg);
-              });
-            },
-          },
-        });
-        wasm.instance.exports.init_panic_hook();
-
+      // Cache the promise (which also caches a failed load), so that concurrent events don't
+      // load it multiple times and a failure isn't retried on every event.
+      if (path.href !== WASM.href) {
         WASM.href = path.href;
-        WASM.wasm = wasm;
-
-        return wasm;
-      } catch (err) {
-        console.error("failed to load components.wasm: ", err);
+        WASM.wasm = instantiateWasm(path.href);
       }
+      return WASM.wasm;
     }
 
     return null;
+  }
+
+  /**
+   * @param {string} href
+   * @return {Promise<WebAssembly.WebAssemblyInstantiatedSource?>}
+   */
+  async function instantiateWasm(href) {
+    try {
+      const wasm = await WebAssembly.instantiateStreaming(fetch(href), {
+        env: {
+          error(msgPtr, msgLen) {
+            loadWasm().then((wasm) => {
+              const data = new Uint8Array(wasm.instance.exports.memory.buffer, msgPtr, msgLen);
+              const msg = DECODER.decode(data);
+              wasm.instance.exports.dealloc(msgPtr, msgLen);
+              throw new Error(msg);
+            });
+          },
+        },
+      });
+      wasm.instance.exports.init_panic_hook();
+      return wasm;
+    } catch (err) {
+      console.error("failed to load components.wasm: ", err);
+      return null;
+    }
   }
 
   /**
