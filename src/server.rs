@@ -208,22 +208,6 @@ where
         .and_then(|v| v.to_str().ok()?.parse().ok())
         .ok_or_else(|| Error::from_status_code(StatusCode::UNSUPPORTED_MEDIA_TYPE))?;
 
-    let body = Box::pin(req.into_body());
-    let body = futures_util::stream::try_unfold(body, |mut body| async move {
-        let Some(bytes) = body.frame().await else {
-            return Ok::<_, B::Error>(None);
-        };
-        match bytes?.into_data() {
-            Ok(data) => Ok(Some((data, body))),
-            Err(_) => Ok(None),
-        }
-    })
-    .map_err(|err| {
-        // `multer::Multipart::new` below requires the error to by Sync, to avoid requiring that
-        // upstream simply flatten the error to a string here ...
-        Box::<dyn std::error::Error + Send + Sync + 'static>::from(err.to_string())
-    });
-
     if mime_type == mime::APPLICATION_JSON {
         #[derive(::serde::Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -235,13 +219,12 @@ where
             payload: Box<RawValue>,
         }
 
-        let whole_body = body
-            .try_fold(Vec::new(), |mut data, chunk| async move {
-                data.extend_from_slice(&chunk);
-                Ok(data)
-            })
+        let whole_body = req
+            .into_body()
+            .collect()
             .await
-            .map_err(|err| Error::from(err).with_status(StatusCode::INTERNAL_SERVER_ERROR))?;
+            .map_err(Error::from_err)?
+            .to_bytes();
         let event: JsonEvent = serde_json::from_slice(&whole_body)
             .map_err(|err| Error::from_err(err).with_status(StatusCode::BAD_REQUEST))?;
         Ok(Event {
@@ -251,6 +234,22 @@ where
             multipart: None,
         })
     } else if let Ok(boundary) = multer::parse_boundary(mime_type) {
+        let body = Box::pin(req.into_body());
+        let body = futures_util::stream::try_unfold(body, |mut body| async move {
+            let Some(bytes) = body.frame().await else {
+                return Ok::<_, B::Error>(None);
+            };
+            match bytes?.into_data() {
+                Ok(data) => Ok(Some((data, body))),
+                Err(_) => Ok(None),
+            }
+        })
+        .map_err(|err| {
+            // `multer::Multipart::new` below requires the error to by Sync, to avoid requiring that
+            // upstream simply flatten the error to a string here ...
+            Box::<dyn std::error::Error + Send + Sync + 'static>::from(err.to_string())
+        });
+
         let mut multipart = Multipart::new(body, boundary);
         let event_id: String = {
             let field = multipart.next_field().await.map_err(|err| {
