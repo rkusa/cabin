@@ -201,7 +201,7 @@ mod tests {
                 .unwrap()
                 .end()
                 .html,
-            r#"<iframe sandbox="allow-scripts allow-forms"></iframe>"#
+            r#"<iframe sandbox="allow-forms allow-scripts"></iframe>"#
         );
     }
 }

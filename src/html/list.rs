@@ -1,11 +1,13 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 pub enum SpaceSeparated<T> {
     Single(T),
-    List(HashSet<T>),
+    // Ordered, so that the rendered attribute and the element hash don't depend on a random
+    // iteration order.
+    List(BTreeSet<T>),
 }
 
 impl<T> From<T> for SpaceSeparated<T> {
