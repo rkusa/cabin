@@ -340,12 +340,12 @@ box-sizing: content-box;
 }
 == break_normal
 ._X {
-word-break: normal;
 overflow-wrap: normal;
+word-break: normal;
 }
 == break_word
 ._X {
-word-break: break-word;
+overflow-wrap: break-word;
 }
 == break_all
 ._X {
@@ -2117,6 +2117,7 @@ outline-color: red;
 outline-offset: 1.5px;
 outline-style: double;
 outline-width: 2px;
+overflow-wrap: break-word;
 padding: 0;
 pointer-events: auto;
 position: static;
@@ -2221,6 +2222,7 @@ outline-color: transparent;
 outline-offset: 2px;
 outline-style: solid;
 outline-width: 3px;
+overflow-wrap: normal;
 padding: 0.5rem;
 pointer-events: none;
 position: static;
@@ -2239,7 +2241,6 @@ white-space: nowrap;
 width: 0.5rem;
 word-break: normal;
 z-index: -2;
-overflow-wrap: normal;
 }
 :where(._X > :not(:last-child)) {
 border-color: red;

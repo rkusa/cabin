@@ -1061,17 +1061,19 @@ pub trait Style: Sized {
     /// word-break: normal;
     /// ```
     fn break_normal(mut self) -> Self {
-        self.style_mut().word_break().set("normal");
+        let style = self.style_mut();
+        style.overflow_wrap().set("normal");
+        style.word_break().set("normal");
         self
     }
 
     /// Set how words break in the element.
-    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/word-break>
+    /// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap>
     /// ```css
-    /// word-break: break-wird;
+    /// overflow-wrap: break-word;
     /// ```
     fn break_word(mut self) -> Self {
-        self.style_mut().word_break().set("break-word");
+        self.style_mut().overflow_wrap().set("break-word");
         self
     }
 

@@ -2,7 +2,7 @@
 source: tests/style_tests.rs
 expression: c.build()
 ---
-@keyframes _7505acc1 { from {background-color: #ffffff;
+@keyframes _8a3e6b1f { from {background-color: #ffffff;
 background-image: none;
 color: #374151;
 pointer-events: none;
@@ -12,6 +12,6 @@ background-image: none;
 color: #ffffff;
 pointer-events: none;
 } }
-._7505acc1 {
-animation: 250ms ease-in-out 1 forwards _7505acc1;color: #374151;
+._8a3e6b1f {
+animation: 250ms ease-in-out 1 forwards _8a3e6b1f;color: #374151;
 }

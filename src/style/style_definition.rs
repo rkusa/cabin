@@ -183,6 +183,7 @@ properties! {
     outline_style: &'static str,
     outline_width: Length,
     overflow: Xy<&'static str>,
+    overflow_wrap: &'static str,
     padding: FourSided<Length>,
     pointer_events: &'static str,
     position: &'static str,
@@ -375,6 +376,7 @@ impl fmt::Display for StyleDefinition {
                         overflow.fmt_property("overflow", f)?;
                     }
                 }
+                Property::overflow_wrap(v) => v.fmt_property("overflow-wrap", f)?,
                 Property::padding(v) => v.fmt_property("padding", f)?,
                 Property::place_content(v) => v.fmt_property("place-content", f)?,
                 Property::place_items(v) => v.fmt_property("place-items", f)?,
@@ -401,11 +403,6 @@ impl fmt::Display for StyleDefinition {
                 Property::word_break(v) => v.fmt_property("word-break", f)?,
                 Property::z_index(v) => v.fmt_property("z-index", f)?,
             }
-        }
-        if let Some(Property::word_break(word_break)) = self.get(PropertyKind::word_break)
-            && *word_break == "normal"
-        {
-            word_break.fmt_property("overflow-wrap", f)?;
         }
 
         Ok(())
