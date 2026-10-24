@@ -83,7 +83,7 @@
         target.firstChild instanceof HTMLScriptElement &&
         target.firstChild.getAttribute("type") === "application/json"
       ) {
-        state = target.firstChild.innerText;
+        state = target.firstChild.textContent;
       }
 
       if (target instanceof CabinBoundary) {
