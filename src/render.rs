@@ -284,7 +284,7 @@ impl ElementRenderer {
 
         let hash = self.renderer.hasher.finish_u32();
         if let Some(offset) = self.hash_offset {
-            write!(WriteInto::new(&mut self.renderer.out, offset), "{hash:x}").unwrap();
+            write!(WriteInto::new(&mut self.renderer.out, offset), "{hash:08x}").unwrap();
         }
 
         self.parent_hasher.write_u32(hash);
@@ -452,5 +452,36 @@ fn escape_script_char(ch: char, rest: &str) -> Option<&'static str> {
         Some("<\\")
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::h;
+
+    #[tokio::test]
+    async fn test_hashes_are_zero_padded() {
+        // Without padding, a hash below 0x10000000 would be written left-aligned into the
+        // `00000000` placeholder and thus alias another hash, e.g. 0xabcdef1 with 0xabcdef10. So
+        // with padding, some of the hashes are expected to start with a zero.
+        let mut has_leading_zero = false;
+        for i in 0..256 {
+            let html = h::div(i.to_string())
+                .render(Renderer::new(false, false))
+                .await
+                .unwrap()
+                .end()
+                .html;
+            let hash = html
+                .strip_prefix(r#"<div hash=""#)
+                .and_then(|s| s.split_once('"'))
+                .unwrap()
+                .0;
+            assert_eq!(hash.len(), 8, "{html}");
+            assert!(hash.bytes().all(|b| b.is_ascii_hexdigit()), "{html}");
+            has_leading_zero |= hash.starts_with('0');
+        }
+        assert!(has_leading_zero);
     }
 }
