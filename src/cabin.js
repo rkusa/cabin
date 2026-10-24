@@ -4,6 +4,11 @@
   const WASM = { href: null, wasm: null };
   const REFRESH_SYMBOL = Symbol("REFRESH_SYMBOL");
 
+  /** @type {AbortController | undefined} */
+  let refreshAbortController = undefined;
+  /** URL (without hash) of the current page, used to ignore hash-only history changes */
+  let currentPath = `${location.pathname}${location.search}`;
+
   /**
    * @return {Promise<WebAssembly.WebAssemblyInstantiatedSource?}
    */
@@ -200,6 +205,7 @@
       const rewriteUrl = res.headers.get("location");
       if (!isRefresh && rewriteUrl && `${location.pathname}${location.search}` !== rewriteUrl) {
         history.pushState(null, undefined, rewriteUrl);
+        currentPath = `${location.pathname}${location.search}`;
       }
 
       const newTitle = res.headers.get("x-cabin-title");
@@ -834,10 +840,20 @@
         el.removeAttribute("hash");
       } while ((el = el.parentElement) && !(el instanceof CabinBoundary));
     }
-    await update(REFRESH_SYMBOL, {}, document.body);
+
+    // Only the latest refresh is applied
+    refreshAbortController?.abort();
+    const abortController = (refreshAbortController = new AbortController());
+    await update(REFRESH_SYMBOL, {}, document.body, abortController);
   });
 
   window.addEventListener("popstate", () => {
+    const path = `${location.pathname}${location.search}`;
+    if (path === currentPath) {
+      // only the hash changed
+      return;
+    }
+    currentPath = path;
     document.dispatchEvent(new CustomEvent("cabinRefresh"));
   });
 
