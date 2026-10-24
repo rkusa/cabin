@@ -1364,7 +1364,7 @@ pub trait Style: Sized {
         self.style_mut()
             .grid_column()
             .get_or_insert_default()
-            .set(GridLine::Auto);
+            .set_start(GridLine::Auto);
         self
     }
 
@@ -1390,7 +1390,7 @@ pub trait Style: Sized {
         self.style_mut()
             .grid_column()
             .get_or_insert_default()
-            .set(GridLine::Auto);
+            .set_end(GridLine::Auto);
         self
     }
 
@@ -2411,7 +2411,10 @@ pub trait Style: Sized {
     /// column-gap: {x};
     /// ```
     fn gap_x(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().gap().get_or_insert_default().set(x.into());
+        self.style_mut()
+            .gap()
+            .get_or_insert_default()
+            .set_column(x.into());
         self
     }
 
@@ -2421,7 +2424,10 @@ pub trait Style: Sized {
     /// row-gap: {x};
     /// ```
     fn gap_y(mut self, x: impl Into<Length>) -> Self {
-        self.style_mut().gap().get_or_insert_default().set(x.into());
+        self.style_mut()
+            .gap()
+            .get_or_insert_default()
+            .set_row(x.into());
         self
     }
 
@@ -4751,7 +4757,7 @@ pub trait Style: Sized {
         self.style_mut()
             .grid_row()
             .get_or_insert_default()
-            .set(GridLine::Auto);
+            .set_start(GridLine::Auto);
         self
     }
 
@@ -4777,7 +4783,7 @@ pub trait Style: Sized {
         self.style_mut()
             .grid_row()
             .get_or_insert_default()
-            .set(GridLine::Auto);
+            .set_end(GridLine::Auto);
         self
     }
 

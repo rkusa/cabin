@@ -229,6 +229,29 @@ fn delays_set_delay() {
 }
 
 #[test]
+fn axis_specific_methods_set_one_axis() {
+    let css = StyleCollector::default().gap_x(1).build();
+    assert!(css.contains("column-gap: 0.25rem;"), "{css}");
+    assert!(!css.contains("row-gap"), "{css}");
+
+    let css = StyleCollector::default().gap_y(1).build();
+    assert!(css.contains("row-gap: 0.25rem;"), "{css}");
+    assert!(!css.contains("column-gap"), "{css}");
+
+    let css = StyleCollector::default()
+        .col_start_auto()
+        .row_end_auto()
+        .build();
+    assert!(css.contains("grid-column-start: auto;"), "{css}");
+    assert!(css.contains("grid-row-end: auto;"), "{css}");
+
+    let css = StyleCollector::default().col_end_auto().build();
+    assert!(css.contains("grid-column-end: auto;"), "{css}");
+    let css = StyleCollector::default().row_start_auto().build();
+    assert!(css.contains("grid-row-start: auto;"), "{css}");
+}
+
+#[test]
 fn min_container_width_comes_after_base() {
     let c = StyleCollector::default()
         .min_container_width(640, |s| s.w(1))

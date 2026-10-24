@@ -453,7 +453,7 @@ grid-column: span 4 / span 4;
 }
 == col_start_auto
 ._X {
-grid-column: auto / auto;
+grid-column-start: auto;
 }
 == col_start
 ._X {
@@ -461,7 +461,7 @@ grid-column-start: 3;
 }
 == col_end_auto
 ._X {
-grid-column: auto / auto;
+grid-column-end: auto;
 }
 == col_end
 ._X {
@@ -858,11 +858,11 @@ gap: 0.5rem;
 }
 == gap_x
 ._X {
-gap: 0.5rem;
+column-gap: 0.5rem;
 }
 == gap_y
 ._X {
-gap: 0.5rem;
+row-gap: 0.5rem;
 }
 == cols
 ._X {
@@ -1640,7 +1640,7 @@ grid-row: span 4 / span 4;
 }
 == row_start_auto
 ._X {
-grid-row: auto / auto;
+grid-row-start: auto;
 }
 == row_start
 ._X {
@@ -1648,7 +1648,7 @@ grid-row-start: 3;
 }
 == row_end_auto
 ._X {
-grid-row: auto / auto;
+grid-row-end: auto;
 }
 == row_end
 ._X {
@@ -2075,8 +2075,8 @@ font-style: normal;
 font-weight: 900;
 gap: 0.5rem;
 grid-auto-flow: column dense;
-grid-column: auto / 3;
-grid-row: auto / 3;
+grid-column: 3 / 3;
+grid-row: 3 / 3;
 grid-template-columns: red;
 grid-template-rows: red;
 height: auto;
