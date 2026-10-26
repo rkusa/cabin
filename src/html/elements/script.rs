@@ -166,5 +166,23 @@ mod tests {
                 .html,
             r#"<script>if (1<2) alert("<\/script>")</script>"#
         );
+        assert_eq!(
+            script("a</SCRIPT b<!-x c</scrip d</div>")
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r"<script>a<\/SCRIPT b<!-x c</scrip d</div></script>"
+        );
+        assert_eq!(
+            script("a<!b<")
+                .render(Renderer::new(false, true))
+                .await
+                .unwrap()
+                .end()
+                .html,
+            r"<script>a<!b<</script>"
+        );
     }
 }

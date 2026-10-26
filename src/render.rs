@@ -316,7 +316,7 @@ impl TextRenderer {
 
 pub struct Escape<W> {
     wr: W,
-    escape_fn: fn(char, Option<char>) -> Option<&'static str>,
+    escape_fn: fn(char, &str) -> Option<&'static str>,
 }
 
 impl<W> Escape<W> {
@@ -347,11 +347,9 @@ where
     W: fmt::Write,
 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        let mut next = s.chars();
-        next.next();
         let mut replacements = s
             .char_indices()
-            .filter_map(|(i, ch)| (self.escape_fn)(ch, next.next()).map(|s| (i, s)))
+            .filter_map(|(i, ch)| (self.escape_fn)(ch, &s[i + ch.len_utf8()..]).map(|s| (i, s)))
             .peekable();
         if replacements.peek().is_none() {
             return self.wr.write_str(s);
@@ -422,7 +420,7 @@ impl Write for Renderer {
     }
 }
 
-fn escape_attribute_value_char(ch: char, _next: Option<char>) -> Option<&'static str> {
+fn escape_attribute_value_char(ch: char, _rest: &str) -> Option<&'static str> {
     // Not escaping ' -> because cabin always warps attribute values in double-quotes
     match ch {
         '"' => Some("&quot;"),
@@ -431,7 +429,7 @@ fn escape_attribute_value_char(ch: char, _next: Option<char>) -> Option<&'static
     }
 }
 
-fn escape_content_char(ch: char, _next: Option<char>) -> Option<&'static str> {
+fn escape_content_char(ch: char, _rest: &str) -> Option<&'static str> {
     match ch {
         '<' => Some("&lt;"),
         '&' => Some("&amp;"),
@@ -439,10 +437,20 @@ fn escape_content_char(ch: char, _next: Option<char>) -> Option<&'static str> {
     }
 }
 
-fn escape_script_char(ch: char, next: Option<char>) -> Option<&'static str> {
-    match (ch, next) {
-        ('<', Some('/')) => Some("<\\"),
-        ('<', Some('!')) => Some("<\\"),
-        _ => None,
+/// Only escapes what could end the script element early (`</script`) or switch the tokenizer into
+/// its escaped state (`<!--`), in which a later `<script` would hide the closing tag. Anything else
+/// is kept as is, so that e.g. `a<!b` or `a</b` in JavaScript stays intact. The script content is
+/// written in one go, so a sequence can't be split across two writes.
+fn escape_script_char(ch: char, rest: &str) -> Option<&'static str> {
+    if ch != '<' {
+        return None;
+    }
+    let rest = rest.as_bytes();
+    let is_script_end =
+        rest.len() >= 7 && rest[0] == b'/' && rest[1..7].eq_ignore_ascii_case(b"script");
+    if is_script_end || rest.starts_with(b"!--") {
+        Some("<\\")
+    } else {
+        None
     }
 }

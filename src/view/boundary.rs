@@ -242,7 +242,7 @@ where
         };
 
         let state = match serde_json::to_string(&args) {
-            Ok(state) => state,
+            Ok(state) => escape_state(state),
             Err(err) => {
                 return RenderFuture::Ready(Err(InternalError::Serialize {
                     what: "boundary state".into(),
@@ -314,5 +314,48 @@ where
                 is_topmost: false,
             },
         }
+    }
+}
+
+/// Escapes every `<` in the serialized state as `\u003c`. The state is rendered into a
+/// `<script type="application/json">`, which cabin.js reads back and sends to the server as JSON.
+/// Leaving the escaping to the generic script escaper would turn e.g. `<!--` into `<\!--`, which
+/// is fine in JavaScript, but `\!` is an invalid JSON escape. As `<` can only occur inside JSON
+/// strings, `\u003c` keeps it valid JSON and makes it inert in HTML.
+fn escape_state(state: String) -> String {
+    if state.contains('<') {
+        state.replace('<', "\\u003c")
+    } else {
+        state
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_state_escape() {
+        let args = (
+            "<!-- </script> <SCRIPT>".to_string(),
+            vec!["a<!b".to_string(), "</ScRiPt".to_string()],
+        );
+        let state = escape_state(serde_json::to_string(&args).unwrap());
+        let html = h::script(state)
+            .r#type("application/json")
+            .render(Renderer::new(false, true))
+            .await
+            .unwrap()
+            .end()
+            .html;
+        let json = html
+            .strip_prefix(r#"<script type="application/json">"#)
+            .and_then(|s| s.strip_suffix("</script>"))
+            .unwrap();
+        assert!(!json.contains('<'), "{json}");
+        assert_eq!(
+            serde_json::from_str::<(String, Vec<String>)>(json).unwrap(),
+            args
+        );
     }
 }
