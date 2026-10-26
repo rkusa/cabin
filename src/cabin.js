@@ -418,6 +418,10 @@
             el.readOnly = before;
           }
         }
+
+        // the controller outlives the request, don't keep the elements alive through it
+        disabledBefore.clear();
+        readOnlyBefore.clear();
       };
 
       // Do not make the parent function async to ensure e.preventDefault() and e.stopPropagation()
