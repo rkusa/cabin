@@ -115,6 +115,7 @@
 
             return;
           } else {
+            wasm.instance.exports.dealloc(outPtr, 4);
             console.warn("using wasm component failed, falling back to using serveer component");
           }
         } else if (wasm && wasm.instance.exports[name] && payload instanceof FormData) {
