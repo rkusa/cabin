@@ -797,9 +797,7 @@
    * @return {Set<string>} the events the boundary handles
    */
   function boundaryEvents(boundary) {
-    return new Set(
-      (boundary.getAttribute("events") ?? "").split(",").filter((s) => s.length > 0),
-    );
+    return new Set((boundary.getAttribute("events") ?? "").split(",").filter((s) => s.length > 0));
   }
 
   /**
