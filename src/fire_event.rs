@@ -6,6 +6,7 @@ use http_error::HttpError;
 use crate::View;
 use crate::error::InternalError;
 use crate::event::Event;
+use crate::header::percent_encoded;
 
 #[derive(Debug)]
 pub struct FireEvent {
@@ -20,13 +21,12 @@ impl FireEvent {
     {
         Ok(Self {
             event_id: HeaderValue::from_static(E::ID),
-            payload: HeaderValue::from_str(&serde_json::to_string(&event).map_err(|err| {
+            payload: percent_encoded(&serde_json::to_string(&event).map_err(|err| {
                 InternalError::Serialize {
                     what: "fire event".into(),
                     err,
                 }
-            })?)
-            .map_err(InternalError::InvalidHeaderValue)?,
+            })?),
         })
     }
 }

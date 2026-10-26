@@ -21,6 +21,7 @@ pub mod event;
 pub mod exposed;
 pub mod fire_event;
 mod hash;
+mod header;
 pub mod html;
 pub mod multipart;
 pub mod pack;

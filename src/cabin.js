@@ -204,7 +204,11 @@
       if (headerEventId && headerPayload) {
         target.dispatchEvent(
           new CustomEvent("cabinFire", {
-            detail: { eventId: headerEventId, payload: JSON.parse(headerPayload) },
+            detail: {
+              eventId: headerEventId,
+              // percent-encoded, as browsers decode header values as latin-1
+              payload: JSON.parse(decodeURIComponent(headerPayload)),
+            },
             bubbles: true,
           }),
         );
@@ -229,7 +233,8 @@
 
       const newTitle = res.headers.get("x-cabin-title");
       if (newTitle) {
-        document.title = newTitle;
+        // percent-encoded, as browsers decode header values as latin-1
+        document.title = decodeURIComponent(newTitle);
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {

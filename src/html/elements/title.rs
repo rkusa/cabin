@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
-use http::{HeaderName, HeaderValue};
+use http::HeaderName;
 
 use crate::View;
+use crate::header::percent_encoded;
 use crate::html::attributes::Attributes;
 use crate::html::{Global, Html};
 use crate::render::Renderer;
@@ -31,15 +32,10 @@ pub fn title_update(title: impl Into<Cow<'static, str>>) -> TitleUpdate {
 impl View for TitleUpdate {
     fn render(self, mut r: Renderer) -> RenderFuture {
         if r.is_update() {
-            match HeaderValue::from_str(&self.0) {
-                Ok(v) => {
-                    let h = r.headers_mut();
-                    h.insert(HeaderName::from_static("x-cabin-title"), v);
-                }
-                Err(err) => {
-                    tracing::error!(%err, "invalid header value for X-CABIN-TITLE");
-                }
-            }
+            r.headers_mut().insert(
+                HeaderName::from_static("x-cabin-title"),
+                percent_encoded(&self.0),
+            );
         }
 
         RenderFuture::Ready(Ok(r))
