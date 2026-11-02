@@ -36,7 +36,9 @@ percent-encoding = "2.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_html_form = { version = "0.4", default-features = false, features = ["std", "de"] }
 serde_json = { version = "1.0", features = ["raw_value"] }
-smallvec = { version = "2.0.0-alpha.13", features = ["std"] }
+# Pinned: beta.4 implements `From<SmallVec>` for a `<Vec as Like>::Type` projection, which breaks
+# every blanket `impl<T> From<T> for Local` in this crate and its dependents (E0119).
+smallvec = { version = "=2.0.0-beta.3", features = ["std"] }
 time = { version = "0.3", default-features = false, optional = true }
 tokio = { version = "1.0", features = ["rt", "macros"] }
 tokio-util = { version = "0.7", features = ["rt"] }
